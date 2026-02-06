@@ -4,6 +4,7 @@ export interface Collection {
   slug: string;
   description: string;
   image: string;
+  heroImage?: string;
 }
 
 export interface Product {
@@ -28,6 +29,7 @@ export const collections: Collection[] = [
     slug: "lighting",
     description: "Sculptural forms that cast warmth and shadow",
     image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=1920&q=80",
   },
   {
     id: "ceramics",
@@ -35,6 +37,7 @@ export const collections: Collection[] = [
     slug: "ceramics",
     description: "Handcrafted vessels shaped by patient hands",
     image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=1920&q=80",
   },
   {
     id: "furniture",
@@ -42,6 +45,7 @@ export const collections: Collection[] = [
     slug: "furniture",
     description: "Timeless pieces built for generations",
     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&q=80",
   },
   {
     id: "textiles",
@@ -49,6 +53,7 @@ export const collections: Collection[] = [
     slug: "textiles",
     description: "Natural fibers woven with intention",
     image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1920&q=80",
   },
   {
     id: "objects",
@@ -56,13 +61,15 @@ export const collections: Collection[] = [
     slug: "objects",
     description: "Curated details that complete a space",
     image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=1920&q=80",
   },
   {
     id: "seasonal",
     name: "Seasonal Collection",
     slug: "seasonal",
     description: "Limited pieces inspired by the changing light",
-    image: "https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=1920&q=80",
   },
   {
     id: "new",
@@ -70,6 +77,7 @@ export const collections: Collection[] = [
     slug: "new-arrivals",
     description: "The latest additions to our collection",
     image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920&q=80",
   },
   {
     id: "gifts",
@@ -77,6 +85,7 @@ export const collections: Collection[] = [
     slug: "gifts",
     description: "Thoughtfully selected pieces for giving",
     image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1920&q=80",
   },
 ];
 
@@ -110,6 +119,7 @@ export const products: Product[] = [
     dimensions: "25cm diameter × 40cm height",
     images: [
       "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&q=80",
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80",
     ],
     new: true,
   },
@@ -142,6 +152,7 @@ export const products: Product[] = [
     dimensions: "28cm diameter × 10cm height",
     images: [
       "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800&q=80",
+      "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&q=80",
     ],
   },
   // Furniture
@@ -173,6 +184,7 @@ export const products: Product[] = [
     dimensions: "75cm width × 80cm depth × 85cm height",
     images: [
       "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=800&q=80",
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
     ],
     new: true,
   },
@@ -189,6 +201,7 @@ export const products: Product[] = [
     dimensions: "180cm × 140cm",
     images: [
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80",
+      "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80",
     ],
   },
   {
@@ -203,6 +216,7 @@ export const products: Product[] = [
     dimensions: "50cm × 50cm",
     images: [
       "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80",
+      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80",
     ],
   },
   // Objects & Vases
@@ -218,6 +232,7 @@ export const products: Product[] = [
     dimensions: "15cm height × 6cm diameter",
     images: [
       "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80",
+      "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=800&q=80",
     ],
   },
   {
@@ -232,6 +247,7 @@ export const products: Product[] = [
     dimensions: "15cm, 20cm, 25cm heights",
     images: [
       "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=800&q=80",
+      "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80",
     ],
     featured: true,
   },
@@ -247,7 +263,8 @@ export const products: Product[] = [
     materials: "Natural soy wax, cotton wick, stoneware vessel",
     dimensions: "80 hour burn time",
     images: [
-      "https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=800&q=80",
+      "https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=800&q=80",
+      "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=800&q=80",
     ],
   },
   // New Arrivals
@@ -263,6 +280,7 @@ export const products: Product[] = [
     dimensions: "30cm × 20cm × 2cm",
     images: [
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+      "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80",
     ],
     new: true,
   },
@@ -278,6 +296,7 @@ export const products: Product[] = [
     materials: "Stoneware, soy candle, linen, wooden box",
     images: [
       "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?w=800&q=80",
+      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&q=80",
     ],
   },
 ];

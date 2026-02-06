@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Heart, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWishlist } from "@/hooks/useWishlist";
 import { collections } from "@/data/products";
@@ -16,14 +16,33 @@ import { cn } from "@/lib/utils";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { items } = useWishlist();
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-      <nav className="container-wide">
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-500",
+        scrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-sm"
+          : "bg-background/80 backdrop-blur-sm border-b border-transparent"
+      )}
+    >
+      <nav className="container-full">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="font-serif text-2xl md:text-3xl tracking-tight text-foreground">
+          <Link
+            to="/"
+            className="font-serif text-2xl md:text-3xl tracking-tight text-foreground hover:text-primary transition-colors duration-300"
+          >
             Maison
           </Link>
 
@@ -32,7 +51,7 @@ export const Header = () => {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium tracking-wide uppercase">
+                  <NavigationMenuTrigger className="bg-transparent text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground">
                     Collections
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -46,7 +65,9 @@ export const Header = () => {
                                 "block select-none space-y-1 rounded-sm p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                               )}
                             >
-                              <div className="text-sm font-medium leading-none">{collection.name}</div>
+                              <div className="text-sm font-medium leading-none">
+                                {collection.name}
+                              </div>
                               <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                                 {collection.description}
                               </p>
@@ -62,21 +83,21 @@ export const Header = () => {
 
             <Link
               to="/products"
-              className="text-sm font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground transition-colors link-underline"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
             >
               Shop All
             </Link>
 
             <Link
               to="/about"
-              className="text-sm font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground transition-colors link-underline"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
             >
               About
             </Link>
 
             <Link
               to="/inquiry"
-              className="text-sm font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground transition-colors link-underline"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
             >
               Inquire
             </Link>
@@ -84,21 +105,53 @@ export const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-4">
-            <Link to="/wishlist" className="relative p-2 hover:bg-accent rounded-sm transition-colors">
-              <Heart className="w-5 h-5" />
-              {items.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center">
-                  {items.length}
-                </span>
-              )}
+            <Link
+              to="/wishlist"
+              className="relative p-2 hover:bg-accent transition-colors duration-300 group"
+            >
+              <Heart className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+              <AnimatePresence>
+                {items.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full flex items-center justify-center"
+                  >
+                    {items.length}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Link>
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden p-2 hover:bg-accent rounded-sm transition-colors"
+              className="md:hidden p-2 hover:bg-accent transition-colors duration-300"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <AnimatePresence mode="wait">
+                {mobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-5 h-5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
@@ -110,44 +163,52 @@ export const Header = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="md:hidden border-t border-border overflow-hidden"
             >
-              <div className="py-6 space-y-4">
-                <div className="space-y-2">
-                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground px-2">Collections</p>
-                  {collections.slice(0, 6).map((collection) => (
-                    <Link
+              <div className="py-8 space-y-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-muted-foreground/50 px-2 mb-3">
+                    Collections
+                  </p>
+                  {collections.slice(0, 6).map((collection, i) => (
+                    <motion.div
                       key={collection.id}
-                      to={`/products?collection=${collection.slug}`}
-                      className="block px-2 py-2 text-sm hover:bg-accent rounded-sm transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
-                      {collection.name}
-                    </Link>
+                      <Link
+                        to={`/products?collection=${collection.slug}`}
+                        className="block px-2 py-2.5 text-sm hover:bg-accent transition-colors duration-300"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {collection.name}
+                      </Link>
+                    </motion.div>
                   ))}
                 </div>
-                <div className="pt-4 border-t border-border space-y-2">
-                  <Link
-                    to="/products"
-                    className="block px-2 py-2 text-sm font-medium hover:bg-accent rounded-sm transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Shop All
-                  </Link>
-                  <Link
-                    to="/about"
-                    className="block px-2 py-2 text-sm font-medium hover:bg-accent rounded-sm transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                  <Link
-                    to="/inquiry"
-                    className="block px-2 py-2 text-sm font-medium hover:bg-accent rounded-sm transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Inquire
-                  </Link>
+                <div className="pt-6 border-t border-border space-y-1">
+                  {[
+                    { to: "/products", label: "Shop All" },
+                    { to: "/about", label: "About" },
+                    { to: "/inquiry", label: "Inquire" },
+                  ].map((link, i) => (
+                    <motion.div
+                      key={link.to}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + i * 0.05 }}
+                    >
+                      <Link
+                        to={link.to}
+                        className="block px-2 py-2.5 text-sm font-medium hover:bg-accent transition-colors duration-300"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </motion.div>
