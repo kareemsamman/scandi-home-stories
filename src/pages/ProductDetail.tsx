@@ -1,19 +1,25 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ArrowLeft, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, ArrowRight, ShoppingBag } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
+import { QuantitySelector } from "@/components/QuantitySelector";
 import { getProductBySlug, getRelatedProducts, collections } from "@/data/products";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = getProductBySlug(slug || "");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addItem, removeItem, isInWishlist } = useWishlist();
+  const [quantity, setQuantity] = useState(1);
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
+  const { addItem: addToCart } = useCart();
+  const { toast } = useToast();
 
   if (!product) {
     return (
@@ -37,10 +43,27 @@ const ProductDetail = () => {
 
   const handleWishlistToggle = () => {
     if (inWishlist) {
-      removeItem(product.id);
+      removeFromWishlist(product.id);
+      toast({
+        title: "Removed from wishlist",
+        description: `${product.name} has been removed from your wishlist.`,
+      });
     } else {
-      addItem(product);
+      addToWishlist(product);
+      toast({
+        title: "Added to wishlist",
+        description: `${product.name} has been saved to your wishlist.`,
+      });
     }
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast({
+      title: "Added to bag",
+      description: `${quantity} × ${product.name} added to your bag.`,
+    });
+    setQuantity(1);
   };
 
   const nextImage = () => {
@@ -98,7 +121,7 @@ const ProductDetail = () => {
                     initial={{ opacity: 0, scale: 1.02 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                     className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
                   />
                 </AnimatePresence>
@@ -175,7 +198,7 @@ const ProductDetail = () => {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const }}
               className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start"
             >
               {collection && (
@@ -219,17 +242,26 @@ const ProductDetail = () => {
                 )}
               </div>
 
+              {/* Quantity Selector */}
+              <div className="mb-6">
+                <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground block mb-3">
+                  Quantity
+                </span>
+                <QuantitySelector
+                  quantity={quantity}
+                  onQuantityChange={setQuantity}
+                />
+              </div>
+
               {/* Actions */}
               <div className="flex flex-col gap-3">
                 <Button
-                  asChild
                   size="lg"
+                  onClick={handleAddToCart}
                   className="rounded-none w-full py-6 text-sm tracking-[0.15em] uppercase btn-premium"
                 >
-                  <Link to={`/inquiry?product=${product.slug}`}>
-                    Inquire About This Piece
-                    <ArrowRight className="ml-3 w-4 h-4" />
-                  </Link>
+                  <ShoppingBag className="w-4 h-4 mr-3" />
+                  Add to Bag
                 </Button>
                 <Button
                   variant="outline"
