@@ -1,94 +1,233 @@
 
 
-## Boutique Home & Lifestyle Showcase Website
+# Homepage & Store Restructure
 
-A sophisticated, design-driven portfolio website for your boutique brand, featuring warm Scandinavian-inspired aesthetics with elegant typography and thoughtful interactions.
-
----
-
-### Visual Design System
-
-- **Color palette**: Warm neutrals — soft cream, warm taupe, muted terracotta, charcoal accents
-- **Typography**: Elegant serif for headings (refined, editorial feel), clean sans-serif for body text
-- **Textures**: Subtle linen and paper-like backgrounds for warmth
-- **Spacing**: Generous whitespace throughout for a premium, breathable feel
-- **Animations**: Smooth, subtle transitions between pages and sections
+This plan transforms the portfolio/inquiry-only website into a fully functional e-commerce store with cart, checkout, and proper product flow.
 
 ---
 
-### Pages & Features
+## Summary of Changes
 
-**Homepage**
-- Hero section with large lifestyle photography showing products in context
-- Curated "Editor's Picks" or featured collection highlight
-- 6-10 collection previews with editorial imagery
-- Brand philosophy statement
-- Newsletter signup with warm, inviting design
-
-**Product Listing Page**
-- Editorial-style grid with generous spacing
-- Filter by collection (Lighting, Ceramics, Furniture, Textiles, etc.)
-- Hover effects revealing quick "Add to Wishlist" option
-- Smooth scroll and load animations
-
-**Product Detail Page**
-- Large contextual lifestyle images (gallery with smooth transitions)
-- Craftsmanship-focused descriptions highlighting materials, story, and making
-- "Inquire About This Piece" button linking to inquiry form
-- Related products from same collection
-
-**About / Brand Story**
-- Philosophy and ethos of slow living and considered design
-- Founder story or brand journey
-- Craftsmanship and sourcing values
-
-**Inquiry Form**
-- Clean, elegant contact form
-- Option to reference specific products
-- Confirmation with warm, on-brand messaging
+### Current State → New State
+- **Wishlist page** → Removed (keep wishlist functionality in header icon only)
+- **Inquiry-based flow** → Shopping cart + checkout flow
+- **Product detail "Inquire" button** → "Add to Bag" + quantity selector
+- **Homepage structure** → Reorganized to match reference layout
 
 ---
 
-### Interactive Features
+## 1. Homepage Restructure
 
-**Wishlist (Local)**
-- Save favorite pieces to a wishlist (stored in browser)
-- Heart icon on product cards and detail pages
-- Wishlist drawer/page to review saved items
-- Persistent across browsing session
+Reorganize sections to follow this exact order:
 
-**Cart Drawer**
-- Repurposed as "Saved Items" drawer
-- Slides in smoothly from the side
-- Shows wishlist items with images and names
+| Section | Description |
+|---------|-------------|
+| Hero Banner | Keep existing lifestyle hero |
+| Featured Collection(s) | 1-2 highlighted collections with editorial imagery |
+| Latest Products | Grid of newest arrivals |
+| Collections | Grid/list of all collection categories |
+| About Us | Brand philosophy snippet with link |
+| Follow Us | Social media / Instagram feed placeholder |
 
-**Navigation**
-- Minimal, elegant header with smooth hover states
-- Collections dropdown menu
-- Wishlist icon with item count badge
-
-**Smooth Transitions**
-- Page transitions with subtle fade effects
-- Image galleries with elegant sliding animations
-- Scroll-triggered animations for content reveals
+### Remove from Homepage
+- Philosophy statement section (move essence to About Us section)
+- Marquee text banner
+- Full-width lifestyle banner mid-page
+- Newsletter section (move to footer only)
 
 ---
 
-### Collections Structure (6-10)
+## 2. Collection/Products Page Updates
 
-We'll set up placeholder collections you can customize:
-1. Lighting
-2. Ceramics
-3. Furniture
-4. Textiles
-5. Objects & Vases
-6. Seasonal Collection
-7. New Arrivals
-8. Curated Gifts
+### Add Filters
+- Collection filter (already exists)
+- Price range filter (Low to High, High to Low)
+- Material type filter
+- "New Arrivals" and "Featured" quick filters
+
+### Add Sorting
+- Dropdown with options:
+  - Featured (default)
+  - Newest
+  - Price: Low to High
+  - Price: High to Low
+  - Alphabetical A-Z
+
+### Product Grid
+- Keep existing editorial-style grid
+- Ensure all cards show mock data
+- Only the first product links to real detail page (others link to same product for demo purposes)
 
 ---
 
-### Sample Content
+## 3. Product Detail Page Updates
 
-I'll include placeholder products with lifestyle imagery to demonstrate the design. You can replace these with your actual products and photography later.
+### Current → New Layout
+| Element | Change |
+|---------|--------|
+| Images | Keep existing gallery |
+| Title, Description, Price | Keep |
+| "Inquire About This Piece" | → "Add to Bag" primary CTA |
+| Wishlist button | Keep as secondary action |
+| **New: Quantity Selector** | Add increment/decrement control |
+| Related Products | Keep existing |
+
+### New Elements to Add
+- Quantity selector (1-10, with +/- buttons)
+- "Add to Bag" button replaces inquiry button
+- Toast notification on add to cart
+
+---
+
+## 4. New Cart System
+
+### Create Cart Store (Zustand)
+Similar to wishlist but with quantity:
+- `items: { product, quantity }[]`
+- `addItem(product, quantity)`
+- `updateQuantity(productId, quantity)`
+- `removeItem(productId)`
+- `getTotal()`
+- `getItemCount()`
+- Persist to localStorage
+
+### Cart Page (`/cart`)
+| Element | Description |
+|---------|-------------|
+| Product List | Image, title, price, quantity selector, remove button |
+| Cart Summary | Subtotal, estimated shipping, total |
+| Checkout CTA | Button linking to checkout page |
+| Continue Shopping | Secondary link back to products |
+
+---
+
+## 5. Checkout Page (`/checkout`)
+
+### Coming Soon Banner
+- Prominent banner: "Online checkout coming soon"
+- Message: "Please contact us to complete your order"
+- Email/phone contact info
+
+### Order Summary
+- List of cart items (read-only)
+- Quantities and prices
+- Subtotal and total
+
+### Contact Form
+- Name, Email, Phone
+- Shipping address fields
+- Order notes/special requests
+- "Submit Order Request" button
+- Form submits and clears cart with success message
+
+---
+
+## 6. Header Updates
+
+### Navigation Changes
+| Current | New |
+|---------|-----|
+| Wishlist icon | Keep (but no dedicated page, opens mini drawer or tooltip) |
+| **New:** Cart icon | Bag icon with item count badge |
+
+### Cart Icon Behavior
+- Shows item count
+- Links to `/cart` page
+
+---
+
+## 7. Mock Data Strategy
+
+### Product Cards Approach
+- All product cards render with unique mock data (images, names, prices)
+- For demo simplicity, clicking any product goes to a single working detail page
+- This prevents broken pages while showcasing the grid design
+
+### Implementation
+- Keep existing product data
+- First product (Arc Pendant Light) is the "real" linkable product
+- Other cards can link to this same product for the demo
+
+---
+
+## 8. Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/hooks/useCart.ts` | Cart state management with Zustand |
+| `src/pages/Cart.tsx` | Shopping cart page |
+| `src/pages/Checkout.tsx` | Checkout page with form |
+| `src/components/QuantitySelector.tsx` | Reusable +/- quantity control |
+| `src/components/CartIcon.tsx` | Header cart icon with badge |
+
+---
+
+## 9. Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Index.tsx` | Restructure sections per new layout |
+| `src/pages/Products.tsx` | Add filters and sorting UI |
+| `src/pages/ProductDetail.tsx` | Add quantity selector, change CTA to "Add to Bag" |
+| `src/components/Header.tsx` | Add cart icon, update wishlist behavior |
+| `src/components/Footer.tsx` | Remove wishlist link, keep rest |
+| `src/App.tsx` | Add `/cart` and `/checkout` routes, remove `/wishlist` |
+| `src/components/Layout.tsx` | Fix TypeScript error with Framer Motion variants |
+
+---
+
+## 10. Files to Delete
+
+| File | Reason |
+|------|--------|
+| `src/pages/Wishlist.tsx` | User requested removal |
+
+---
+
+## Technical Details
+
+### Fix Build Error (Layout.tsx)
+The Framer Motion `ease` array needs to be typed as a tuple:
+```typescript
+ease: [0.25, 0.46, 0.45, 0.94] as const
+```
+
+### Cart Store Structure
+```typescript
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+  addItem: (product: Product, quantity: number) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string) => void;
+  clearCart: () => void;
+  getSubtotal: () => number;
+  getItemCount: () => number;
+}
+```
+
+### Quantity Selector Component
+- Shows current quantity (default: 1)
+- Minus button (disabled at 1)
+- Plus button (max 10)
+- Clean, minimal styling matching brand
+
+### Sorting Implementation
+- URL parameter based (`?sort=price-asc`)
+- Combined with existing collection filter
+- `useMemo` for filtered and sorted products
+
+---
+
+## Visual Design Notes
+
+- Maintain warm, Scandinavian aesthetic throughout
+- Cart and checkout pages use same cream/neutral tones
+- No dark theming - keep light, warm palette
+- Generous whitespace on cart/checkout pages
+- Form inputs match existing inquiry form styling
 
