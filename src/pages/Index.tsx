@@ -1,17 +1,18 @@
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowRight, ArrowDown, Instagram } from "lucide-react";
 import { useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { CollectionCard } from "@/components/CollectionCard";
-import { collections, getFeaturedProducts, getNewProducts, products } from "@/data/products";
+import { collections, getNewProducts, products } from "@/data/products";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const featuredProducts = getFeaturedProducts();
   const newProducts = getNewProducts();
+  const latestProducts = products.slice(0, 4);
   const displayedCollections = collections.slice(0, 6);
+  const featuredCollection = collections[0]; // Lighting
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -19,6 +20,16 @@ const Index = () => {
   });
   const heroImageY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // Instagram placeholder images
+  const instagramImages = [
+    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80",
+    "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=400&q=80",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80",
+    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80",
+    "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400&q=80",
+    "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=400&q=80",
+  ];
 
   return (
     <Layout>
@@ -40,7 +51,7 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 1, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const }}
             className="max-w-3xl"
           >
             <motion.p
@@ -67,17 +78,9 @@ const Index = () => {
                 className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase btn-premium"
               >
                 <Link to="/products">
-                  Explore Collection
+                  Shop Now
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white"
-              >
-                <Link to="/about">Our Story</Link>
               </Button>
             </div>
           </motion.div>
@@ -100,132 +103,59 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Marquee Text Banner */}
-      <section className="py-5 border-y border-border bg-background overflow-hidden">
-        <div className="marquee">
-          <div className="marquee-content gap-12 animate-marquee">
-            {[
-              "Handcrafted with Intention",
-              "Natural Materials",
-              "Scandinavian Heritage",
-              "Timeless Design",
-              "Artisan Made",
-              "Sustainable Living",
-              "Handcrafted with Intention",
-              "Natural Materials",
-              "Scandinavian Heritage",
-              "Timeless Design",
-              "Artisan Made",
-              "Sustainable Living",
-            ].map((text, i) => (
-              <span
-                key={i}
-                className="text-sm font-medium tracking-[0.2em] uppercase text-muted-foreground/50 whitespace-nowrap flex items-center gap-12"
-              >
-                {text}
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/30" />
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Philosophy Statement */}
-      <section className="py-24 md:py-36">
-        <div className="container-narrow text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <div className="divider-ornament mb-12">
-              <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-primary whitespace-nowrap">
-                Our Philosophy
-              </span>
-            </div>
-            <p className="font-serif text-2xl md:text-4xl lg:text-5xl text-foreground leading-[1.3] tracking-tight">
-              We believe in the beauty of slow living—in objects made with care,
-              materials that age gracefully, and spaces that invite{" "}
-              <span className="italic">pause</span>.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Large Editorial Image Banner */}
-      <section className="px-6 lg:px-12 mb-24 md:mb-36">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+      {/* Featured Collection */}
+      <section className="py-20 md:py-28">
+        <div className="container-full">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="relative aspect-[4/5] md:aspect-auto md:h-[85vh] overflow-hidden group"
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+              className="relative aspect-[4/5] overflow-hidden group"
             >
               <img
-                src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80"
-                alt="Minimal Scandinavian interior"
+                src={featuredCollection.heroImage || featuredCollection.image}
+                alt={featuredCollection.name}
                 className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-white/60 mb-3">
-                  The Living Room Edit
-                </p>
-                <h3 className="font-serif text-3xl md:text-4xl text-white mb-3 leading-tight">
-                  Spaces That
-                  <br />
-                  <span className="italic">Breathe</span>
-                </h3>
-                <Link
-                  to="/products?collection=furniture"
-                  className="inline-flex items-center gap-2 text-sm tracking-[0.1em] uppercase text-white/80 hover:text-white transition-colors"
-                >
-                  Shop Furniture
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.9, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="relative aspect-[4/5] md:aspect-auto md:h-[85vh] overflow-hidden group"
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+              className="md:py-12"
             >
-              <img
-                src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"
-                alt="Elegant home interior"
-                className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-white/60 mb-3">
-                  Curated Details
-                </p>
-                <h3 className="font-serif text-3xl md:text-4xl text-white mb-3 leading-tight">
-                  The Art of
-                  <br />
-                  <span className="italic">Dwelling</span>
-                </h3>
-                <Link
-                  to="/products?collection=objects"
-                  className="inline-flex items-center gap-2 text-sm tracking-[0.1em] uppercase text-white/80 hover:text-white transition-colors"
-                >
-                  Shop Objects
-                  <ArrowRight className="w-4 h-4" />
+              <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-4">
+                Featured Collection
+              </p>
+              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-6 leading-[0.95]">
+                {featuredCollection.name}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-8 max-w-md">
+                {featuredCollection.description}. Discover sculptural forms that cast warmth and shadow, 
+                designed to transform any space into a sanctuary of light.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase btn-premium"
+              >
+                <Link to={`/products?collection=${featuredCollection.slug}`}>
+                  Shop {featuredCollection.name}
+                  <ArrowRight className="ml-3 w-4 h-4" />
                 </Link>
-              </div>
+              </Button>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 md:py-32">
+      {/* Latest Products */}
+      <section className="py-20 md:py-28 bg-linen">
         <div className="container-full">
           <div className="flex items-end justify-between mb-14">
             <motion.div
@@ -235,10 +165,10 @@ const Index = () => {
               transition={{ duration: 0.6 }}
             >
               <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-3">
-                Editor's Picks
+                Just Arrived
               </p>
               <h2 className="font-serif text-4xl md:text-5xl text-foreground">
-                Featured Pieces
+                Latest Products
               </h2>
             </motion.div>
             <Link
@@ -250,8 +180,8 @@ const Index = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-            {featuredProducts.map((product, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+            {latestProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
@@ -268,59 +198,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Full-Width Lifestyle Banner */}
-      <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
-        <motion.div
-          initial={{ scale: 1.1 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="absolute inset-0"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80"
-            alt="Beautiful home interior"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-charcoal/30" />
-        </motion.div>
-
-        <div className="relative container-full h-full flex items-center justify-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="max-w-2xl"
-          >
-            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-white/60 mb-6">
-              Craftsmanship & Heritage
-            </p>
-            <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl text-white mb-6 leading-[0.95]">
-              Made to Be
-              <br />
-              <span className="italic">Treasured</span>
-            </h2>
-            <p className="text-base text-white/70 mb-10 max-w-md mx-auto leading-relaxed">
-              Every piece is selected for its material integrity, its maker's
-              story, and its ability to endure beautifully.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase bg-white text-charcoal hover:bg-white/90"
-            >
-              <Link to="/about">
-                Discover Our Story
-                <ArrowRight className="ml-3 w-4 h-4" />
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Collections Grid */}
-      <section className="py-24 md:py-36">
+      <section className="py-24 md:py-32">
         <div className="container-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -386,178 +265,89 @@ const Index = () => {
         </div>
       </section>
 
-      {/* New Arrivals Section */}
-      <section className="py-20 md:py-32 bg-linen">
-        <div className="container-full">
-          <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="aspect-[4/5] overflow-hidden group">
-                <img
-                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1000&q=80"
-                  alt="New arrivals"
-                  className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-                />
-              </div>
-              {/* Floating accent image */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="absolute -bottom-8 -right-4 md:-right-12 w-48 md:w-64 aspect-square overflow-hidden shadow-2xl border-4 border-background"
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=400&q=80"
-                  alt="Detail"
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="md:pl-8"
-            >
-              <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-5">
-                Just Arrived
-              </p>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-6 leading-[1.05]">
-                New Additions
-                <br />
-                to the{" "}
-                <span className="italic">Collection</span>
-              </h2>
-              <p className="text-muted-foreground leading-relaxed mb-10 text-base max-w-md">
-                Discover our latest carefully selected pieces—from sculptural
-                ceramics to heirloom-quality textiles. Each new addition has been
-                chosen to complement the rhythms of thoughtful living.
-              </p>
-
-              {/* Mini product grid */}
-              <div className="grid grid-cols-2 gap-6 mb-10">
-                {newProducts.slice(0, 2).map((product) => (
-                  <Link
-                    key={product.id}
-                    to={`/product/${product.slug}`}
-                    className="group/item"
-                  >
-                    <div className="aspect-square overflow-hidden bg-muted/50 mb-3">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-105"
-                      />
-                    </div>
-                    <p className="text-sm font-serif text-foreground group-hover/item:text-primary transition-colors">
-                      {product.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ${product.price}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-
-              <Button
-                asChild
-                className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase"
-              >
-                <Link to="/products?collection=new-arrivals">
-                  Shop New Arrivals
-                  <ArrowRight className="ml-3 w-4 h-4" />
-                </Link>
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Three-Image Editorial Strip */}
-      <section className="py-4 md:py-6">
-        <div className="grid grid-cols-3 gap-2 md:gap-4 h-[40vh] md:h-[60vh]">
-          {[
-            {
-              src: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&q=80",
-              alt: "Handcrafted ceramics",
-            },
-            {
-              src: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80",
-              alt: "Styled living space",
-            },
-            {
-              src: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80",
-              alt: "Artisan textiles",
-            },
-          ].map((img, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: i * 0.15 }}
-              className="overflow-hidden group"
-            >
-              <img
-                src={img.src}
-                alt={img.alt}
-                className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
-              />
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="py-28 md:py-40 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&q=80"
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-charcoal/70" />
-        </div>
-
-        <div className="relative container-narrow text-center">
+      {/* About Us Section */}
+      <section className="py-24 md:py-32 bg-linen">
+        <div className="container-narrow text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }}
           >
-            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-white/50 mb-6">
-              Stay Connected
+            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-6">
+              About Us
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white mb-5 leading-tight">
-              Join Our World
+            <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-foreground leading-[1.3] mb-8">
+              We believe in the beauty of slow living—in objects made with care,
+              materials that age gracefully, and spaces that invite{" "}
+              <span className="italic">pause</span>.
             </h2>
-            <p className="text-white/60 mb-10 max-w-md mx-auto leading-relaxed">
-              Be the first to know about new arrivals, seasonal collections, and
-              stories from our workshop.
+            <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
+              Every piece in our collection is selected for its material integrity, 
+              its maker's story, and its ability to endure beautifully. We work with 
+              artisans who share our commitment to craft and sustainability.
             </p>
-            <form className="flex flex-col sm:flex-row gap-0 max-w-lg mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="flex-1 h-14 px-6 text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-white/50 transition-colors"
-              />
-              <button
-                type="submit"
-                className="h-14 px-10 text-sm font-medium tracking-[0.15em] uppercase bg-white text-charcoal hover:bg-white/90 transition-colors whitespace-nowrap"
-              >
-                Subscribe
-              </button>
-            </form>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-none px-10 py-6 text-sm tracking-[0.15em] uppercase"
+            >
+              <Link to="/about">
+                Read Our Story
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Link>
+            </Button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Follow Us / Instagram Section */}
+      <section className="py-20 md:py-28">
+        <div className="container-full">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-3">
+              Follow Us
+            </p>
+            <h2 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
+              @maisonhome
+            </h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Join our community and get inspired by curated spaces and behind-the-scenes moments.
+            </p>
+          </motion.div>
+
+          {/* Instagram Grid */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
+            {instagramImages.map((image, index) => (
+              <motion.a
+                key={index}
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="relative aspect-square overflow-hidden group cursor-pointer"
+              >
+                <img
+                  src={image}
+                  alt="Instagram post"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/40 transition-colors duration-300 flex items-center justify-center">
+                  <Instagram className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              </motion.a>
+            ))}
+          </div>
         </div>
       </section>
     </Layout>

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { collections } from "@/data/products";
 
@@ -91,18 +90,10 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/inquiry"
+                  to="/cart"
                   className="text-sm text-background/60 hover:text-background transition-colors duration-300"
                 >
-                  Inquire
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/wishlist"
-                  className="text-sm text-background/60 hover:text-background transition-colors duration-300"
-                >
-                  Saved Items
+                  Shopping Bag
                 </Link>
               </li>
             </ul>
