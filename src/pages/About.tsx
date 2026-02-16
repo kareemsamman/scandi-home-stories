@@ -335,10 +335,10 @@ const About = () => {
               size="lg"
               className="rounded-none px-12 py-6 text-sm tracking-[0.15em] uppercase bg-white text-charcoal hover:bg-white/90"
             >
-              <Link to="/inquiry">
+              <a href="mailto:hello@maison.com">
                 Get in Touch
                 <ArrowRight className="ml-3 w-4 h-4" />
-              </Link>
+              </a>
             </Button>
           </motion.div>
         </div>
