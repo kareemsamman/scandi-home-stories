@@ -17,6 +17,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       cart: 'סל קניות',
       search: 'חיפוש',
       collections: 'קולקציות',
+      account: 'חשבון',
     },
     announcement: {
       messages: [
