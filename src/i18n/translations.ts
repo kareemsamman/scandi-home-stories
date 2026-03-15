@@ -535,6 +535,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       applyDiscount: 'تطبيق',
       invalidDiscount: 'أدخل رمز خصم أو بطاقة هدية صالحة',
       discount: 'خصم',
+      discountAppliedLabel: 'رمز الخصم:',
       refundPolicy: 'سياسة الاسترداد',
       shippingPolicy: 'الشحن',
       privacyPolicy: 'سياسة الخصوصية',
