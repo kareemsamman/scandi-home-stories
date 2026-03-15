@@ -449,6 +449,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       specifications: 'المواصفات التقنية',
       features: 'الميزات',
       description: 'الوصف',
+      about: 'حول',
       aboutProduct: 'حول المنتج',
       productDetails: 'تفاصيل المنتج',
       adding: 'جاري الإضافة...',
