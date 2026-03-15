@@ -115,7 +115,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               <div className="pt-0.5">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {contractor.sizes.map(s => s.label).join(" · ")}
+                  {contractor.sizes.map(s => `${s.label}${s.price ? ` ₪${s.price}` : ''}`).join(" · ")}
                 </p>
               </div>
             )}
