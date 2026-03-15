@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Loader2, Search } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
@@ -56,12 +56,75 @@ interface FormErrors {
 const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const validatePhone = (v: string) => /^\d{10}$/.test(v.replace(/\s/g, ""));
 
-/* ---------- input style ---------- */
-const baseInputClass =
-  "w-full h-12 px-4 rounded-lg border text-sm bg-muted/30 placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors";
-const focusRing = "focus:ring-[#4f6df5]/30 focus:border-[#4f6df5]";
-const errorBorder = "border-red-400";
-const normalBorder = "border-border";
+/* ---------- Floating Label Input ---------- */
+const FloatingInput = ({
+  name,
+  label,
+  value,
+  onChange,
+  onBlur,
+  onFocus,
+  error,
+  type = "text",
+  inputMode,
+  inputRef,
+  autoComplete = "off",
+}: {
+  name: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: () => void;
+  onFocus?: () => void;
+  error?: string;
+  type?: string;
+  inputMode?: "text" | "numeric" | "email" | "tel";
+  inputRef?: React.Ref<HTMLInputElement>;
+  autoComplete?: string;
+}) => {
+  const [focused, setFocused] = useState(false);
+  const isActive = focused || value.length > 0;
+
+  return (
+    <div>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          name={name}
+          type={type}
+          inputMode={inputMode}
+          value={value}
+          onChange={onChange}
+          onFocus={() => {
+            setFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => {
+            setFocused(false);
+            onBlur?.();
+          }}
+          autoComplete={autoComplete}
+          className={`peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
+            error
+              ? "border-red-400 focus:ring-red-200 focus:border-red-400"
+              : "border-border focus:ring-[#4f6df5]/30 focus:border-[#4f6df5]"
+          }`}
+          placeholder=" "
+        />
+        <label
+          className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+            isActive
+              ? "top-1.5 text-[10px] text-muted-foreground"
+              : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+          }`}
+        >
+          {label}
+        </label>
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+};
 
 /* ---------- component ---------- */
 const Checkout = () => {
@@ -85,6 +148,7 @@ const Checkout = () => {
   const [discountCode, setDiscountCode] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [citySelected, setCitySelected] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -104,7 +168,6 @@ const Checkout = () => {
     firstInputRef.current?.focus();
   }, []);
 
-  /* close city dropdown on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (cityRef.current && !cityRef.current.contains(e.target as Node)) {
@@ -123,7 +186,6 @@ const Checkout = () => {
     return cities.filter((c) => c.toLowerCase().includes(q)).slice(0, 8);
   }, [cityQuery, cities]);
 
-  /* validation */
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
     if (!form.firstName.trim()) e.firstName = t("checkout.required");
@@ -132,10 +194,10 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.required");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
-    if (!form.city.trim()) e.city = t("checkout.required");
+    if (!form.city.trim() || !citySelected) e.city = t("checkout.required");
     if (!form.address.trim()) e.address = t("checkout.required");
     return e;
-  }, [form, t]);
+  }, [form, t, citySelected]);
 
   const isValid = Object.keys(validate()).length === 0;
 
@@ -189,12 +251,9 @@ const Checkout = () => {
     );
   }
 
-  const fieldError = (name: keyof FormErrors) => touched[name] && errors[name];
+  const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
-  const inputCls = (name: keyof FormErrors) =>
-    `${baseInputClass} ${focusRing} ${fieldError(name) ? errorBorder : normalBorder}`;
-
-  /* ---------- Order summary content (shared mobile/desktop) ---------- */
+  /* ---------- Order summary content ---------- */
   const OrderSummaryContent = ({ showDiscount = true }: { showDiscount?: boolean }) => (
     <>
       <div className="space-y-4 mb-6">
@@ -208,12 +267,8 @@ const Checkout = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{item.product.name}</p>
-              {item.options?.color && (
-                <p className="text-xs text-muted-foreground mt-0.5">{item.options.color.name}</p>
-              )}
-              {item.options?.size && (
-                <p className="text-xs text-muted-foreground">{item.options.size}</p>
-              )}
+              {item.options?.color && <p className="text-xs text-muted-foreground mt-0.5">{item.options.color.name}</p>}
+              {item.options?.size && <p className="text-xs text-muted-foreground">{item.options.size}</p>}
             </div>
             <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
           </div>
@@ -238,7 +293,6 @@ const Checkout = () => {
         </div>
       </div>
 
-      {/* Discount code */}
       {showDiscount && (
         <div className="border-t border-border mt-6 pt-6">
           <div className="flex gap-2">
@@ -246,11 +300,11 @@ const Checkout = () => {
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value)}
               placeholder={t("checkout.discountPlaceholder")}
-              className={`flex-1 h-11 px-4 rounded-lg border ${normalBorder} text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${focusRing} transition-colors`}
+              className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
             />
             <button
               type="button"
-              className="h-11 px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+              className="h-[48px] px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
             >
               {t("checkout.applyDiscount")}
             </button>
@@ -263,10 +317,10 @@ const Checkout = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
       {/* Header */}
-      <header className="sticky top-0 z-30 px-6 md:px-10" style={{ backgroundColor: "rgb(242,242,242)" }}>
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16">
+      <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)" }}>
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-6 md:px-10">
           <Link to={localePath("/")} className="flex items-center">
-            <img src={logoWhite} alt="AMG Pergola" className="h-8 invert" />
+            <img src={logoWhite} alt="AMG Pergola" className="h-10 md:h-12 invert" />
           </Link>
           <Link to={localePath("/cart")} className="relative flex items-center justify-center w-10 h-10 text-foreground">
             <CartBagIcon />
@@ -279,8 +333,8 @@ const Checkout = () => {
         </div>
       </header>
 
-      {/* Main content — no horizontal padding on container */}
-      <main className="max-w-[1200px] mx-auto pb-16">
+      {/* Main — full width, no max-w, no pb */}
+      <main className="w-full">
         {/* Mobile: collapsible order summary */}
         <div className="md:hidden mb-6 px-6">
           <button
@@ -312,201 +366,182 @@ const Checkout = () => {
           </AnimatePresence>
         </div>
 
-        {/* Desktop two-column grid */}
+        {/* Desktop two-column grid — full width */}
         <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
 
           {/* LEFT: Checkout Form */}
-          <div className="px-6 md:px-10">
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
-              {/* Contact Info */}
-              <div>
-                <h2 className="text-lg font-bold mb-4">{t("checkout.contactInfo")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <input
-                      ref={firstInputRef}
+          <div className="flex justify-end">
+            <div className="w-full max-w-[600px] px-6 md:px-10 py-6">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
+                {/* Contact Info */}
+                <div>
+                  <h2 className="text-lg font-bold mb-4">{t("checkout.contactInfo")}</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <FloatingInput
+                      inputRef={firstInputRef}
                       name="firstName"
+                      label={t("checkout.firstName")}
                       value={form.firstName}
                       onChange={handleChange}
                       onBlur={() => handleBlur("firstName")}
-                      placeholder={t("checkout.firstName")}
-                      className={inputCls("firstName")}
+                      error={fieldError("firstName")}
                     />
-                    {fieldError("firstName") && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
-                  </div>
-                  <div>
-                    <input
+                    <FloatingInput
                       name="lastName"
+                      label={t("checkout.lastName")}
                       value={form.lastName}
                       onChange={handleChange}
                       onBlur={() => handleBlur("lastName")}
-                      placeholder={t("checkout.lastName")}
-                      className={inputCls("lastName")}
+                      error={fieldError("lastName")}
                     />
-                    {fieldError("lastName") && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
-                  </div>
-                  <div>
-                    <input
+                    <FloatingInput
                       name="email"
-                      type="email"
+                      label={t("checkout.email")}
                       value={form.email}
                       onChange={handleChange}
                       onBlur={() => handleBlur("email")}
-                      placeholder={t("checkout.email")}
-                      className={inputCls("email")}
+                      error={fieldError("email")}
+                      type="email"
+                      inputMode="email"
                     />
-                    {fieldError("email") && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                  </div>
-                  <div>
-                    <input
+                    <FloatingInput
                       name="phone"
-                      type="tel"
-                      inputMode="numeric"
+                      label={t("checkout.phone")}
                       value={form.phone}
                       onChange={handleChange}
                       onBlur={() => handleBlur("phone")}
-                      placeholder={t("checkout.phone")}
-                      className={inputCls("phone")}
+                      error={fieldError("phone")}
+                      type="tel"
+                      inputMode="numeric"
                     />
-                    {fieldError("phone") && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
                 </div>
-              </div>
 
-              {/* Shipping Address */}
-              <div>
-                <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
-                <div className="space-y-3">
-                  {/* City with autocomplete */}
-                  <div ref={cityRef} className="relative">
-                    <input
-                      name="city"
-                      value={cityQuery || form.city}
-                      onChange={(e) => {
-                        setCityQuery(e.target.value);
-                        setForm((p) => ({ ...p, city: e.target.value }));
-                        setShowCitySuggestions(true);
-                      }}
-                      onFocus={() => setShowCitySuggestions(true)}
-                      onBlur={() => {
-                        // delay to allow click on suggestion
-                        setTimeout(() => handleBlur("city"), 150);
-                      }}
-                      placeholder={t("checkout.city")}
-                      className={inputCls("city")}
-                      autoComplete="off"
-                    />
-                    {fieldError("city") && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
+                {/* Shipping Address */}
+                <div>
+                  <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
+                  <div className="space-y-3">
+                    {/* City with autocomplete */}
+                    <div ref={cityRef} className="relative">
+                      <FloatingInput
+                        name="city"
+                        label={t("checkout.city")}
+                        value={cityQuery || form.city}
+                        onChange={(e) => {
+                          setCityQuery(e.target.value);
+                          setForm((p) => ({ ...p, city: e.target.value }));
+                          setCitySelected(false);
+                          setShowCitySuggestions(true);
+                        }}
+                        onFocus={() => setShowCitySuggestions(true)}
+                        onBlur={() => setTimeout(() => handleBlur("city"), 150)}
+                        error={fieldError("city")}
+                      />
 
-                    {/* City suggestions dropdown */}
-                    {showCitySuggestions && filteredCities.length > 0 && (
-                      <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {filteredCities.map((city) => (
-                          <button
-                            key={city}
-                            type="button"
-                            className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setForm((p) => ({ ...p, city }));
-                              setCityQuery(city);
-                              setShowCitySuggestions(false);
-                            }}
-                          >
-                            {city}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      {showCitySuggestions && filteredCities.length > 0 && (
+                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filteredCities.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setForm((p) => ({ ...p, city }));
+                                setCityQuery(city);
+                                setCitySelected(true);
+                                setShowCitySuggestions(false);
+                              }}
+                            >
+                              {city}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                  <div>
-                    <input
+                    <FloatingInput
                       name="address"
+                      label={t("checkout.address")}
                       value={form.address}
                       onChange={handleChange}
                       onBlur={() => handleBlur("address")}
-                      placeholder={t("checkout.address")}
-                      className={inputCls("address")}
+                      error={fieldError("address")}
                     />
-                    {fieldError("address") && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
-                  </div>
-                  <div>
-                    <input
+                    <FloatingInput
                       name="apartment"
+                      label={t("checkout.apartment")}
                       value={form.apartment}
                       onChange={handleChange}
-                      placeholder={t("checkout.apartment")}
-                      className={`${baseInputClass} ${focusRing} ${normalBorder}`}
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Shipping Method */}
-              <div>
-                <h2 className="text-lg font-bold mb-4">{t("checkout.shippingMethod")}</h2>
-                <div className="rounded-lg border border-border bg-white p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{t("checkout.freeDelivery")}</p>
-                    <p className="text-xs text-muted-foreground">{t("checkout.deliveryTime")}</p>
+                {/* Shipping Method */}
+                <div>
+                  <h2 className="text-lg font-bold mb-4">{t("checkout.shippingMethod")}</h2>
+                  <div className="rounded-lg border border-border bg-white p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{t("checkout.freeDelivery")}</p>
+                      <p className="text-xs text-muted-foreground">{t("checkout.deliveryTime")}</p>
+                    </div>
+                    <span className="text-sm font-semibold">{t("cart.complimentary")}</span>
                   </div>
-                  <span className="text-sm font-semibold">{t("cart.complimentary")}</span>
                 </div>
-              </div>
 
-              {/* Payment Method */}
-              <div>
-                <h2 className="text-lg font-bold mb-4">{t("checkout.paymentMethod")}</h2>
-                <div className="rounded-lg border border-border bg-white p-4">
-                  <p className="text-sm font-semibold mb-2">{t("checkout.bankTransfer")}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{t("checkout.bankTransferNote")}</p>
+                {/* Payment Method */}
+                <div>
+                  <h2 className="text-lg font-bold mb-4">{t("checkout.paymentMethod")}</h2>
+                  <div className="rounded-lg border border-border bg-white p-4">
+                    <p className="text-sm font-semibold mb-2">{t("checkout.bankTransfer")}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t("checkout.bankTransferNote")}</p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Place Order */}
-              <button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <LockIcon />
-                    {t("checkout.placeOrder")}
-                  </>
-                )}
-              </button>
+                {/* Place Order */}
+                <button
+                  type="submit"
+                  disabled={!isValid || isSubmitting}
+                  className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <LockIcon />
+                      {t("checkout.placeOrder")}
+                    </>
+                  )}
+                </button>
 
-              {/* Bottom links */}
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-4">
-                <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                  {t("checkout.refundPolicy")}
-                </Link>
-                <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                  {t("checkout.shippingPolicy")}
-                </Link>
-                <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                  {t("checkout.privacyPolicy")}
-                </Link>
-                <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                  {t("checkout.termsOfService")}
-                </Link>
-                <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                  {t("nav.contact")}
-                </Link>
-              </div>
-            </form>
+                {/* Bottom links */}
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-8">
+                  <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                    {t("checkout.refundPolicy")}
+                  </Link>
+                  <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                    {t("checkout.shippingPolicy")}
+                  </Link>
+                  <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                    {t("checkout.privacyPolicy")}
+                  </Link>
+                  <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                    {t("checkout.termsOfService")}
+                  </Link>
+                  <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                    {t("nav.contact")}
+                  </Link>
+                </div>
+              </form>
+            </div>
           </div>
 
           {/* Vertical divider */}
-          <div className="hidden md:block bg-border" />
+          <div className="hidden md:block" style={{ backgroundColor: "#e5e5e5" }} />
 
-          {/* RIGHT: Order Summary (desktop only) */}
-          <div className="hidden md:block">
-            <div className="sticky top-20 bg-white p-8" style={{ maxHeight: "calc(100vh - 6rem)", overflowY: "auto" }}>
+          {/* RIGHT: Order Summary (desktop) — full-width white bg */}
+          <div className="hidden md:block bg-white">
+            <div className="sticky top-20 p-8 max-w-[600px]" style={{ maxHeight: "calc(100vh - 5rem)", overflowY: "auto" }}>
               <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
               <OrderSummaryContent showDiscount />
             </div>
