@@ -8,12 +8,11 @@ import {
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
-  { label: "Users", icon: Users, path: "/admin/users" },
-  { label: "Products", icon: Package, path: "/admin/products" },
   { label: "Categories", icon: Grid3X3, path: "/admin/categories" },
+  { label: "Products", icon: Package, path: "/admin/products" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/orders" },
-  { label: "Pages", icon: FileText, path: "/admin/pages" },
-  { label: "Media", icon: Image, path: "/admin/media" },
+  { label: "Hero Slides", icon: Image, path: "/admin/hero-slides" },
+  { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
