@@ -229,7 +229,6 @@ export const SiteHeader = () => {
             </Link>
 
             <div className="flex items-center gap-0.5">
-              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidPage || isScrolled} />
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"

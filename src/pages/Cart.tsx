@@ -173,7 +173,7 @@ const Cart = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                    <span className="font-medium">{shipping === 0 ? t("cart.complimentary") : `${t("common.currency")}${shipping}`}</span>
+                    <span className="font-medium">{t("cart.complimentary")}</span>
                   </div>
                 </div>
 
