@@ -199,7 +199,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailRequired: 'דוא"ל חובה',
       invalidEmail: 'כתובת דוא"ל לא תקינה',
       phoneRequired: 'מספר טלפון חובה',
-      invalidPhone: 'מספר טלפון ישראלי לא תקין (לדוגמה: 0525143581)',
+      invalidPhone: 'מספר טלפון ישראלי לא תקין (לדוגמה: 050-1234567)',
       addressRequired: 'כתובת חובה',
       showSummary: 'סיכום הזמנה',
       emptyTitle: 'אין פריטים',
