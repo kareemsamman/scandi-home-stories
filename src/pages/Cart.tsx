@@ -53,17 +53,7 @@ const Cart = () => {
       <section className="py-4 md:py-12 mt-14 md:mt-20">
         <div className="section-container">
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("cart.title")}</h1>
-
-          {/* Free shipping banner */}
-          {freeShipping && (
-            <div className="mb-6 py-2.5 px-4 rounded-lg bg-accent/10 border border-accent/20 text-sm text-foreground">
-              ✓ {t("cart.freeShippingEligible")}
-            </div>
-          )}
-          {!freeShipping && (
-            <p className="text-sm text-muted-foreground mb-6">{t("cart.freeShippingNote")}</p>
-          )}
+          <h1 className="text-2xl md:text-3xl font-bold mb-6">{t("cart.title")}</h1>
 
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
             {/* ── LEFT: Cart items ── */}
