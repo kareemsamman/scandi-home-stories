@@ -1,4 +1,7 @@
 import type { Locale } from "@/i18n/translations";
+import profileGateTubeImg from "@/assets/profile-gate-tube.png";
+import profileBeakImg from "@/assets/profile-beak.png";
+import profileHitechImg from "@/assets/profile-hitech.png";
 
 export interface LocaleString {
   he: string;
