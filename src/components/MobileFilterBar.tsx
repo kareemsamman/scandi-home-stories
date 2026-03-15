@@ -204,7 +204,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                           {t("shop.filters.color")}
                         </label>
                         <div className="flex gap-3 flex-wrap">
-                          {allColors.map((color) => (
+                          {availableColors.map((color) => (
                             <button
                               key={color.id}
                               onClick={() => {
