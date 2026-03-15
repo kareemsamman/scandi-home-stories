@@ -23,10 +23,8 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const [quantity, setQuantity] = useState(1);
   const [showCustomColors, setShowCustomColors] = useState(false);
 
-  if (!product) return null;
-
-  const isRetail = product.type === "retail";
-  const isContractor = product.type === "contractor";
+  const isRetail = product?.type === "retail";
+  const isContractor = product?.type === "contractor";
   const retail = isRetail ? (product as RetailProduct) : null;
   const contractor = isContractor ? (product as ContractorProduct) : null;
 
@@ -36,6 +34,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
 
   // Calculate price based on selected size
   const currentPrice = useMemo(() => {
+    if (!product) return 0;
     if (contractor && selectedSize) {
       const sizeOption = contractor.sizes.find(s => s.label === selectedSize);
       if (sizeOption?.price) return sizeOption.price;
@@ -44,7 +43,9 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       return contractor.sizes[0].price;
     }
     return product.price;
-  }, [contractor, selectedSize, product.price]);
+  }, [contractor, selectedSize, product]);
+
+  if (!product) return null;
 
   const handleAdd = () => {
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
