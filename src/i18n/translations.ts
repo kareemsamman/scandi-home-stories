@@ -472,6 +472,7 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     search: {
       placeholder: 'بحث...',
+      clear: 'مسح',
       featuredCollections: 'مجموعات مميزة',
       noResults: 'لم يتم العثور على نتائج.',
       tabs: {

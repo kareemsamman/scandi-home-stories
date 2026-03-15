@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLocale } from "@/i18n/useLocale";
 import { products, collections, getLocaleName, getLocaleText } from "@/data/products";
@@ -26,21 +26,64 @@ const SearchIcon = () => (
 
 type TabKey = "products" | "suggestions" | "collections" | "blog";
 
+// Skeleton shimmer for loading state
+function SkeletonRow() {
+  return (
+    <div className="flex items-center gap-4 animate-pulse">
+      <div className="bg-foreground/10 rounded" style={{ width: 64, height: 64, borderRadius: 4 }} />
+      <div className="flex-1 flex flex-col gap-2">
+        <div className="bg-foreground/10 rounded" style={{ height: 10, width: "40%" }} />
+        <div className="bg-foreground/10 rounded" style={{ height: 12, width: "70%" }} />
+        <div className="bg-foreground/10 rounded" style={{ height: 10, width: "30%" }} />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonTabs() {
+  return (
+    <div className="flex items-center border-b border-foreground/10" style={{ gap: 24, marginTop: 16, paddingBottom: 12 }}>
+      {[80, 60, 70, 50].map((w, i) => (
+        <div key={i} className="bg-foreground/10 rounded animate-pulse" style={{ height: 14, width: w }} />
+      ))}
+    </div>
+  );
+}
+
+function SkeletonResults() {
+  return (
+    <>
+      <SkeletonTabs />
+      <div className="flex flex-col" style={{ gap: 16, marginTop: 16 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <SkeletonRow key={i} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const { t, locale, localePath } = useLocale();
   const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [mounted, setMounted] = useState(false);
   const [animState, setAnimState] = useState<"closed" | "opening" | "open" | "closing">("closed");
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const loadingRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Animation lifecycle
   useEffect(() => {
     if (open) {
       setMounted(true);
       setQuery("");
+      setDebouncedQuery("");
+      setIsLoading(false);
       setActiveTab("products");
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setAnimState("opening"));
@@ -59,37 +102,64 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, [open]);
 
-  // Search logic
+  // Debounce: wait 600ms after typing stops, then show loading, then results
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (loadingRef.current) clearTimeout(loadingRef.current);
+
+    if (!query.trim()) {
+      setDebouncedQuery("");
+      setIsLoading(false);
+      return;
+    }
+
+    // Start debounce
+    debounceRef.current = setTimeout(() => {
+      // Show loading skeleton
+      setIsLoading(true);
+      // After 2s, show actual results
+      loadingRef.current = setTimeout(() => {
+        setDebouncedQuery(query);
+        setIsLoading(false);
+      }, 2000);
+    }, 600);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (loadingRef.current) clearTimeout(loadingRef.current);
+    };
+  }, [query]);
+
+  // Search logic — uses debouncedQuery
   const filteredProducts = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
+    if (!debouncedQuery.trim()) return [];
+    const q = debouncedQuery.toLowerCase();
     return products.filter(p =>
       p.name.toLowerCase().includes(q) ||
       getLocaleText(p.description, locale).toLowerCase().includes(q)
     );
-  }, [query, locale]);
+  }, [debouncedQuery, locale]);
 
   const filteredCollections = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
+    if (!debouncedQuery.trim()) return [];
+    const q = debouncedQuery.toLowerCase();
     return collections.filter(c =>
       getLocaleName(c, locale).toLowerCase().includes(q) ||
       getLocaleText(c.description, locale).toLowerCase().includes(q)
     );
-  }, [query, locale]);
+  }, [debouncedQuery, locale]);
 
   const hasResults = filteredProducts.length > 0 || filteredCollections.length > 0;
   const hasQuery = query.trim().length > 0;
+  const hasSearched = debouncedQuery.trim().length > 0;
 
-  // Featured collections for initial state
   const featuredCollections = collections.slice(0, 4);
 
-  // Tabs config
-  const tabs: { key: TabKey; label: string; count: number }[] = [
-    { key: "products", label: t("search.tabs.products"), count: filteredProducts.length },
-    { key: "suggestions", label: t("search.tabs.suggestions"), count: 0 },
-    { key: "collections", label: t("search.tabs.collections"), count: filteredCollections.length },
-    { key: "blog", label: t("search.tabs.blog"), count: 0 },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "products", label: t("search.tabs.products") },
+    { key: "suggestions", label: t("search.tabs.suggestions") },
+    { key: "collections", label: t("search.tabs.collections") },
+    { key: "blog", label: t("search.tabs.blog") },
   ];
 
   if (!mounted) return null;
@@ -97,12 +167,12 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const isVisible = animState === "opening" || animState === "open";
   const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-  // Mobile: centered modal, Desktop: right-side panel
+  // Shared content
   const renderContent = () => (
     <>
-      {/* Search input */}
-      <div className="flex items-center gap-3 pb-4">
-        <span className="text-foreground/40">
+      {/* Search input: icon LEFT, input CENTER, clear RIGHT */}
+      <div className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
+        <span className="text-foreground/40 shrink-0" style={{ marginInlineEnd: 12 }}>
           <SearchIcon />
         </span>
         <input
@@ -111,23 +181,22 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("search.placeholder")}
-          className="flex-1 bg-transparent text-base font-medium text-foreground outline-none placeholder:text-foreground/40"
-          style={{ fontSize: 16 }}
+          className="flex-1 bg-transparent text-foreground outline-none placeholder:text-foreground/40"
+          style={{ fontSize: 16, fontWeight: 500 }}
         />
         {query && (
           <button
-            onClick={() => setQuery("")}
-            className="text-foreground/40 hover:text-foreground transition-colors"
+            onClick={() => { setQuery(""); setDebouncedQuery(""); setIsLoading(false); }}
+            className="text-foreground/50 hover:text-foreground transition-colors shrink-0"
+            style={{ fontSize: 14, fontWeight: 500, marginInlineStart: 12 }}
           >
-            <CloseIcon />
+            {t("search.clear")}
           </button>
         )}
       </div>
 
-      <div className="border-b border-foreground/10" />
-
       {/* STATE 1: Initial — Featured Collections */}
-      {!hasQuery && (
+      {!hasQuery && !isLoading && (
         <div style={{ marginTop: 16 }}>
           <h3 className="text-foreground" style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
             {t("search.featuredCollections")}
@@ -148,8 +217,13 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         </div>
       )}
 
-      {/* STATE 2/3: Has query — show tabs and results */}
-      {hasQuery && (
+      {/* STATE: Loading skeleton */}
+      {hasQuery && isLoading && (
+        <SkeletonResults />
+      )}
+
+      {/* STATE: Results with tabs */}
+      {hasQuery && !isLoading && hasSearched && (
         <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
           {/* Tabs */}
           <div className="flex items-center border-b border-foreground/10" style={{ gap: 24, marginTop: 16, paddingBottom: 0 }}>
@@ -158,7 +232,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "pb-3 transition-colors relative",
+                  "pb-3 transition-colors relative whitespace-nowrap",
                   activeTab === tab.key
                     ? "text-foreground"
                     : "text-foreground/40 hover:text-foreground/60"
@@ -167,7 +241,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
               >
                 {tab.label}
                 {activeTab === tab.key && (
-                  <span className="absolute bottom-0 inset-x-0 h-0.5 bg-foreground" />
+                  <span className="absolute bottom-0 inset-x-0 bg-foreground" style={{ height: 2 }} />
                 )}
               </button>
             ))}
@@ -175,55 +249,47 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
           {/* Results area */}
           <div className="flex-1 overflow-y-auto" style={{ marginTop: 16 }}>
-            {/* Products tab */}
             {activeTab === "products" && (
-              <>
-                {filteredProducts.length > 0 ? (
-                  <div className="flex flex-col" style={{ gap: 16 }}>
-                    {filteredProducts.map((product) => (
-                      <ProductResultItem
-                        key={product.id}
-                        product={product}
-                        locale={locale}
-                        localePath={localePath}
-                        onClose={onClose}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState message={t("search.noResults")} />
-                )}
-              </>
+              filteredProducts.length > 0 ? (
+                <div className="flex flex-col" style={{ gap: 16 }}>
+                  {filteredProducts.map((product) => (
+                    <ProductResultItem
+                      key={product.id}
+                      product={product}
+                      locale={locale}
+                      localePath={localePath}
+                      onClose={onClose}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState message={t("search.noResults")} />
+              )
             )}
 
-            {/* Suggestions tab */}
             {activeTab === "suggestions" && (
               <EmptyState message={t("search.noResults")} />
             )}
 
-            {/* Collections tab */}
             {activeTab === "collections" && (
-              <>
-                {filteredCollections.length > 0 ? (
-                  <div className="flex flex-col" style={{ gap: 16 }}>
-                    {filteredCollections.map((col) => (
-                      <CollectionResultItem
-                        key={col.id}
-                        collection={col}
-                        locale={locale}
-                        localePath={localePath}
-                        onClose={onClose}
-                        productCount={products.filter(p => p.collection === col.id).length}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState message={t("search.noResults")} />
-                )}
-              </>
+              filteredCollections.length > 0 ? (
+                <div className="flex flex-col" style={{ gap: 16 }}>
+                  {filteredCollections.map((col) => (
+                    <CollectionResultItem
+                      key={col.id}
+                      collection={col}
+                      locale={locale}
+                      localePath={localePath}
+                      onClose={onClose}
+                      productCount={products.filter(p => p.collection === col.id).length}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState message={t("search.noResults")} />
+              )
             )}
 
-            {/* Blog tab */}
             {activeTab === "blog" && (
               <EmptyState message={t("search.noResults")} />
             )}
@@ -231,22 +297,19 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         </div>
       )}
 
-      {/* STATE 4: No results */}
-      {hasQuery && !hasResults && activeTab === "products" && null /* handled inside tab */}
+      {/* Typing but debounce hasn't fired yet — show nothing extra */}
     </>
   );
 
-  // MOBILE: centered modal
+  // ── MOBILE: top-aligned modal ──
   if (isMobile) {
     const modalStyle: React.CSSProperties = prefersReducedMotion
-      ? { width: "98%", maxWidth: 480 }
+      ? { width: "98%" }
       : {
-          maxWidth: 480,
-          width: isVisible ? "98%" : "0%",
+          width: isVisible ? "98%" : "90%",
           opacity: isVisible ? 1 : 0,
-          transformOrigin: "right",
-          transition: "width 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease",
-          overflow: "hidden",
+          transform: isVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-20px)",
+          transition: "width 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease, transform 340ms cubic-bezier(.22,.61,.36,1)",
         };
 
     const contentStyle: React.CSSProperties = prefersReducedMotion
@@ -260,37 +323,38 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       <>
         <div
           className="fixed inset-0 bg-black/40 z-50"
-          style={{ opacity: isVisible ? 1 : 0, transition: "opacity 0ms" }}
+          style={{ opacity: isVisible ? 1 : 0, transition: "opacity 200ms ease" }}
           onClick={onClose}
         />
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div
-            className="pointer-events-auto relative bg-background rounded-sm shadow-xl flex flex-col"
-            style={{
-              ...modalStyle,
-              maxHeight: "98vh",
-              borderRadius: 2,
-            }}
+        <div
+          className="fixed z-50 bg-background shadow-xl flex flex-col pointer-events-auto"
+          style={{
+            ...modalStyle,
+            top: 10,
+            left: "50%",
+            transform: prefersReducedMotion ? "translateX(-50%)" : modalStyle.transform,
+            maxHeight: "98vh",
+            borderRadius: 2,
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 end-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
+            aria-label="Close"
           >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 start-4 w-8 h-8 border border-[hsl(0_0%_94%)] rounded-full grid place-items-center text-foreground z-10"
-              aria-label="Close"
-            >
-              <CloseIcon />
-            </button>
+            <CloseIcon />
+          </button>
 
-            <div className="flex-1 overflow-y-auto px-6 pt-14 pb-6 flex flex-col" style={contentStyle}>
-              {renderContent()}
-            </div>
+          <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48, ...contentStyle }}>
+            {renderContent()}
           </div>
         </div>
       </>
     );
   }
 
-  // DESKTOP: right-side panel
+  // ── DESKTOP: right-side panel ──
   const panelStyle: React.CSSProperties = prefersReducedMotion
     ? { width: 420 }
     : {
@@ -314,13 +378,13 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 start-4 w-8 h-8 border border-[hsl(0_0%_94%)] rounded-full grid place-items-center text-foreground z-10"
+          className="absolute top-4 start-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
           aria-label="Close"
         >
           <CloseIcon />
         </button>
 
-        <div className="flex-1 overflow-y-auto px-6 pt-14 pb-6 flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48 }}>
           {renderContent()}
         </div>
       </div>
@@ -330,18 +394,14 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
 // Product result item
 function ProductResultItem({
-  product,
-  locale,
-  localePath,
-  onClose,
+  product, locale, localePath, onClose,
 }: {
   product: Product;
   locale: "he" | "ar";
   localePath: (path: string) => string;
   onClose: () => void;
 }) {
-  const currency = locale === "he" ? "₪" : "₪";
-
+  const currency = "₪";
   return (
     <Link
       to={localePath(`/products/${product.slug}`)}
@@ -351,7 +411,7 @@ function ProductResultItem({
       <img
         src={product.images[0]}
         alt={product.name}
-        className="object-cover rounded"
+        className="object-cover rounded shrink-0"
         style={{ width: 64, height: 64, borderRadius: 4 }}
       />
       <div className="flex flex-col">
@@ -369,11 +429,7 @@ function ProductResultItem({
 
 // Collection result item
 function CollectionResultItem({
-  collection,
-  locale,
-  localePath,
-  onClose,
-  productCount,
+  collection, locale, localePath, onClose, productCount,
 }: {
   collection: Collection;
   locale: "he" | "ar";
@@ -390,7 +446,7 @@ function CollectionResultItem({
       <img
         src={collection.image}
         alt={getLocaleName(collection, locale)}
-        className="object-cover rounded"
+        className="object-cover rounded shrink-0"
         style={{ width: 64, height: 64, borderRadius: 4 }}
       />
       <div className="flex flex-col">
