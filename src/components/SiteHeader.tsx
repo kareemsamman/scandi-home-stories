@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useCart } from "@/hooks/useCart";
@@ -47,27 +47,66 @@ const MenuIcon = () => (
 export const SiteHeader = () => {
   const { t, localePath } = useLocale();
   const itemCount = useCart((s) => s.getItemCount());
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Scroll states
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
+  const handleScroll = useCallback(() => {
+    const currentY = window.scrollY;
+    const prevY = lastScrollY.current;
+    const scrollingDown = currentY > prevY;
+    const atTop = currentY <= 10;
+    const pastAnnouncement = currentY > 50;
+
+    setIsAtTop(atTop);
+
+    if (atTop) {
+      // At top: transparent, show announcement bar
+      setIsScrolled(false);
+      setIsHidden(false);
+    } else if (pastAnnouncement) {
+      // Past announcement bar
+      setIsScrolled(true);
+
+      if (scrollingDown && currentY > 200) {
+        // Scrolling down past threshold: hide header
+        setIsHidden(true);
+      } else if (!scrollingDown) {
+        // Scrolling up: show header
+        setIsHidden(false);
+      }
+    }
+
+    // Toggle announcement bar
+    const bar = document.querySelector(".announcement-bar");
+    if (bar) {
+      if (pastAnnouncement) {
+        bar.classList.add("is-hidden");
+      } else {
+        bar.classList.remove("is-hidden");
+      }
+    }
+
+    lastScrollY.current = currentY;
+    ticking.current = false;
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
-      const isScrolled = window.scrollY > 60;
-      setScrolled(isScrolled);
-
-      // Toggle announcement bar hidden class
-      const bar = document.querySelector(".announcement-bar");
-      if (bar) {
-        if (isScrolled) {
-          bar.classList.add("is-hidden");
-        } else {
-          bar.classList.remove("is-hidden");
-        }
+      if (!ticking.current) {
+        ticking.current = true;
+        requestAnimationFrame(handleScroll);
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [handleScroll]);
 
   const navLinks = [
     { label: t("nav.shop"), href: localePath("/shop") },
@@ -76,21 +115,22 @@ export const SiteHeader = () => {
   ];
 
   // Color classes based on scroll state
-  const textColor = scrolled ? "text-foreground" : "text-white";
-  const textHover = scrolled ? "hover:text-foreground/70" : "hover:text-white/80";
-  const mobileTextColor = "text-white/80 hover:text-white";
+  const textColor = isScrolled ? "text-foreground" : "text-white";
+  const textHover = isScrolled ? "hover:text-foreground/70" : "hover:text-white/80";
 
   return (
     <>
       <header
         className={cn(
-          "site-header sticky z-40 transition-all duration-[240ms] ease-in-out",
-          scrolled ? "top-0 is-scrolled" : "top-[40px]"
+          "site-header sticky z-40",
+          isAtTop && "is-at-top top-[40px]",
+          isScrolled && !isAtTop && "is-scrolled top-0",
+          isHidden && "is-hidden"
         )}
       >
         <div className="px-6 md:px-10">
           {/* Desktop */}
-          <div className="hidden md:grid grid-cols-3 items-center h-20 pt-4">
+          <div className="hidden md:grid grid-cols-3 items-center" style={{ paddingTop: '14px', paddingBottom: '20px' }}>
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
                 <img
@@ -98,7 +138,7 @@ export const SiteHeader = () => {
                   alt="AMG Pergola"
                   className={cn(
                     "h-16 w-auto transition-all duration-[240ms]",
-                    scrolled && "invert"
+                    isScrolled && "invert"
                   )}
                 />
               </Link>
@@ -127,7 +167,7 @@ export const SiteHeader = () => {
               >
                 <SearchIcon />
               </button>
-              <LocaleSwitcher icon={<LanguageIcon />} scrolled={scrolled} />
+              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isScrolled} />
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
@@ -148,7 +188,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        scrolled ? "bg-foreground text-background" : "bg-white text-dark"
+                        isScrolled ? "bg-foreground text-background" : "bg-white text-dark"
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
@@ -162,23 +202,44 @@ export const SiteHeader = () => {
           {/* Mobile */}
           <div className="flex md:hidden items-center justify-between h-14">
             <div className="flex items-center gap-0.5">
-              <button className={mobileTextColor + " p-2 transition-colors"} onClick={() => setMobileOpen(true)} aria-label="Menu">
+              <button
+                className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
+                onClick={() => setMobileOpen(true)}
+                aria-label="Menu"
+              >
                 <MenuIcon />
               </button>
-              <button className={mobileTextColor + " p-2 transition-colors"} aria-label="Search">
+              <button
+                className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
+                aria-label="Search"
+              >
                 <SearchIcon />
               </button>
             </div>
 
             <Link to={localePath("/")} className="absolute start-1/2 -translate-x-1/2 rtl:translate-x-1/2">
-              <img src={logoWhite} alt="AMG Pergola" className="h-9 w-auto" />
+              <img
+                src={logoWhite}
+                alt="AMG Pergola"
+                className={cn(
+                  "h-9 w-auto transition-all duration-[240ms]",
+                  isScrolled && "invert"
+                )}
+              />
             </Link>
 
             <div className="flex items-center gap-0.5">
-              <button className={mobileTextColor + " p-2 transition-colors"} aria-label="Account">
+              <button
+                className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
+                aria-label="Account"
+              >
                 <AccountIcon />
               </button>
-              <Link to={localePath("/cart")} className={"relative " + mobileTextColor + " p-2 transition-colors"} aria-label="Cart">
+              <Link
+                to={localePath("/cart")}
+                className={cn("relative p-2 transition-colors duration-[240ms]", textColor, textHover)}
+                aria-label="Cart"
+              >
                 <CartSvgIcon />
                 <AnimatePresence>
                   {itemCount > 0 && (
@@ -186,7 +247,10 @@ export const SiteHeader = () => {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-0.5 -end-0.5 w-4 h-4 bg-white text-dark text-[10px] font-bold rounded-full flex items-center justify-center"
+                      className={cn(
+                        "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
+                        isScrolled ? "bg-foreground text-background" : "bg-white text-dark"
+                      )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
                     </motion.span>

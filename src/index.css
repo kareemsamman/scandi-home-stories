@@ -174,7 +174,17 @@
     background: transparent;
     -webkit-backdrop-filter: blur(0px);
     backdrop-filter: blur(0px);
-    transition: background 240ms ease, backdrop-filter 240ms ease, -webkit-backdrop-filter 240ms ease, top 240ms ease;
+    transition:
+      background 240ms ease,
+      backdrop-filter 240ms ease,
+      -webkit-backdrop-filter 240ms ease,
+      top 240ms ease,
+      transform 240ms ease,
+      opacity 240ms ease;
+  }
+
+  .site-header.is-at-top {
+    background: transparent;
   }
 
   .site-header.is-scrolled {
@@ -182,6 +192,12 @@
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     box-shadow: 0 1px 0 hsl(var(--border));
+  }
+
+  .site-header.is-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
   }
 }
 
