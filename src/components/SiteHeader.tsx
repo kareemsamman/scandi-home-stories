@@ -256,6 +256,7 @@ export const SiteHeader = () => {
       </header>
 
       <MobileNavDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 };
