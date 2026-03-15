@@ -1,0 +1,28 @@
+import { useState, useEffect } from "react";
+import { useLocale } from "@/i18n/useLocale";
+
+export const AnnouncementBar = () => {
+  const { t } = useLocale();
+  const messages: string[] = t("announcement.messages");
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!Array.isArray(messages) || messages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % messages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [messages]);
+
+  if (!Array.isArray(messages)) return null;
+
+  return (
+    <div className="bg-primary text-primary-foreground">
+      <div className="section-container flex items-center justify-center h-10">
+        <p className="text-xs font-medium text-center transition-opacity duration-300">
+          {messages[current]}
+        </p>
+      </div>
+    </div>
+  );
+};
