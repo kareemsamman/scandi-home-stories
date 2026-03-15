@@ -529,6 +529,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emptyTitle: 'لا توجد عناصر',
       emptyText: 'السلة فارغة.',
       city: 'المدينة',
+      selectCity: 'يجب اختيار مدينة من القائمة',
       discountPlaceholder: 'رمز الخصم أو بطاقة هدية',
       applyDiscount: 'تطبيق',
       invalidDiscount: 'أدخل رمز خصم أو بطاقة هدية صالحة',
