@@ -564,6 +564,13 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
         colorGroups={customColorGroups}
         selectedColorId={selectedColor?.id}
       />
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <ImageLightbox images={product.images} startIndex={currentImg} onClose={() => setLightboxOpen(false)} />
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };
