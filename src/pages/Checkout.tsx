@@ -523,20 +523,20 @@ const Checkout = () => {
 
                       {showCitySuggestions && citySuggestions.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {citySuggestions.map((city) => (
+                          {citySuggestions.map((result, idx) => (
                             <button
-                              key={city}
+                              key={`${result.display}-${idx}`}
                               type="button"
                               className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
                               onMouseDown={(e) => {
                                 e.preventDefault();
-                                setForm((p) => ({ ...p, city }));
-                                setCityQuery(city);
+                                setForm((p) => ({ ...p, city: result.city }));
+                                setCityQuery(result.display);
                                 setCitySelected(true);
                                 setShowCitySuggestions(false);
                               }}
                             >
-                              {city}
+                              {result.display}
                             </button>
                           ))}
                         </div>
