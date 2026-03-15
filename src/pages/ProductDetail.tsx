@@ -469,7 +469,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
 
               {/* Length selection */}
               {product.sizes.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-5">
                   <p className="text-sm font-medium text-foreground mb-2.5">{t("contractor.size")}:</p>
                   <div className="flex gap-2 flex-wrap">
                     {product.sizes.map((size) => {
