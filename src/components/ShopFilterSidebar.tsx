@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 import { collections, profileSubCategories, products, ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
