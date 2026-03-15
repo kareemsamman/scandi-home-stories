@@ -26,7 +26,13 @@ const Login = () => {
     const { error } = await signIn({ email: identifier.trim(), password });
     setLoading(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      const hebrewErrors: Record<string, string> = {
+        "Invalid login credentials": "שם משתמש או סיסמה שגויים",
+        "Email not confirmed": "כתובת האימייל לא אומתה",
+        "Too many requests": "יותר מדי ניסיונות, נסו שוב מאוחר יותר",
+      };
+      const msg = hebrewErrors[error.message] || "שגיאה בהתחברות, נסו שוב";
+      toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } else {
       toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
       navigate(localePath("/account"));
