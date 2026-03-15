@@ -10,6 +10,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Products", icon: Package, path: "/admin/products" },
+  { label: "Categories", icon: Grid3X3, path: "/admin/categories" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/orders" },
   { label: "Pages", icon: FileText, path: "/admin/pages" },
   { label: "Media", icon: Image, path: "/admin/media" },

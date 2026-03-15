@@ -32,6 +32,7 @@ const LocaleRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/shop" element={<Products />} />
+      <Route path="/catalog" element={<Catalog />} />
       <Route path="/product/:slug" element={<ProductDetail />} />
       <Route path="/about" element={<About />} />
       <Route path="/cart" element={<Cart />} />
