@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Ruler } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Product, RetailProduct, ContractorProduct, getLocaleText } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
@@ -22,17 +22,17 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showCustomColors, setShowCustomColors] = useState(false);
+  const [customColorTab, setCustomColorTab] = useState(0);
+  const [addedConfirm, setAddedConfirm] = useState(false);
 
   const isRetail = product?.type === "retail";
   const isContractor = product?.type === "contractor";
-  const retail = isRetail ? (product as RetailProduct) : null;
   const contractor = isContractor ? (product as ContractorProduct) : null;
 
-  const standardColors = retail?.colors || contractor?.colorGroups?.[0]?.colors || [];
+  const standardColors = (isRetail ? (product as RetailProduct)?.colors : contractor?.colorGroups?.[0]?.colors) || [];
   const customColorGroups = contractor?.colorGroups?.slice(1) || [];
   const hasCustomColors = customColorGroups.length > 0 && customColorGroups.some(g => g.colors.length > 0);
 
-  // Calculate price based on selected size
   const currentPrice = useMemo(() => {
     if (!product) return 0;
     if (contractor && selectedSize) {
@@ -45,19 +45,58 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     return product.price;
   }, [contractor, selectedSize, product]);
 
+  // Custom color tab definitions
+  const colorTabKeys = ['ral', 'passivation', 'noColorMF', 'woodLook', 'iron', 'metal'] as const;
+  const colorTabLabels = colorTabKeys.map(key => t(`contractor.colorTabs.${key}`));
+
+  // Map custom color groups to tabs (fill remaining tabs with empty arrays)
+  const getTabColors = useCallback((tabIndex: number) => {
+    if (tabIndex < customColorGroups.length) return customColorGroups[tabIndex].colors;
+    return [];
+  }, [customColorGroups]);
+
   if (!product) return null;
 
   const handleAdd = () => {
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
-    addItem(product, quantity, {
-      color: colorOption,
-      size: selectedSize || undefined,
-    });
-    onClose();
-    setSelectedColor(null);
-    setSelectedSize(null);
-    setQuantity(1);
-    setShowCustomColors(false);
+
+    // For contractor products, add without opening mini cart
+    if (isContractor) {
+      const cart = useCart.getState();
+      const key = `${product.id}__${selectedSize || ""}__${colorOption?.id || ""}`;
+      const existing = cart.items.find(
+        (i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === key
+      );
+      const maxQty = 9999;
+      if (existing) {
+        cart.updateQuantity(key, Math.min(existing.quantity + quantity, maxQty));
+      } else {
+        // Directly set items without opening cart
+        useCart.setState((state) => ({
+          items: [...state.items, { product, quantity, options: { color: colorOption, size: selectedSize || undefined } }],
+        }));
+      }
+    } else {
+      addItem(product, quantity, {
+        color: colorOption,
+        size: selectedSize || undefined,
+      });
+    }
+
+    // Show confirmation
+    setAddedConfirm(true);
+    setTimeout(() => {
+      setAddedConfirm(false);
+      if (!isContractor) {
+        onClose();
+        setSelectedColor(null);
+        setSelectedSize(null);
+        setQuantity(1);
+        setShowCustomColors(false);
+      }
+      // For contractor: keep modal open, reset quantity only
+      setQuantity(1);
+    }, 1000);
   };
 
   return (
@@ -137,8 +176,13 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                   {/* Custom color button */}
                   {hasCustomColors && (
                     <button
-                      onClick={() => setShowCustomColors(!showCustomColors)}
-                      className="mt-2.5 text-xs font-medium text-foreground underline underline-offset-2 hover:text-muted-foreground transition-colors"
+                      onClick={() => { setShowCustomColors(!showCustomColors); setCustomColorTab(0); }}
+                      className={cn(
+                        "mt-3 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 transition-all",
+                        showCustomColors
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border text-foreground hover:border-foreground"
+                      )}
                     >
                       {t("contractor.customColor")}
                     </button>
@@ -146,12 +190,27 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                 </div>
               )}
 
-              {/* Custom color groups (RAL / Wood) */}
-              {showCustomColors && customColorGroups.map((group) => (
-                <div key={group.id}>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">{group.name[locale]}</p>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {group.colors.map((color) => {
+              {/* Custom color tabs */}
+              {showCustomColors && (
+                <div>
+                  <div className="flex gap-1.5 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+                    {colorTabLabels.map((label, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCustomColorTab(idx)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border transition-all",
+                          customColorTab === idx
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border text-muted-foreground hover:border-muted-foreground"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap mt-2">
+                    {getTabColors(customColorTab).map((color) => {
                       const isActive = selectedColor?.id === color.id;
                       return (
                         <button
@@ -166,15 +225,18 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                         />
                       );
                     })}
+                    {getTabColors(customColorTab).length === 0 && (
+                      <p className="text-xs text-muted-foreground py-2">—</p>
+                    )}
                   </div>
                 </div>
-              ))}
+              )}
 
-              {/* Size selection */}
+              {/* Length/size selection */}
               {contractor && contractor.sizes.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-foreground mb-2.5">
-                    {t("contractor.size")}: <span className="text-muted-foreground font-normal">{selectedSize || contractor.sizes[0].label}</span>
+                    {t("contractor.size")}:
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {contractor.sizes.map((size) => {
@@ -184,15 +246,15 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                           key={size.id}
                           onClick={() => setSelectedSize(size.label)}
                           className={cn(
-                            "px-4 py-2 rounded-lg border text-sm font-medium transition-all",
+                            "px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center",
                             isActive
                               ? "border-foreground bg-foreground text-background"
                               : "border-border hover:border-muted-foreground"
                           )}
                         >
-                          {size.label}
+                          <span>{size.label}</span>
                           {size.price && (
-                            <span className="text-[10px] opacity-70 ms-1">
+                            <span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>
                               {t("common.currency")}{size.price}
                             </span>
                           )}
@@ -204,26 +266,43 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
               )}
 
               {/* Quantity */}
-              {isContractor && (
-                <div>
-                  <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
-                  <QuantitySelector
-                    quantity={quantity}
-                    onQuantityChange={setQuantity}
-                    max={9999}
-                  />
-                </div>
-              )}
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
+                <QuantitySelector
+                  quantity={quantity}
+                  onQuantityChange={setQuantity}
+                  max={isContractor ? 9999 : 10}
+                />
+              </div>
             </div>
 
-            {/* Add to cart button */}
+            {/* Add to cart button with confirmation state */}
             <div className="p-5 border-t border-border">
-              <button
-                onClick={handleAdd}
-                className="w-full h-12 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-full text-foreground hover:bg-foreground hover:text-background transition-colors"
-              >
-                {t("product.addToBag")}
-              </button>
+              <AnimatePresence mode="wait">
+                {addedConfirm ? (
+                  <motion.div
+                    key="confirmed"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="w-full h-12 flex items-center justify-center gap-2 text-sm font-semibold rounded-full bg-green-600 text-white"
+                  >
+                    <Check className="w-4 h-4" />
+                    {t("contractor.addedToCart")}
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="add"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={handleAdd}
+                    className="w-full h-12 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-full text-foreground hover:bg-foreground hover:text-background transition-colors"
+                  >
+                    {t("product.addToBag")}
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </motion.div>
