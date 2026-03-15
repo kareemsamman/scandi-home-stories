@@ -157,7 +157,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
             {/* Bottom section: TikTok to the right + account */}
             <div className="mt-8">
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-start">
                 <TikTokIcon />
               </div>
               <div className="border-t border-foreground/10 mt-4 pt-4">
