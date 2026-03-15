@@ -1,12 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import { getProductBySlug, getRelatedProducts, collections, getLocaleText, RetailProduct, ContractorProduct, ColorOption } from "@/data/products";
-import { useWishlist } from "@/hooks/useWishlist";
 import { useCart, CartItemOptions } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeColorTab, setActiveColorTab] = useState<string | null>(null);
-  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
   const { toast } = useToast();
   const { t, locale, localePath } = useLocale();
@@ -39,7 +37,6 @@ const ProductDetail = () => {
     );
   }
 
-  const inWishlist = isInWishlist(product.id);
   const relatedProducts = getRelatedProducts(product.id);
   const collection = collections.find((c) => c.id === product.collection);
 
@@ -52,7 +49,6 @@ const ProductDetail = () => {
       options.size = selectedSize;
     }
 
-    // Validation for contractor products
     if (product.type === "contractor") {
       const contractor = product as ContractorProduct;
       if (contractor.sizes.length > 0 && !selectedSize) {
@@ -140,7 +136,6 @@ const ProductDetail = () => {
               {collection && <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong mb-3 block">{collection.name[locale]}</Link>}
               <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.name}</h1>
 
-              {/* SKU + Length for contractor */}
               {isContractor && (
                 <div className="space-y-1 mb-4">
                   <p className="text-sm text-muted-foreground">{t("contractor.sku")}: {(product as ContractorProduct).sku}</p>
@@ -202,7 +197,6 @@ const ProductDetail = () => {
               {isContractor && (product as ContractorProduct).colorGroups.length > 0 && (
                 <div className="mb-6">
                   <span className="text-xs font-semibold text-muted-foreground block mb-2">{t("contractor.color")}</span>
-                  {/* Tabs */}
                   <div className="flex gap-1 mb-3 border-b border-border">
                     {(product as ContractorProduct).colorGroups.map((group) => (
                       <button
@@ -222,7 +216,6 @@ const ProductDetail = () => {
                       </button>
                     ))}
                   </div>
-                  {/* Color grid */}
                   {(product as ContractorProduct).colorGroups
                     .filter((g) => g.id === activeColorTab)
                     .map((group) => (
@@ -291,10 +284,6 @@ const ProductDetail = () => {
                 <Button size="lg" onClick={handleAddToCart} className="rounded-lg w-full py-6 text-sm font-semibold">
                   <ShoppingBag className="w-4 h-4 me-2" />{t("product.addToBag")}
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-lg w-full py-6 text-sm" onClick={() => { inWishlist ? removeFromWishlist(product.id) : addToWishlist(product); }}>
-                  <Heart className={cn("w-4 h-4 me-2", inWishlist && "fill-primary text-primary")} />
-                  {inWishlist ? t("product.savedToWishlist") : t("product.addToWishlist")}
-                </Button>
               </div>
 
               <div className="mt-8 pt-6 border-t border-border grid grid-cols-3 gap-4">
@@ -311,7 +300,7 @@ const ProductDetail = () => {
         <section className="py-14 md:py-20 bg-surface">
           <div className="section-container">
             <h2 className="text-2xl font-bold mb-10">{t("product.relatedProducts")}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {relatedProducts.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
             </div>
           </div>

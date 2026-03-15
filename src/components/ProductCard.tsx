@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Product, RetailProduct, ContractorProduct, collections, getLocaleText } from "@/data/products";
-import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
@@ -13,24 +12,14 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const { addItem, removeItem, isInWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
   const { locale, localePath, t } = useLocale();
-  const inWishlist = isInWishlist(product.id);
   const collection = collections.find((c) => c.id === product.collection);
   const hasSecondImage = product.images.length > 1;
-
-  const handleWishlistToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (inWishlist) removeItem(product.id);
-    else addItem(product);
-  };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Only retail products without required color selection can quick-add
     if (product.type === "retail") {
       const retail = product as RetailProduct;
       const defaultColor = retail.colors.length > 0 ? { id: retail.colors[0].id, name: retail.colors[0].name[locale], hex: retail.colors[0].hex } : undefined;
@@ -110,17 +99,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100"
             />
           )}
-
-          <button
-            onClick={handleWishlistToggle}
-            className={cn(
-              "absolute top-3 end-3 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300",
-              "opacity-0 group-hover:opacity-100",
-              inWishlist && "opacity-100"
-            )}
-          >
-            <Heart className={cn("w-4 h-4", inWishlist ? "fill-primary text-primary" : "text-foreground")} />
-          </button>
 
           <div className="absolute top-3 start-3 flex flex-col gap-1.5">
             {product.new && (
