@@ -176,10 +176,10 @@ export const MiniCart = () => {
             exit={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
             transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
             className={cn(
-              "flex flex-col bg-background overflow-hidden",
+              "flex flex-col bg-background overflow-hidden rounded-[10px]",
               isMobile
-                ? "w-[98%] max-w-[480px] h-[98%] rounded-[2px]"
-                : "fixed top-6 bottom-6 rounded-[2px] shadow-xl"
+                ? "w-[98%] max-w-[480px] max-h-[88vh] rounded-t-2xl"
+                : "fixed top-6 bottom-6 shadow-xl"
             )}
             style={isMobile ? {} : { insetInlineEnd: 24, width: 420 }}
             onClick={(e) => e.stopPropagation()}

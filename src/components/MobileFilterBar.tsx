@@ -60,7 +60,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
   return (
     <>
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background border-t border-border safe-area-bottom">
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background border-t border-border safe-area-bottom">
         <div className="flex">
           <button
             onClick={() => setActivePanel("filter")}

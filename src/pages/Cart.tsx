@@ -250,7 +250,12 @@ const Cart = () => {
                   {t("cart.checkout")}
                 </Link>
 
-                <PaymentIcons />
+                <Link
+                  to={localePath("/shop")}
+                  className="flex items-center justify-center gap-2 w-full h-12 text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+                >
+                  {t("cart.continueShopping")}
+                </Link>
               </div>
             </div>
           </div>
