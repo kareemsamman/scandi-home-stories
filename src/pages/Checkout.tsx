@@ -69,7 +69,7 @@ interface FormErrors {
 }
 
 const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-const validatePhone = (v: string) => /^\d{10}$/.test(v.replace(/\s/g, ""));
+const validatePhone = (v: string) => /^0(5[0-9]|[2-4]|[7-9])\d{7}$/.test(v.replace(/[\s\-]/g, ""));
 
 /* ---------- Floating Label Input ---------- */
 const FloatingInput = ({
