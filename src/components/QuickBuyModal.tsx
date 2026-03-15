@@ -20,6 +20,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const { addItem } = useCart();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string } | null>(null);
+  const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
