@@ -235,6 +235,11 @@ export const translations: Record<Locale, Record<string, any>> = {
       selectSize: 'יש לבחור אורך',
       selectColor: 'יש לבחור צבע',
       customColor: 'בחר צבע מותאם',
+      customColorTitle: 'בחר צבע לשינוי',
+      searchColor: 'חפש לפי שם או קוד RAL...',
+      cancel: 'ביטול',
+      confirmSelection: 'אישור בחירה',
+      meter: 'מטר',
       addedToCart: 'נוסף לסל',
       colorTabs: {
         ral: 'RAL צבע קוד',
