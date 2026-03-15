@@ -57,7 +57,6 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
     { label: t("nav.shop"), href: localePath("/shop") },
     { label: t("nav.about"), href: localePath("/about") },
     { label: t("nav.contact"), href: localePath("/contact") },
-    { label: t("nav.cart"), href: localePath("/cart") },
   ];
 
   useEffect(() => {
@@ -124,7 +123,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 end-4 w-8 h-8 border border-[#f0f0f0] rounded-full grid place-items-center text-foreground z-10"
+            className="absolute top-4 start-4 w-8 h-8 border border-[#f0f0f0] rounded-full grid place-items-center text-foreground z-10"
             aria-label="Close"
           >
             <CloseIcon />
@@ -147,20 +146,6 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
               ))}
             </nav>
 
-            {/* Collections directly */}
-            <div className="mt-4">
-              {collections.map((col) => (
-                <Link
-                  key={col.id}
-                  to={localePath(`/shop?collection=${col.slug}`)}
-                  onClick={onClose}
-                  className="flex items-center justify-between py-2.5 text-sm text-foreground/70 hover:text-foreground border-b border-foreground/10 transition-colors"
-                >
-                  {col.name[locale]}
-                  <ChevronCircle />
-                </Link>
-              ))}
-            </div>
 
             {/* Locale switcher */}
             <div className="mt-6">
@@ -172,7 +157,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
             {/* Bottom section: TikTok to the right + account */}
             <div className="mt-8">
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-start">
                 <TikTokIcon />
               </div>
               <div className="border-t border-foreground/10 mt-4 pt-4">
