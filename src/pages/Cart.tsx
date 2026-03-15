@@ -81,7 +81,7 @@ const Cart = () => {
 
   return (
     <Layout>
-      <section className="py-6 md:py-12 mt-16 md:mt-20">
+      <section className="py-4 md:py-12 mt-14 md:mt-20">
         <div className="section-container">
           {/* Title */}
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("cart.title")}</h1>
