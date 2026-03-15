@@ -14,7 +14,26 @@ export interface Collection {
   heroImage?: string;
 }
 
-export interface Product {
+export interface ColorOption {
+  id: string;
+  name: LocaleString;
+  hex: string;
+}
+
+export interface ColorGroup {
+  id: string;
+  name: LocaleString;
+  colors: ColorOption[];
+}
+
+export interface SizeOption {
+  id: string;
+  label: string;
+  price?: number; // override price for this size
+}
+
+// Base product fields
+interface BaseProduct {
   id: string;
   name: string;
   slug: string;
@@ -23,11 +42,29 @@ export interface Product {
   description: LocaleString;
   longDescription: LocaleString;
   materials: string;
-  dimensions?: string;
   images: string[];
   featured?: boolean;
   new?: boolean;
 }
+
+// TYPE 1: Retail products (Pergolas) — fixed size, color swatches only
+export interface RetailProduct extends BaseProduct {
+  type: "retail";
+  dimensions?: string;
+  colors: ColorOption[];
+}
+
+// TYPE 2: Contractor products (Aluminum profiles) — sizes, color groups (standard + RAL + wood)
+export interface ContractorProduct extends BaseProduct {
+  type: "contractor";
+  sku: string;
+  length: LocaleString;
+  sizes: SizeOption[];
+  colorGroups: ColorGroup[];
+  maxQuantity?: number;
+}
+
+export type Product = RetailProduct | ContractorProduct;
 
 export const collections: Collection[] = [
   {
@@ -70,11 +107,78 @@ export const collections: Collection[] = [
     image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
     heroImage: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1920&q=80",
   },
+  {
+    id: "profiles",
+    name: { he: "פרופילי אלומיניום", ar: "بروفيلات ألمنيوم" },
+    slug: "profiles",
+    description: { he: "פרופילים מקצועיים לקבלנים ומתקינים", ar: "بروفيلات احترافية للمقاولين والفنيين" },
+    image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
+    heroImage: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1920&q=80",
+  },
+];
+
+// Shared color definitions
+const standardColors: ColorOption[] = [
+  { id: "black", name: { he: "שחור", ar: "أسود" }, hex: "#1a1a1a" },
+  { id: "white", name: { he: "לבן", ar: "أبيض" }, hex: "#f5f5f5" },
+  { id: "charcoal", name: { he: "פחם", ar: "فحمي" }, hex: "#444444" },
+  { id: "aluminum", name: { he: "אלומיניום", ar: "ألمنيوم" }, hex: "#c0c0c0" },
+];
+
+const ralColors: ColorOption[] = [
+  { id: "ral7000", name: { he: "RAL 7000", ar: "RAL 7000" }, hex: "#7a8b7a" },
+  { id: "ral7001", name: { he: "RAL 7001", ar: "RAL 7001" }, hex: "#8d948d" },
+  { id: "ral7002", name: { he: "RAL 7002", ar: "RAL 7002" }, hex: "#817f68" },
+  { id: "ral7003", name: { he: "RAL 7003", ar: "RAL 7003" }, hex: "#7a7b6d" },
+  { id: "ral7004", name: { he: "RAL 7004", ar: "RAL 7004" }, hex: "#9b9b9b" },
+  { id: "ral7005", name: { he: "RAL 7005", ar: "RAL 7005" }, hex: "#6c7066" },
+  { id: "ral7006", name: { he: "RAL 7006", ar: "RAL 7006" }, hex: "#756f61" },
+  { id: "ral7008", name: { he: "RAL 7008", ar: "RAL 7008" }, hex: "#6a5d4d" },
+  { id: "ral7009", name: { he: "RAL 7009", ar: "RAL 7009" }, hex: "#5d6058" },
+  { id: "ral7010", name: { he: "RAL 7010", ar: "RAL 7010" }, hex: "#575d57" },
+  { id: "ral7011", name: { he: "RAL 7011", ar: "RAL 7011" }, hex: "#555d61" },
+  { id: "ral7012", name: { he: "RAL 7012", ar: "RAL 7012" }, hex: "#596163" },
+];
+
+const woodFinishColors: ColorOption[] = [
+  { id: "oak", name: { he: "אלון", ar: "بلوط" }, hex: "#b8860b" },
+  { id: "walnut", name: { he: "אגוז", ar: "جوز" }, hex: "#5c4033" },
+  { id: "teak", name: { he: "טיק", ar: "ساج" }, hex: "#c19a6b" },
+  { id: "mahogany", name: { he: "מהגוני", ar: "ماهوغاني" }, hex: "#c04000" },
+  { id: "pine", name: { he: "אורן", ar: "صنوبر" }, hex: "#deb887" },
+  { id: "cherry", name: { he: "דובדבן", ar: "كرز" }, hex: "#9b111e" },
+];
+
+const contractorColorGroups: ColorGroup[] = [
+  {
+    id: "standard",
+    name: { he: "סטנדרט", ar: "قياسي" },
+    colors: standardColors,
+  },
+  {
+    id: "ral",
+    name: { he: "צבעי RAL", ar: "ألوان RAL" },
+    colors: ralColors,
+  },
+  {
+    id: "wood",
+    name: { he: "גימור עץ", ar: "تشطيب خشبي" },
+    colors: woodFinishColors,
+  },
+];
+
+const defaultSizes: SizeOption[] = [
+  { id: "3m", label: "3m" },
+  { id: "4m", label: "4m" },
+  { id: "5m", label: "5m" },
+  { id: "6m", label: "6m" },
 ];
 
 export const products: Product[] = [
+  // ── RETAIL PRODUCTS (Pergolas) ──
   {
     id: "elite-4000",
+    type: "retail",
     name: "AMG Elite 4000",
     slug: "amg-elite-4000",
     collection: "bioclimatic",
@@ -83,6 +187,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-Elite 4000 היא הדגם המוביל שלנו. למלות אלומיניום מתכווננות ב-180 מעלות מאפשרות שליטה מלאה באור, אוורור והגנה מגשם. מערכת ניקוז מובנית, מנוע שקט במיוחד, ואפשרות לשליטה מרחוק ואפליקציה.", ar: "Elite 4000 هو طرازنا الرائد. شرائح ألمنيوم قابلة للتعديل بزاوية 180 درجة للتحكم الكامل في الضوء والتهوية والحماية من المطر." },
     materials: "Powder-coated aluminum 6063-T5",
     dimensions: "600×400 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
@@ -91,6 +196,7 @@ export const products: Product[] = [
   },
   {
     id: "pro-3000",
+    type: "retail",
     name: "AMG Pro 3000",
     slug: "amg-pro-3000",
     collection: "bioclimatic",
@@ -99,6 +205,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-Pro 3000 מציעה את כל היתרונות של מערכת ביוקלימטית בפורמט קומפקטי. מושלמת למרפסות, פטיו וגינות קטנות עד בינוניות.", ar: "Pro 3000 تقدم جميع مزايا النظام البيوكليماتيكي بتصميم مدمج. مثالية للشرفات والحدائق." },
     materials: "Powder-coated aluminum 6063-T5",
     dimensions: "400×300 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
@@ -107,6 +214,7 @@ export const products: Product[] = [
   },
   {
     id: "louvermax-500",
+    type: "retail",
     name: "AMG LouverMax 500",
     slug: "amg-louvermax-500",
     collection: "motorized",
@@ -115,6 +223,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-LouverMax 500 היא מערכת הלמלות המוטוריות המתקדמת ביותר שלנו. חיישני גשם, רוח ושמש מפעילים את המערכת אוטומטית לפי תנאי מזג האוויר.", ar: "LouverMax 500 هو نظام الشرائح الآلية الأكثر تقدماً لدينا. أجهزة استشعار للمطر والرياح والشمس." },
     materials: "Marine-grade aluminum, stainless steel hardware",
     dimensions: "700×500 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
@@ -123,6 +232,7 @@ export const products: Product[] = [
   },
   {
     id: "smartblade-200",
+    type: "retail",
     name: "AMG SmartBlade 200",
     slug: "amg-smartblade-200",
     collection: "motorized",
@@ -131,6 +241,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-SmartBlade 200 משלבת מנועים שקטים עם שליטה חכמה דרך אפליקציה. ניתן לתכנת תרחישי הפעלה אוטומטיים.", ar: "SmartBlade 200 تجمع بين محركات هادئة وتحكم ذكي عبر التطبيق." },
     materials: "Powder-coated aluminum, Somfy motors",
     dimensions: "500×400 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
@@ -139,6 +250,7 @@ export const products: Product[] = [
   },
   {
     id: "classicshade-100",
+    type: "retail",
     name: "AMG ClassicShade",
     slug: "amg-classicshade",
     collection: "fixed",
@@ -147,6 +259,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-ClassicShade מציעה הצללה קבועה ואמינה. מבנה חזק במיוחד עם גג אלומיניום מלא ומערכת ניקוז משולבת.", ar: "ClassicShade تقدم تظليل ثابت وموثوق. هيكل قوي مع سقف ألمنيوم كامل." },
     materials: "Powder-coated aluminum frame and roof panels",
     dimensions: "500×350 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
       "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
@@ -154,14 +267,16 @@ export const products: Product[] = [
   },
   {
     id: "solidtop-500",
+    type: "retail",
     name: "AMG SolidTop 500",
     slug: "amg-solidtop-500",
     collection: "fixed",
     price: 28000,
     description: { he: "גג קבוע מבודד עם פנלים מרופדים", ar: "سقف ثابت معزول مع ألواح مبطنة" },
-    longDescription: { he: "ה-SolidTop 500 מציעה בידוד תרמי מעולה עם פנלים סנדוויץ\' מרופדים. אידיאלית לשימוש כל-שנתי.", ar: "SolidTop 500 تقدم عزل حراري ممتاز مع ألواح ساندوتش مبطنة." },
+    longDescription: { he: "ה-SolidTop 500 מציעה בידוד תרמי מעולה עם פנלים סנדוויץ' מרופדים. אידיאלית לשימוש כל-שנתי.", ar: "SolidTop 500 تقدم عزل حراري ممتاز مع ألواح ساندوتش مبطنة." },
     materials: "Insulated sandwich panels, aluminum frame",
     dimensions: "600×400 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80",
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
@@ -170,6 +285,7 @@ export const products: Product[] = [
   },
   {
     id: "flexroof-600",
+    type: "retail",
     name: "AMG FlexRoof 600",
     slug: "amg-flexroof-600",
     collection: "retractable",
@@ -178,6 +294,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-FlexRoof 600 מציעה גמישות מלאה — פתוח לשמש, סגור לגשם. בד PVC עמיד בציפוי UV עם מנוע שקט.", ar: "FlexRoof 600 تقدم مرونة كاملة — مفتوح للشمس، مغلق للمطر." },
     materials: "PVC fabric, powder-coated aluminum frame",
     dimensions: "500×400 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
@@ -186,6 +303,7 @@ export const products: Product[] = [
   },
   {
     id: "stormguard-800",
+    type: "retail",
     name: "AMG StormGuard 800",
     slug: "amg-stormguard-800",
     collection: "retractable",
@@ -194,6 +312,7 @@ export const products: Product[] = [
     longDescription: { he: "ה-StormGuard 800 מתוכנן לתנאי מזג אוויר קשים. מערכת גג כפולה עם חיזוקים מיוחדים ועמידות לרוחות חזקות.", ar: "StormGuard 800 مصمم لظروف الطقس القاسية. نظام سقف مزدوج مع تعزيزات خاصة." },
     materials: "Heavy-duty aluminum, reinforced PVC",
     dimensions: "700×500 cm (customizable)",
+    colors: standardColors,
     images: [
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80",
@@ -202,6 +321,7 @@ export const products: Product[] = [
   },
   {
     id: "led-kit",
+    type: "retail",
     name: "AMG LED Lighting Kit",
     slug: "amg-led-lighting-kit",
     collection: "accessories",
@@ -209,6 +329,7 @@ export const products: Product[] = [
     description: { he: "ערכת תאורת LED משולבת לפרגולות", ar: "مجموعة إضاءة LED مدمجة للبرجولات" },
     longDescription: { he: "ערכת תאורת LED מותקנת בתוך פרופיל הלמלות. תאורת RGB עם שלט רחוק ואפשרות לדימר.", ar: "مجموعة إضاءة LED مثبتة داخل شرائح البرجولة. إضاءة RGB مع ريموت." },
     materials: "IP65 LED strips, aluminum housing",
+    colors: [],
     images: [
       "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
@@ -216,6 +337,7 @@ export const products: Product[] = [
   },
   {
     id: "drainage-system",
+    type: "retail",
     name: "AMG Rain Drainage System",
     slug: "amg-rain-drainage-system",
     collection: "accessories",
@@ -223,10 +345,96 @@ export const products: Product[] = [
     description: { he: "מערכת ניקוז גשם משולבת", ar: "نظام تصريف مياه الأمطار المتكامل" },
     longDescription: { he: "מערכת ניקוז גשם מובנית בתוך עמודי הפרגולה. ניקוז שקט ויעיל ללא צנרת חיצונית.", ar: "نظام تصريف مياه مدمج في أعمدة البرجولة. تصريف هادئ وفعال." },
     materials: "Aluminum gutters, PVC piping",
+    colors: [],
     images: [
       "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
     ],
+  },
+
+  // ── CONTRACTOR PRODUCTS (Aluminum Profiles) ──
+  {
+    id: "profile-gate-tube",
+    type: "contractor",
+    name: "פרופיל שער צינור",
+    slug: "profile-gate-tube",
+    collection: "profiles",
+    price: 180,
+    sku: "900YSL1300-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "פרופיל צינור לשערים מאלומיניום מחוזק", ar: "بروفيل أنبوبي للبوابات من ألمنيوم مقوى" },
+    longDescription: { he: "פרופיל צינור מאלומיניום 6063-T5 לבניית שערים. מתאים לשערים חשמליים וידניים. עמיד בפני קורוזיה וחלודה.", ar: "بروفيل أنبوبي من ألمنيوم 6063-T5 لبناء البوابات. مناسب للبوابات الكهربائية واليدوية." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [
+      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
+    ],
+  },
+  {
+    id: "gate-stopper",
+    type: "contractor",
+    name: "סטופר לשער",
+    slug: "gate-stopper",
+    collection: "profiles",
+    price: 45,
+    sku: "900YSL1400-25",
+    length: { he: "2.5 מטר", ar: "2.5 متر" },
+    description: { he: "סטופר אלומיניום לשערים הזזה", ar: "ماسك ألمنيوم للبوابات المنزلقة" },
+    longDescription: { he: "סטופר מאלומיניום לבלימת שערים הזזה. התקנה קלה עם ברגים מובנים. עמיד לכל תנאי מזג האוויר.", ar: "ماسك من الألمنيوم لإيقاف البوابات المنزلقة. تركيب سهل بمسامير مدمجة." },
+    materials: "Aluminum 6063-T5",
+    sizes: [
+      { id: "2.5m", label: "2.5m" },
+      { id: "3m", label: "3m" },
+      { id: "4m", label: "4m" },
+    ],
+    colorGroups: contractorColorGroups,
+    images: [
+      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
+    ],
+  },
+  {
+    id: "beak-profile",
+    type: "contractor",
+    name: "משופע מקור",
+    slug: "beak-profile",
+    collection: "profiles",
+    price: 120,
+    sku: "900YSL1500-40",
+    length: { he: "4 מטר", ar: "4 متر" },
+    description: { he: "פרופיל משופע מקור לגימור עליון", ar: "بروفيل مائل للتشطيب العلوي" },
+    longDescription: { he: "פרופיל אלומיניום משופע בצורת מקור לגימור עליון של גדרות ושערים. מעניק מראה מקצועי ומוגמר.", ar: "بروفيل ألمنيوم مائل بشكل منقار للتشطيب العلوي للأسوار والبوابات." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [
+      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
+    ],
+    featured: true,
+  },
+  {
+    id: "fence-slat",
+    type: "contractor",
+    name: "למלת גדר",
+    slug: "fence-slat",
+    collection: "profiles",
+    price: 95,
+    sku: "900YSL1600-35",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "למלת אלומיניום לגדרות פרטיות", ar: "شريحة ألمنيوم لأسوار الخصوصية" },
+    longDescription: { he: "למלת אלומיניום לבניית גדרות פרטיות. עיצוב מודרני, התקנה מהירה, ומגוון צבעים.", ar: "شريحة ألمنيوم لبناء أسوار الخصوصية. تصميم عصري وتركيب سريع." },
+    materials: "Aluminum 6063-T5",
+    sizes: [
+      { id: "3m", label: "3m" },
+      { id: "4m", label: "4m" },
+      { id: "5m", label: "5m" },
+      { id: "6m", label: "6m" },
+    ],
+    colorGroups: contractorColorGroups,
+    images: [
+      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
+    ],
+    new: true,
   },
 ];
 
