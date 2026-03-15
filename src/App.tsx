@@ -15,6 +15,7 @@ import CheckoutThankYou from "./pages/CheckoutThankYou";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
