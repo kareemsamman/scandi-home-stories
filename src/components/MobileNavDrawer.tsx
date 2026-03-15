@@ -123,7 +123,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 start-4 w-8 h-8 border border-[#f0f0f0] rounded-full grid place-items-center text-foreground z-10"
+            className="absolute top-4 start-4 w-8 h-8 bg-background border border-[#f0f0f0] rounded-full grid place-items-center text-foreground z-10"
             aria-label="Close"
           >
             <CloseIcon />
