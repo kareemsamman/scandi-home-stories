@@ -24,23 +24,35 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli cities API ---------- */
-const GOV_IL_CITIES_URL = "https://data.gov.il/api/3/action/datastore_search";
-const GOV_IL_RESOURCE_ID = "5c78e9fa-c2e2-4771-93ff-7f400a12f7ba";
+/* ---------- Israeli streets API (includes city + street) ---------- */
+const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
+const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
 
-const fetchCities = async (query: string): Promise<string[]> => {
+interface CityStreetResult {
+  city: string;
+  street: string;
+  display: string;
+}
+
+const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
   try {
-    const url = `${GOV_IL_CITIES_URL}?resource_id=${GOV_IL_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
+    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
     const records = data?.result?.records ?? [];
+    const seen = new Set<string>();
     return records
       .map((r: Record<string, unknown>) => {
-        const name = (r["שם_ישוב"] as string) || "";
-        return name.trim();
+        const city = ((r["city_name"] as string) || "").trim();
+        const street = ((r["street_name"] as string) || "").trim();
+        if (!city) return null;
+        const display = street ? `${city} – ${street}` : city;
+        if (seen.has(display)) return null;
+        seen.add(display);
+        return { city, street, display };
       })
-      .filter((n: string) => n.length > 0);
+      .filter(Boolean) as CityStreetResult[];
   } catch {
     return [];
   }
