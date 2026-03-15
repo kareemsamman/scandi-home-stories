@@ -70,32 +70,32 @@ export const SiteHeader = () => {
           scrolled ? "bg-dark/95 backdrop-blur-md shadow-lg" : "bg-transparent"
         )}
       >
-        <div className="section-container">
+        <div className="px-6 md:px-10">
           {/* Desktop */}
-          <div className="hidden md:grid grid-cols-3 items-center h-16 md:h-20">
+          <div className="hidden md:grid grid-cols-3 items-center h-24">
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
-                <img src={logoWhite} alt="AMG Pergola" className="h-12 w-auto" />
+                <img src={logoWhite} alt="AMG Pergola" className="h-24 w-auto" />
               </Link>
             </div>
 
             <nav className="flex items-center justify-center gap-8">
               {navLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="text-sm font-medium text-white/70 hover:text-white transition-colors duration-300">
+                <Link key={link.href} to={link.href} className="text-base font-medium text-white hover:text-white/80 transition-colors duration-300">
                   {link.label}
                 </Link>
               ))}
             </nav>
 
             <div className="flex items-center justify-end gap-1">
-              <button className="p-2 text-white/70 hover:text-white transition-colors" aria-label="Search">
+              <button className="p-2 text-white hover:text-white/80 transition-colors" aria-label="Search">
                 <SearchIcon />
               </button>
               <LocaleSwitcher icon={<LanguageIcon />} />
-              <button className="p-2 text-white/70 hover:text-white transition-colors" aria-label="Account">
+              <button className="p-2 text-white hover:text-white/80 transition-colors" aria-label="Account">
                 <AccountIcon />
               </button>
-              <Link to={localePath("/cart")} className="relative p-2 text-white/70 hover:text-white transition-colors" aria-label="Cart">
+              <Link to={localePath("/cart")} className="relative p-2 text-white hover:text-white/80 transition-colors" aria-label="Cart">
                 <CartIcon />
                 <AnimatePresence>
                   {itemCount > 0 && (
