@@ -51,7 +51,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
 
     const lengths = Array.from(
       new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label)))
-    );
+    ).sort((a, b) => parseFloat(a) - parseFloat(b));
 
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
     contractorProducts.forEach((p) => {
