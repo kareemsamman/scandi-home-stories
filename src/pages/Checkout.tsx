@@ -176,6 +176,10 @@ const Checkout = () => {
   const getItemCount = useCart((s) => s.getItemCount);
   const getItemKey = useCart((s) => s.getItemKey);
   const clearCart = useCart((s) => s.clearCart);
+  const savedAddresses = useAddresses((s) => s.addresses);
+  const getDefaultAddress = useAddresses((s) => s.getDefault);
+  const profileData = useProfile((s) => s.profile);
+  const addOrder = useOrders((s) => s.addOrder);
 
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
@@ -196,6 +200,7 @@ const Checkout = () => {
   const [citySelected, setCitySelected] = useState(false);
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
 
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
@@ -204,8 +209,18 @@ const Checkout = () => {
   const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", city: "", address: "", apartment: "",
+  // Auto-fill from saved address or profile
+  const [form, setForm] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return {
+      firstName: profileData.firstName || defaultAddr?.firstName || "",
+      lastName: profileData.lastName || defaultAddr?.lastName || "",
+      email: profileData.email || "",
+      phone: profileData.phone || defaultAddr?.phone || "",
+      city: defaultAddr?.city || "",
+      address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : "",
+      apartment: defaultAddr?.apartment || "",
+    };
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
