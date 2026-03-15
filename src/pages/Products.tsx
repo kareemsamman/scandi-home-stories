@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
@@ -49,6 +49,8 @@ const Products = () => {
 
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const handleFilterChange = useCallback((partial: Partial<FilterState>) => {
     setFilters((prev) => {
       const next = { ...prev, ...partial };
@@ -60,6 +62,10 @@ const Products = () => {
       setSearchParams(p, { replace: true });
       return next;
     });
+    // Scroll to product grid area
+    setTimeout(() => {
+      gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   }, [setSearchParams]);
 
   const handleClearAll = useCallback(() => {
@@ -172,7 +178,7 @@ const Products = () => {
       </section>
 
       {/* Desktop: Category Navigation Bar */}
-      <section className="border-b border-border sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40">
+      <section className="border-b border-border sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40 hidden md:block">
         <div className="section-container">
           {/* Category tabs */}
           <div className="flex gap-0 overflow-x-auto">
@@ -207,7 +213,7 @@ const Products = () => {
 
       {/* Subcategory pills (when profiles selected) */}
       {isProfilesCollection && (
-        <section className="py-3 border-b border-border bg-background">
+        <section className="py-3 border-b border-border bg-background hidden md:block">
           <div className="section-container">
             <div className="flex gap-2 overflow-x-auto pb-1">
               <button
@@ -241,7 +247,7 @@ const Products = () => {
       )}
 
       {/* Main content: Sidebar + Grid */}
-      <section className="py-8 md:py-12 pb-24 md:pb-12">
+      <section ref={gridRef} className="py-8 md:py-12 pb-24 md:pb-12">
         <div className="section-container md:!max-w-[94%]">
           <div className="flex gap-8">
             {/* Desktop sidebar */}
