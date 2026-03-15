@@ -294,6 +294,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       streetRequired: 'רחוב חובה',
       houseNumberRequired: 'מספר בית חובה',
       username: 'שם משתמש',
+      setDefault: 'קבע כברירת מחדל',
+      orderDetails: 'פרטי הזמנה',
     },
     about: {
       heroTitle: 'הנדסת חוץ.\nברמה אחרת.',
