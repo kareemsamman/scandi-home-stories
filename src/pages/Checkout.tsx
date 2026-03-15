@@ -141,6 +141,72 @@ const FloatingInput = ({
   );
 };
 
+/* ---------- Skeleton ---------- */
+const CheckoutSkeleton = () => (
+  <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
+    <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
+      <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
+        <div className="h-12 w-28 bg-muted/40 rounded animate-pulse" />
+        <div className="h-8 w-8 bg-muted/40 rounded-full animate-pulse" />
+      </div>
+    </header>
+    <main className="w-full">
+      <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
+        <div className="flex justify-end">
+          <div className="w-full max-w-[600px] px-6 md:px-10 py-6 space-y-8">
+            {/* Contact section skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 w-32 bg-muted/40 rounded animate-pulse" />
+              <div className="grid grid-cols-2 gap-3">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />
+                ))}
+              </div>
+            </div>
+            {/* Shipping section skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 w-40 bg-muted/40 rounded animate-pulse" />
+              <div className="space-y-3">
+                {[1,2,3].map(i => (
+                  <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />
+                ))}
+              </div>
+            </div>
+            {/* Payment skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 w-36 bg-muted/40 rounded animate-pulse" />
+              <div className="h-20 bg-white rounded-lg border border-border animate-pulse" />
+            </div>
+            {/* Button skeleton */}
+            <div className="h-14 bg-muted/30 rounded-[1.875rem] animate-pulse" />
+          </div>
+        </div>
+        <div className="hidden md:block" style={{ backgroundColor: "rgb(210,210,210)" }} />
+        <div className="hidden md:block bg-white">
+          <div className="p-8 max-w-[600px] space-y-4">
+            <div className="h-6 w-32 bg-muted/40 rounded animate-pulse" />
+            {[1,2,3].map(i => (
+              <div key={i} className="flex gap-4">
+                <div className="w-[72px] h-[72px] bg-muted/30 rounded-lg animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-3/4 bg-muted/30 rounded animate-pulse" />
+                  <div className="h-3 w-1/2 bg-muted/20 rounded animate-pulse" />
+                </div>
+                <div className="h-4 w-12 bg-muted/30 rounded animate-pulse" />
+              </div>
+            ))}
+            <div className="h-[48px] bg-muted/20 rounded-lg animate-pulse mt-6" />
+            <div className="space-y-3 mt-4">
+              <div className="h-4 w-full bg-muted/20 rounded animate-pulse" />
+              <div className="h-4 w-full bg-muted/20 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+);
+
 /* ---------- component ---------- */
 const Checkout = () => {
   const navigate = useNavigate();
@@ -156,6 +222,7 @@ const Checkout = () => {
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
 
+  const [showSkeleton, setShowSkeleton] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(!isMobile);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -169,6 +236,8 @@ const Checkout = () => {
   const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
+  const [emailMarketing, setEmailMarketing] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -188,9 +257,15 @@ const Checkout = () => {
   const discountAmount = discountApplied ? 10 : 0;
   const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
 
+  // Skeleton loading
   useEffect(() => {
-    firstInputRef.current?.focus();
+    const timer = setTimeout(() => setShowSkeleton(false), 1000);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!showSkeleton) firstInputRef.current?.focus();
+  }, [showSkeleton]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -233,7 +308,7 @@ const Checkout = () => {
     return e;
   }, [form, t, citySelected]);
 
-  const isValid = Object.keys(validate()).length === 0;
+  const isValid = Object.keys(validate()).length === 0 && acceptPrivacy;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -271,7 +346,7 @@ const Checkout = () => {
     setErrors(errs);
     setTouched({ firstName: true, lastName: true, email: true, phone: true, city: true, address: true });
 
-    if (Object.keys(errs).length > 0) {
+    if (Object.keys(errs).length > 0 || !acceptPrivacy) {
       const firstErrorField = Object.keys(errs)[0];
       const el = formRef.current?.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -288,7 +363,7 @@ const Checkout = () => {
   };
 
   /* empty cart */
-  if (items.length === 0) {
+  if (items.length === 0 && !showSkeleton) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6" style={{ backgroundColor: "rgb(242,242,242)" }}>
         <h1 className="text-2xl font-bold text-foreground">{t("checkout.emptyTitle")}</h1>
@@ -298,6 +373,10 @@ const Checkout = () => {
         </Link>
       </div>
     );
+  }
+
+  if (showSkeleton) {
+    return <CheckoutSkeleton />;
   }
 
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
@@ -417,7 +496,12 @@ const Checkout = () => {
       </header>
 
       {/* Main */}
-      <main className="w-full">
+      <motion.main
+        className="w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35 }}
+      >
         {/* Mobile: collapsible order summary */}
         <div className="md:hidden mb-6 px-6">
           <button
@@ -458,7 +542,15 @@ const Checkout = () => {
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
                 {/* Contact Info */}
                 <div>
-                  <h2 className="text-lg font-bold mb-4">{t("checkout.contactInfo")}</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold">{t("checkout.contactInfo")}</h2>
+                    <Link
+                      to={localePath("/login")}
+                      className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                    >
+                      {t("checkout.loginLink")}
+                    </Link>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FloatingInput
                       inputRef={firstInputRef}
@@ -498,6 +590,18 @@ const Checkout = () => {
                       inputMode="numeric"
                     />
                   </div>
+                  {/* Email marketing checkbox */}
+                  <label className="flex items-start gap-2.5 mt-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={emailMarketing}
+                      onChange={(e) => setEmailMarketing(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0"
+                    />
+                    <span className="text-xs text-muted-foreground leading-relaxed">
+                      {t("checkout.emailMarketing")}
+                    </span>
+                  </label>
                 </div>
 
                 {/* Shipping Address */}
@@ -581,6 +685,25 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                {/* Privacy policy acceptance */}
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={acceptPrivacy}
+                    onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0"
+                  />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    {t("checkout.acceptPrivacy")}{" "}
+                    <Link
+                      to={localePath("/privacy-policy")}
+                      className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors"
+                    >
+                      {t("checkout.privacyPolicy")}
+                    </Link>
+                  </span>
+                </label>
+
                 {/* Place Order */}
                 <button
                   type="submit"
@@ -630,7 +753,7 @@ const Checkout = () => {
             </div>
           </div>
         </div>
-      </main>
+      </motion.main>
     </div>
   );
 };
