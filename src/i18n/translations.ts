@@ -12,12 +12,17 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     nav: {
       shop: 'חנות',
+      catalog: 'קטלוג',
       about: 'אודות',
       contact: 'צור קשר',
       cart: 'סל קניות',
       search: 'חיפוש',
       collections: 'קולקציות',
       account: 'חשבון',
+    },
+    catalog: {
+      title: 'קטלוג מוצרים',
+      subtitle: 'כל הקטגוריות והמוצרים שלנו במקום אחד',
     },
     announcement: {
       messages: [
@@ -430,12 +435,17 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     nav: {
       shop: 'المتجر',
+      catalog: 'الكتالوج',
       about: 'من نحن',
       contact: 'اتصل بنا',
       cart: 'سلة التسوق',
       search: 'بحث',
       collections: 'المجموعات',
       account: 'حساب',
+    },
+    catalog: {
+      title: 'كتالوج المنتجات',
+      subtitle: 'جميع الفئات والمنتجات في مكان واحد',
     },
     announcement: {
       messages: [

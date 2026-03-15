@@ -3,13 +3,14 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
-  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu, X
+  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Grid3X3
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Products", icon: Package, path: "/admin/products" },
+  { label: "Categories", icon: Grid3X3, path: "/admin/categories" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/orders" },
   { label: "Pages", icon: FileText, path: "/admin/pages" },
   { label: "Media", icon: Image, path: "/admin/media" },

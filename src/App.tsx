@@ -8,6 +8,7 @@ import { LocaleProvider, LocaleRedirect } from "./i18n/LocaleContext";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
+import Catalog from "./pages/Catalog";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
@@ -31,6 +32,7 @@ const LocaleRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/shop" element={<Products />} />
+      <Route path="/catalog" element={<Catalog />} />
       <Route path="/product/:slug" element={<ProductDetail />} />
       <Route path="/about" element={<About />} />
       <Route path="/cart" element={<Cart />} />
