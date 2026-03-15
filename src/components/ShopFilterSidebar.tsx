@@ -259,26 +259,6 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
           </div>
         )}
 
-        {/* Sort */}
-        <div>
-          <label className="text-xs font-semibold text-foreground mb-2 block">
-            {t("shop.filters.sort")}
-          </label>
-          <div className="space-y-1">
-            {sortOptions.map((opt: any) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
-                <input
-                  type="radio"
-                  name="sort"
-                  checked={filters.sort === opt.value}
-                  onChange={() => onFilterChange({ sort: opt.value })}
-                  className="accent-foreground w-3.5 h-3.5"
-                />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
     </aside>
   );
