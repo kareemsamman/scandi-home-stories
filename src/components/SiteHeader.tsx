@@ -122,7 +122,7 @@ export const SiteHeader = () => {
           "site-header sticky z-40",
           isAtTop ? "is-at-top top-[40px]" : "is-scrolled top-0",
           isHidden && "is-hidden",
-          isSolidBlack && "!bg-[hsl(var(--dark))]"
+          isSolidPage && "!bg-background border-b border-border"
         )}
         style={isSolidBlack && !isScrolled ? { top: 0 } : undefined}
       >
