@@ -137,8 +137,8 @@ const Cart = () => {
                               <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ backgroundColor: item.options.color.hex }} />
                             </p>
                           )}
-                          {item.product.sku && (
-                            <p className="text-xs text-muted-foreground">SKU: {item.product.sku}</p>
+                          {"sku" in item.product && (item.product as any).sku && (
+                            <p className="text-xs text-muted-foreground">SKU: {(item.product as any).sku}</p>
                           )}
                           <button
                             onClick={() => removeItem(key)}
