@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
   const { t, localePath } = useLocale();
   const { toast } = useToast();
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -17,16 +20,26 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const isValid = fullName.trim() && username.trim() && email.trim() && phone.trim() && password.trim() && acceptPrivacy;
+  const isValid = firstName.trim() && lastName.trim() && email.trim() && phone.trim() && password.trim() && acceptPrivacy;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
     setLoading(true);
-    // Placeholder — will integrate with auth later
-    await new Promise((r) => setTimeout(r, 1500));
-    toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
+    const { error } = await signUp({
+      email: email.trim(),
+      password,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim(),
+    });
     setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
+      navigate(localePath("/account"));
+    }
   };
 
   const FloatingField = ({ name, label, value, onChange, type = "text" }: { name: string; label: string; value: string; onChange: (v: string) => void; type?: string }) => {
@@ -39,16 +52,12 @@ const Signup = () => {
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocusedField(name)}
           onBlur={() => setFocusedField(null)}
-          className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
+          className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
           placeholder=" "
         />
-        <label
-          className={`absolute start-4 transition-all duration-200 pointer-events-none ${
-            isActive
-              ? "top-1.5 text-[10px] text-muted-foreground"
-              : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-          }`}
-        >
+        <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+          isActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+        }`}>
           {label}
         </label>
       </div>
@@ -62,13 +71,14 @@ const Signup = () => {
           <h1 className="text-xl font-bold text-foreground text-center">{t("auth.signup")}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FloatingField name="fullName" label={t("auth.fullName")} value={fullName} onChange={setFullName} />
-            <FloatingField name="username" label={t("auth.username")} value={username} onChange={setUsername} />
+            <div className="grid grid-cols-2 gap-3">
+              <FloatingField name="firstName" label={t("checkout.firstName")} value={firstName} onChange={setFirstName} />
+              <FloatingField name="lastName" label={t("checkout.lastName")} value={lastName} onChange={setLastName} />
+            </div>
             <FloatingField name="email" label={t("checkout.email")} value={email} onChange={setEmail} type="email" />
             <FloatingField name="phone" label={t("checkout.phone")} value={phone} onChange={setPhone} type="tel" />
             <FloatingField name="password" label={t("auth.password")} value={password} onChange={setPassword} type="password" />
 
-            {/* Privacy policy acceptance */}
             <label className="flex items-start gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -78,10 +88,7 @@ const Signup = () => {
               />
               <span className="text-xs text-muted-foreground leading-relaxed">
                 {t("checkout.acceptPrivacy")}{" "}
-                <Link
-                  to={localePath("/privacy-policy")}
-                  className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors"
-                >
+                <Link to={localePath("/privacy-policy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">
                   {t("checkout.privacyPolicy")}
                 </Link>
               </span>
@@ -98,10 +105,7 @@ const Signup = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.hasAccount")}{" "}
-            <Link
-              to={localePath("/login")}
-              className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors"
-            >
+            <Link to={localePath("/login")} className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors">
               {t("auth.loginLink")}
             </Link>
           </p>
