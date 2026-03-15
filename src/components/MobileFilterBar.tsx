@@ -171,7 +171,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                     </div>
 
                     {/* Length */}
-                    {allLengths.length > 0 && (
+                    {availableLengths.length > 0 && (
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">
                           {t("shop.filters.length")}
