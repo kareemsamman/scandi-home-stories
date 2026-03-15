@@ -109,11 +109,11 @@ export const SiteHeader = () => {
   ];
 
   // On homepage: transparent at top, frosted on scroll
-  // On other pages: always solid black with white text
-  const isSolidBlack = !isHomePage;
-  const textColor = isSolidBlack ? "text-white" : (isScrolled ? "text-foreground" : "text-white");
-  const textHover = isSolidBlack ? "hover:text-white/80" : (isScrolled ? "hover:text-foreground/70" : "hover:text-white/80");
-  const showInvert = !isSolidBlack && isScrolled;
+  // On other pages: solid white background with black text
+  const isSolidPage = !isHomePage;
+  const textColor = isSolidPage ? "text-foreground" : (isScrolled ? "text-foreground" : "text-white");
+  const textHover = isSolidPage ? "hover:text-foreground/70" : (isScrolled ? "hover:text-foreground/70" : "hover:text-white/80");
+  const showInvert = isSolidPage || isScrolled;
 
   return (
     <>
