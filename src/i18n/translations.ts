@@ -441,6 +441,13 @@ export const translations: Record<Locale, Record<string, any>> = {
       browseAll: 'جميع المنتجات',
       noProducts: 'لا توجد منتجات',
       noProductsText: 'هذه المجموعة قيد التحضير.',
+      zoomImage: 'تكبير الصورة',
+      specifications: 'المواصفات التقنية',
+      features: 'الميزات',
+      description: 'الوصف',
+      reviews: 'التقييمات',
+      noReviews: 'لا توجد تقييمات بعد',
+      writeReview: 'اكتب تقييم',
     },
     cart: {
       title: 'سلة التسوق',
