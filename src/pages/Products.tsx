@@ -178,7 +178,7 @@ const Products = () => {
       </section>
 
       {/* Desktop: Category Navigation Bar */}
-      <section className="border-b border-border sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40">
+      <section className="border-b border-border sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40 hidden md:block">
         <div className="section-container">
           {/* Category tabs */}
           <div className="flex gap-0 overflow-x-auto">
