@@ -423,7 +423,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
 
               {/* Color selection */}
               {standardColors.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-5">
                   <p className="text-sm font-medium text-foreground mb-2.5">
                     {t("contractor.color")}: <span className="text-muted-foreground font-normal">
                       {selectedColor?.name || standardColors[0].name[locale]}
