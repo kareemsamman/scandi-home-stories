@@ -6,6 +6,9 @@ import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useProfile } from "@/hooks/useProfile";
+import { useOrders } from "@/hooks/useOrders";
 import logoWhite from "@/assets/logo-white.png";
 
 /* ---------- icons ---------- */
