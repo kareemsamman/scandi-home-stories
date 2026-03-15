@@ -509,9 +509,9 @@ const Checkout = () => {
                         error={fieldError("city")}
                       />
 
-                      {showCitySuggestions && filteredCities.length > 0 && (
+                      {showCitySuggestions && citySuggestions.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredCities.map((city) => (
+                          {citySuggestions.map((city) => (
                             <button
                               key={city}
                               type="button"
