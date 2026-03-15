@@ -70,7 +70,7 @@ export const SiteHeader = () => {
           scrolled ? "bg-dark/95 backdrop-blur-md shadow-lg" : "bg-transparent"
         )}
       >
-        <div className="section-container">
+        <div className="px-6 md:px-10">
           {/* Desktop */}
           <div className="hidden md:grid grid-cols-3 items-center h-16 md:h-20">
             <div className="flex items-center justify-start">
