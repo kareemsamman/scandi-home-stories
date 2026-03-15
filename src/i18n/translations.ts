@@ -469,6 +469,17 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'تحتاج مساعدة؟',
       helpText: 'نحن هنا من أجلك',
     },
+    search: {
+      placeholder: 'بحث...',
+      featuredCollections: 'مجموعات مميزة',
+      noResults: 'لم يتم العثور على نتائج.',
+      tabs: {
+        products: 'منتجات',
+        suggestions: 'اقتراحات',
+        collections: 'مجموعات',
+        blog: 'مدونة',
+      },
+    },
     notFound: {
       title: 'الصفحة غير موجودة',
       text: 'الصفحة التي تبحث عنها غير موجودة.',

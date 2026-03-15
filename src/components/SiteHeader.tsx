@@ -7,6 +7,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { cn } from "@/lib/utils";
 import logoWhite from "@/assets/logo-white.png";
+import { SearchModal } from "./SearchModal";
 
 const SearchIcon = () => (
   <svg role="presentation" strokeWidth="2" focusable="false" width="22" height="22" viewBox="0 0 22 22" fill="none">
