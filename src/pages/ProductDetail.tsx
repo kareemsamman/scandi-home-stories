@@ -17,15 +17,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
   const [idx, setIdx] = useState(startIndex);
+  const isFirst = idx === 0;
+  const isLast = idx === images.length - 1;
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") setIdx((p) => (p - 1 + images.length) % images.length);
-      if (e.key === "ArrowRight") setIdx((p) => (p + 1) % images.length);
+      if (e.key === "ArrowRight" && !isLast) setIdx((p) => p + 1);
+      if (e.key === "ArrowLeft" && !isFirst) setIdx((p) => p - 1);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [images.length, onClose]);
+  }, [isFirst, isLast, onClose]);
 
   return (
     <motion.div
@@ -46,19 +49,21 @@ const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; star
         <div className="absolute bottom-6 inset-x-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-4 bg-background border border-border rounded-full px-4 py-2 shadow-sm">
             <button
-              onClick={() => setIdx((p) => (p - 1 + images.length) % images.length)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+              onClick={() => !isFirst && setIdx((p) => p - 1)}
+              disabled={isFirst}
+              className={cn("w-8 h-8 flex items-center justify-center rounded-full transition-colors", isFirst ? "opacity-30 cursor-not-allowed" : "hover:bg-muted")}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" />
             </button>
             <span className="text-sm font-medium tabular-nums">
               {idx + 1} / {images.length}
             </span>
             <button
-              onClick={() => setIdx((p) => (p + 1) % images.length)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+              onClick={() => !isLast && setIdx((p) => p + 1)}
+              disabled={isLast}
+              className={cn("w-8 h-8 flex items-center justify-center rounded-full transition-colors", isLast ? "opacity-30 cursor-not-allowed" : "hover:bg-muted")}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -242,7 +247,7 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
   return (
     <Layout>
       {/* Breadcrumb — light, no border */}
-      <div className="section-container pt-2 pb-1 mt-14 md:mt-16">
+      <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
@@ -482,7 +487,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
   return (
     <Layout>
       {/* Breadcrumb — light, no border */}
-      <div className="section-container pt-2 pb-1 mt-14 md:mt-16">
+      <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingBag } from "lucide-react";
+import { X } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,8 +15,16 @@ const CartIcon = () => (
   </svg>
 );
 
+const LockIcon = () => (
+  <svg role="presentation" fill="none" focusable="false" strokeWidth="2" width="18" height="18" viewBox="0 0 24 24">
+    <path d="M3.236 18.182a5.071 5.071 0 0 0 4.831 4.465 114.098 114.098 0 0 0 7.865-.001 5.07 5.07 0 0 0 4.831-4.464 23.03 23.03 0 0 0 .165-2.611c0-.881-.067-1.752-.165-2.61a5.07 5.07 0 0 0-4.83-4.465c-1.311-.046-2.622-.07-3.933-.069a109.9 109.9 0 0 0-3.933.069 5.07 5.07 0 0 0-4.83 4.466 23.158 23.158 0 0 0-.165 2.609c0 .883.067 1.754.164 2.61Z" fill="currentColor" fillOpacity=".12" stroke="currentColor" />
+    <path d="M17 8.43V6.285A5 5 0 0 0 7 6.286V8.43" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 17.714a2.143 2.143 0 1 0 0-4.286 2.143 2.143 0 0 0 0 4.286Z" stroke="currentColor" />
+  </svg>
+);
+
 export const MiniCart = () => {
-  const { t, localePath, locale } = useLocale();
+  const { t, localePath } = useLocale();
   const isMobile = useIsMobile();
   const isOpen = useCart((s) => s.isOpen);
   const closeCart = useCart((s) => s.closeCart);
@@ -28,6 +36,7 @@ export const MiniCart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
 
@@ -67,11 +76,10 @@ export const MiniCart = () => {
             const key = getItemKey(item);
             return (
               <div key={key} className="flex gap-4">
-                <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-16 rounded object-cover flex-shrink-0" />
+                <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-20 rounded object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-muted-foreground">AMG Pergola</p>
                   <p className="text-sm font-semibold text-foreground truncate">{item.product.name}</p>
-                  {/* Show selected options */}
                   {item.options?.size && (
                     <p className="text-[11px] text-muted-foreground">
                       {t("contractor.length")}: {item.options.size}
@@ -101,20 +109,25 @@ export const MiniCart = () => {
           })}
         </div>
 
+        {/* Buy With - horizontal slider */}
         {buyWithProducts.length > 0 && (
           <div className="mt-6 pt-4 border-t border-border">
             <p className="text-sm font-semibold mb-3">{t("miniCart.buyWith")}</p>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+            <div
+              ref={scrollRef}
+              className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory"
+              style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+            >
               {buyWithProducts.map((p) => (
-                <div key={p.id} className="flex-shrink-0 w-[130px] space-y-2">
-                  <div className="aspect-square rounded overflow-hidden bg-muted">
+                <div key={p.id} className="flex-shrink-0 w-[160px] snap-start rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                     <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-xs font-medium truncate">{p.name}</p>
+                  <p className="text-xs font-semibold truncate">{p.name}</p>
                   <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
                   <button
                     onClick={() => useCart.getState().addItem(p, 1)}
-                    className="text-xs font-semibold text-foreground hover:text-accent-strong transition-colors"
+                    className="text-xs font-semibold border border-foreground rounded-full px-3 py-1 text-foreground hover:bg-foreground hover:text-background transition-colors"
                   >
                     + {t("miniCart.add")}
                   </button>
@@ -135,10 +148,11 @@ export const MiniCart = () => {
           {t("miniCart.orderNote")}
         </button>
         <div className="flex gap-3 pt-1">
-          <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-11 flex items-center justify-center text-sm font-semibold border border-foreground rounded-[2px] text-foreground hover:bg-foreground hover:text-background transition-colors">
+          <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
           </Link>
-          <Link to={localePath("/checkout")} onClick={closeCart} className="flex-1 h-11 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[2px] hover:bg-foreground/90 transition-colors">
+          <Link to={localePath("/checkout")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center gap-2 text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors">
+            <LockIcon />
             {t("cart.checkout")}
           </Link>
         </div>
@@ -153,17 +167,19 @@ export const MiniCart = () => {
           ref={overlayRef}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-black/40"
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
           onClick={handleOverlayClick}
         >
           <motion.div
-            initial={{ x: isMobile ? 0 : "100%", opacity: isMobile ? 0 : 1 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: isMobile ? 0 : "100%", opacity: isMobile ? 0 : 1 }}
+            initial={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
+            animate={isMobile ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+            exit={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
             transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
             className={cn(
-              "fixed flex flex-col bg-background overflow-hidden",
-              isMobile ? "inset-x-0 bottom-0 top-[1vh] rounded-t-[2px]" : "top-6 bottom-6 rounded-[2px] shadow-xl"
+              "flex flex-col bg-background overflow-hidden",
+              isMobile
+                ? "w-[98%] max-w-[480px] h-[98%] rounded-[2px]"
+                : "fixed top-6 bottom-6 rounded-[2px] shadow-xl"
             )}
             style={isMobile ? {} : { insetInlineEnd: 24, width: 420 }}
             onClick={(e) => e.stopPropagation()}
