@@ -193,11 +193,17 @@ const Checkout = () => {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [cityQuery, setCityQuery] = useState("");
+  const [cityQuery, setCityQuery] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return defaultAddr?.city || "";
+  });
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const [citySelected, setCitySelected] = useState(false);
+  const [citySelected, setCitySelected] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return !!defaultAddr?.city;
+  });
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
