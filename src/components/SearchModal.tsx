@@ -168,7 +168,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   // Shared content
   const renderContent = () => (
     <>
-      {/* Search input: icon LEFT, input CENTER, clear RIGHT */}
+      {/* Search input: icon LEFT, input CENTER, clear + close RIGHT */}
       <div className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
         <span className="text-foreground/40 shrink-0" style={{ marginInlineEnd: 12 }}>
           <SearchIcon />
@@ -191,6 +191,14 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             {t("search.clear")}
           </button>
         )}
+        <button
+          onClick={onClose}
+          className="shrink-0 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground hover:bg-foreground/5 transition-colors"
+          style={{ marginInlineStart: 12 }}
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
       </div>
 
       {/* STATE 1: Initial — Featured Collections */}
