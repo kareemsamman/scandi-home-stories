@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import { AnnouncementBar } from "./AnnouncementBar";
+import { MiniCart } from "./MiniCart";
 
 interface LayoutProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {children}
       </motion.main>
       <SiteFooter />
+      <MiniCart />
     </div>
   );
 };

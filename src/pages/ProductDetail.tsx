@@ -41,7 +41,6 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    toast({ title: t("product.addToBag"), description: `${quantity} × ${product.name}` });
     setQuantity(1);
   };
 
