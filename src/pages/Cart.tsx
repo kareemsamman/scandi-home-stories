@@ -200,9 +200,6 @@ const Cart = () => {
                 );
               })}
 
-              <Link to={localePath("/shop")} className="inline-flex items-center gap-2 mt-6 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="w-4 h-4 rotate-180" />{t("cart.continueShopping")}
-              </Link>
             </div>
 
             {/* ── RIGHT: Order summary ── */}
