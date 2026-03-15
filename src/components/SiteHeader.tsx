@@ -81,7 +81,7 @@ export const SiteHeader = () => {
 
             <nav className="flex items-center justify-center gap-8">
               {navLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="text-sm font-medium text-white/70 hover:text-white transition-colors duration-300">
+                <Link key={link.href} to={link.href} className="text-base font-medium text-white hover:text-white/80 transition-colors duration-300">
                   {link.label}
                 </Link>
               ))}
