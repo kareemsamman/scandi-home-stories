@@ -228,6 +228,7 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     search: {
       placeholder: 'חיפוש...',
+      clear: 'נקה',
       featuredCollections: 'קולקציות מובחרות',
       noResults: 'לא נמצאו תוצאות.',
       tabs: {
@@ -471,6 +472,7 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     search: {
       placeholder: 'بحث...',
+      clear: 'مسح',
       featuredCollections: 'مجموعات مميزة',
       noResults: 'لم يتم العثور على نتائج.',
       tabs: {
