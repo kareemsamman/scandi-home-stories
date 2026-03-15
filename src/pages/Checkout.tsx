@@ -216,7 +216,7 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.required");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
-    if (!form.city.trim() || !citySelected) e.city = t("checkout.required");
+    if (!form.city.trim() || !citySelected) e.city = t("checkout.selectCity");
     if (!form.address.trim()) e.address = t("checkout.required");
     return e;
   }, [form, t, citySelected]);
