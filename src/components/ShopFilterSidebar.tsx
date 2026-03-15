@@ -37,20 +37,24 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
   const handleSearchChange = (value: string) => {
     setLocalSearch(value);
     setIsSearching(true);
+    onSearchingChange?.(true);
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
       onFilterChange({ search: value });
       setIsSearching(false);
+      onSearchingChange?.(false);
     }, 800);
   };
 
   const handleSkuChange = (value: string) => {
     setLocalSku(value);
     setIsSkuSearching(true);
+    onSearchingChange?.(true);
     clearTimeout(skuTimer.current);
     skuTimer.current = setTimeout(() => {
       onFilterChange({ skuSearch: value });
       setIsSkuSearching(false);
+      onSearchingChange?.(false);
     }, 800);
   };
 

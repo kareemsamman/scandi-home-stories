@@ -279,7 +279,20 @@ const Products = () => {
                 </div>
               </div>
 
-              {filteredAndSortedProducts.length > 0 ? (
+              {isSearching ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="rounded-2xl overflow-hidden border border-border bg-background animate-pulse">
+                      <div className="aspect-square bg-muted" />
+                      <div className="p-3 space-y-2">
+                        <div className="h-4 bg-muted rounded w-3/4" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
+                        <div className="h-4 bg-muted rounded w-1/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredAndSortedProducts.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                   {filteredAndSortedProducts.map((product, i) => (
                     <ProductCard key={product.id} product={product} index={i} />
