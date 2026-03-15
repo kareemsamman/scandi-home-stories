@@ -175,7 +175,6 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     { key: "products", label: t("search.tabs.products") },
     { key: "suggestions", label: t("search.tabs.suggestions") },
     { key: "collections", label: t("search.tabs.collections") },
-    { key: "blog", label: t("search.tabs.blog") },
   ];
 
   if (!mounted) return null;
