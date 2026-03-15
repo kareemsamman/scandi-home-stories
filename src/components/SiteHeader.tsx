@@ -166,7 +166,7 @@ export const SiteHeader = () => {
               >
                 <SearchIcon />
               </button>
-              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidBlack ? false : isScrolled} />
+              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidPage || isScrolled} />
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
