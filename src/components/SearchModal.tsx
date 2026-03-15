@@ -375,19 +375,18 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         onClick={onClose}
       />
       <div
-        className="fixed top-0 end-0 bottom-0 z-50 bg-background shadow-xl flex flex-col"
-        style={panelStyle}
+        className="fixed z-50 flex flex-col"
+        style={{
+          top: 24,
+          bottom: 24,
+          insetInlineEnd: 24,
+          width: 420,
+          transform: isVisible ? "translateX(0)" : (document.documentElement.dir === "rtl" ? "translateX(-100%)" : "translateX(100%)"),
+          opacity: isVisible ? 1 : 0,
+          transition: "transform 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease",
+        }}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 start-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
-          aria-label="Close"
-        >
-          <CloseIcon />
-        </button>
-
-        <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48 }}>
+        <div className="bg-background shadow-xl flex flex-col flex-1 overflow-hidden" style={{ borderRadius: 2, padding: 24 }}>
           {renderContent()}
         </div>
       </div>
