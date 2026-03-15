@@ -712,6 +712,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       streetRequired: 'الشارع مطلوب',
       houseNumberRequired: 'رقم المبنى مطلوب',
       username: 'اسم المستخدم',
+      setDefault: 'تعيين كافتراضي',
+      orderDetails: 'تفاصيل الطلب',
     },
     about: {
       heroTitle: 'هندسة خارجية.\nبمستوى آخر.',

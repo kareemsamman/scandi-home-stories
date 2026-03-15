@@ -36,6 +36,7 @@ const LocaleRoutes = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/account" element={<Account />} />
+      <Route path="/account/order/:orderId" element={<OrderDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </LocaleProvider>
