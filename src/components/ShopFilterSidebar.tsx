@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 import { collections, profileSubCategories, products, ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
@@ -24,7 +24,38 @@ interface ShopFilterSidebarProps {
 
 export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
-  const sortOptions: any[] = t("shop.sortOptions") || [];
+
+  // Debounced search
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  const [localSku, setLocalSku] = useState(filters.skuSearch);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSkuSearching, setIsSkuSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const skuTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleSearchChange = (value: string) => {
+    setLocalSearch(value);
+    setIsSearching(true);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      onFilterChange({ search: value });
+      setIsSearching(false);
+    }, 800);
+  };
+
+  const handleSkuChange = (value: string) => {
+    setLocalSku(value);
+    setIsSkuSearching(true);
+    clearTimeout(skuTimer.current);
+    skuTimer.current = setTimeout(() => {
+      onFilterChange({ skuSearch: value });
+      setIsSkuSearching(false);
+    }, 800);
+  };
+
+  useEffect(() => {
+    return () => { clearTimeout(searchTimer.current); clearTimeout(skuTimer.current); };
+  }, []);
 
   const isProfilesCollection = filters.collection === "profiles";
 
@@ -51,7 +82,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
 
     const lengths = Array.from(
       new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label)))
-    );
+    ).sort((a, b) => parseFloat(a) - parseFloat(b));
 
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
     contractorProducts.forEach((p) => {
@@ -82,20 +113,33 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              value={filters.search}
-              onChange={(e) => onFilterChange({ search: e.target.value })}
+              value={localSearch}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={t("shop.filters.searchPlaceholder")}
               className="w-full h-9 ps-9 pe-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
             />
-            {filters.search && (
+            {localSearch && (
               <button
-                onClick={() => onFilterChange({ search: "" })}
+                onClick={() => { setLocalSearch(""); onFilterChange({ search: "" }); setIsSearching(false); }}
                 className="absolute end-2 top-1/2 -translate-y-1/2"
               >
                 <X className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             )}
           </div>
+          {isSearching && (
+            <div className="mt-2 space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-2 animate-pulse">
+                  <div className="w-8 h-8 rounded bg-muted-foreground/10" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-2.5 bg-muted-foreground/10 rounded w-3/4" />
+                    <div className="h-2 bg-muted-foreground/10 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Category */}
@@ -251,34 +295,27 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
             </label>
             <input
               type="text"
-              value={filters.skuSearch}
-              onChange={(e) => onFilterChange({ skuSearch: e.target.value })}
+              value={localSku}
+              onChange={(e) => handleSkuChange(e.target.value)}
               placeholder={t("shop.filters.skuPlaceholder")}
               className="w-full h-9 px-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
             />
+            {isSkuSearching && (
+              <div className="mt-2 space-y-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-2 animate-pulse">
+                    <div className="w-8 h-8 rounded bg-muted-foreground/10" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-2.5 bg-muted-foreground/10 rounded w-3/4" />
+                      <div className="h-2 bg-muted-foreground/10 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Sort */}
-        <div>
-          <label className="text-xs font-semibold text-foreground mb-2 block">
-            {t("shop.filters.sort")}
-          </label>
-          <div className="space-y-1">
-            {sortOptions.map((opt: any) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
-                <input
-                  type="radio"
-                  name="sort"
-                  checked={filters.sort === opt.value}
-                  onChange={() => onFilterChange({ sort: opt.value })}
-                  className="accent-foreground w-3.5 h-3.5"
-                />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
     </aside>
   );

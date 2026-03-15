@@ -46,7 +46,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
     }
     const contractorProducts = relevantProducts.filter((p): p is ContractorProduct => p.type === "contractor");
     const retailProducts = relevantProducts.filter((p): p is RetailProduct => p.type === "retail");
-    const lengths = Array.from(new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label))));
+    const lengths = Array.from(new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label)))).sort((a, b) => parseFloat(a) - parseFloat(b));
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
     contractorProducts.forEach((p) => { if (p.colorGroups[0]) p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c)); });
     retailProducts.forEach((p) => { p.colors.forEach((c) => colorMap.set(c.id, c)); });
