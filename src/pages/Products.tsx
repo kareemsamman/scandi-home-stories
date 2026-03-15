@@ -52,6 +52,7 @@ const Products = () => {
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
   const gridRef = useRef<HTMLDivElement>(null);
+  const mobileSearchTimerRef = useRef<number | null>(null);
 
   const handleFilterChange = useCallback((partial: Partial<FilterState>) => {
     setFilters((prev) => {
