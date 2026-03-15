@@ -23,7 +23,7 @@ interface ShopFilterSidebarProps {
   onSearchingChange?: (isSearching: boolean) => void;
 }
 
-export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: ShopFilterSidebarProps) => {
+export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSearchingChange }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
 
   // Debounced search
