@@ -226,6 +226,15 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'צריכים עזרה?',
       helpText: 'אנחנו כאן בשבילכם',
     },
+    contractor: {
+      sku: 'מק״ט',
+      length: 'אורך',
+      size: 'גודל',
+      color: 'צבע',
+      selectedColor: 'צבע נבחר',
+      selectSize: 'יש לבחור גודל',
+      selectColor: 'יש לבחור צבע',
+    },
     miniCart: {
       empty: 'הסל שלך ריק',
       continueShopping: 'המשך קניות',
