@@ -166,8 +166,8 @@ export const SiteHeader = () => {
               >
                 <AccountIcon />
               </button>
-              <Link
-                to={localePath("/cart")}
+              <button
+                onClick={() => useCart.getState().openCart()}
                 className={cn("relative p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Cart"
               >
@@ -187,7 +187,7 @@ export const SiteHeader = () => {
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </Link>
+              </button>
             </div>
           </div>
 
