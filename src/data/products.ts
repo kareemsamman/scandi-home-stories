@@ -453,9 +453,7 @@ export const products: Product[] = [
       { id: "6m", label: "6m" },
     ],
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileHitechImg],
     new: true,
   },
   {
