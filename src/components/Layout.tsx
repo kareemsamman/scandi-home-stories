@@ -23,6 +23,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {children}
       </motion.main>
       <SiteFooter />
+      <MiniCart />
     </div>
   );
 };
