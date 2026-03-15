@@ -405,7 +405,7 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     announcement: {
       messages: [
-        'شحن مجاني للطلبات فوق ₪5,000',
+        'شحن مجاني لجميع الطلبات',
         'تركيب احترافي في جميع أنحاء البلاد',
         'استشارة مجانية: 03-1234567',
       ],
