@@ -190,13 +190,23 @@ const Checkout = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const cities = locale === "ar" ? ISRAELI_CITIES_AR : ISRAELI_CITIES_HE;
-
-  const filteredCities = useMemo(() => {
-    if (!cityQuery.trim()) return cities.slice(0, 8);
-    const q = cityQuery.trim().toLowerCase();
-    return cities.filter((c) => c.toLowerCase().includes(q)).slice(0, 8);
-  }, [cityQuery, cities]);
+  // Debounced city fetch from gov.il API
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (citySelected) return;
+    if (cityQuery.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setCityLoading(true);
+      const results = await fetchCities(cityQuery.trim());
+      setCitySuggestions(results);
+      setCityLoading(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [cityQuery, citySelected]);
 
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
