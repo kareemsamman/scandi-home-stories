@@ -213,7 +213,7 @@ const Products = () => {
 
       {/* Subcategory pills (when profiles selected) */}
       {isProfilesCollection && (
-        <section className="py-3 border-b border-border bg-background">
+        <section className="py-3 border-b border-border bg-background hidden md:block">
           <div className="section-container">
             <div className="flex gap-2 overflow-x-auto pb-1">
               <button
