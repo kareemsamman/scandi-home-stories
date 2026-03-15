@@ -412,11 +412,14 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="lg:col-span-7 lg:sticky lg:top-28 lg:self-start"
             >
-              <h1 className="text-xl md:text-2xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
-              <p className="text-2xl font-bold mb-6">{t("common.currency")}{currentPrice.toLocaleString()}</p>
+              <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>
 
-              <div className="h-px bg-border mb-6" />
+              {/* Short description */}
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">{getLocaleText(product.description, locale)}</p>
+
+              <div className="h-px bg-border mb-5" />
 
               {/* Color selection */}
               {standardColors.length > 0 && (
