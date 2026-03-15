@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Ruler } from "lucide-react";
 import { Product, RetailProduct, ContractorProduct, getLocaleText } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
@@ -21,18 +21,34 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string } | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [showCustomColors, setShowCustomColors] = useState(false);
 
-  if (!product) return null;
-
-  const isRetail = product.type === "retail";
-  const isContractor = product.type === "contractor";
+  const isRetail = product?.type === "retail";
+  const isContractor = product?.type === "contractor";
   const retail = isRetail ? (product as RetailProduct) : null;
   const contractor = isContractor ? (product as ContractorProduct) : null;
 
-  const colors = retail?.colors || contractor?.colorGroups?.[0]?.colors || [];
+  const standardColors = retail?.colors || contractor?.colorGroups?.[0]?.colors || [];
+  const customColorGroups = contractor?.colorGroups?.slice(1) || [];
+  const hasCustomColors = customColorGroups.length > 0 && customColorGroups.some(g => g.colors.length > 0);
+
+  // Calculate price based on selected size
+  const currentPrice = useMemo(() => {
+    if (!product) return 0;
+    if (contractor && selectedSize) {
+      const sizeOption = contractor.sizes.find(s => s.label === selectedSize);
+      if (sizeOption?.price) return sizeOption.price;
+    }
+    if (contractor && !selectedSize && contractor.sizes[0]?.price) {
+      return contractor.sizes[0].price;
+    }
+    return product.price;
+  }, [contractor, selectedSize, product]);
+
+  if (!product) return null;
 
   const handleAdd = () => {
-    const colorOption = selectedColor || (colors.length > 0 ? { id: colors[0].id, name: colors[0].name[locale], hex: colors[0].hex } : undefined);
+    const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
     addItem(product, quantity, {
       color: colorOption,
       size: selectedSize || undefined,
@@ -41,6 +57,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     setSelectedColor(null);
     setSelectedSize(null);
     setQuantity(1);
+    setShowCustomColors(false);
   };
 
   return (
@@ -62,17 +79,17 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
             className={cn(
               "bg-background overflow-hidden",
               isMobile
-                ? "w-full rounded-t-2xl max-h-[85vh]"
+                ? "w-full rounded-t-2xl max-h-[88vh]"
                 : "w-full max-w-md rounded-2xl shadow-2xl max-h-[80vh]"
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with product info */}
+            {/* Header with product image + info */}
             <div className="flex items-start gap-4 p-5 border-b border-border">
               <img
                 src={product.images[0]}
                 alt={product.name}
-                className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-border"
               />
               <div className="flex-1 min-w-0">
                 <button
@@ -82,26 +99,31 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                   <X className="w-4 h-4" />
                 </button>
                 <h3 className="text-base font-bold text-foreground">{product.name}</h3>
-                <p className="text-base font-semibold text-foreground mt-1">
-                  {t("common.currency")}{product.price.toLocaleString()}
+                {contractor && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {t("contractor.sku")}: {contractor.sku}
+                  </p>
+                )}
+                <p className="text-base font-bold text-foreground mt-1">
+                  {t("common.currency")}{currentPrice.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: isMobile ? '55vh' : '50vh' }}>
+            <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: isMobile ? '58vh' : '50vh' }}>
               {/* Color selection */}
-              {colors.length > 0 && (
+              {standardColors.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2.5">
-                    {t("contractor.color")}: <span className="text-foreground font-medium">{selectedColor?.name || colors[0].name[locale]}</span>
+                  <p className="text-sm font-medium text-foreground mb-2.5">
+                    {t("contractor.color")}: <span className="text-muted-foreground font-normal">{selectedColor?.name || standardColors[0].name[locale]}</span>
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {colors.map((color) => {
-                      const isActive = selectedColor?.id === color.id || (!selectedColor && color.id === colors[0].id);
+                    {standardColors.map((color) => {
+                      const isActive = selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id);
                       return (
                         <button
                           key={color.id}
-                          onClick={() => setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex })}
+                          onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setShowCustomColors(false); }}
                           className={cn(
                             "w-10 h-10 rounded border-2 transition-all",
                             isActive ? "border-foreground scale-110" : "border-border hover:border-muted-foreground"
@@ -112,14 +134,47 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                       );
                     })}
                   </div>
+                  {/* Custom color button */}
+                  {hasCustomColors && (
+                    <button
+                      onClick={() => setShowCustomColors(!showCustomColors)}
+                      className="mt-2.5 text-xs font-medium text-foreground underline underline-offset-2 hover:text-muted-foreground transition-colors"
+                    >
+                      {t("contractor.customColor")}
+                    </button>
+                  )}
                 </div>
               )}
 
-              {/* Size selection for contractor */}
+              {/* Custom color groups (RAL / Wood) */}
+              {showCustomColors && customColorGroups.map((group) => (
+                <div key={group.id}>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">{group.name[locale]}</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {group.colors.map((color) => {
+                      const isActive = selectedColor?.id === color.id;
+                      return (
+                        <button
+                          key={color.id}
+                          onClick={() => setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex })}
+                          className={cn(
+                            "w-8 h-8 rounded border-2 transition-all",
+                            isActive ? "border-foreground scale-110" : "border-border hover:border-muted-foreground"
+                          )}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name[locale]}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Size selection */}
               {contractor && contractor.sizes.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2.5">
-                    {t("contractor.length")}: <span className="text-foreground font-medium">{selectedSize || contractor.sizes[0].label}</span>
+                  <p className="text-sm font-medium text-foreground mb-2.5">
+                    {t("contractor.size")}: <span className="text-muted-foreground font-normal">{selectedSize || contractor.sizes[0].label}</span>
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {contractor.sizes.map((size) => {
@@ -136,6 +191,11 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                           )}
                         >
                           {size.label}
+                          {size.price && (
+                            <span className="text-[10px] opacity-70 ms-1">
+                              {t("common.currency")}{size.price}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -143,10 +203,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                 </div>
               )}
 
-              {/* Quantity for contractor */}
+              {/* Quantity */}
               {isContractor && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2.5">{t("product.quantity")}</p>
+                  <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
                   <QuantitySelector
                     quantity={quantity}
                     onQuantityChange={setQuantity}

@@ -175,10 +175,10 @@ const contractorColorGroups: ColorGroup[] = [
 ];
 
 const defaultSizes: SizeOption[] = [
-  { id: "3m", label: "3m" },
-  { id: "4m", label: "4m" },
-  { id: "5m", label: "5m" },
-  { id: "6m", label: "6m" },
+  { id: "3m", label: "3m", price: 80 },
+  { id: "4m", label: "4m", price: 100 },
+  { id: "5m", label: "5m", price: 110 },
+  { id: "6m", label: "6m", price: 120 },
 ];
 
 export const products: Product[] = [
