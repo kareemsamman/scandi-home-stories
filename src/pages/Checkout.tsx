@@ -213,7 +213,7 @@ const Checkout = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setCityLoading(true);
-      const results = await fetchCities(cityQuery.trim());
+      const results = await fetchCityStreets(cityQuery.trim());
       setCitySuggestions(results);
       setCityLoading(false);
     }, 300);
