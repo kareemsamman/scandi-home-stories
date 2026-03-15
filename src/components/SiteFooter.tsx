@@ -60,7 +60,7 @@ export const SiteFooter = () => {
     href.startsWith("mailto:") || href.startsWith("tel:") || href === "#";
 
   return (
-    <footer style={{ background: "#0b0f16", color: "rgba(255,255,255,0.75)" }}>
+    <footer className="bg-[hsl(var(--footer-background))]" style={{ color: "rgba(255,255,255,0.75)" }}>
       {/* Main footer */}
       <div
         className="mx-auto"
