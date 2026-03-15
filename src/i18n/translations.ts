@@ -198,6 +198,13 @@ export const translations: Record<Locale, Record<string, any>> = {
       showSummary: 'סיכום הזמנה',
       emptyTitle: 'אין פריטים',
       emptyText: 'הסל ריק.',
+      city: 'עיר',
+      discountPlaceholder: 'קוד הנחה או כרטיס מתנה',
+      applyDiscount: 'החל',
+      refundPolicy: 'מדיניות החזרות',
+      shippingPolicy: 'משלוחים',
+      privacyPolicy: 'מדיניות פרטיות',
+      termsOfService: 'תנאי שימוש',
     },
     about: {
       heroTitle: 'הנדסת חוץ.\nברמה אחרת.',
