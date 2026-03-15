@@ -353,9 +353,9 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
         </div>
       </div>
 
-      <section className="py-8 md:py-14">
+      <section className="py-6 md:py-10">
         <div className="section-container">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-14">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
             {/* LEFT: Product image gallery */}
             <div className="lg:col-span-5 space-y-3">
               <div className="relative aspect-square overflow-hidden rounded-xl bg-muted sticky top-28 group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
@@ -412,15 +412,18 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="lg:col-span-7 lg:sticky lg:top-28 lg:self-start"
             >
-              <h1 className="text-xl md:text-2xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
-              <p className="text-2xl font-bold mb-6">{t("common.currency")}{currentPrice.toLocaleString()}</p>
+              <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>
 
-              <div className="h-px bg-border mb-6" />
+              {/* Short description */}
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">{getLocaleText(product.description, locale)}</p>
+
+              <div className="h-px bg-border mb-5" />
 
               {/* Color selection */}
               {standardColors.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-5">
                   <p className="text-sm font-medium text-foreground mb-2.5">
                     {t("contractor.color")}: <span className="text-muted-foreground font-normal">
                       {selectedColor?.name || standardColors[0].name[locale]}
@@ -466,7 +469,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
 
               {/* Length selection */}
               {product.sizes.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-5">
                   <p className="text-sm font-medium text-foreground mb-2.5">{t("contractor.size")}:</p>
                   <div className="flex gap-2 flex-wrap">
                     {product.sizes.map((size) => {
@@ -494,7 +497,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               )}
 
               {/* Quantity */}
-              <div className="mb-6">
+              <div className="mb-5">
                 <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} max={9999} />
               </div>
