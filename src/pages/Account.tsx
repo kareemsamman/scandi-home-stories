@@ -107,7 +107,7 @@ const Account = () => {
 
   return (
     <Layout>
-      <section className="mt-14 md:mt-20 py-8 md:py-12">
+      <section className="mt-4 pb-8 md:pb-12">
         <div className="w-full max-w-[1000px] mx-auto px-6">
           <div className="flex items-center justify-between border-b border-border mb-8">
             <div className="flex gap-6">

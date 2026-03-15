@@ -16,7 +16,12 @@ interface ProfileStore {
 export const useProfile = create<ProfileStore>()(
   persist(
     (set) => ({
-      profile: { firstName: "", lastName: "", email: "", phone: "" },
+      profile: {
+        firstName: "אחמד",
+        lastName: "כנעאן",
+        email: "ahmad@example.com",
+        phone: "0521234567",
+      },
       updateProfile: (data) =>
         set((s) => ({ profile: { ...s.profile, ...data } })),
     }),

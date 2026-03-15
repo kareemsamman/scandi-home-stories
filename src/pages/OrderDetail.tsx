@@ -17,7 +17,7 @@ const OrderDetail = () => {
   if (!order) {
     return (
       <Layout>
-        <section className="mt-14 md:mt-20 py-16">
+        <section className="mt-4 py-16">
           <div className="w-full max-w-[800px] mx-auto px-6 text-center">
             <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-lg font-semibold">{t("product.notFound")}</p>
@@ -50,7 +50,6 @@ const OrderDetail = () => {
     }
   };
 
-  // Progress steps
   const steps = ["pending", "confirmed", "shipped", "delivered"];
   const currentStep = steps.indexOf(order.status);
 
@@ -59,39 +58,38 @@ const OrderDetail = () => {
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="mt-14 md:mt-20 py-8 md:py-12"
+        className="mt-4 pb-8 md:pb-12"
       >
-        <div className="w-full max-w-[800px] mx-auto px-6">
-          {/* Back button */}
+        <div className="w-full max-w-[800px] mx-auto px-4 md:px-6">
+          {/* Back */}
           <button
             onClick={() => navigate(localePath("/account"))}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <ArrowIcon className="w-4 h-4" />
             {t("account.orders")}
           </button>
 
           {/* Header */}
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start justify-between mb-5">
             <div>
-              <h1 className="text-xl font-bold">{t("account.orderNumber")} {order.orderNumber}</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{order.date}</p>
+              <h1 className="text-lg font-bold">{t("account.orderNumber")} {order.orderNumber}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{order.date}</p>
             </div>
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${statusColor(order.status)}`}>
+            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${statusColor(order.status)}`}>
               {statusLabel(order.status)}
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="bg-white rounded-xl border border-border p-5 mb-4">
-            <div className="flex items-center justify-between relative">
-              {/* Line behind */}
-              <div className="absolute top-3 inset-x-0 h-0.5 bg-border" />
+          {/* Progress */}
+          <div className="bg-white rounded-xl border border-border p-4 mb-3">
+            <div className="flex items-center justify-between relative px-2">
+              <div className="absolute top-3 inset-x-2 h-[2px] bg-border" />
               <div
-                className="absolute top-3 h-0.5 bg-foreground transition-all"
+                className="absolute top-3 h-[2px] bg-foreground transition-all"
                 style={{
-                  insetInlineStart: 0,
-                  width: `${(currentStep / (steps.length - 1)) * 100}%`,
+                  insetInlineStart: 8,
+                  width: `calc(${(currentStep / (steps.length - 1)) * 100}% - 16px)`,
                 }}
               />
               {steps.map((step, idx) => (
@@ -103,7 +101,7 @@ const OrderDetail = () => {
                   }`}>
                     {idx <= currentStep ? "✓" : idx + 1}
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-1.5 whitespace-nowrap">
+                  <span className="text-[9px] text-muted-foreground mt-1 whitespace-nowrap text-center max-w-[60px] leading-tight">
                     {statusLabel(step)}
                   </span>
                 </div>
@@ -112,73 +110,73 @@ const OrderDetail = () => {
           </div>
 
           {/* Items */}
-          <div className="bg-white rounded-xl border border-border divide-y divide-border mb-4">
-            <div className="px-5 py-3">
-              <h2 className="text-sm font-bold">{t("cart.product")}</h2>
+          <div className="bg-white rounded-xl border border-border mb-3">
+            <div className="px-4 py-2.5 border-b border-border">
+              <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("cart.product")}</h2>
             </div>
             {order.items.map((item, idx) => (
-              <div key={idx} className="px-5 py-4 flex gap-4 items-start">
+              <div key={idx} className={`px-4 py-3.5 flex gap-3 items-start ${idx > 0 ? "border-t border-border" : ""}`}>
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-16 h-16 rounded-lg object-cover border border-border shrink-0"
+                  className="w-14 h-14 rounded-lg object-cover border border-border shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                  <p className="text-sm font-semibold text-foreground leading-tight">{item.name}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                     {item.color && (
-                      <span className="text-xs text-muted-foreground">
-                        {t("contractor.color")}: {item.color}
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("contractor.color")}: <span className="font-medium text-foreground">{item.color}</span>
                       </span>
                     )}
                     {item.size && (
-                      <span className="text-xs text-muted-foreground">
-                        {t("contractor.size")}: {item.size}
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("contractor.size")}: <span className="font-medium text-foreground">{item.size}</span>
                       </span>
                     )}
-                    <span className="text-xs text-muted-foreground">
-                      {t("cart.quantity")}: {item.quantity}
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-[11px] text-muted-foreground">x{item.quantity}</span>
+                    <span className="text-sm font-bold">
+                      {t("common.currency")}{(item.price * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 </div>
-                <p className="text-sm font-bold shrink-0">
-                  {t("common.currency")}{(item.price * item.quantity).toLocaleString()}
-                </p>
               </div>
             ))}
           </div>
 
-          {/* Shipping address + Total */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Address + Summary side by side on desktop, stacked on mobile */}
+          <div className="grid gap-3 sm:grid-cols-2">
             {order.shippingAddress && (
-              <div className="bg-white rounded-xl border border-border p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-sm font-bold">{t("checkout.shippingAddress")}</h3>
+              <div className="bg-white rounded-xl border border-border p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("checkout.shippingAddress")}</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-foreground">
                   {order.shippingAddress.firstName} {order.shippingAddress.lastName}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {order.shippingAddress.city}, {order.shippingAddress.street} {order.shippingAddress.houseNumber}
-                  {order.shippingAddress.apartment ? `, ${order.shippingAddress.apartment}` : ""}
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {order.shippingAddress.street} {order.shippingAddress.houseNumber}
+                  {order.shippingAddress.apartment ? ` / ${order.shippingAddress.apartment}` : ""}, {order.shippingAddress.city}
                 </p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{order.shippingAddress.phone}</span>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Phone className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{order.shippingAddress.phone}</span>
                 </div>
               </div>
             )}
-            <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-bold mb-3">{t("cart.orderSummary")}</h3>
-              <div className="space-y-2">
+            <div className="bg-white rounded-xl border border-border p-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">{t("cart.orderSummary")}</h3>
+              <div className="space-y-1.5">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{t("cart.subtotal")}</span>
                   <span>{t("common.currency")}{order.total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{t("cart.shipping")}</span>
-                  <span>{t("cart.complimentary")}</span>
+                  <span className="text-green-600 font-medium">{t("cart.complimentary")}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold pt-2 border-t border-border">
                   <span>{t("cart.total")}</span>
