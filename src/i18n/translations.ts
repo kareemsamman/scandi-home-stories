@@ -481,6 +481,17 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'تحتاج مساعدة؟',
       helpText: 'نحن هنا من أجلك',
     },
+    miniCart: {
+      empty: 'سلتك فارغة',
+      continueShopping: 'متابعة التسوق',
+      freeShipping: 'أنت مؤهل للشحن المجاني.',
+      remove: 'إزالة',
+      buyWith: 'اشترِ مع',
+      add: 'أضف',
+      taxNote: 'الضرائب والشحن تُحسب عند الدفع',
+      orderNote: 'أضف ملاحظة للطلب',
+      viewCart: 'عرض السلة',
+    },
     search: {
       placeholder: 'بحث...',
       clear: 'مسح',

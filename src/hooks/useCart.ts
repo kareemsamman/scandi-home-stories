@@ -9,6 +9,9 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  isOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
   addItem: (product: Product, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
@@ -21,13 +24,16 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      isOpen: false,
+      openCart: () => set({ isOpen: true }),
+      closeCart: () => set({ isOpen: false }),
       addItem: (product, quantity = 1) => {
         set((state) => {
           const existing = state.items.find((i) => i.product.id === product.id);
           if (existing) {
-            return { items: state.items.map((i) => i.product.id === product.id ? { ...i, quantity: Math.min(i.quantity + quantity, 10) } : i) };
+            return { items: state.items.map((i) => i.product.id === product.id ? { ...i, quantity: Math.min(i.quantity + quantity, 10) } : i), isOpen: true };
           }
-          return { items: [...state.items, { product, quantity }] };
+          return { items: [...state.items, { product, quantity }], isOpen: true };
         });
       },
       updateQuantity: (productId, quantity) => {
@@ -39,6 +45,6 @@ export const useCart = create<CartState>()(
       getSubtotal: () => get().items.reduce((t, i) => t + i.product.price * i.quantity, 0),
       getItemCount: () => get().items.reduce((c, i) => c + i.quantity, 0),
     }),
-    { name: "amg-cart" }
+    { name: "amg-cart", partialize: (state) => ({ items: state.items }) }
   )
 );
