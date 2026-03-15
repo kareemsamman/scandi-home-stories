@@ -72,10 +72,10 @@ export const SiteHeader = () => {
       >
         <div className="px-6 md:px-10">
           {/* Desktop */}
-          <div className="hidden md:grid grid-cols-3 items-center h-24">
+          <div className="hidden md:grid grid-cols-3 items-center h-20 pt-4">
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
-                <img src={logoWhite} alt="AMG Pergola" className="h-24 w-auto" />
+                <img src={logoWhite} alt="AMG Pergola" className="h-16 w-auto" />
               </Link>
             </div>
 
