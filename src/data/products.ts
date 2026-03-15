@@ -413,9 +413,7 @@ export const products: Product[] = [
       { id: "4m", label: "4m" },
     ],
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileGateTubeImg],
   },
   {
     id: "beak-profile",
