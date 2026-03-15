@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw } from "lucide-react";
+import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
@@ -12,6 +12,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
@@ -30,26 +31,156 @@ const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; star
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
       onClick={onClose}
     >
       <button onClick={onClose} className="absolute top-4 end-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 z-10">
         <X className="w-5 h-5" />
       </button>
-      <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p - 1 + images.length) % images.length); }} className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
-        <ChevronLeft className="w-5 h-5" />
-      </button>
+      {images.length > 1 && (
+        <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p - 1 + images.length) % images.length); }} className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
       <img src={images[idx]} alt="" className="max-h-[90vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
-      <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p + 1) % images.length); }} className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
-        <ChevronRight className="w-5 h-5" />
-      </button>
-      <div className="absolute bottom-6 inset-x-0 flex justify-center gap-2">
-        {images.map((_, i) => (
-          <button key={i} onClick={(e) => { e.stopPropagation(); setIdx(i); }}
-            className={cn("w-2 h-2 rounded-full transition-colors", i === idx ? "bg-white" : "bg-white/30")} />
-        ))}
+      {images.length > 1 && (
+        <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p + 1) % images.length); }} className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      )}
+      {/* Image counter */}
+      <div className="absolute bottom-6 inset-x-0 flex justify-center">
+        <span className="text-white/80 text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-sm">
+          {idx + 1} / {images.length}
+        </span>
       </div>
     </motion.div>
+  );
+};
+
+/* ─── Mobile Swipe Gallery with Dots ─── */
+const MobileGallery = ({ images, onZoom }: { images: string[]; onZoom: (idx: number) => void }) => {
+  const [current, setCurrent] = useState(0);
+  const touchStart = useRef(0);
+  const touchEnd = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.targetTouches[0].clientX; };
+  const handleTouchMove = (e: React.TouchEvent) => { touchEnd.current = e.targetTouches[0].clientX; };
+  const handleTouchEnd = () => {
+    const diff = touchStart.current - touchEnd.current;
+    if (Math.abs(diff) > 50) {
+      // RTL: swipe directions are reversed
+      const isRtl = document.documentElement.dir === 'rtl';
+      if (isRtl ? diff < 0 : diff > 0) setCurrent((p) => Math.min(p + 1, images.length - 1));
+      else setCurrent((p) => Math.max(p - 1, 0));
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-muted">
+      <div
+        className="flex transition-transform duration-300 ease-out"
+        style={{ transform: `translateX(${document.documentElement.dir === 'rtl' ? current * 100 : -current * 100}%)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {images.map((img, i) => (
+          <div key={i} className="w-full flex-shrink-0 aspect-[4/5]">
+            <img src={img} alt="" className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
+          </div>
+        ))}
+      </div>
+      {/* Zoom button - top start on mobile */}
+      <button
+        onClick={() => onZoom(current)}
+        className="absolute top-3 start-3 w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center"
+      >
+        <ZoomIn className="w-4 h-4" />
+      </button>
+      {/* Blurred dots */}
+      {images.length > 1 && (
+        <div className="absolute bottom-3 inset-x-0 flex justify-center">
+          <div className="bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 flex gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all",
+                  i === current ? "bg-white scale-110" : "bg-white/40"
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Desktop Gallery with Thumbnails ─── */
+const DesktopGallery = ({ images, onZoom, badges }: { images: string[]; onZoom: (idx: number) => void; badges?: React.ReactNode }) => {
+  const [current, setCurrent] = useState(0);
+
+  return (
+    <div className="space-y-3">
+      {/* Main image */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted cursor-zoom-in" onClick={() => onZoom(current)}>
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={current}
+            src={images[current]}
+            alt=""
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-full h-full object-cover"
+          />
+        </AnimatePresence>
+        {/* Always-visible zoom button - bottom start */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onZoom(current); }}
+          className="absolute bottom-3 start-3 w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center"
+        >
+          <ZoomIn className="w-4 h-4" />
+        </button>
+        {/* Badges */}
+        {badges}
+      </div>
+      {/* Thumbnails */}
+      {images.length > 1 && (
+        <div className="flex gap-2">
+          {images.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={cn(
+                "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                i === current ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"
+              )}
+            >
+              <img src={img} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Additional Product Images Section ─── */
+const ProductImagesSection = ({ images }: { images: string[] }) => {
+  if (images.length <= 1) return null;
+  return (
+    <div className="space-y-4">
+      {images.map((img, i) => (
+        <div key={i} className="rounded-xl overflow-hidden">
+          <img src={img} alt="" className="w-full h-auto object-cover" loading="lazy" />
+        </div>
+      ))}
+    </div>
   );
 };
 
@@ -57,25 +188,36 @@ const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; star
 const RetailProductPage = ({ product }: { product: RetailProduct }) => {
   const { t, locale, localePath } = useLocale();
   const { addItem: addToCart } = useCart();
-  const [currentImg, setCurrentImg] = useState(0);
+  const isMobile = useIsMobile();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxStart, setLightboxStart] = useState(0);
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
   const collection = collections.find((c) => c.id === product.collection);
   const relatedProducts = getRelatedProducts(product.id);
 
-  const handleAdd = () => {
+  const handleZoom = (idx: number) => {
+    setLightboxStart(idx);
+    setLightboxOpen(true);
+  };
+
+  const handleAdd = async () => {
+    setIsAdding(true);
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
+    // Simulate brief loading
+    await new Promise((r) => setTimeout(r, 600));
     addToCart(product, quantity, options);
     setQuantity(1);
+    setIsAdding(false);
   };
 
   return (
     <Layout>
-      {/* Breadcrumb */}
-      <div className="section-container py-4 border-b border-border mt-16 md:mt-20">
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      {/* Breadcrumb — light, no border */}
+      <div className="section-container pt-2 pb-1 mt-14 md:mt-16">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
@@ -83,64 +225,24 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
         </div>
       </div>
 
-      <section className="py-8 md:py-14">
+      <section className="py-4 md:py-8">
         <div className="section-container">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-14">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-10">
             {/* LEFT: Image Gallery */}
-            <div className="lg:col-span-7 space-y-3">
-              {/* Main image */}
-              <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentImg}
-                    src={product.images[currentImg]}
-                    alt={product.name}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="w-full h-full object-cover"
-                  />
-                </AnimatePresence>
-                {/* Zoom button */}
-                <button className="absolute bottom-4 end-4 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-                {/* Badges */}
-                <div className="absolute top-4 start-4 flex flex-col gap-2">
-                  {product.new && <span className="px-3 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">{t("product.newBadge")}</span>}
-                  {product.featured && <span className="px-3 py-1 text-[10px] font-semibold bg-foreground text-background rounded-md">{t("product.featuredBadge")}</span>}
-                </div>
-                {/* Arrows */}
-                {product.images.length > 1 && (
-                  <>
-                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p - 1 + product.images.length) % product.images.length); }}
-                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p + 1) % product.images.length); }}
-                      className="absolute end-14 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
-              </div>
-              {/* Thumbnails */}
-              {product.images.length > 1 && (
-                <div className="flex gap-2.5">
-                  {product.images.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentImg(i)}
-                      className={cn(
-                        "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
-                        i === currentImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"
-                      )}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
+            <div className="lg:col-span-7">
+              {isMobile ? (
+                <MobileGallery images={product.images} onZoom={handleZoom} />
+              ) : (
+                <DesktopGallery
+                  images={product.images}
+                  onZoom={handleZoom}
+                  badges={
+                    <div className="absolute top-4 start-4 flex flex-col gap-2">
+                      {product.new && <span className="px-3 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">{t("product.newBadge")}</span>}
+                      {product.featured && <span className="px-3 py-1 text-[10px] font-semibold bg-foreground text-background rounded-md">{t("product.featuredBadge")}</span>}
+                    </div>
+                  }
+                />
               )}
             </div>
 
@@ -149,20 +251,15 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start"
+              className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start"
             >
-              {/* Category */}
               {collection && (
                 <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong mb-2 block">
                   {collection.name[locale]}
                 </Link>
               )}
-
-              {/* Name */}
-              <h1 className="text-2xl md:text-3xl font-bold mb-3">{product.name}</h1>
-
-              {/* Reviews placeholder */}
-              <div className="flex items-center gap-2 mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
+              <div className="flex items-center gap-2 mb-3">
                 <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} className="w-3.5 h-3.5 fill-accent-strong text-accent-strong" />
@@ -170,19 +267,14 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
                 </div>
                 <span className="text-xs text-muted-foreground">{t("product.noReviews")}</span>
               </div>
-
-              {/* Price */}
-              <p className="text-2xl font-bold mb-5">{t("common.currency")}{product.price.toLocaleString()}</p>
-
-              {/* Description */}
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">{getLocaleText(product.description, locale)}</p>
-
-              <div className="h-px bg-border mb-6" />
+              <p className="text-2xl font-bold mb-4">{t("common.currency")}{product.price.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">{getLocaleText(product.description, locale)}</p>
+              <div className="h-px bg-border mb-5" />
 
               {/* Color */}
               {product.colors.length > 0 && (
-                <div className="mb-6">
-                  <span className="text-sm font-medium text-foreground block mb-2.5">
+                <div className="mb-5">
+                  <span className="text-sm font-medium text-foreground block mb-2">
                     {t("contractor.color")}: <span className="text-muted-foreground font-normal">{selectedColor?.name[locale]}</span>
                   </span>
                   <div className="flex flex-wrap gap-2.5">
@@ -203,19 +295,28 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
               )}
 
               {/* Quantity */}
-              <div className="mb-6">
-                <span className="text-sm font-medium text-foreground block mb-2.5">{t("product.quantity")}</span>
+              <div className="mb-5">
+                <span className="text-sm font-medium text-foreground block mb-2">{t("product.quantity")}</span>
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
               </div>
 
-              {/* Add to cart */}
-              <Button size="lg" onClick={handleAdd} className="rounded-xl w-full py-6 text-sm font-semibold">
-                <ShoppingBag className="w-4 h-4 me-2" />
-                {t("product.addToBag")}
+              {/* Add to cart with loading */}
+              <Button
+                size="lg"
+                onClick={handleAdd}
+                disabled={isAdding}
+                className="rounded-xl w-full py-6 text-sm font-semibold"
+              >
+                {isAdding ? (
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                ) : (
+                  <ShoppingBag className="w-4 h-4 me-2" />
+                )}
+                {isAdding ? t("product.adding") : t("product.addToBag")}
               </Button>
 
               {/* Trust badges */}
-              <div className="mt-8 pt-6 border-t border-border grid grid-cols-3 gap-4">
+              <div className="mt-6 pt-5 border-t border-border grid grid-cols-3 gap-4">
                 <div className="flex flex-col items-center text-center gap-1.5">
                   <Truck className="w-5 h-5 text-muted-foreground" />
                   <p className="text-[10px] font-semibold text-muted-foreground">{t("product.shipping")}</p>
@@ -237,41 +338,48 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
         </div>
       </section>
 
-      {/* Product details section */}
-      <section className="py-12 border-t border-border">
+      {/* About the product */}
+      <section className="py-10 md:py-14">
         <div className="section-container">
-          <div className="max-w-3xl mx-auto space-y-10">
-            {/* Long description */}
+          <div className="max-w-4xl mx-auto space-y-10">
+            {/* About */}
             <div>
-              <h2 className="text-xl font-bold mb-4">{t("product.description")}</h2>
-              <p className="text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
+              <h2 className="text-xl md:text-2xl font-bold mb-4">{t("product.aboutProduct")}</h2>
+              <p className="text-base text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
             </div>
 
-            {/* Specs */}
+            {/* Details table */}
             <div>
-              <h2 className="text-xl font-bold mb-4">{t("product.specifications")}</h2>
-              <div className="divide-y divide-border">
-                <div className="flex justify-between py-3">
+              <h2 className="text-xl md:text-2xl font-bold mb-4">{t("product.productDetails")}</h2>
+              <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                <div className="flex justify-between py-3.5 px-4 bg-muted/50">
                   <span className="text-sm text-muted-foreground">{t("product.materials")}</span>
                   <span className="text-sm font-medium">{product.materials}</span>
                 </div>
                 {product.dimensions && (
-                  <div className="flex justify-between py-3">
+                  <div className="flex justify-between py-3.5 px-4">
                     <span className="text-sm text-muted-foreground">{t("product.dimensions")}</span>
                     <span className="text-sm font-medium">{product.dimensions}</span>
                   </div>
                 )}
+                <div className="flex justify-between py-3.5 px-4 bg-muted/50">
+                  <span className="text-sm text-muted-foreground">{t("product.warranty")}</span>
+                  <span className="text-sm font-medium">{t("product.warrantyText")}</span>
+                </div>
               </div>
             </div>
+
+            {/* Additional product images */}
+            <ProductImagesSection images={product.images} />
           </div>
         </div>
       </section>
 
       {/* Related products */}
       {relatedProducts.length > 0 && (
-        <section className="py-14 md:py-20 border-t border-border">
-          <div className="section-container">
-            <h2 className="text-2xl font-bold mb-10">{t("product.relatedProducts")}</h2>
+        <section className="py-10 md:py-14 border-t border-border">
+          <div className="section-container md:!max-w-[90%]">
+            <h2 className="text-xl md:text-2xl font-bold mb-8">{t("product.relatedProducts")}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {relatedProducts.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
             </div>
@@ -282,25 +390,27 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
       {/* Lightbox */}
       <AnimatePresence>
         {lightboxOpen && (
-          <ImageLightbox images={product.images} startIndex={currentImg} onClose={() => setLightboxOpen(false)} />
+          <ImageLightbox images={product.images} startIndex={lightboxStart} onClose={() => setLightboxOpen(false)} />
         )}
       </AnimatePresence>
     </Layout>
   );
 };
 
-/* ─── Contractor (B2B) Product Page — Redirects to shop ─── */
+/* ─── Contractor (B2B) Product Page ─── */
 const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
   const { t, locale, localePath } = useLocale();
   const { addItem } = useCart();
+  const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label || null);
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [customColorOpen, setCustomColorOpen] = useState(false);
-  const [currentImg, setCurrentImg] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxStart, setLightboxStart] = useState(0);
   const collection = collections.find((c) => c.id === product.collection);
   const relatedProducts = getRelatedProducts(product.id);
 
@@ -316,15 +426,21 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
     return product.sizes[0]?.price || product.price;
   })();
 
-  // Initialize default color
   useEffect(() => {
     if (!selectedColor && standardColors.length > 0) {
       setSelectedColor({ id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex });
     }
   }, []);
 
-  const handleAdd = () => {
+  const handleZoom = (idx: number) => {
+    setLightboxStart(idx);
+    setLightboxOpen(true);
+  };
+
+  const handleAdd = async () => {
+    setIsAdding(true);
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
+    await new Promise((r) => setTimeout(r, 500));
     const cart = useCart.getState();
     const key = `${product.id}__${selectedSize || ""}__${colorOption?.id || ""}`;
     const existing = cart.items.find(
@@ -337,15 +453,16 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
         items: [...state.items, { product, quantity, options: { color: colorOption, size: selectedSize || undefined } }],
       }));
     }
+    setIsAdding(false);
     setAddedConfirm(true);
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
   };
 
   return (
     <Layout>
-      {/* Breadcrumb */}
-      <div className="section-container py-4 border-b border-border mt-16 md:mt-20">
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      {/* Breadcrumb — light, no border */}
+      <div className="section-container pt-2 pb-1 mt-14 md:mt-16">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
@@ -353,54 +470,16 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
         </div>
       </div>
 
-      <section className="py-6 md:py-10">
+      <section className="py-4 md:py-6">
         <div className="section-container">
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-12 gap-5 lg:gap-8">
             {/* LEFT: Product image gallery */}
-            <div className="lg:col-span-5 space-y-3">
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-muted sticky top-28 group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentImg}
-                    src={product.images[currentImg]}
-                    alt={product.name}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="w-full h-full object-cover"
-                  />
-                </AnimatePresence>
-                <button className="absolute bottom-4 end-4 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-                {product.images.length > 1 && (
-                  <>
-                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p - 1 + product.images.length) % product.images.length); }}
-                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p + 1) % product.images.length); }}
-                      className="absolute end-14 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
-              </div>
-              {product.images.length > 1 && (
-                <div className="flex gap-2.5">
-                  {product.images.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentImg(i)}
-                      className={cn(
-                        "w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
-                        i === currentImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"
-                      )}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+            <div className="lg:col-span-5">
+              {isMobile ? (
+                <MobileGallery images={product.images} onZoom={handleZoom} />
+              ) : (
+                <div className="sticky top-24">
+                  <DesktopGallery images={product.images} onZoom={handleZoom} />
                 </div>
               )}
             </div>
@@ -410,27 +489,22 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="lg:col-span-7 lg:sticky lg:top-28 lg:self-start"
+              className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start"
             >
               <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
               <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>
-
-              {/* Short description */}
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{getLocaleText(product.description, locale)}</p>
-
-              <div className="h-px bg-border mb-5" />
+              <div className="h-px bg-border mb-4" />
 
               {/* Color selection */}
               {standardColors.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-sm font-medium text-foreground mb-2.5">
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-foreground mb-2">
                     {t("contractor.color")}: <span className="text-muted-foreground font-normal">
                       {selectedColor?.name || standardColors[0].name[locale]}
                     </span>
                   </p>
-
-                  {/* Custom color indicator */}
                   {isCustomColor && selectedColor && (
                     <div className="flex items-center gap-2.5 mb-3 p-2.5 rounded-xl border border-foreground bg-muted">
                       <span className="w-8 h-8 rounded-lg border border-foreground flex-shrink-0" style={{ backgroundColor: selectedColor.hex }} />
@@ -440,7 +514,6 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
                       </button>
                     </div>
                   )}
-
                   <div className={cn("flex gap-2.5 flex-wrap", isCustomColor && "opacity-40 pointer-events-none")}>
                     {standardColors.map((color) => {
                       const isActive = !isCustomColor && (selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id));
@@ -455,7 +528,6 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
                       );
                     })}
                   </div>
-
                   {hasCustomColors && (
                     <button
                       onClick={() => setCustomColorOpen(true)}
@@ -469,8 +541,8 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
 
               {/* Length selection */}
               {product.sizes.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-sm font-medium text-foreground mb-2.5">{t("contractor.size")}:</p>
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-foreground mb-2">{t("contractor.size")}:</p>
                   <div className="flex gap-2 flex-wrap">
                     {product.sizes.map((size) => {
                       const isActive = selectedSize === size.label || (!selectedSize && size.id === product.sizes[0].id);
@@ -497,8 +569,8 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               )}
 
               {/* Quantity */}
-              <div className="mb-5">
-                <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
+              <div className="mb-4">
+                <p className="text-sm font-medium text-foreground mb-2">{t("product.quantity")}</p>
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} max={9999} />
               </div>
 
@@ -522,16 +594,25 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     onClick={handleAdd}
-                    className="w-full h-14 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-xl text-foreground hover:bg-foreground hover:text-background transition-colors"
+                    disabled={isAdding}
+                    className={cn(
+                      "w-full h-14 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-xl transition-colors",
+                      isAdding ? "opacity-70 cursor-not-allowed" : "text-foreground hover:bg-foreground hover:text-background"
+                    )}
                   >
-                    <ShoppingBag className="w-4 h-4 me-2" />
-                    {t("product.addToBag")}
+                    {isAdding ? (
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                    ) : (
+                      <ShoppingBag className="w-4 h-4 me-2" />
+                    )}
+                    {isAdding ? t("product.adding") : t("product.addToBag")}
                   </motion.button>
                 )}
               </AnimatePresence>
 
               {/* Description */}
-              <div className="mt-8 pt-6 border-t border-border">
+              <div className="mt-6 pt-5 border-t border-border">
+                <h3 className="text-base font-bold mb-2">{t("product.aboutProduct")}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
               </div>
 
@@ -549,9 +630,9 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
 
       {/* Related products */}
       {relatedProducts.length > 0 && (
-        <section className="py-14 md:py-20 border-t border-border">
-          <div className="section-container">
-            <h2 className="text-2xl font-bold mb-10">{t("product.relatedProducts")}</h2>
+        <section className="py-10 md:py-14 border-t border-border">
+          <div className="section-container md:!max-w-[90%]">
+            <h2 className="text-xl md:text-2xl font-bold mb-8">{t("product.relatedProducts")}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {relatedProducts.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
             </div>
@@ -571,7 +652,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
       {/* Lightbox */}
       <AnimatePresence>
         {lightboxOpen && (
-          <ImageLightbox images={product.images} startIndex={currentImg} onClose={() => setLightboxOpen(false)} />
+          <ImageLightbox images={product.images} startIndex={lightboxStart} onClose={() => setLightboxOpen(false)} />
         )}
       </AnimatePresence>
     </Layout>
