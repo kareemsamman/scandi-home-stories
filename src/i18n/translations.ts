@@ -505,7 +505,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       materials: 'المواد',
       dimensions: 'الأبعاد',
       shipping: 'الشحن',
-      shippingText: 'شحن مجاني فوق ₪5,000',
+      shippingText: 'شحن مجاني',
       returns: 'الإرجاع',
       returnsText: '14 يوم للإرجاع',
       warranty: 'الضمان',
