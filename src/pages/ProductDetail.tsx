@@ -20,9 +20,8 @@ const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; star
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-        setIdx((p) => e.key === "ArrowRight" ? (p + 1) % images.length : (p - 1 + images.length) % images.length);
-      }
+      if (e.key === "ArrowLeft") setIdx((p) => (p - 1 + images.length) % images.length);
+      if (e.key === "ArrowRight") setIdx((p) => (p + 1) % images.length);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -31,29 +30,39 @@ const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; star
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+      className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center"
       onClick={onClose}
     >
-      <button onClick={onClose} className="absolute top-4 end-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 z-10">
+      {/* Close button */}
+      <button onClick={onClose} className="absolute top-4 end-4 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground hover:bg-muted z-10">
         <X className="w-5 h-5" />
       </button>
+
+      {/* Image */}
+      <img src={images[idx]} alt="" className="max-h-[80vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
+
+      {/* Bottom pagination with arrows */}
       {images.length > 1 && (
-        <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p - 1 + images.length) % images.length); }} className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+        <div className="absolute bottom-6 inset-x-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-4 bg-background border border-border rounded-full px-4 py-2 shadow-sm">
+            <button
+              onClick={() => setIdx((p) => (p - 1 + images.length) % images.length)}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-medium tabular-nums">
+              {idx + 1} / {images.length}
+            </span>
+            <button
+              onClick={() => setIdx((p) => (p + 1) % images.length)}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
-      <img src={images[idx]} alt="" className="max-h-[90vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
-      {images.length > 1 && (
-        <button onClick={(e) => { e.stopPropagation(); setIdx((p) => (p + 1) % images.length); }} className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      )}
-      {/* Image counter */}
-      <div className="absolute bottom-6 inset-x-0 flex justify-center">
-        <span className="text-white/80 text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-sm">
-          {idx + 1} / {images.length}
-        </span>
-      </div>
     </motion.div>
   );
 };
@@ -69,7 +78,6 @@ const MobileGallery = ({ images, onZoom }: { images: string[]; onZoom: (idx: num
   const handleTouchEnd = () => {
     const diff = touchStart.current - touchEnd.current;
     if (Math.abs(diff) > 50) {
-      // RTL: swipe directions are reversed
       const isRtl = document.documentElement.dir === 'rtl';
       if (isRtl ? diff < 0 : diff > 0) setCurrent((p) => Math.min(p + 1, images.length - 1));
       else setCurrent((p) => Math.max(p - 1, 0));
@@ -119,14 +127,33 @@ const MobileGallery = ({ images, onZoom }: { images: string[]; onZoom: (idx: num
   );
 };
 
-/* ─── Desktop Gallery with Thumbnails ─── */
+/* ─── Desktop Gallery with Thumbnails + Touch ─── */
 const DesktopGallery = ({ images, onZoom, badges }: { images: string[]; onZoom: (idx: number) => void; badges?: React.ReactNode }) => {
   const [current, setCurrent] = useState(0);
+  const touchStart = useRef(0);
+  const touchEnd = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.targetTouches[0].clientX; };
+  const handleTouchMove = (e: React.TouchEvent) => { touchEnd.current = e.targetTouches[0].clientX; };
+  const handleTouchEnd = () => {
+    const diff = touchStart.current - touchEnd.current;
+    if (Math.abs(diff) > 50) {
+      const isRtl = document.documentElement.dir === 'rtl';
+      if (isRtl ? diff < 0 : diff > 0) setCurrent((p) => Math.min(p + 1, images.length - 1));
+      else setCurrent((p) => Math.max(p - 1, 0));
+    }
+  };
 
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted cursor-zoom-in" onClick={() => onZoom(current)}>
+      <div
+        className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted cursor-zoom-in"
+        onClick={() => onZoom(current)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <AnimatePresence mode="wait">
           <motion.img
             key={current}
@@ -206,7 +233,6 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
     setIsAdding(true);
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
-    // Simulate brief loading
     await new Promise((r) => setTimeout(r, 600));
     addToCart(product, quantity, options);
     setQuantity(1);
@@ -259,14 +285,6 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
                 </Link>
               )}
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} className="w-3.5 h-3.5 fill-accent-strong text-accent-strong" />
-                  ))}
-                </div>
-                <span className="text-xs text-muted-foreground">{t("product.noReviews")}</span>
-              </div>
               <p className="text-2xl font-bold mb-4">{t("common.currency")}{product.price.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">{getLocaleText(product.description, locale)}</p>
               <div className="h-px bg-border mb-5" />
@@ -338,19 +356,20 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
         </div>
       </section>
 
-      {/* About the product */}
+      {/* About + Details — Side by side like Mirador */}
       <section className="py-10 md:py-14">
         <div className="section-container">
-          <div className="max-w-4xl mx-auto space-y-10">
-            {/* About */}
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16">
+            {/* Right side (in RTL) — About text */}
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">{t("product.aboutProduct")}</h2>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("product.about")}</p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name}</h2>
               <p className="text-base text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
             </div>
 
-            {/* Details table */}
+            {/* Left side (in RTL) — Specs table */}
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">{t("product.productDetails")}</h2>
+              <h3 className="text-lg font-bold mb-4">{t("product.productDetails")}</h3>
               <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
                 <div className="flex justify-between py-3.5 px-4 bg-muted/50">
                   <span className="text-sm text-muted-foreground">{t("product.materials")}</span>
@@ -368,8 +387,10 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Additional product images */}
+          {/* Additional product images below both columns */}
+          <div className="mt-12">
             <ProductImagesSection images={product.images} />
           </div>
         </div>
@@ -609,21 +630,37 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
                   </motion.button>
                 )}
               </AnimatePresence>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
-              {/* Description */}
-              <div className="mt-6 pt-5 border-t border-border">
-                <h3 className="text-base font-bold mb-2">{t("product.aboutProduct")}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
-              </div>
+      {/* About + Details — Side by side like Mirador */}
+      <section className="py-10 md:py-14 border-t border-border">
+        <div className="section-container">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16">
+            {/* About text */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("product.about")}</p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name}</h2>
+              <p className="text-base text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
+            </div>
 
-              {/* Materials */}
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex justify-between py-2">
+            {/* Specs table */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">{t("product.productDetails")}</h3>
+              <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                <div className="flex justify-between py-3.5 px-4 bg-muted/50">
                   <span className="text-sm text-muted-foreground">{t("product.materials")}</span>
                   <span className="text-sm font-medium">{product.materials}</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
+          </div>
+
+          {/* Additional images below */}
+          <div className="mt-12">
+            <ProductImagesSection images={product.images} />
           </div>
         </div>
       </section>
