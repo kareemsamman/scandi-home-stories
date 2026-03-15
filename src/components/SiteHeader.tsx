@@ -187,7 +187,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        isSolidBlack ? "bg-white text-dark" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
+                        isSolidPage ? "bg-foreground text-background" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
