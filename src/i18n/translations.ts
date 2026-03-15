@@ -525,6 +525,13 @@ export const translations: Record<Locale, Record<string, any>> = {
       showSummary: 'ملخص الطلب',
       emptyTitle: 'لا توجد عناصر',
       emptyText: 'السلة فارغة.',
+      city: 'المدينة',
+      discountPlaceholder: 'رمز الخصم أو بطاقة هدية',
+      applyDiscount: 'تطبيق',
+      refundPolicy: 'سياسة الاسترداد',
+      shippingPolicy: 'الشحن',
+      privacyPolicy: 'سياسة الخصوصية',
+      termsOfService: 'شروط الخدمة',
     },
     about: {
       heroTitle: 'هندسة خارجية.\nبمستوى آخر.',
