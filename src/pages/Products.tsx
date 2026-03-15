@@ -96,13 +96,16 @@ const Products = () => {
       });
     }
 
-    // Search filter
+    // Search filter - flexible: case-insensitive, ignores dashes/spaces
     if (filters.search) {
-      const q = filters.search.toLowerCase();
+      const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "");
+      const q = normalize(filters.search);
       result = result.filter((p) => {
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchSku = p.type === "contractor" && (p as ContractorProduct).sku.toLowerCase().includes(q);
-        return matchName || matchSku;
+        const matchName = normalize(p.name).includes(q);
+        const matchSku = p.type === "contractor" && normalize((p as ContractorProduct).sku).includes(q);
+        const matchCollection = collections.find((c) => c.id === p.collection);
+        const matchCol = matchCollection ? (normalize(matchCollection.name.he).includes(q) || normalize(matchCollection.name.ar).includes(q)) : false;
+        return matchName || matchSku || matchCol;
       });
     }
 

@@ -120,28 +120,26 @@ export const MiniCart = () => {
           })}
         </div>
 
-        {/* Buy With - horizontal slider */}
+        {/* Buy With - grid layout like reference */}
         {buyWithProducts.length > 0 && (
           <div className="mt-6 pt-4 border-t border-border">
             <p className="text-sm font-semibold mb-3">{t("miniCart.buyWith")}</p>
-            <div
-              ref={scrollRef}
-              className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory"
-              style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
-            >
-              {buyWithProducts.map((p) => (
-                <div key={p.id} className="flex-shrink-0 w-[160px] snap-start rounded-xl border border-border bg-muted/30 p-3 space-y-2">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+            <div className="grid grid-cols-2 gap-3">
+              {buyWithProducts.slice(0, 4).map((p) => (
+                <div key={p.id} className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-muted/30">
                     <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-xs font-semibold truncate">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
-                  <button
-                    onClick={() => useCart.getState().addItem(p, 1)}
-                    className="text-xs font-semibold border border-foreground rounded-full px-3 py-1 text-foreground hover:bg-foreground hover:text-background transition-colors"
-                  >
-                    + {t("miniCart.add")}
-                  </button>
+                  <p className="text-xs font-semibold truncate text-center">{p.name}</p>
+                  <p className="text-xs text-muted-foreground text-center">{t("common.currency")}{p.price.toLocaleString()}</p>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => useCart.getState().addItem(p, 1)}
+                      className="text-xs font-semibold border border-foreground rounded-full px-4 py-1.5 text-foreground hover:bg-foreground hover:text-background transition-colors"
+                    >
+                      + {t("miniCart.add")}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
