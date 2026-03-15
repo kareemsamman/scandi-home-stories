@@ -141,6 +141,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       specifications: 'מפרט טכני',
       features: 'תכונות',
       description: 'תיאור',
+      about: 'אודות',
       aboutProduct: 'אודות המוצר',
       productDetails: 'פרטי המוצר',
       adding: 'מוסיף...',
