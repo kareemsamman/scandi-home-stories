@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
-  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu, X
+  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Grid3X3
 } from "lucide-react";
 
 const navItems = [
