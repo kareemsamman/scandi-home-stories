@@ -177,21 +177,6 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* Mobile: collapsible shipping estimate */}
-                <div className="lg:hidden">
-                  <button
-                    onClick={() => setShippingOpen(!shippingOpen)}
-                    className="flex items-center justify-between w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-                  >
-                    <span>{t("cart.estimateShipping")}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", shippingOpen && "rotate-180")} />
-                  </button>
-                  {shippingOpen && (
-                    <div className="pt-2 pb-3 text-xs text-muted-foreground">
-                      {t("cart.freeShippingNote")}
-                    </div>
-                  )}
-                </div>
 
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between text-base font-bold">
