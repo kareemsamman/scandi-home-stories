@@ -1,12 +1,14 @@
 import { ReactNode } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { useNavigate, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface LocaleSwitcherProps {
   icon?: ReactNode;
+  scrolled?: boolean;
 }
 
-export const LocaleSwitcher = ({ icon }: LocaleSwitcherProps) => {
+export const LocaleSwitcher = ({ icon, scrolled }: LocaleSwitcherProps) => {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,7 +23,12 @@ export const LocaleSwitcher = ({ icon }: LocaleSwitcherProps) => {
   return (
     <button
       onClick={toggleLocale}
-      className="flex items-center gap-1 p-2 text-white hover:text-white/80 transition-colors"
+      className={cn(
+        "flex items-center gap-1 p-2 transition-colors duration-[240ms]",
+        scrolled
+          ? "text-foreground hover:text-foreground/70"
+          : "text-white hover:text-white/80"
+      )}
       aria-label="Switch language"
     >
       {icon}
