@@ -132,10 +132,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                     <span
                       key={s.id}
                       className={cn(
-                        "px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight",
-                        idx === 0
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border text-muted-foreground"
+                        "px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight border-border text-muted-foreground"
                       )}
                     >
                       <span>{s.label}</span>
