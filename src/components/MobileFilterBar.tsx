@@ -198,7 +198,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                     )}
 
                     {/* Color */}
-                    {allColors.length > 0 && (
+                    {availableColors.length > 0 && (
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">
                           {t("shop.filters.color")}
