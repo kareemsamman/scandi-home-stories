@@ -247,7 +247,7 @@ const Products = () => {
       )}
 
       {/* Main content: Sidebar + Grid */}
-      <section className="py-8 md:py-12 pb-24 md:pb-12">
+      <section ref={gridRef} className="py-8 md:py-12 pb-24 md:pb-12">
         <div className="section-container md:!max-w-[94%]">
           <div className="flex gap-8">
             {/* Desktop sidebar */}
