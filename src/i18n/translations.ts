@@ -503,12 +503,21 @@ export const translations: Record<Locale, Record<string, any>> = {
     contractor: {
       sku: 'رقم القطعة',
       length: 'الطول',
-      size: 'المقاس',
+      size: 'الطول',
       color: 'اللون',
       selectedColor: 'اللون المحدد',
-      selectSize: 'يرجى اختيار المقاس',
+      selectSize: 'يرجى اختيار الطول',
       selectColor: 'يرجى اختيار اللون',
       customColor: 'اختر لون مخصص',
+      addedToCart: 'تمت الإضافة للسلة',
+      colorTabs: {
+        ral: 'RAL كود اللون',
+        passivation: 'تخميل',
+        noColorMF: 'بدون لون MF',
+        woodLook: 'شبيه الخشب',
+        iron: 'حديد',
+        metal: 'معدن',
+      },
     },
     miniCart: {
       empty: 'سلتك فارغة',
