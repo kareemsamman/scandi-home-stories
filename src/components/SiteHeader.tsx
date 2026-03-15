@@ -7,6 +7,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { cn } from "@/lib/utils";
 import logoWhite from "@/assets/logo-white.png";
+import { SearchModal } from "./SearchModal";
 
 const SearchIcon = () => (
   <svg role="presentation" strokeWidth="2" focusable="false" width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -48,6 +49,7 @@ export const SiteHeader = () => {
   const { t, localePath } = useLocale();
   const itemCount = useCart((s) => s.getItemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Scroll states
   const [isAtTop, setIsAtTop] = useState(true);
@@ -153,6 +155,7 @@ export const SiteHeader = () => {
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Search"
+                onClick={() => setSearchOpen(true)}
               >
                 <SearchIcon />
               </button>
@@ -201,6 +204,7 @@ export const SiteHeader = () => {
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Search"
+                onClick={() => setSearchOpen(true)}
               >
                 <SearchIcon />
               </button>
@@ -252,6 +256,7 @@ export const SiteHeader = () => {
       </header>
 
       <MobileNavDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 };
