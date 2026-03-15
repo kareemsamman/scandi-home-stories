@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidersHorizontal, Grid3X3, ArrowUpDown, X, Search, Check } from "lucide-react";
-import { collections, profileSubCategories, products, ContractorProduct } from "@/data/products";
+import { collections, profileSubCategories, products, ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -24,38 +24,34 @@ interface MobileFilterBarProps {
   onClearAll: () => void;
 }
 
-const allLengths = Array.from(
-  new Set(
-    products
-      .filter((p): p is ContractorProduct => p.type === "contractor")
-      .flatMap((p) => p.sizes.map((s) => s.label))
-  )
-);
-
-const allColors = (() => {
-  const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
-  products
-    .filter((p): p is ContractorProduct => p.type === "contractor")
-    .forEach((p) => {
-      if (p.colorGroups[0]) {
-        p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c));
-      }
-    });
-  products
-    .filter((p) => p.type === "retail")
-    .forEach((p) => {
-      const retail = p as import("@/data/products").RetailProduct;
-      retail.colors.forEach((c) => colorMap.set(c.id, c));
-    });
-  return Array.from(colorMap.values());
-})();
-
 type PanelType = "filter" | "category" | "sort" | null;
 
 export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearAll }: MobileFilterBarProps) => {
   const { t, locale } = useLocale();
   const [activePanel, setActivePanel] = useState<PanelType>(null);
   const sortOptions: any[] = t("shop.sortOptions") || [];
+
+  // Dynamic lengths and colors based on current collection
+  const { availableLengths, availableColors, hasContractorProducts } = useMemo(() => {
+    let relevantProducts = [...products];
+    if (filters.collection !== "all") {
+      const col = collections.find((c) => c.slug === filters.collection);
+      if (col) relevantProducts = relevantProducts.filter((p) => p.collection === col.id);
+    }
+    if (filters.collection === "profiles" && filters.subCategory !== "all") {
+      relevantProducts = relevantProducts.filter((p) => {
+        if (p.type === "contractor") return (p as ContractorProduct).subCategory === filters.subCategory;
+        return false;
+      });
+    }
+    const contractorProducts = relevantProducts.filter((p): p is ContractorProduct => p.type === "contractor");
+    const retailProducts = relevantProducts.filter((p): p is RetailProduct => p.type === "retail");
+    const lengths = Array.from(new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label))));
+    const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
+    contractorProducts.forEach((p) => { if (p.colorGroups[0]) p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c)); });
+    retailProducts.forEach((p) => { p.colors.forEach((c) => colorMap.set(c.id, c)); });
+    return { availableLengths: lengths, availableColors: Array.from(colorMap.values()), hasContractorProducts: contractorProducts.length > 0 };
+  }, [filters.collection, filters.subCategory]);
 
   const closePanel = () => setActivePanel(null);
 
