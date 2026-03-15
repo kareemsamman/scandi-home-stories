@@ -48,7 +48,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     if (!contractor || contractor.sizes.length === 0) return null;
     const labels = contractor.sizes.map(s => s.label);
     if (labels.length === 1) return labels[0];
-    return `${labels[0]}–${labels[labels.length - 1]}`;
+    return `${labels[labels.length - 1]}–${labels[0]}`;
   };
 
   const lengthRange = getLengthRange();
