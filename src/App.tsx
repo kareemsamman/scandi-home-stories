@@ -23,6 +23,10 @@ import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminCategories from "./pages/admin/Categories";
+import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
+import AdminHeroSlides from "./pages/admin/HeroSlides";
 
 const queryClient = new QueryClient();
 
