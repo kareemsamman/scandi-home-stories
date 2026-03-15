@@ -36,6 +36,7 @@ const defaultFilters: FilterState = {
 };
 
 const Products = () => {
+  const [isSearching, setIsSearching] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale, localePath } = useLocale();
 
