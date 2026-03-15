@@ -36,7 +36,7 @@ export const MiniCart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
 
   const overlayRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
 
