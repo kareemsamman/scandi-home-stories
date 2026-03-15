@@ -256,6 +256,7 @@ const Products = () => {
               filters={filters}
               onFilterChange={handleFilterChange}
               resultCount={filteredAndSortedProducts.length}
+              onSearchingChange={setIsSearching}
             />
 
             {/* Product grid area */}
