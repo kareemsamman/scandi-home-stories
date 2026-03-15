@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +24,7 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli streets API (includes city + street) ---------- */
+/* ---------- Israeli streets API ---------- */
 const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
 const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
 
@@ -73,68 +73,29 @@ const validatePhone = (v: string) => /^\d{10}$/.test(v.replace(/\s/g, ""));
 
 /* ---------- Floating Label Input ---------- */
 const FloatingInput = ({
-  name,
-  label,
-  value,
-  onChange,
-  onBlur,
-  onFocus,
-  error,
-  type = "text",
-  inputMode,
-  inputRef,
-  autoComplete = "off",
+  name, label, value, onChange, onBlur, onFocus, error, type = "text", inputMode, inputRef, autoComplete = "off",
 }: {
-  name: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: () => void;
-  onFocus?: () => void;
-  error?: string;
-  type?: string;
-  inputMode?: "text" | "numeric" | "email" | "tel";
-  inputRef?: React.Ref<HTMLInputElement>;
-  autoComplete?: string;
+  name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: () => void; onFocus?: () => void; error?: string; type?: string;
+  inputMode?: "text" | "numeric" | "email" | "tel"; inputRef?: React.Ref<HTMLInputElement>; autoComplete?: string;
 }) => {
   const [focused, setFocused] = useState(false);
   const isActive = focused || value.length > 0;
-
   return (
     <div>
       <div className="relative">
-        <input
-          ref={inputRef}
-          name={name}
-          type={type}
-          inputMode={inputMode}
-          value={value}
-          onChange={onChange}
-          onFocus={() => {
-            setFocused(true);
-            onFocus?.();
-          }}
-          onBlur={() => {
-            setFocused(false);
-            onBlur?.();
-          }}
+        <input ref={inputRef} name={name} type={type} inputMode={inputMode} value={value} onChange={onChange}
+          onFocus={() => { setFocused(true); onFocus?.(); }}
+          onBlur={() => { setFocused(false); onBlur?.(); }}
           autoComplete={autoComplete}
           className={`peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
-            error
-              ? "border-red-400 focus:ring-red-200 focus:border-red-400"
-              : "border-border focus:ring-[#4f6df5]/30 focus:border-[#4f6df5]"
+            error ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[#4f6df5]/30 focus:border-[#4f6df5]"
           }`}
           placeholder=" "
         />
-        <label
-          className={`absolute start-4 transition-all duration-200 pointer-events-none ${
-            isActive
-              ? "top-1.5 text-[10px] text-muted-foreground"
-              : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-          }`}
-        >
-          {label}
-        </label>
+        <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+          isActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+        }`}>{label}</label>
       </div>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
@@ -154,30 +115,20 @@ const CheckoutSkeleton = () => (
       <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
         <div className="flex justify-end">
           <div className="w-full max-w-[600px] px-6 md:px-10 py-6 space-y-8">
-            {/* Contact section skeleton */}
             <div className="space-y-4">
               <div className="h-6 w-32 bg-muted/40 rounded animate-pulse" />
               <div className="grid grid-cols-2 gap-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />
-                ))}
+                {[1,2,3,4].map(i => <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />)}
               </div>
             </div>
-            {/* Shipping section skeleton */}
             <div className="space-y-4">
               <div className="h-6 w-40 bg-muted/40 rounded animate-pulse" />
-              <div className="space-y-3">
-                {[1,2,3].map(i => (
-                  <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />
-                ))}
-              </div>
+              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-[48px] bg-white rounded-lg border border-border animate-pulse" />)}</div>
             </div>
-            {/* Payment skeleton */}
             <div className="space-y-4">
               <div className="h-6 w-36 bg-muted/40 rounded animate-pulse" />
               <div className="h-20 bg-white rounded-lg border border-border animate-pulse" />
             </div>
-            {/* Button skeleton */}
             <div className="h-14 bg-muted/30 rounded-[1.875rem] animate-pulse" />
           </div>
         </div>
@@ -195,17 +146,21 @@ const CheckoutSkeleton = () => (
                 <div className="h-4 w-12 bg-muted/30 rounded animate-pulse" />
               </div>
             ))}
-            <div className="h-[48px] bg-muted/20 rounded-lg animate-pulse mt-6" />
-            <div className="space-y-3 mt-4">
-              <div className="h-4 w-full bg-muted/20 rounded animate-pulse" />
-              <div className="h-4 w-full bg-muted/20 rounded animate-pulse" />
-            </div>
           </div>
         </div>
       </div>
     </main>
   </div>
 );
+
+/* ---------- generate order number ---------- */
+const generateOrderNumber = () => `#${Math.floor(10000 + Math.random() * 90000)}`;
+
+/* ---------- Upload receipt types ---------- */
+interface UploadedFile {
+  file: File;
+  preview: string;
+}
 
 /* ---------- component ---------- */
 const Checkout = () => {
@@ -239,14 +194,15 @@ const Checkout = () => {
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
+  // Payment step state
+  const [step, setStep] = useState<"form" | "payment">("form");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
+  const [receiptDetected, setReceiptDetected] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    city: "",
-    address: "",
-    apartment: "",
+    firstName: "", lastName: "", email: "", phone: "", city: "", address: "", apartment: "",
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -257,34 +213,27 @@ const Checkout = () => {
   const discountAmount = discountApplied ? 10 : 0;
   const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
 
-  // Skeleton loading
   useEffect(() => {
     const timer = setTimeout(() => setShowSkeleton(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!showSkeleton) firstInputRef.current?.focus();
-  }, [showSkeleton]);
+    if (!showSkeleton && step === "form") firstInputRef.current?.focus();
+  }, [showSkeleton, step]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (cityRef.current && !cityRef.current.contains(e.target as Node)) {
-        setShowCitySuggestions(false);
-      }
+      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setShowCitySuggestions(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Debounced city fetch from gov.il API
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (citySelected) return;
-    if (cityQuery.trim().length < 2) {
-      setCitySuggestions([]);
-      return;
-    }
+    if (cityQuery.trim().length < 2) { setCitySuggestions([]); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setCityLoading(true);
@@ -313,8 +262,7 @@ const Checkout = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "phone") {
-      const cleaned = value.replace(/\D/g, "").slice(0, 10);
-      setForm((p) => ({ ...p, phone: cleaned }));
+      setForm((p) => ({ ...p, phone: value.replace(/\D/g, "").slice(0, 10) }));
     } else {
       setForm((p) => ({ ...p, [name]: value }));
     }
@@ -331,21 +279,19 @@ const Checkout = () => {
     setDiscountError("");
     await new Promise((r) => setTimeout(r, 1000));
     if (discountCode.trim().toLowerCase() === "code10") {
-      setDiscountApplied(true);
-      setDiscountError("");
+      setDiscountApplied(true); setDiscountError("");
     } else {
-      setDiscountApplied(false);
-      setDiscountError(t("checkout.invalidDiscount"));
+      setDiscountApplied(false); setDiscountError(t("checkout.invalidDiscount"));
     }
     setDiscountLoading(false);
   };
 
+  // Step 1: validate form → move to payment step
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     setTouched({ firstName: true, lastName: true, email: true, phone: true, city: true, address: true });
-
     if (Object.keys(errs).length > 0 || !acceptPrivacy) {
       const firstErrorField = Object.keys(errs)[0];
       const el = formRef.current?.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
@@ -353,17 +299,58 @@ const Checkout = () => {
       el?.focus();
       return;
     }
-
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    toast({ title: t("checkout.successTitle"), description: t("checkout.successText") });
-    clearCart();
+    await new Promise((r) => setTimeout(r, 800));
     setIsSubmitting(false);
-    navigate(localePath("/"));
+    setStep("payment");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // File upload handlers
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+    const accepted = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    const newFiles: UploadedFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!accepted.includes(file.type)) continue;
+      const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+      newFiles.push({ file, preview });
+    }
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    // Simple receipt detection
+    if (newFiles.length > 0) setReceiptDetected(true);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => {
+      const copy = [...prev];
+      if (copy[index]?.preview) URL.revokeObjectURL(copy[index].preview);
+      copy.splice(index, 1);
+      return copy;
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  // Step 2: submit receipt → navigate to thank-you
+  const handleSubmitReceipt = async () => {
+    if (uploadedFiles.length === 0) return;
+    setIsSubmittingReceipt(true);
+    await new Promise((r) => setTimeout(r, 1500));
+    const orderNumber = generateOrderNumber();
+    clearCart();
+    setIsSubmittingReceipt(false);
+    navigate(localePath("/checkout/thank-you"), {
+      state: { orderNumber, total: totalAfterDiscount, date: new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA") },
+    });
   };
 
   /* empty cart */
-  if (items.length === 0 && !showSkeleton) {
+  if (items.length === 0 && !showSkeleton && step === "form") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6" style={{ backgroundColor: "rgb(242,242,242)" }}>
         <h1 className="text-2xl font-bold text-foreground">{t("checkout.emptyTitle")}</h1>
@@ -375,35 +362,24 @@ const Checkout = () => {
     );
   }
 
-  if (showSkeleton) {
-    return <CheckoutSkeleton />;
-  }
+  if (showSkeleton) return <CheckoutSkeleton />;
 
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
-  /* ---------- inline discount block JSX ---------- */
+  /* ---------- discount block ---------- */
   const discountBlockJSX = (
     <div className="py-4">
       <div className="flex gap-2">
-        <input
-          ref={discountInputRef}
-          value={discountCode}
+        <input ref={discountInputRef} value={discountCode}
           onChange={(e) => setDiscountCode(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleApplyDiscount(); } }}
           placeholder={t("checkout.discountPlaceholder")}
           className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
         />
-        <button
-          type="button"
-          onClick={handleApplyDiscount}
-          disabled={discountLoading || !discountCode.trim()}
+        <button type="button" onClick={handleApplyDiscount} disabled={discountLoading || !discountCode.trim()}
           className="h-[48px] px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors disabled:opacity-50 min-w-[70px] flex items-center justify-center"
         >
-          {discountLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            t("checkout.applyDiscount")
-          )}
+          {discountLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("checkout.applyDiscount")}
         </button>
       </div>
       {discountError && <p className="text-xs text-red-500 mt-1.5">{discountError}</p>}
@@ -411,33 +387,23 @@ const Checkout = () => {
     </div>
   );
 
-  /* ---------- inline order summary JSX ---------- */
+  /* ---------- order summary ---------- */
   const orderSummaryJSX = (
     <>
-      {/* Product list */}
       <div className="space-y-4 mb-4">
         {items.map((item) => (
           <div key={getItemKey(item)} className="flex gap-4">
             <div className="relative w-16 h-16 md:w-[72px] md:h-[72px] rounded-lg border border-border bg-white flex-shrink-0">
               <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
-              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">
-                {item.quantity}
-              </span>
+              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">{item.quantity}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{item.product.name}</p>
-              {item.options?.size && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("contractor.length")}: {item.options.size}
-                </p>
-              )}
+              {item.options?.size && <p className="text-xs text-muted-foreground mt-0.5">{t("contractor.length")}: {item.options.size}</p>}
               {item.options?.color && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                   {t("contractor.color")}: {item.options.color.name}
-                  <span
-                    className="inline-block w-3 h-3 rounded-full border border-border"
-                    style={{ backgroundColor: item.options.color.hex }}
-                  />
+                  <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ backgroundColor: item.options.color.hex }} />
                 </p>
               )}
             </div>
@@ -445,11 +411,7 @@ const Checkout = () => {
           </div>
         ))}
       </div>
-
-      {/* Discount code */}
       {discountBlockJSX}
-
-      {/* Pricing — no top border */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.subtotal")}</span>
@@ -466,7 +428,6 @@ const Checkout = () => {
           <span className="font-medium">{t("cart.complimentary")}</span>
         </div>
       </div>
-
       <div className="border-t border-border mt-4 pt-4">
         <div className="flex justify-between text-lg font-bold">
           <span>{t("cart.total")}</span>
@@ -476,9 +437,146 @@ const Checkout = () => {
     </>
   );
 
+  /* ---------- PAYMENT STEP ---------- */
+  if (step === "payment") {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
+        <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
+          <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
+            <Link to={localePath("/")} className="flex items-center">
+              <img src={logoWhite} alt="AMG Pergola" className="h-12 md:h-14 invert" />
+            </Link>
+            <button onClick={() => setStep("form")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
+              {t("payment.backToForm")}
+            </button>
+          </div>
+        </header>
+
+        <motion.main
+          className="w-full max-w-2xl mx-auto px-6 py-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          {/* Payment instructions */}
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-bold text-foreground mb-3">{t("payment.title")}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+              {t("payment.instructions")}
+            </p>
+          </div>
+
+          {/* Bank details card */}
+          <div className="bg-white rounded-xl border border-border p-6 mb-8">
+            <div className="flex flex-col items-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                <Building2 className="w-7 h-7 text-foreground" />
+              </div>
+              <h2 className="text-base font-bold text-foreground">{t("payment.bankDetailsTitle")}</h2>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: t("payment.bankName"), value: "בנק הפועלים" },
+                { label: t("payment.accountName"), value: "AMG Pergola LTD" },
+                { label: t("payment.accountNumber"), value: "12345678" },
+                { label: t("payment.branchNumber"), value: "123" },
+                { label: t("payment.bankCode"), value: "12" },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="font-semibold text-foreground">{row.value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex justify-between text-base font-bold">
+                <span>{t("payment.amountToPay")}</span>
+                <span>{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload receipt section */}
+          <div className="bg-white rounded-xl border border-border p-6 mb-6">
+            <h3 className="text-base font-bold text-foreground mb-4">{t("payment.uploadTitle")}</h3>
+
+            {/* Drop zone */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-muted-foreground transition-colors"
+            >
+              <Upload className="w-8 h-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                {t("payment.dropText")}
+              </p>
+              <p className="text-xs text-muted-foreground/60">JPG, PNG, PDF</p>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files)}
+            />
+
+            {/* Uploaded previews */}
+            {uploadedFiles.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {uploadedFiles.map((uf, idx) => (
+                  <div key={idx} className="relative group">
+                    {uf.preview ? (
+                      <img src={uf.preview} alt="" className="w-full aspect-square rounded-lg object-cover border border-border" />
+                    ) : (
+                      <div className="w-full aspect-square rounded-lg border border-border bg-muted/20 flex items-center justify-center">
+                        <span className="text-xs text-muted-foreground">PDF</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => removeFile(idx)}
+                      className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Receipt detection message */}
+            {receiptDetected && uploadedFiles.length > 0 && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{t("payment.receiptDetected")}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Submit receipt button */}
+          <button
+            onClick={handleSubmitReceipt}
+            disabled={uploadedFiles.length === 0 || isSubmittingReceipt}
+            className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmittingReceipt ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <LockIcon />
+                {t("payment.submitReceipt")}
+              </>
+            )}
+          </button>
+        </motion.main>
+      </div>
+    );
+  }
+
+  /* ---------- FORM STEP ---------- */
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
-      {/* Header — taller with bottom border */}
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
           <Link to={localePath("/")} className="flex items-center">
@@ -487,27 +585,16 @@ const Checkout = () => {
           <Link to={localePath("/cart")} className="relative flex items-center justify-center w-10 h-10 text-foreground">
             <CartBagIcon />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
-                {itemCount}
-              </span>
+              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">{itemCount}</span>
             )}
           </Link>
         </div>
       </header>
 
-      {/* Main */}
-      <motion.main
-        className="w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.35 }}
-      >
+      <motion.main className="w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
         {/* Mobile: collapsible order summary */}
         <div className="md:hidden mb-6 px-6">
-          <button
-            onClick={() => setSummaryOpen(!summaryOpen)}
-            className="w-full flex items-center justify-between py-4 border-b border-border"
-          >
+          <button onClick={() => setSummaryOpen(!summaryOpen)} className="w-full flex items-center justify-between py-4 border-b border-border">
             <div className="flex items-center gap-2">
               <CartBagIcon />
               <span className="text-sm font-medium">{t("checkout.showSummary")}</span>
@@ -515,27 +602,16 @@ const Checkout = () => {
             </div>
             <span className="text-sm font-bold">{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
           </button>
-
           <AnimatePresence>
             {summaryOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="overflow-hidden"
-              >
-                <div className="py-4">
-                  {orderSummaryJSX}
-                </div>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+                <div className="py-4">{orderSummaryJSX}</div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Desktop two-column grid */}
         <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
-
           {/* LEFT: Checkout Form */}
           <div className="flex justify-end">
             <div className="w-full max-w-[600px] px-6 md:px-10 py-6">
@@ -544,63 +620,19 @@ const Checkout = () => {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold">{t("checkout.contactInfo")}</h2>
-                    <Link
-                      to={localePath("/login")}
-                      className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-                    >
+                    <Link to={localePath("/login")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
                       {t("checkout.loginLink")}
                     </Link>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <FloatingInput
-                      inputRef={firstInputRef}
-                      name="firstName"
-                      label={t("checkout.firstName")}
-                      value={form.firstName}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("firstName")}
-                      error={fieldError("firstName")}
-                    />
-                    <FloatingInput
-                      name="lastName"
-                      label={t("checkout.lastName")}
-                      value={form.lastName}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("lastName")}
-                      error={fieldError("lastName")}
-                    />
-                    <FloatingInput
-                      name="email"
-                      label={t("checkout.email")}
-                      value={form.email}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("email")}
-                      error={fieldError("email")}
-                      type="email"
-                      inputMode="email"
-                    />
-                    <FloatingInput
-                      name="phone"
-                      label={t("checkout.phone")}
-                      value={form.phone}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("phone")}
-                      error={fieldError("phone")}
-                      type="tel"
-                      inputMode="numeric"
-                    />
+                    <FloatingInput inputRef={firstInputRef} name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} onBlur={() => handleBlur("firstName")} error={fieldError("firstName")} />
+                    <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} onBlur={() => handleBlur("lastName")} error={fieldError("lastName")} />
+                    <FloatingInput name="email" label={t("checkout.email")} value={form.email} onChange={handleChange} onBlur={() => handleBlur("email")} error={fieldError("email")} type="email" inputMode="email" />
+                    <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} onBlur={() => handleBlur("phone")} error={fieldError("phone")} type="tel" inputMode="numeric" />
                   </div>
-                  {/* Email marketing checkbox */}
                   <label className="flex items-start gap-2.5 mt-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={emailMarketing}
-                      onChange={(e) => setEmailMarketing(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0"
-                    />
-                    <span className="text-xs text-muted-foreground leading-relaxed">
-                      {t("checkout.emailMarketing")}
-                    </span>
+                    <input type="checkbox" checked={emailMarketing} onChange={(e) => setEmailMarketing(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground leading-relaxed">{t("checkout.emailMarketing")}</span>
                   </label>
                 </div>
 
@@ -608,59 +640,23 @@ const Checkout = () => {
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
                   <div className="space-y-3">
-                    {/* City with autocomplete */}
                     <div ref={cityRef} className="relative">
-                      <FloatingInput
-                        name="city"
-                        label={t("checkout.city")}
-                        value={cityQuery || form.city}
-                        onChange={(e) => {
-                          setCityQuery(e.target.value);
-                          setForm((p) => ({ ...p, city: e.target.value }));
-                          setCitySelected(false);
-                          setShowCitySuggestions(true);
-                        }}
-                        onFocus={() => setShowCitySuggestions(true)}
-                        onBlur={() => setTimeout(() => handleBlur("city"), 150)}
-                        error={fieldError("city")}
-                      />
-
+                      <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
+                        onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); }}
+                        onFocus={() => setShowCitySuggestions(true)} onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
                       {showCitySuggestions && citySuggestions.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {citySuggestions.map((result, idx) => (
-                            <button
-                              key={`${result.display}-${idx}`}
-                              type="button"
-                              className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                setForm((p) => ({ ...p, city: result.city }));
-                                setCityQuery(result.display);
-                                setCitySelected(true);
-                                setShowCitySuggestions(false);
-                              }}
-                            >
+                            <button key={`${result.display}-${idx}`} type="button" className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
+                              onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); }}>
                               {result.display}
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
-
-                    <FloatingInput
-                      name="address"
-                      label={t("checkout.address")}
-                      value={form.address}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("address")}
-                      error={fieldError("address")}
-                    />
-                    <FloatingInput
-                      name="apartment"
-                      label={t("checkout.apartment")}
-                      value={form.apartment}
-                      onChange={handleChange}
-                    />
+                    <FloatingInput name="address" label={t("checkout.address")} value={form.address} onChange={handleChange} onBlur={() => handleBlur("address")} error={fieldError("address")} />
+                    <FloatingInput name="apartment" label={t("checkout.apartment")} value={form.apartment} onChange={handleChange} />
                   </div>
                 </div>
 
@@ -685,67 +681,35 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Privacy policy acceptance */}
+                {/* Privacy */}
                 <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={acceptPrivacy}
-                    onChange={(e) => setAcceptPrivacy(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0"
-                  />
+                  <input type="checkbox" checked={acceptPrivacy} onChange={(e) => setAcceptPrivacy(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground leading-relaxed">
                     {t("checkout.acceptPrivacy")}{" "}
-                    <Link
-                      to={localePath("/privacy-policy")}
-                      className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors"
-                    >
-                      {t("checkout.privacyPolicy")}
-                    </Link>
+                    <Link to={localePath("/privacy-policy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
                   </span>
                 </label>
 
                 {/* Place Order */}
-                <button
-                  type="submit"
-                  disabled={!isValid || isSubmitting}
-                  className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <LockIcon />
-                      {t("checkout.placeOrder")}
-                    </>
-                  )}
+                <button type="submit" disabled={!isValid || isSubmitting}
+                  className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><LockIcon />{t("checkout.placeOrder")}</>}
                 </button>
 
                 {/* Bottom links */}
                 <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-8">
-                  <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                    {t("checkout.refundPolicy")}
-                  </Link>
-                  <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                    {t("checkout.shippingPolicy")}
-                  </Link>
-                  <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                    {t("checkout.privacyPolicy")}
-                  </Link>
-                  <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                    {t("checkout.termsOfService")}
-                  </Link>
-                  <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
-                    {t("nav.contact")}
-                  </Link>
+                  <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.refundPolicy")}</Link>
+                  <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.shippingPolicy")}</Link>
+                  <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.privacyPolicy")}</Link>
+                  <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.termsOfService")}</Link>
+                  <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("nav.contact")}</Link>
                 </div>
               </form>
             </div>
           </div>
 
-          {/* Vertical divider */}
           <div className="hidden md:block" style={{ backgroundColor: "rgb(210,210,210)" }} />
 
-          {/* RIGHT: Order Summary (desktop) — full-width white bg, no border-inline-start */}
           <div className="hidden md:block bg-white">
             <div className="sticky top-20 p-8 max-w-[600px]" style={{ maxHeight: "calc(100vh - 5rem)", overflowY: "auto" }}>
               <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
