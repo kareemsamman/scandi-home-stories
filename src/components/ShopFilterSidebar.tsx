@@ -20,6 +20,7 @@ interface ShopFilterSidebarProps {
   filters: FilterState;
   onFilterChange: (filters: Partial<FilterState>) => void;
   resultCount: number;
+  onSearchingChange?: (isSearching: boolean) => void;
 }
 
 export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: ShopFilterSidebarProps) => {
