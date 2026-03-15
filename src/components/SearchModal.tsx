@@ -228,8 +228,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         <SkeletonResults />
       )}
 
-      {/* STATE: Results with tabs */}
-      {hasQuery && !isLoading && hasSearched && (
+      {/* STATE: Results with tabs — only show if there are results */}
+      {hasQuery && !isLoading && hasSearched && hasResults && (
         <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
           {/* Tabs */}
           <div className="flex items-center border-b border-foreground/10" style={{ gap: 24, marginTop: 16, paddingBottom: 0 }}>
@@ -301,6 +301,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             )}
           </div>
         </div>
+      )}
+
+      {/* STATE: No results */}
+      {hasQuery && !isLoading && hasSearched && !hasResults && (
+        <EmptyState message={t("search.noResults")} />
       )}
 
       {/* Typing but debounce hasn't fired yet — show nothing extra */}
