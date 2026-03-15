@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2 } from "lucide-react";
@@ -24,24 +24,27 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli cities ---------- */
-const ISRAELI_CITIES_HE = [
-  "תל אביב", "ירושלים", "חיפה", "ראשון לציון", "פתח תקווה",
-  "נתניה", "אשדוד", "באר שבע", "חולון", "בת ים",
-  "בני ברק", "רמת גן", "אשקלון", "הרצליה", "כפר סבא",
-  "רעננה", "מודיעין", "לוד", "רמלה", "נצרת",
-  "עכו", "קריית גת", "אילת", "טבריה", "צפת",
-  "כרמיאל", "עפולה", "יבנה", "אור יהודה", "גבעתיים",
-];
+/* ---------- Israeli cities API ---------- */
+const GOV_IL_CITIES_URL = "https://data.gov.il/api/3/action/datastore_search";
+const GOV_IL_RESOURCE_ID = "5c78e9fa-c2e2-4771-93ff-7f400a12f7ba";
 
-const ISRAELI_CITIES_AR = [
-  "تل أبيب", "القدس", "حيفا", "ريشون لتسيون", "بيتح تكفا",
-  "نتانيا", "أشدود", "بئر السبع", "حولون", "بات يام",
-  "بني براك", "رمات غان", "عسقلان", "هرتسليا", "كفار سابا",
-  "رعنانا", "موديعين", "اللد", "الرملة", "الناصرة",
-  "عكا", "كريات غات", "إيلات", "طبريا", "صفد",
-  "كرميئيل", "العفولة", "يبنة", "أور يهودا", "جفعاتايم",
-];
+const fetchCities = async (query: string): Promise<string[]> => {
+  try {
+    const url = `${GOV_IL_CITIES_URL}?resource_id=${GOV_IL_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const records = data?.result?.records ?? [];
+    return records
+      .map((r: Record<string, unknown>) => {
+        const name = (r["שם_ישוב"] as string) || "";
+        return name.trim();
+      })
+      .filter((n: string) => n.length > 0);
+  } catch {
+    return [];
+  }
+};
 
 /* ---------- validation ---------- */
 interface FormErrors {
@@ -150,6 +153,8 @@ const Checkout = () => {
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
 
@@ -185,13 +190,23 @@ const Checkout = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const cities = locale === "ar" ? ISRAELI_CITIES_AR : ISRAELI_CITIES_HE;
-
-  const filteredCities = useMemo(() => {
-    if (!cityQuery.trim()) return cities.slice(0, 8);
-    const q = cityQuery.trim().toLowerCase();
-    return cities.filter((c) => c.toLowerCase().includes(q)).slice(0, 8);
-  }, [cityQuery, cities]);
+  // Debounced city fetch from gov.il API
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (citySelected) return;
+    if (cityQuery.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setCityLoading(true);
+      const results = await fetchCities(cityQuery.trim());
+      setCitySuggestions(results);
+      setCityLoading(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [cityQuery, citySelected]);
 
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
@@ -201,7 +216,7 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.required");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
-    if (!form.city.trim() || !citySelected) e.city = t("checkout.required");
+    if (!form.city.trim() || !citySelected) e.city = t("checkout.selectCity");
     if (!form.address.trim()) e.address = t("checkout.required");
     return e;
   }, [form, t, citySelected]);
@@ -494,9 +509,9 @@ const Checkout = () => {
                         error={fieldError("city")}
                       />
 
-                      {showCitySuggestions && filteredCities.length > 0 && (
+                      {showCitySuggestions && citySuggestions.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredCities.map((city) => (
+                          {citySuggestions.map((city) => (
                             <button
                               key={city}
                               type="button"
