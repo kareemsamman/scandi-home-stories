@@ -24,7 +24,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-type TabKey = "products" | "suggestions" | "collections" | "blog";
+type TabKey = "products" | "suggestions" | "collections";
 
 // Skeleton shimmer for loading state
 function SkeletonRow() {
@@ -157,14 +157,13 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     });
   }, [debouncedQuery, locale]);
 
+  // Collections: show collections that contain matching products
   const filteredCollections = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
-    const q = debouncedQuery.toLowerCase();
-    return collections.filter(c =>
-      getLocaleName(c, locale).toLowerCase().includes(q) ||
-      getLocaleText(c.description, locale).toLowerCase().includes(q)
-    );
-  }, [debouncedQuery, locale]);
+    // Get unique collection IDs from filtered products
+    const matchedCollectionIds = new Set(filteredProducts.map(p => p.collection));
+    return collections.filter(c => matchedCollectionIds.has(c.id));
+  }, [debouncedQuery, locale, filteredProducts]);
 
   const hasResults = filteredProducts.length > 0 || filteredCollections.length > 0;
   const hasQuery = query.trim().length > 0;
@@ -176,7 +175,6 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     { key: "products", label: t("search.tabs.products") },
     { key: "suggestions", label: t("search.tabs.suggestions") },
     { key: "collections", label: t("search.tabs.collections") },
-    { key: "blog", label: t("search.tabs.blog") },
   ];
 
   if (!mounted) return null;
@@ -315,9 +313,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
               )
             )}
 
-            {activeTab === "blog" && (
-              <EmptyState message={t("search.noResults")} />
-            )}
+
+
           </div>
         </div>
       )}
@@ -425,7 +422,7 @@ function ProductResultItem({
   const currency = "₪";
   return (
     <Link
-      to={localePath(`/products/${product.slug}`)}
+      to={localePath(`/product/${product.slug}`)}
       onClick={onClose}
       className="flex items-center gap-4 group"
     >
