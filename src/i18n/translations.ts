@@ -199,6 +199,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emptyTitle: 'אין פריטים',
       emptyText: 'הסל ריק.',
       city: 'עיר',
+      selectCity: 'יש לבחור עיר מהרשימה',
       discountPlaceholder: 'קוד הנחה או כרטיס מתנה',
       applyDiscount: 'החל',
       invalidDiscount: 'הזן קוד הנחה או כרטיס מתנה תקין',
