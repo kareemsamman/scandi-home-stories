@@ -24,7 +24,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-type TabKey = "products" | "suggestions" | "collections" | "blog";
+type TabKey = "products" | "suggestions" | "collections";
 
 // Skeleton shimmer for loading state
 function SkeletonRow() {
