@@ -146,6 +146,9 @@ const Checkout = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [discountCode, setDiscountCode] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountError, setDiscountError] = useState("");
+  const [discountLoading, setDiscountLoading] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
@@ -163,6 +166,10 @@ const Checkout = () => {
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const cityRef = useRef<HTMLDivElement>(null);
+  const discountInputRef = useRef<HTMLInputElement>(null);
+
+  const discountAmount = discountApplied ? 10 : 0;
+  const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
 
   useEffect(() => {
     firstInputRef.current?.focus();
@@ -216,6 +223,21 @@ const Checkout = () => {
     setErrors(validate());
   };
 
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim() || discountLoading) return;
+    setDiscountLoading(true);
+    setDiscountError("");
+    await new Promise((r) => setTimeout(r, 1000));
+    if (discountCode.trim().toLowerCase() === "code10") {
+      setDiscountApplied(true);
+      setDiscountError("");
+    } else {
+      setDiscountApplied(false);
+      setDiscountError(t("checkout.invalidDiscount"));
+    }
+    setDiscountLoading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -253,33 +275,86 @@ const Checkout = () => {
 
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
+  /* ---------- Discount code block ---------- */
+  const DiscountBlock = () => (
+    <div className="py-4">
+      <div className="flex gap-2">
+        <input
+          ref={discountInputRef}
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleApplyDiscount(); } }}
+          placeholder={t("checkout.discountPlaceholder")}
+          className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
+        />
+        <button
+          type="button"
+          onClick={handleApplyDiscount}
+          disabled={discountLoading || !discountCode.trim()}
+          className="h-[48px] px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors disabled:opacity-50 min-w-[70px] flex items-center justify-center"
+        >
+          {discountLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            t("checkout.applyDiscount")
+          )}
+        </button>
+      </div>
+      {discountError && <p className="text-xs text-red-500 mt-1.5">{discountError}</p>}
+      {discountApplied && <p className="text-xs text-green-600 mt-1.5">-{t("common.currency")}10</p>}
+    </div>
+  );
+
   /* ---------- Order summary content ---------- */
-  const OrderSummaryContent = ({ showDiscount = true }: { showDiscount?: boolean }) => (
+  const OrderSummaryContent = () => (
     <>
-      <div className="space-y-4 mb-6">
+      {/* Product list */}
+      <div className="space-y-4 mb-4">
         {items.map((item) => (
           <div key={getItemKey(item)} className="flex gap-4">
-            <div className="relative w-16 h-16 md:w-[72px] md:h-[72px] rounded-lg overflow-hidden border border-border bg-white flex-shrink-0">
-              <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+            <div className="relative w-16 h-16 md:w-[72px] md:h-[72px] rounded-lg border border-border bg-white flex-shrink-0">
+              <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
               <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">
                 {item.quantity}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{item.product.name}</p>
-              {item.options?.color && <p className="text-xs text-muted-foreground mt-0.5">{item.options.color.name}</p>}
-              {item.options?.size && <p className="text-xs text-muted-foreground">{item.options.size}</p>}
+              {item.options?.size && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t("contractor.length")}: {item.options.size}
+                </p>
+              )}
+              {item.options?.color && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                  {t("contractor.color")}: {item.options.color.name}
+                  <span
+                    className="inline-block w-3 h-3 rounded-full border border-border"
+                    style={{ backgroundColor: item.options.color.hex }}
+                  />
+                </p>
+              )}
             </div>
             <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
           </div>
         ))}
       </div>
 
-      <div className="border-t border-border pt-4 space-y-3">
+      {/* Discount code */}
+      <DiscountBlock />
+
+      {/* Pricing — no top border */}
+      <div className="space-y-3 pt-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.subtotal")}</span>
           <span className="font-medium">{t("common.currency")}{subtotal.toLocaleString()}</span>
         </div>
+        {discountApplied && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("checkout.discount")}</span>
+            <span className="font-medium text-green-600">-{t("common.currency")}10</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.shipping")}</span>
           <span className="font-medium">{t("cart.complimentary")}</span>
@@ -289,38 +364,19 @@ const Checkout = () => {
       <div className="border-t border-border mt-4 pt-4">
         <div className="flex justify-between text-lg font-bold">
           <span>{t("cart.total")}</span>
-          <span>{t("common.currency")}{subtotal.toLocaleString()}</span>
+          <span>{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
         </div>
       </div>
-
-      {showDiscount && (
-        <div className="border-t border-border mt-6 pt-6">
-          <div className="flex gap-2">
-            <input
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              placeholder={t("checkout.discountPlaceholder")}
-              className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
-            />
-            <button
-              type="button"
-              className="h-[48px] px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
-            >
-              {t("checkout.applyDiscount")}
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)" }}>
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-6 md:px-10">
+      {/* Header — taller with bottom border */}
+      <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
           <Link to={localePath("/")} className="flex items-center">
-            <img src={logoWhite} alt="AMG Pergola" className="h-10 md:h-12 invert" />
+            <img src={logoWhite} alt="AMG Pergola" className="h-12 md:h-14 invert" />
           </Link>
           <Link to={localePath("/cart")} className="relative flex items-center justify-center w-10 h-10 text-foreground">
             <CartBagIcon />
@@ -333,7 +389,7 @@ const Checkout = () => {
         </div>
       </header>
 
-      {/* Main — full width, no max-w, no pb */}
+      {/* Main */}
       <main className="w-full">
         {/* Mobile: collapsible order summary */}
         <div className="md:hidden mb-6 px-6">
@@ -346,7 +402,7 @@ const Checkout = () => {
               <span className="text-sm font-medium">{t("checkout.showSummary")}</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${summaryOpen ? "rotate-180" : ""}`} />
             </div>
-            <span className="text-sm font-bold">{t("common.currency")}{subtotal.toLocaleString()}</span>
+            <span className="text-sm font-bold">{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
           </button>
 
           <AnimatePresence>
@@ -359,14 +415,14 @@ const Checkout = () => {
                 className="overflow-hidden"
               >
                 <div className="py-4">
-                  <OrderSummaryContent showDiscount />
+                  <OrderSummaryContent />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Desktop two-column grid — full width */}
+        {/* Desktop two-column grid */}
         <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
 
           {/* LEFT: Checkout Form */}
@@ -537,13 +593,13 @@ const Checkout = () => {
           </div>
 
           {/* Vertical divider */}
-          <div className="hidden md:block" style={{ backgroundColor: "#e5e5e5" }} />
+          <div className="hidden md:block" style={{ backgroundColor: "rgb(210,210,210)" }} />
 
-          {/* RIGHT: Order Summary (desktop) — full-width white bg */}
-          <div className="hidden md:block bg-white">
+          {/* RIGHT: Order Summary (desktop) — full-width white bg with border */}
+          <div className="hidden md:block bg-white" style={{ borderInlineStart: "1px solid rgb(210,210,210)" }}>
             <div className="sticky top-20 p-8 max-w-[600px]" style={{ maxHeight: "calc(100vh - 5rem)", overflowY: "auto" }}>
               <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
-              <OrderSummaryContent showDiscount />
+              <OrderSummaryContent />
             </div>
           </div>
         </div>
