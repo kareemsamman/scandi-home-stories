@@ -333,16 +333,16 @@ export const translations: Record<Locale, Record<string, any>> = {
           { label: 'شروط الاستخدام', href: '#' },
           { label: 'إمكانية الوصول', href: '#' },
         ]},
-        { title: 'Mirador', links: [
+        { title: 'AMG Pergola', links: [
           { label: 'من نحن', href: '/about' },
           { label: 'قصتنا', href: '/about' },
         ]},
         { title: 'التواصل', links: [
-          { label: 'Support@miradoroutdoor.com', href: 'mailto:Support@miradoroutdoor.com' },
-          { label: '877-506-4777', href: 'tel:+18775064777' },
+          { label: 'support@pergolaamg.com', href: 'mailto:support@pergolaamg.com' },
+          { label: '+972528122846', href: 'tel:+972528122846' },
         ]},
       ],
-      copyright: '© {year}, Mirador Outdoor',
+      copyright: '© {year}, AMG Pergola',
     },
     product: {
       addToBag: 'أضف إلى السلة',

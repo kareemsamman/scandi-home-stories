@@ -107,25 +107,12 @@ export const SiteFooter = () => {
             ))}
         </div>
 
-        {/* Social + Payment row */}
-        <div
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between"
-          style={{ marginTop: 40 }}
-        >
-          {/* Social icons */}
-          <div className="flex items-center" style={{ gap: 24 }}>
-            <SocialIcon type="instagram" />
-            <SocialIcon type="facebook" />
-            <SocialIcon type="pinterest" />
-            <SocialIcon type="tiktok" />
-          </div>
-
-          {/* Payment icons */}
-          <div className="flex flex-wrap items-center mt-6 sm:mt-0" style={{ gap: 10 }}>
-            {PAYMENT_METHODS.map((m) => (
-              <PaymentIcon key={m} name={m} />
-            ))}
-          </div>
+        {/* Social row */}
+        <div className="flex items-center" style={{ marginTop: 40, gap: 24 }}>
+          <SocialIcon type="instagram" />
+          <SocialIcon type="facebook" />
+          <SocialIcon type="pinterest" />
+          <SocialIcon type="tiktok" href="https://www.tiktok.com/@amg.pergola" />
         </div>
       </div>
 
