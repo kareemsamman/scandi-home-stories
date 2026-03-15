@@ -290,6 +290,10 @@ export const translations: Record<Locale, Record<string, any>> = {
       saveChanges: 'שמור שינויים',
       saved: 'נשמר',
       selectAddress: 'בחר כתובת',
+      cityRequired: 'עיר חובה',
+      streetRequired: 'רחוב חובה',
+      houseNumberRequired: 'מספר בית חובה',
+      username: 'שם משתמש',
     },
     about: {
       heroTitle: 'הנדסת חוץ.\nברמה אחרת.',
@@ -702,6 +706,10 @@ export const translations: Record<Locale, Record<string, any>> = {
       saveChanges: 'حفظ التغييرات',
       saved: 'تم الحفظ',
       selectAddress: 'اختر عنوان',
+      cityRequired: 'المدينة مطلوبة',
+      streetRequired: 'الشارع مطلوب',
+      houseNumberRequired: 'رقم المبنى مطلوب',
+      username: 'اسم المستخدم',
     },
     about: {
       heroTitle: 'هندسة خارجية.\nبمستوى آخر.',

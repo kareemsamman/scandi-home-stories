@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, User, LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { Package, MapPin, LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
@@ -42,13 +42,18 @@ const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
   }
 };
 
+/* ---------- validation helpers ---------- */
+const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const validatePhone = (v: string) => /^0(5[0-9]|[2-4]|[7-9])\d{7}$/.test(v.replace(/[\s\-]/g, ""));
+
 /* ---------- Floating Label Input ---------- */
 const FloatingInput = ({
-  name, label, value, onChange, onBlur, onFocus, error, type = "text", inputMode, inputRef,
+  name, label, value, onChange, onBlur, onFocus, error, type = "text", inputMode, inputRef, disabled,
 }: {
   name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: () => void; onFocus?: () => void; error?: string; type?: string;
   inputMode?: "text" | "numeric" | "email" | "tel"; inputRef?: React.Ref<HTMLInputElement>;
+  disabled?: boolean;
 }) => {
   const [focused, setFocused] = useState(false);
   const isActive = focused || value.length > 0;
@@ -56,9 +61,11 @@ const FloatingInput = ({
     <div>
       <div className="relative">
         <input ref={inputRef} name={name} type={type} inputMode={inputMode} value={value} onChange={onChange}
+          disabled={disabled}
           onFocus={() => { setFocused(true); onFocus?.(); }}
           onBlur={() => { setFocused(false); onBlur?.(); }}
           className={`peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
+            disabled ? "bg-muted/30 text-muted-foreground cursor-not-allowed" :
             error ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
           }`}
           placeholder=" "
@@ -218,6 +225,20 @@ const OrdersTab = () => {
               {statusLabel(order.status)}
             </span>
           </div>
+          {/* Order items preview */}
+          {order.items && order.items.length > 0 && (
+            <div className="flex gap-3 mb-3 overflow-x-auto pb-1">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 shrink-0">
+                  <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover border border-border" />
+                  <div className="text-xs">
+                    <p className="font-medium text-foreground line-clamp-1">{item.name}</p>
+                    <p className="text-muted-foreground">x{item.quantity}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between pt-3 border-t border-border">
             <span className="text-sm text-muted-foreground">{t("cart.total")}</span>
             <span className="text-sm font-bold">{t("common.currency")}{order.total.toLocaleString()}</span>
@@ -319,7 +340,7 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
   );
 };
 
-/* ============ ADDRESS FORM ============ */
+/* ============ ADDRESS FORM (with validation) ============ */
 interface AddressFormProps {
   initial?: SavedAddress;
   onSave: (data: Omit<SavedAddress, "id">) => void;
@@ -337,6 +358,7 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
     houseNumber: initial?.houseNumber || "",
     apartment: initial?.apartment || "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [cityQuery, setCityQuery] = useState(initial?.city || "");
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -370,34 +392,50 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
     } else {
       setForm((p) => ({ ...p, [name]: value }));
     }
+    // Clear error on change
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.firstName.trim()) errs.firstName = t("checkout.firstNameRequired");
+    if (!form.lastName.trim()) errs.lastName = t("checkout.lastNameRequired");
+    if (!form.phone.trim()) errs.phone = t("checkout.phoneRequired");
+    else if (!validatePhone(form.phone)) errs.phone = t("checkout.invalidPhone");
+    if (!form.city.trim()) errs.city = t("account.cityRequired");
+    if (!form.street.trim()) errs.street = t("account.streetRequired");
+    if (!form.houseNumber.trim()) errs.houseNumber = t("account.houseNumberRequired");
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.phone || !form.city || !form.street || !form.houseNumber) return;
+    if (!validate()) return;
     onSave({ ...form, isDefault: initial?.isDefault ?? false });
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 mb-6 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} />
-        <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} />
+        <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
+        <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
       </div>
-      <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" />
+      <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
       <div ref={cityRef} className="relative">
         <FloatingInput
           name="city"
           label={t("checkout.city")}
           value={cityQuery || form.city}
-          onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); }}
+          onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); if (errors.city) setErrors((prev) => ({ ...prev, city: "" })); }}
           onFocus={() => setShowCitySuggestions(true)}
+          error={errors.city}
         />
         {showCitySuggestions && citySuggestions.length > 0 && (
           <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
             {citySuggestions.map((result, idx) => (
               <button key={`${result.display}-${idx}`} type="button" className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); }}>
+                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); setErrors((prev) => ({ ...prev, city: "" })); }}>
                 {result.display}
               </button>
             ))}
@@ -405,8 +443,8 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
         )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FloatingInput name="street" label={t("account.street")} value={form.street} onChange={handleChange} />
-        <FloatingInput name="houseNumber" label={t("account.houseNumber")} value={form.houseNumber} onChange={handleChange} />
+        <FloatingInput name="street" label={t("account.street")} value={form.street} onChange={handleChange} error={errors.street} />
+        <FloatingInput name="houseNumber" label={t("account.houseNumber")} value={form.houseNumber} onChange={handleChange} error={errors.houseNumber} />
       </div>
       <FloatingInput name="apartment" label={t("checkout.apartment")} value={form.apartment} onChange={handleChange} />
       <div className="flex gap-3 pt-2">
@@ -421,7 +459,7 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
   );
 };
 
-/* ============ PROFILE TAB ============ */
+/* ============ PROFILE TAB (with validation) ============ */
 interface ProfileTabProps {
   profile: { firstName: string; lastName: string; email: string; phone: string };
   onUpdate: (data: Partial<{ firstName: string; lastName: string; email: string; phone: string }>) => void;
@@ -430,7 +468,13 @@ interface ProfileTabProps {
 const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
   const { t } = useLocale();
   const [form, setForm] = useState({ ...profile });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+
+  // Sync form with store when profile changes externally
+  useEffect(() => {
+    setForm({ ...profile });
+  }, [profile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -439,10 +483,23 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
     } else {
       setForm((p) => ({ ...p, [name]: value }));
     }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.firstName.trim()) errs.firstName = t("checkout.firstNameRequired");
+    if (!form.lastName.trim()) errs.lastName = t("checkout.lastNameRequired");
+    if (!form.phone.trim()) errs.phone = t("checkout.phoneRequired");
+    else if (!validatePhone(form.phone)) errs.phone = t("checkout.invalidPhone");
+    if (form.email && !validateEmail(form.email)) errs.email = t("checkout.invalidEmail");
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     onUpdate(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -451,12 +508,13 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 max-w-lg space-y-4">
       <h2 className="text-lg font-bold mb-2">{t("account.personalInfo")}</h2>
+      {/* Email / Username - disabled */}
+      <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={handleChange} type="email" inputMode="email" disabled error={errors.email} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} />
-        <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} />
+        <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
+        <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
       </div>
-      <FloatingInput name="email" label={t("checkout.email")} value={form.email} onChange={handleChange} type="email" inputMode="email" />
-      <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" />
+      <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
       <div className="flex items-center gap-3 pt-2">
         <button type="submit" className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
           {t("account.saveChanges")}
