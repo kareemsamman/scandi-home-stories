@@ -490,6 +490,15 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'تحتاج مساعدة؟',
       helpText: 'نحن هنا من أجلك',
     },
+    contractor: {
+      sku: 'رقم القطعة',
+      length: 'الطول',
+      size: 'الحجم',
+      color: 'اللون',
+      selectedColor: 'اللون المحدد',
+      selectSize: 'يرجى اختيار الحجم',
+      selectColor: 'يرجى اختيار اللون',
+    },
     miniCart: {
       empty: 'سلتك فارغة',
       continueShopping: 'متابعة التسوق',
