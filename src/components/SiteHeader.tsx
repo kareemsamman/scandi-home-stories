@@ -155,6 +155,7 @@ export const SiteHeader = () => {
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Search"
+                onClick={() => setSearchOpen(true)}
               >
                 <SearchIcon />
               </button>
