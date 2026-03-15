@@ -167,12 +167,13 @@ export const SiteHeader = () => {
                 <SearchIcon />
               </button>
               <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidPage || isScrolled} />
-              <button
+              <Link
+                to={localePath("/account")}
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
               >
                 <AccountIcon />
-              </button>
+              </Link>
               <button
                 onClick={() => useCart.getState().openCart()}
                 className={cn("relative p-2 transition-colors duration-[240ms]", textColor, textHover)}
@@ -229,12 +230,13 @@ export const SiteHeader = () => {
             </Link>
 
             <div className="flex items-center gap-0.5">
-              <button
+              <Link
+                to={localePath("/account")}
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
               >
                 <AccountIcon />
-              </button>
+              </Link>
               <button
                 onClick={() => useCart.getState().openCart()}
                 className={cn("relative p-2 transition-colors duration-[240ms]", textColor, textHover)}

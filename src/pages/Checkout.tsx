@@ -6,6 +6,9 @@ import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useProfile } from "@/hooks/useProfile";
+import { useOrders } from "@/hooks/useOrders";
 import logoWhite from "@/assets/logo-white.png";
 
 /* ---------- icons ---------- */
@@ -173,6 +176,10 @@ const Checkout = () => {
   const getItemCount = useCart((s) => s.getItemCount);
   const getItemKey = useCart((s) => s.getItemKey);
   const clearCart = useCart((s) => s.clearCart);
+  const savedAddresses = useAddresses((s) => s.addresses);
+  const getDefaultAddress = useAddresses((s) => s.getDefault);
+  const profileData = useProfile((s) => s.profile);
+  const addOrder = useOrders((s) => s.addOrder);
 
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
@@ -186,13 +193,20 @@ const Checkout = () => {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [cityQuery, setCityQuery] = useState("");
+  const [cityQuery, setCityQuery] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return defaultAddr?.city || "";
+  });
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const [citySelected, setCitySelected] = useState(false);
+  const [citySelected, setCitySelected] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return !!defaultAddr?.city;
+  });
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
 
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
@@ -201,8 +215,18 @@ const Checkout = () => {
   const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", city: "", address: "", apartment: "",
+  // Auto-fill from saved address or profile
+  const [form, setForm] = useState(() => {
+    const defaultAddr = getDefaultAddress();
+    return {
+      firstName: profileData.firstName || defaultAddr?.firstName || "",
+      lastName: profileData.lastName || defaultAddr?.lastName || "",
+      email: profileData.email || "",
+      phone: profileData.phone || defaultAddr?.phone || "",
+      city: defaultAddr?.city || "",
+      address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : "",
+      apartment: defaultAddr?.apartment || "",
+    };
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -342,10 +366,26 @@ const Checkout = () => {
     setIsSubmittingReceipt(true);
     await new Promise((r) => setTimeout(r, 1500));
     const orderNumber = generateOrderNumber();
+    const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
+    // Save order
+    addOrder({
+      orderNumber,
+      date: orderDate,
+      total: totalAfterDiscount,
+      status: "pending",
+      items: items.map((item) => ({
+        name: item.product.name,
+        image: item.product.images[0],
+        price: item.product.price,
+        quantity: item.quantity,
+        size: item.options?.size,
+        color: item.options?.color?.name,
+      })),
+    });
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
-      state: { orderNumber, total: totalAfterDiscount, date: new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA") },
+      state: { orderNumber, total: totalAfterDiscount, date: orderDate },
     });
   };
 
@@ -639,6 +679,36 @@ const Checkout = () => {
                 {/* Shipping Address */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
+                  {savedAddresses.length > 1 && (
+                    <select
+                      value={selectedAddressId}
+                      onChange={(e) => {
+                        const addr = savedAddresses.find((a) => a.id === e.target.value);
+                        if (addr) {
+                          setSelectedAddressId(addr.id);
+                          setForm((p) => ({
+                            ...p,
+                            firstName: addr.firstName,
+                            lastName: addr.lastName,
+                            phone: addr.phone,
+                            city: addr.city,
+                            address: `${addr.street} ${addr.houseNumber}`,
+                            apartment: addr.apartment,
+                          }));
+                          setCityQuery(addr.city);
+                          setCitySelected(true);
+                        }
+                      }}
+                      className="w-full h-[48px] px-4 rounded-lg border border-border bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
+                    >
+                      <option value="">{t("account.selectAddress")}</option>
+                      {savedAddresses.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.firstName} {a.lastName} – {a.city}, {a.street} {a.houseNumber}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <div className="space-y-3">
                     <div ref={cityRef} className="relative">
                       <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}

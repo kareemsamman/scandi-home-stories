@@ -156,10 +156,10 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                 <TikTokIcon />
               </div>
               <div className="border-t border-foreground/10 mt-4 pt-4 space-y-1">
-                <button className="flex items-center justify-between w-full py-2 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors">
+                <Link to={localePath("/account")} onClick={onClose} className="flex items-center justify-between w-full py-2 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors">
                   <span>{t("nav.account")}</span>
                   <ChevronCircle />
-                </button>
+                </Link>
                 <div className="py-2">
                   <LocaleSwitcher />
                 </div>
