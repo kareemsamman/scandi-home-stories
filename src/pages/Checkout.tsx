@@ -328,7 +328,7 @@ const Checkout = () => {
         </button>
       </div>
       {discountError && <p className="text-xs text-red-500 mt-1.5">{discountError}</p>}
-      {discountApplied && <p className="text-xs text-green-600 mt-1.5">-{t("common.currency")}10</p>}
+      {discountApplied && <p className="text-xs text-green-600 mt-1.5">{t("checkout.discountAppliedLabel")} -{t("common.currency")}10</p>}
     </div>
   );
 
@@ -378,7 +378,7 @@ const Checkout = () => {
         </div>
         {discountApplied && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("checkout.discount")}</span>
+            <span className="text-muted-foreground">{t("checkout.discountAppliedLabel")}</span>
             <span className="font-medium text-green-600">-{t("common.currency")}10</span>
           </div>
         )}

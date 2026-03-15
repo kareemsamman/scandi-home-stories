@@ -1,12 +1,13 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuantitySelector } from "./QuantitySelector";
-import { products } from "@/data/products";
+import { QuickBuyModal } from "./QuickBuyModal";
+import { products, Product } from "@/data/products";
 import { cn } from "@/lib/utils";
 
 const CartIcon = () => (
@@ -36,6 +37,8 @@ export const MiniCart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [quickBuyProduct, setQuickBuyProduct] = useState<Product | null>(null);
   
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
@@ -45,10 +48,8 @@ export const MiniCart = () => {
     const cartIds = new Set(items.map((i) => i.product.id));
     const cartCollections = new Set(items.map((i) => i.product.collection));
     
-    // First try to find products from the same collections
     const related = products.filter((p) => !cartIds.has(p.id) && cartCollections.has(p.collection));
     
-    // If not enough, fill with other products
     if (related.length >= 10) return related.slice(0, 10);
     
     const remaining = products.filter((p) => !cartIds.has(p.id) && !cartCollections.has(p.collection));
@@ -63,6 +64,26 @@ export const MiniCart = () => {
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) closeCart();
+  };
+
+  const scrollSlider = (direction: "prev" | "next") => {
+    if (!sliderRef.current) return;
+    const scrollAmount = 220;
+    const dir = document.documentElement.dir === "rtl" ? -1 : 1;
+    sliderRef.current.scrollBy({
+      left: direction === "next" ? scrollAmount * dir : -scrollAmount * dir,
+      behavior: "smooth",
+    });
+  };
+
+  const handleBuyWithAdd = (p: Product) => {
+    // If product has variants (contractor with sizes/colors, or retail with colors), open QuickBuy
+    const isVariable = p.type === "contractor" || (p.type === "retail" && p.colors && p.colors.length > 0);
+    if (isVariable) {
+      setQuickBuyProduct(p);
+    } else {
+      useCart.getState().addItem(p, 1);
+    }
   };
 
   const renderEmpty = () => (
@@ -120,22 +141,46 @@ export const MiniCart = () => {
           })}
         </div>
 
-        {/* Buy With - grid layout like reference */}
+        {/* Buy With - horizontal slider */}
         {buyWithProducts.length > 0 && (
           <div className="mt-6 pt-4 border-t border-border">
-            <p className="text-sm font-semibold mb-3">{t("miniCart.buyWith")}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {buyWithProducts.slice(0, 4).map((p) => (
-                <div key={p.id} className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-muted/30">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold">{t("miniCart.buyWith")}</p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => scrollSlider("prev")}
+                  className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => scrollSlider("next")}
+                  className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+            <div
+              ref={sliderRef}
+              className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+              style={{ scrollSnapType: "x mandatory" }}
+            >
+              {buyWithProducts.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex-shrink-0 rounded-xl p-3 flex gap-3 items-center"
+                  style={{ width: 280, scrollSnapAlign: "start", backgroundColor: "rgb(242,242,242)" }}
+                >
+                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                     <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-xs font-semibold truncate text-center">{p.name}</p>
-                  <p className="text-xs text-muted-foreground text-center">{t("common.currency")}{p.price.toLocaleString()}</p>
-                  <div className="flex justify-center">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-xs font-semibold truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
                     <button
-                      onClick={() => useCart.getState().addItem(p, 1)}
-                      className="text-xs font-semibold border border-foreground rounded-full px-4 py-1.5 text-foreground hover:bg-foreground hover:text-background transition-colors"
+                      onClick={() => handleBuyWithAdd(p)}
+                      className="text-xs font-semibold border border-foreground rounded-full px-4 py-1 text-foreground hover:bg-foreground hover:text-background transition-colors"
                     >
                       + {t("miniCart.add")}
                     </button>
@@ -170,42 +215,51 @@ export const MiniCart = () => {
   );
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          ref={overlayRef}
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
-          onClick={handleOverlayClick}
-        >
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            initial={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
-            animate={isMobile ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-            exit={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
-            transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
-            className={cn(
-              "flex flex-col bg-background overflow-hidden rounded-[10px]",
-              isMobile
-                ? "w-[98%] max-w-[480px] h-[98%] rounded-[10px]"
-                : "fixed top-6 bottom-6 shadow-xl"
-            )}
-            style={isMobile ? {} : { insetInlineEnd: 24, width: 420 }}
-            onClick={(e) => e.stopPropagation()}
+            ref={overlayRef}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
+            onClick={handleOverlayClick}
           >
-            <div className="flex items-center justify-between px-6 pt-5 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-semibold">{t("nav.cart")}</span>
-                {itemCount > 0 && <span className="text-sm text-muted-foreground">({itemCount})</span>}
+            <motion.div
+              initial={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
+              animate={isMobile ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={isMobile ? { opacity: 0, scale: 0.95 } : { x: "100%", opacity: 1 }}
+              transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
+              className={cn(
+                "flex flex-col bg-background overflow-hidden rounded-[10px]",
+                isMobile
+                  ? "w-[98%] max-w-[480px] h-[98%] rounded-[10px]"
+                  : "fixed top-6 bottom-6 shadow-xl"
+              )}
+              style={isMobile ? {} : { insetInlineEnd: 24, width: 420 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold">{t("nav.cart")}</span>
+                  {itemCount > 0 && <span className="text-sm text-muted-foreground">({itemCount})</span>}
+                </div>
+                <button onClick={closeCart} className="w-8 h-8 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={closeCart} className="w-8 h-8 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {items.length === 0 ? renderEmpty() : renderItems()}
+              {items.length === 0 ? renderEmpty() : renderItems()}
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* QuickBuy modal for variable products from Buy With */}
+      <QuickBuyModal
+        product={quickBuyProduct}
+        open={!!quickBuyProduct}
+        onClose={() => setQuickBuyProduct(null)}
+      />
+    </>
   );
 };
