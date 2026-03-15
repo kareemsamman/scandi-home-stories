@@ -1,16 +1,9 @@
 import { Link } from "react-router-dom";
 import { useLocale } from "@/i18n/useLocale";
 
-const PaymentIcon = ({ name }: { name: string }) => (
-  <div
-    className="h-7 px-2 rounded-sm flex items-center justify-center text-[10px] font-semibold tracking-tight select-none"
-    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
-  >
-    {name}
-  </div>
-);
 
-const SocialIcon = ({ type }: { type: string }) => {
+
+const SocialIcon = ({ type, href }: { type: string; href?: string }) => {
   const icons: Record<string, React.ReactNode> = {
     instagram: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -38,9 +31,11 @@ const SocialIcon = ({ type }: { type: string }) => {
   };
   return (
     <a
-      href="#"
-      className="transition-opacity hover:opacity-100"
-      style={{ color: "rgba(255,255,255,0.7)", opacity: 0.7 }}
+      href={href || "#"}
+      target={href ? "_blank" : undefined}
+      rel={href ? "noopener noreferrer" : undefined}
+      className="transition-opacity hover:opacity-80"
+      style={{ color: "#ffffff" }}
       aria-label={type}
     >
       {icons[type]}
@@ -48,10 +43,6 @@ const SocialIcon = ({ type }: { type: string }) => {
   );
 };
 
-const PAYMENT_METHODS = [
-  "Amex", "Apple Pay", "Diners", "Discover", "Google Pay",
-  "Mastercard", "PayPal", "Shop Pay", "Venmo", "Visa",
-];
 
 export const SiteFooter = () => {
   const { t, localePath } = useLocale();
@@ -62,7 +53,7 @@ export const SiteFooter = () => {
     href.startsWith("mailto:") || href.startsWith("tel:") || href === "#";
 
   return (
-    <footer style={{ background: "#0b0f16", color: "rgba(255,255,255,0.75)" }}>
+    <footer className="bg-[hsl(var(--footer-background))]" style={{ color: "rgba(255,255,255,0.75)" }}>
       {/* Main footer */}
       <div
         className="mx-auto"
@@ -109,25 +100,12 @@ export const SiteFooter = () => {
             ))}
         </div>
 
-        {/* Social + Payment row */}
-        <div
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between"
-          style={{ marginTop: 40 }}
-        >
-          {/* Social icons */}
-          <div className="flex items-center" style={{ gap: 24 }}>
-            <SocialIcon type="instagram" />
-            <SocialIcon type="facebook" />
-            <SocialIcon type="pinterest" />
-            <SocialIcon type="tiktok" />
-          </div>
-
-          {/* Payment icons */}
-          <div className="flex flex-wrap items-center mt-6 sm:mt-0" style={{ gap: 10 }}>
-            {PAYMENT_METHODS.map((m) => (
-              <PaymentIcon key={m} name={m} />
-            ))}
-          </div>
+        {/* Social row */}
+        <div className="flex items-center" style={{ marginTop: 40, gap: 24 }}>
+          <SocialIcon type="instagram" />
+          <SocialIcon type="facebook" />
+          <SocialIcon type="pinterest" />
+          <SocialIcon type="tiktok" href="https://www.tiktok.com/@amg.pergola" />
         </div>
       </div>
 
