@@ -585,7 +585,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailRequired: 'البريد الإلكتروني مطلوب',
       invalidEmail: 'بريد إلكتروني غير صالح',
       phoneRequired: 'رقم الهاتف مطلوب',
-      invalidPhone: 'رقم هاتف إسرائيلي غير صالح (مثال: 0525143581)',
+      invalidPhone: 'رقم هاتف إسرائيلي غير صالح (مثال: 050-1234567)',
       addressRequired: 'العنوان مطلوب',
       showSummary: 'ملخص الطلب',
       emptyTitle: 'لا توجد عناصر',
