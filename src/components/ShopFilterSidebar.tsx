@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Search, X } from "lucide-react";
-import { collections, profileSubCategories, products, ContractorProduct } from "@/data/products";
+import { collections, profileSubCategories, products, ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -22,44 +22,57 @@ interface ShopFilterSidebarProps {
   resultCount: number;
 }
 
-// Get all unique lengths from contractor products
-const allLengths = Array.from(
-  new Set(
-    products
-      .filter((p): p is ContractorProduct => p.type === "contractor")
-      .flatMap((p) => p.sizes.map((s) => s.label))
-  )
-);
-
-// Get all unique standard colors
-const allColors = (() => {
-  const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
-  products
-    .filter((p): p is ContractorProduct => p.type === "contractor")
-    .forEach((p) => {
-      if (p.colorGroups[0]) {
-        p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c));
-      }
-    });
-  // Also add retail colors
-  products
-    .filter((p) => p.type === "retail")
-    .forEach((p) => {
-      const retail = p as import("@/data/products").RetailProduct;
-      retail.colors.forEach((c) => colorMap.set(c.id, c));
-    });
-  return Array.from(colorMap.values());
-})();
-
 export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
   const isProfilesCollection = filters.collection === "profiles";
 
+  // Compute available lengths and colors based on current collection filter
+  const { availableLengths, availableColors, hasContractorProducts } = useMemo(() => {
+    let relevantProducts = [...products];
+
+    // Filter by collection
+    if (filters.collection !== "all") {
+      const col = collections.find((c) => c.slug === filters.collection);
+      if (col) relevantProducts = relevantProducts.filter((p) => p.collection === col.id);
+    }
+
+    // Filter by subcategory
+    if (isProfilesCollection && filters.subCategory !== "all") {
+      relevantProducts = relevantProducts.filter((p) => {
+        if (p.type === "contractor") return (p as ContractorProduct).subCategory === filters.subCategory;
+        return false;
+      });
+    }
+
+    const contractorProducts = relevantProducts.filter((p): p is ContractorProduct => p.type === "contractor");
+    const retailProducts = relevantProducts.filter((p): p is RetailProduct => p.type === "retail");
+
+    const lengths = Array.from(
+      new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label)))
+    );
+
+    const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
+    contractorProducts.forEach((p) => {
+      if (p.colorGroups[0]) {
+        p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c));
+      }
+    });
+    retailProducts.forEach((p) => {
+      p.colors.forEach((c) => colorMap.set(c.id, c));
+    });
+
+    return {
+      availableLengths: lengths,
+      availableColors: Array.from(colorMap.values()),
+      hasContractorProducts: contractorProducts.length > 0,
+    };
+  }, [filters.collection, filters.subCategory, isProfilesCollection]);
+
   return (
     <aside className="w-[260px] flex-shrink-0 hidden md:block">
-      <div className="sticky top-36 space-y-6">
+      <div className="sticky top-36 space-y-6 max-h-[calc(100vh-10rem)] overflow-y-auto pb-8 pe-2">
         {/* Search */}
         <div>
           <label className="text-xs font-semibold text-foreground mb-2 block">
@@ -173,14 +186,14 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
           </div>
         </div>
 
-        {/* Length */}
-        {allLengths.length > 0 && (
+        {/* Length - only shown when contractor products exist in current filter */}
+        {availableLengths.length > 0 && (
           <div>
             <label className="text-xs font-semibold text-foreground mb-2 block">
               {t("shop.filters.length")}
             </label>
             <div className="space-y-1">
-              {allLengths.map((len) => (
+              {availableLengths.map((len) => (
                 <label key={len} className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
                   <input
                     type="checkbox"
@@ -201,13 +214,13 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
         )}
 
         {/* Color */}
-        {allColors.length > 0 && (
+        {availableColors.length > 0 && (
           <div>
             <label className="text-xs font-semibold text-foreground mb-2 block">
               {t("shop.filters.color")}
             </label>
             <div className="flex gap-2 flex-wrap">
-              {allColors.map((color) => (
+              {availableColors.map((color) => (
                 <button
                   key={color.id}
                   onClick={() => {
@@ -230,19 +243,21 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
           </div>
         )}
 
-        {/* SKU */}
-        <div>
-          <label className="text-xs font-semibold text-foreground mb-2 block">
-            {t("shop.filters.sku")}
-          </label>
-          <input
-            type="text"
-            value={filters.skuSearch}
-            onChange={(e) => onFilterChange({ skuSearch: e.target.value })}
-            placeholder={t("shop.filters.skuPlaceholder")}
-            className="w-full h-9 px-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
-          />
-        </div>
+        {/* SKU - only for contractor products */}
+        {hasContractorProducts && (
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-2 block">
+              {t("shop.filters.sku")}
+            </label>
+            <input
+              type="text"
+              value={filters.skuSearch}
+              onChange={(e) => onFilterChange({ skuSearch: e.target.value })}
+              placeholder={t("shop.filters.skuPlaceholder")}
+              className="w-full h-9 px-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
+            />
+          </div>
+        )}
 
         {/* Sort */}
         <div>
