@@ -378,7 +378,7 @@ const Checkout = () => {
         </div>
         {discountApplied && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("checkout.discount")}</span>
+            <span className="text-muted-foreground">{t("checkout.discountAppliedLabel")}</span>
             <span className="font-medium text-green-600">-{t("common.currency")}10</span>
           </div>
         )}
