@@ -1,8 +1,12 @@
+import { ReactNode } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Globe } from "lucide-react";
 
-export const LocaleSwitcher = () => {
+interface LocaleSwitcherProps {
+  icon?: ReactNode;
+}
+
+export const LocaleSwitcher = ({ icon }: LocaleSwitcherProps) => {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,11 +21,11 @@ export const LocaleSwitcher = () => {
   return (
     <button
       onClick={toggleLocale}
-      className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md hover:bg-white/10 transition-colors"
+      className="flex items-center gap-1 p-2 text-white/70 hover:text-white transition-colors"
       aria-label="Switch language"
     >
-      <Globe className="w-4 h-4" />
-      <span>{locale === "he" ? "عربي" : "עברית"}</span>
+      {icon}
+      <span className="text-xs font-medium">{locale === "he" ? "عربي" : "עברית"}</span>
     </button>
   );
 };

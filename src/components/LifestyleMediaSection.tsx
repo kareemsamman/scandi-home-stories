@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const LifestyleMediaSection = () => {
@@ -37,7 +37,7 @@ export const LifestyleMediaSection = () => {
           <Button asChild variant="outline" className="rounded-lg">
             <Link to={localePath("/shop")}>
               {t("lifestyle.cta")}
-              <ArrowRight className="w-4 h-4 ms-2" />
+              <ArrowLeft className="w-4 h-4 ms-2" />
             </Link>
           </Button>
         </motion.div>

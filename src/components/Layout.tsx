@@ -6,10 +6,9 @@ import { AnnouncementBar } from "./AnnouncementBar";
 
 interface LayoutProps {
   children: ReactNode;
-  transparentHeader?: boolean;
 }
 
-export const Layout = ({ children, transparentHeader = false }: LayoutProps) => {
+export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <AnnouncementBar />
