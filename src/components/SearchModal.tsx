@@ -102,7 +102,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, [open]);
 
-  // Debounce: wait 600ms after typing stops, then show loading, then results
+  // Debounce: wait 1000ms after typing stops, show skeleton during wait, then results
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (loadingRef.current) clearTimeout(loadingRef.current);
@@ -113,16 +113,14 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       return;
     }
 
-    // Start debounce
+    // Show skeleton immediately while waiting
+    setIsLoading(true);
+
+    // After 1s debounce, show actual results
     debounceRef.current = setTimeout(() => {
-      // Show loading skeleton
-      setIsLoading(true);
-      // After 2s, show actual results
-      loadingRef.current = setTimeout(() => {
-        setDebouncedQuery(query);
-        setIsLoading(false);
-      }, 2000);
-    }, 600);
+      setDebouncedQuery(query);
+      setIsLoading(false);
+    }, 1000);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -170,7 +168,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   // Shared content
   const renderContent = () => (
     <>
-      {/* Search input: icon LEFT, input CENTER, clear RIGHT */}
+      {/* Search input: icon LEFT, input CENTER, clear + close RIGHT */}
       <div className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
         <span className="text-foreground/40 shrink-0" style={{ marginInlineEnd: 12 }}>
           <SearchIcon />
@@ -193,12 +191,20 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             {t("search.clear")}
           </button>
         )}
+        <button
+          onClick={onClose}
+          className="shrink-0 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground hover:bg-foreground/5 transition-colors"
+          style={{ marginInlineStart: 12 }}
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
       </div>
 
       {/* STATE 1: Initial — Featured Collections */}
       {!hasQuery && !isLoading && (
         <div style={{ marginTop: 16 }}>
-          <h3 className="text-foreground" style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "#676767" }}>
             {t("search.featuredCollections")}
           </h3>
           <div className="flex flex-col" style={{ gap: 10 }}>
@@ -222,8 +228,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         <SkeletonResults />
       )}
 
-      {/* STATE: Results with tabs */}
-      {hasQuery && !isLoading && hasSearched && (
+      {/* STATE: Results with tabs — only show if there are results */}
+      {hasQuery && !isLoading && hasSearched && hasResults && (
         <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
           {/* Tabs */}
           <div className="flex items-center border-b border-foreground/10" style={{ gap: 24, marginTop: 16, paddingBottom: 0 }}>
@@ -297,6 +303,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         </div>
       )}
 
+      {/* STATE: No results */}
+      {hasQuery && !isLoading && hasSearched && !hasResults && (
+        <EmptyState message={t("search.noResults")} />
+      )}
+
       {/* Typing but debounce hasn't fired yet — show nothing extra */}
     </>
   );
@@ -337,16 +348,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             borderRadius: 2,
           }}
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 end-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
-            aria-label="Close"
-          >
-            <CloseIcon />
-          </button>
 
-          <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48, ...contentStyle }}>
+          <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, ...contentStyle }}>
             {renderContent()}
           </div>
         </div>
@@ -372,19 +375,18 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         onClick={onClose}
       />
       <div
-        className="fixed top-0 end-0 bottom-0 z-50 bg-background shadow-xl flex flex-col"
-        style={panelStyle}
+        className="fixed z-50 flex flex-col"
+        style={{
+          top: 24,
+          bottom: 24,
+          insetInlineEnd: 24,
+          width: 420,
+          transform: isVisible ? "translateX(0)" : (document.documentElement.dir === "rtl" ? "translateX(-100%)" : "translateX(100%)"),
+          opacity: isVisible ? 1 : 0,
+          transition: "transform 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease",
+        }}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 start-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
-          aria-label="Close"
-        >
-          <CloseIcon />
-        </button>
-
-        <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48 }}>
+        <div className="bg-background shadow-xl flex flex-col flex-1 overflow-hidden" style={{ borderRadius: 2, padding: 24 }}>
           {renderContent()}
         </div>
       </div>
