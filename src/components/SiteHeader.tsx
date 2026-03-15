@@ -124,7 +124,7 @@ export const SiteHeader = () => {
           isHidden && "is-hidden",
           isSolidPage && "!bg-background border-b border-border"
         )}
-        style={isSolidBlack && !isScrolled ? { top: 0 } : undefined}
+        style={isSolidPage && !isScrolled ? { top: 0 } : undefined}
       >
         <div className="px-6 md:px-10">
           {/* Desktop */}
