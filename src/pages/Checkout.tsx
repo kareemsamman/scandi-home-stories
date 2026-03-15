@@ -24,23 +24,35 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli cities API ---------- */
-const GOV_IL_CITIES_URL = "https://data.gov.il/api/3/action/datastore_search";
-const GOV_IL_RESOURCE_ID = "5c78e9fa-c2e2-4771-93ff-7f400a12f7ba";
+/* ---------- Israeli streets API (includes city + street) ---------- */
+const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
+const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
 
-const fetchCities = async (query: string): Promise<string[]> => {
+interface CityStreetResult {
+  city: string;
+  street: string;
+  display: string;
+}
+
+const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
   try {
-    const url = `${GOV_IL_CITIES_URL}?resource_id=${GOV_IL_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
+    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
     const records = data?.result?.records ?? [];
+    const seen = new Set<string>();
     return records
       .map((r: Record<string, unknown>) => {
-        const name = (r["שם_ישוב"] as string) || "";
-        return name.trim();
+        const city = ((r["city_name"] as string) || "").trim();
+        const street = ((r["street_name"] as string) || "").trim();
+        if (!city) return null;
+        const display = street ? `${city} – ${street}` : city;
+        if (seen.has(display)) return null;
+        seen.add(display);
+        return { city, street, display };
       })
-      .filter((n: string) => n.length > 0);
+      .filter(Boolean) as CityStreetResult[];
   } catch {
     return [];
   }
@@ -153,7 +165,7 @@ const Checkout = () => {
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
-  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
@@ -201,7 +213,7 @@ const Checkout = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setCityLoading(true);
-      const results = await fetchCities(cityQuery.trim());
+      const results = await fetchCityStreets(cityQuery.trim());
       setCitySuggestions(results);
       setCityLoading(false);
     }, 300);
@@ -290,8 +302,8 @@ const Checkout = () => {
 
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
-  /* ---------- Discount code block ---------- */
-  const DiscountBlock = () => (
+  /* ---------- inline discount block JSX ---------- */
+  const discountBlockJSX = (
     <div className="py-4">
       <div className="flex gap-2">
         <input
@@ -320,8 +332,8 @@ const Checkout = () => {
     </div>
   );
 
-  /* ---------- Order summary content ---------- */
-  const OrderSummaryContent = () => (
+  /* ---------- inline order summary JSX ---------- */
+  const orderSummaryJSX = (
     <>
       {/* Product list */}
       <div className="space-y-4 mb-4">
@@ -356,7 +368,7 @@ const Checkout = () => {
       </div>
 
       {/* Discount code */}
-      <DiscountBlock />
+      {discountBlockJSX}
 
       {/* Pricing — no top border */}
       <div className="space-y-3 pt-2">
@@ -430,7 +442,7 @@ const Checkout = () => {
                 className="overflow-hidden"
               >
                 <div className="py-4">
-                  <OrderSummaryContent />
+                  {orderSummaryJSX}
                 </div>
               </motion.div>
             )}
@@ -511,20 +523,20 @@ const Checkout = () => {
 
                       {showCitySuggestions && citySuggestions.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {citySuggestions.map((city) => (
+                          {citySuggestions.map((result, idx) => (
                             <button
-                              key={city}
+                              key={`${result.display}-${idx}`}
                               type="button"
                               className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
                               onMouseDown={(e) => {
                                 e.preventDefault();
-                                setForm((p) => ({ ...p, city }));
-                                setCityQuery(city);
+                                setForm((p) => ({ ...p, city: result.city }));
+                                setCityQuery(result.display);
                                 setCitySelected(true);
                                 setShowCitySuggestions(false);
                               }}
                             >
-                              {city}
+                              {result.display}
                             </button>
                           ))}
                         </div>
@@ -610,11 +622,11 @@ const Checkout = () => {
           {/* Vertical divider */}
           <div className="hidden md:block" style={{ backgroundColor: "rgb(210,210,210)" }} />
 
-          {/* RIGHT: Order Summary (desktop) — full-width white bg with border */}
-          <div className="hidden md:block bg-white" style={{ borderInlineStart: "1px solid rgb(210,210,210)" }}>
+          {/* RIGHT: Order Summary (desktop) — full-width white bg, no border-inline-start */}
+          <div className="hidden md:block bg-white">
             <div className="sticky top-20 p-8 max-w-[600px]" style={{ maxHeight: "calc(100vh - 5rem)", overflowY: "auto" }}>
               <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
-              <OrderSummaryContent />
+              {orderSummaryJSX}
             </div>
           </div>
         </div>
