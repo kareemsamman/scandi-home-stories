@@ -128,14 +128,33 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     };
   }, [query]);
 
+  // Normalize for flexible matching (remove dashes, spaces, lowercase)
+  const normalize = (s: string) => s.toLowerCase().replace(/[\s\-]/g, "");
+
   // Search logic — uses debouncedQuery
   const filteredProducts = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
-    const q = debouncedQuery.toLowerCase();
-    return products.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      getLocaleText(p.description, locale).toLowerCase().includes(q)
-    );
+    const q = normalize(debouncedQuery);
+    return products.filter((p) => {
+      // Name match
+      if (normalize(p.name).includes(q)) return true;
+      // Description match
+      if (normalize(getLocaleText(p.description, locale)).includes(q)) return true;
+      // SKU match (contractor products)
+      if (p.type === "contractor" && normalize(p.sku).includes(q)) return true;
+      // Color match
+      if (p.type === "contractor") {
+        const colorMatch = p.colorGroups?.some((g) =>
+          g.colors.some((c) => normalize(c.name.he).includes(q) || normalize(c.name.ar).includes(q))
+        );
+        if (colorMatch) return true;
+      }
+      if (p.type === "retail") {
+        const colorMatch = p.colors?.some((c) => normalize(c.name.he).includes(q) || normalize(c.name.ar).includes(q));
+        if (colorMatch) return true;
+      }
+      return false;
+    });
   }, [debouncedQuery, locale]);
 
   const filteredCollections = useMemo(() => {

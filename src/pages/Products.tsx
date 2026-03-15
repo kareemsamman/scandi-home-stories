@@ -183,39 +183,7 @@ const Products = () => {
         </div>
       </section>
 
-      {/* Desktop: Category Navigation Bar */}
-      <section className="border-b border-border sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40 hidden md:block">
-        <div className="section-container">
-          {/* Category tabs */}
-          <div className="flex gap-0 overflow-x-auto">
-            <button
-              onClick={() => handleFilterChange({ collection: "all", subCategory: "all" })}
-              className={cn(
-                "px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                filters.collection === "all"
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t("shop.filterAll")}
-            </button>
-            {collections.map((col) => (
-              <button
-                key={col.id}
-                onClick={() => handleFilterChange({ collection: col.slug, subCategory: "all" })}
-                className={cn(
-                  "px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                  filters.collection === col.slug
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {col.name[locale]}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Desktop category tabs removed — filtering is handled by sidebar */}
 
       {/* Subcategory pills (when profiles selected) */}
       {isProfilesCollection && (
