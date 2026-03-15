@@ -279,7 +279,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       <CustomColorModal
         open={customColorOpen}
         onClose={() => setCustomColorOpen(false)}
-        onSelect={(color) => setSelectedColor(color)}
+        onSelect={(color) => { setSelectedColor(color); setIsCustomColor(true); }}
         colorGroups={customColorGroups}
         selectedColorId={selectedColor?.id}
       />
