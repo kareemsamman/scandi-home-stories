@@ -84,33 +84,33 @@ export const translations: Record<Locale, Record<string, any>> = {
     footer: {
       description: 'מומחים בפרגולות ופתרונות הצללה מתקדמים.',
       columns: [
-        { title: 'מוצרים', links: [
+        { title: 'קולקציות מובחרות', links: [
           { label: 'פרגולות ביוקלימטיות', href: '/shop?collection=bioclimatic' },
           { label: 'מערכות למלות', href: '/shop?collection=motorized' },
           { label: 'פרגולות קבועות', href: '/shop?collection=fixed' },
           { label: 'גגות נפתחים', href: '/shop?collection=retractable' },
           { label: 'אביזרים', href: '/shop?collection=accessories' },
         ]},
-        { title: 'החברה', links: [
-          { label: 'אודות', href: '/about' },
-          { label: 'צור קשר', href: '/contact' },
-        ]},
         { title: 'תמיכה', links: [
           { label: 'שאלות נפוצות', href: '/contact' },
           { label: 'אחריות', href: '/contact' },
+          { label: 'משלוחים והחזרות', href: '/contact' },
+        ]},
+        { title: 'מדיניות', links: [
+          { label: 'מדיניות פרטיות', href: '#' },
+          { label: 'תנאי שימוש', href: '#' },
+          { label: 'נגישות', href: '#' },
+        ]},
+        { title: 'Mirador', links: [
+          { label: 'אודות', href: '/about' },
+          { label: 'הסיפור שלנו', href: '/about' },
         ]},
         { title: 'יצירת קשר', links: [
-          { label: 'info@amgpergola.co.il', href: 'mailto:info@amgpergola.co.il' },
-          { label: '03-1234567', href: 'tel:+97231234567' },
-          { label: 'א-ה 08:00-17:00', href: '#' },
+          { label: 'Support@miradoroutdoor.com', href: 'mailto:Support@miradoroutdoor.com' },
+          { label: '877-506-4777', href: 'tel:+18775064777' },
         ]},
       ],
-      copyright: '© {year} AMG Pergola Ltd. כל הזכויות שמורות.',
-      policies: [
-        { label: 'מדיניות פרטיות', href: '#' },
-        { label: 'תנאי שימוש', href: '#' },
-        { label: 'נגישות', href: '#' },
-      ],
+      copyright: '© {year}, Mirador Outdoor',
     },
     product: {
       addToBag: 'הוסף לסל',
@@ -316,33 +316,33 @@ export const translations: Record<Locale, Record<string, any>> = {
     footer: {
       description: 'خبراء في البرجولات وحلول التظليل المتقدمة.',
       columns: [
-        { title: 'المنتجات', links: [
+        { title: 'مجموعات مميزة', links: [
           { label: 'برجولات بيوكليماتيكية', href: '/shop?collection=bioclimatic' },
           { label: 'أنظمة شرائح', href: '/shop?collection=motorized' },
           { label: 'برجولات ثابتة', href: '/shop?collection=fixed' },
           { label: 'أسقف قابلة للطي', href: '/shop?collection=retractable' },
           { label: 'إكسسوارات', href: '/shop?collection=accessories' },
         ]},
-        { title: 'الشركة', links: [
-          { label: 'من نحن', href: '/about' },
-          { label: 'اتصل بنا', href: '/contact' },
-        ]},
         { title: 'الدعم', links: [
           { label: 'الأسئلة الشائعة', href: '/contact' },
           { label: 'الضمان', href: '/contact' },
+          { label: 'الشحن والإرجاع', href: '/contact' },
+        ]},
+        { title: 'السياسات', links: [
+          { label: 'سياسة الخصوصية', href: '#' },
+          { label: 'شروط الاستخدام', href: '#' },
+          { label: 'إمكانية الوصول', href: '#' },
+        ]},
+        { title: 'Mirador', links: [
+          { label: 'من نحن', href: '/about' },
+          { label: 'قصتنا', href: '/about' },
         ]},
         { title: 'التواصل', links: [
-          { label: 'info@amgpergola.co.il', href: 'mailto:info@amgpergola.co.il' },
-          { label: '03-1234567', href: 'tel:+97231234567' },
-          { label: 'أحد-خميس 08:00-17:00', href: '#' },
+          { label: 'Support@miradoroutdoor.com', href: 'mailto:Support@miradoroutdoor.com' },
+          { label: '877-506-4777', href: 'tel:+18775064777' },
         ]},
       ],
-      copyright: '© {year} AMG Pergola Ltd. جميع الحقوق محفوظة.',
-      policies: [
-        { label: 'سياسة الخصوصية', href: '#' },
-        { label: 'شروط الاستخدام', href: '#' },
-        { label: 'إمكانية الوصول', href: '#' },
-      ],
+      copyright: '© {year}, Mirador Outdoor',
     },
     product: {
       addToBag: 'أضف إلى السلة',
