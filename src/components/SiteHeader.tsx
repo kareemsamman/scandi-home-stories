@@ -88,14 +88,14 @@ export const SiteHeader = () => {
             </nav>
 
             <div className="flex items-center justify-end gap-1">
-              <button className="p-2 text-white/70 hover:text-white transition-colors" aria-label="Search">
+              <button className="p-2 text-white hover:text-white/80 transition-colors" aria-label="Search">
                 <SearchIcon />
               </button>
               <LocaleSwitcher icon={<LanguageIcon />} />
-              <button className="p-2 text-white/70 hover:text-white transition-colors" aria-label="Account">
+              <button className="p-2 text-white hover:text-white/80 transition-colors" aria-label="Account">
                 <AccountIcon />
               </button>
-              <Link to={localePath("/cart")} className="relative p-2 text-white/70 hover:text-white transition-colors" aria-label="Cart">
+              <Link to={localePath("/cart")} className="relative p-2 text-white hover:text-white/80 transition-colors" aria-label="Cart">
                 <CartIcon />
                 <AnimatePresence>
                   {itemCount > 0 && (
