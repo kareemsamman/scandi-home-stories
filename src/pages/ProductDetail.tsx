@@ -299,6 +299,8 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [customColorOpen, setCustomColorOpen] = useState(false);
+  const [currentImg, setCurrentImg] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const collection = collections.find((c) => c.id === product.collection);
   const relatedProducts = getRelatedProducts(product.id);
 
