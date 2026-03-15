@@ -20,7 +20,7 @@ export const translations: Record<Locale, Record<string, any>> = {
     },
     announcement: {
       messages: [
-        'משלוח חינם בהזמנות מעל ₪5,000',
+        'משלוח חינם לכל הזמנה',
         'התקנה מקצועית בכל הארץ',
         'ייעוץ חינם: 03-1234567',
       ],
