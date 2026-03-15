@@ -235,6 +235,11 @@ export const translations: Record<Locale, Record<string, any>> = {
       selectSize: 'יש לבחור אורך',
       selectColor: 'יש לבחור צבע',
       customColor: 'בחר צבע מותאם',
+      customColorTitle: 'בחר צבע לשינוי',
+      searchColor: 'חפש לפי שם או קוד RAL...',
+      cancel: 'ביטול',
+      confirmSelection: 'אישור בחירה',
+      meter: 'מטר',
       addedToCart: 'נוסף לסל',
       colorTabs: {
         ral: 'RAL צבע קוד',
@@ -509,6 +514,11 @@ export const translations: Record<Locale, Record<string, any>> = {
       selectSize: 'يرجى اختيار الطول',
       selectColor: 'يرجى اختيار اللون',
       customColor: 'اختر لون مخصص',
+      customColorTitle: 'اختر لون مخصص',
+      searchColor: 'ابحث بالاسم أو كود RAL...',
+      cancel: 'إلغاء',
+      confirmSelection: 'تأكيد الاختيار',
+      meter: 'متر',
       addedToCart: 'تمت الإضافة للسلة',
       colorTabs: {
         ral: 'RAL كود اللون',

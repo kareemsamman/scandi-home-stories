@@ -43,7 +43,15 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     }
   };
 
-  // Get display price - for contractor, show base price or first size price
+  // Calculate length range from sizes
+  const getLengthRange = () => {
+    if (!contractor || contractor.sizes.length === 0) return null;
+    const labels = contractor.sizes.map(s => s.label);
+    if (labels.length === 1) return labels[0];
+    return `${labels[0]}–${labels[labels.length - 1]}`;
+  };
+
+  const lengthRange = getLengthRange();
   const displayPrice = contractor?.sizes?.[0]?.price || product.price;
 
   if (isContractor && contractor) {
@@ -85,12 +93,17 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             <p className="text-[11px] text-muted-foreground">
               {t("contractor.sku")}: {contractor.sku}
             </p>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <Ruler className="w-3 h-3" />
-              {getLocaleText(contractor.length, locale)} – {t("common.currency")}{displayPrice.toLocaleString()}
+            {lengthRange && (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Ruler className="w-3 h-3" />
+                {lengthRange} {t("contractor.meter")}
+              </p>
+            )}
+            <p className="text-sm font-bold text-foreground">
+              {t("common.currency")}{displayPrice.toLocaleString()}
             </p>
 
-            {/* Color label + swatches */}
+            {/* Color swatches */}
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
@@ -110,12 +123,12 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               </div>
             )}
 
-            {/* Size label + options */}
+            {/* Size/length options */}
             {contractor.sizes.length > 0 && (
               <div className="pt-0.5">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {contractor.sizes.map(s => `${s.label}${s.price ? ` ₪${s.price}` : ''}`).join(" · ")}
+                  {contractor.sizes.map(s => s.label).join(" · ")}
                 </p>
               </div>
             )}
@@ -189,7 +202,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             {t("common.currency")}{product.price.toLocaleString()}
           </p>
 
-          {/* Color swatches on card */}
           {retail && retail.colors.length > 0 && (
             <div className="pt-0.5">
               <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>

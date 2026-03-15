@@ -145,33 +145,55 @@ const standardColors: ColorOption[] = [
 ];
 
 const ralColors: ColorOption[] = [
-  { id: "ral7000", name: { he: "RAL 7000", ar: "RAL 7000" }, hex: "#7a8b7a" },
-  { id: "ral7001", name: { he: "RAL 7001", ar: "RAL 7001" }, hex: "#8d948d" },
-  { id: "ral7002", name: { he: "RAL 7002", ar: "RAL 7002" }, hex: "#817f68" },
-  { id: "ral7003", name: { he: "RAL 7003", ar: "RAL 7003" }, hex: "#7a7b6d" },
-  { id: "ral7004", name: { he: "RAL 7004", ar: "RAL 7004" }, hex: "#9b9b9b" },
-  { id: "ral7005", name: { he: "RAL 7005", ar: "RAL 7005" }, hex: "#6c7066" },
-  { id: "ral7006", name: { he: "RAL 7006", ar: "RAL 7006" }, hex: "#756f61" },
-  { id: "ral7008", name: { he: "RAL 7008", ar: "RAL 7008" }, hex: "#6a5d4d" },
-  { id: "ral7009", name: { he: "RAL 7009", ar: "RAL 7009" }, hex: "#5d6058" },
-  { id: "ral7010", name: { he: "RAL 7010", ar: "RAL 7010" }, hex: "#575d57" },
-  { id: "ral7011", name: { he: "RAL 7011", ar: "RAL 7011" }, hex: "#555d61" },
-  { id: "ral7012", name: { he: "RAL 7012", ar: "RAL 7012" }, hex: "#596163" },
+  { id: "ral7016", name: { he: "RAL 7016 – Anthracite Grey", ar: "RAL 7016 – رمادي أنثراسايت" }, hex: "#383e42" },
+  { id: "ral9005", name: { he: "RAL 9005 – Jet Black", ar: "RAL 9005 – أسود نفاث" }, hex: "#0e0e10" },
+  { id: "ral9016", name: { he: "RAL 9016 – Traffic White", ar: "RAL 9016 – أبيض مروري" }, hex: "#f1f0ea" },
+  { id: "ral7035", name: { he: "RAL 7035 – Light Grey", ar: "RAL 7035 – رمادي فاتح" }, hex: "#c5c7c4" },
+  { id: "ral7000", name: { he: "RAL 7000 – Squirrel Grey", ar: "RAL 7000 – رمادي سنجابي" }, hex: "#7a8b7a" },
+  { id: "ral7001", name: { he: "RAL 7001 – Silver Grey", ar: "RAL 7001 – رمادي فضي" }, hex: "#8d948d" },
+  { id: "ral7002", name: { he: "RAL 7002 – Olive Grey", ar: "RAL 7002 – رمادي زيتوني" }, hex: "#817f68" },
+  { id: "ral7003", name: { he: "RAL 7003 – Moss Grey", ar: "RAL 7003 – رمادي طحلبي" }, hex: "#7a7b6d" },
+  { id: "ral7004", name: { he: "RAL 7004 – Signal Grey", ar: "RAL 7004 – رمادي إشارة" }, hex: "#9b9b9b" },
+  { id: "ral7005", name: { he: "RAL 7005 – Mouse Grey", ar: "RAL 7005 – رمادي فأري" }, hex: "#6c7066" },
+  { id: "ral7006", name: { he: "RAL 7006 – Beige Grey", ar: "RAL 7006 – رمادي بيج" }, hex: "#756f61" },
+  { id: "ral7008", name: { he: "RAL 7008 – Khaki Grey", ar: "RAL 7008 – رمادي كاكي" }, hex: "#6a5d4d" },
+];
+
+const passivationColors: ColorOption[] = [
+  { id: "pass-clear", name: { he: "פסיבציה שקופה", ar: "تخميل شفاف" }, hex: "#e8e8e0" },
+  { id: "pass-yellow", name: { he: "פסיבציה צהובה", ar: "تخميل أصفر" }, hex: "#d4c96a" },
+  { id: "pass-blue", name: { he: "פסיבציה כחולה", ar: "تخميل أزرق" }, hex: "#8fa8c8" },
 ];
 
 const woodFinishColors: ColorOption[] = [
-  { id: "oak", name: { he: "אלון", ar: "بلوط" }, hex: "#b8860b" },
-  { id: "walnut", name: { he: "אגוז", ar: "جوز" }, hex: "#5c4033" },
-  { id: "teak", name: { he: "טיק", ar: "ساج" }, hex: "#c19a6b" },
-  { id: "mahogany", name: { he: "מהגוני", ar: "ماهوغاني" }, hex: "#c04000" },
-  { id: "pine", name: { he: "אורן", ar: "صنوبر" }, hex: "#deb887" },
-  { id: "cherry", name: { he: "דובדבן", ar: "كرز" }, hex: "#9b111e" },
+  { id: "oak", name: { he: "אלון – Oak", ar: "بلوط – Oak" }, hex: "#b8860b" },
+  { id: "walnut", name: { he: "אגוז – Walnut", ar: "جوز – Walnut" }, hex: "#5c4033" },
+  { id: "teak", name: { he: "טיק – Teak", ar: "ساج – Teak" }, hex: "#c19a6b" },
+  { id: "mahogany", name: { he: "מהגוני – Mahogany", ar: "ماهوغاني – Mahogany" }, hex: "#c04000" },
+  { id: "pine", name: { he: "אורן – Pine", ar: "صنوبر – Pine" }, hex: "#deb887" },
+  { id: "cherry", name: { he: "דובדבן – Cherry", ar: "كرز – Cherry" }, hex: "#9b111e" },
+];
+
+const ironColors: ColorOption[] = [
+  { id: "iron-rust", name: { he: "חלודה – Rust", ar: "صدأ – Rust" }, hex: "#b7410e" },
+  { id: "iron-patina", name: { he: "פטינה – Patina", ar: "باتينا – Patina" }, hex: "#5f8575" },
+  { id: "iron-dark", name: { he: "ברזל כהה – Dark Iron", ar: "حديد داكن – Dark Iron" }, hex: "#3b3b3b" },
+];
+
+const metalColors: ColorOption[] = [
+  { id: "metal-bronze", name: { he: "ברונזה – Bronze", ar: "برونز – Bronze" }, hex: "#cd7f32" },
+  { id: "metal-champagne", name: { he: "שמפניה – Champagne", ar: "شامبانيا – Champagne" }, hex: "#f7e7ce" },
+  { id: "metal-titanium", name: { he: "טיטניום – Titanium", ar: "تيتانيوم – Titanium" }, hex: "#878681" },
+  { id: "metal-silver", name: { he: "כסף – Silver", ar: "فضي – Silver" }, hex: "#c0c0c0" },
 ];
 
 const contractorColorGroups: ColorGroup[] = [
   { id: "standard", name: { he: "סטנדרט", ar: "قياسي" }, colors: standardColors },
   { id: "ral", name: { he: "צבעי RAL", ar: "ألوان RAL" }, colors: ralColors },
-  { id: "wood", name: { he: "גימור עץ", ar: "تشطيب خشبي" }, colors: woodFinishColors },
+  { id: "passivation", name: { he: "פסיבציה", ar: "تخميل" }, colors: passivationColors },
+  { id: "wood", name: { he: "דמוי עץ", ar: "شبيه الخشب" }, colors: woodFinishColors },
+  { id: "iron", name: { he: "אירון", ar: "حديد" }, colors: ironColors },
+  { id: "metal", name: { he: "מטאל", ar: "معدن" }, colors: metalColors },
 ];
 
 const defaultSizes: SizeOption[] = [
