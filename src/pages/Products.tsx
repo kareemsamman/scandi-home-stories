@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Search, X } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ShopFilterSidebar } from "@/components/ShopFilterSidebar";
@@ -51,6 +52,7 @@ const Products = () => {
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
   const gridRef = useRef<HTMLDivElement>(null);
+  const mobileSearchTimerRef = useRef<number | null>(null);
 
   const handleFilterChange = useCallback((partial: Partial<FilterState>) => {
     setFilters((prev) => {
@@ -262,7 +264,7 @@ const Products = () => {
             {/* Product grid area */}
             <div className="flex-1 min-w-0">
               {/* Top bar: count + sort */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
                   {filteredAndSortedProducts.length} {t("product.pieces")}
                 </p>
@@ -276,6 +278,40 @@ const Products = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Mobile search bar */}
+              <div className="md:hidden mb-4">
+                <div className="relative">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setIsSearching(true);
+                      if (mobileSearchTimerRef.current) clearTimeout(mobileSearchTimerRef.current);
+                      mobileSearchTimerRef.current = window.setTimeout(() => {
+                        handleFilterChange({ search: val });
+                        setIsSearching(false);
+                      }, 600);
+                      setFilters((prev) => ({ ...prev, search: val }));
+                    }}
+                    placeholder={t("filter.searchPlaceholder")}
+                    className="w-full h-10 ps-9 pe-9 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  {filters.search && (
+                    <button
+                      onClick={() => {
+                        handleFilterChange({ search: "" });
+                        setIsSearching(false);
+                      }}
+                      className="absolute end-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
               </div>
 
