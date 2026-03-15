@@ -204,6 +204,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       applyDiscount: 'החל',
       invalidDiscount: 'הזן קוד הנחה או כרטיס מתנה תקין',
       discount: 'הנחה',
+      discountAppliedLabel: 'קוד הנחה:',
       refundPolicy: 'מדיניות החזרות',
       shippingPolicy: 'משלוחים',
       privacyPolicy: 'מדיניות פרטיות',
