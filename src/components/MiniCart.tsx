@@ -190,7 +190,7 @@ export const MiniCart = () => {
             className={cn(
               "flex flex-col bg-background overflow-hidden rounded-[10px]",
               isMobile
-                ? "w-[98%] max-w-[480px] max-h-[88vh] rounded-t-2xl"
+                ? "w-[98%] max-w-[480px] h-[98%] rounded-[10px]"
                 : "fixed top-6 bottom-6 shadow-xl"
             )}
             style={isMobile ? {} : { insetInlineEnd: 24, width: 420 }}
