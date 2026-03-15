@@ -229,12 +229,21 @@ export const translations: Record<Locale, Record<string, any>> = {
     contractor: {
       sku: 'מק״ט',
       length: 'אורך',
-      size: 'מידה',
+      size: 'אורך',
       color: 'צבע',
       selectedColor: 'צבע נבחר',
-      selectSize: 'יש לבחור מידה',
+      selectSize: 'יש לבחור אורך',
       selectColor: 'יש לבחור צבע',
       customColor: 'בחר צבע מותאם',
+      addedToCart: 'נוסף לסל',
+      colorTabs: {
+        ral: 'RAL צבע קוד',
+        passivation: 'פסיבציה',
+        noColorMF: 'ללא צבע MF',
+        woodLook: 'דמוי עץ',
+        iron: 'אירון',
+        metal: 'מטאל',
+      },
     },
     miniCart: {
       empty: 'הסל שלך ריק',
