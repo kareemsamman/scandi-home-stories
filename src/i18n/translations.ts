@@ -137,6 +137,13 @@ export const translations: Record<Locale, Record<string, any>> = {
       browseAll: 'לכל המוצרים',
       noProducts: 'לא נמצאו מוצרים',
       noProductsText: 'קולקציה זו בהכנה.',
+      zoomImage: 'הגדל תמונה',
+      specifications: 'מפרט טכני',
+      features: 'תכונות',
+      description: 'תיאור',
+      reviews: 'ביקורות',
+      noReviews: 'אין ביקורות עדיין',
+      writeReview: 'כתוב ביקורת',
     },
     cart: {
       title: 'סל הקניות',
