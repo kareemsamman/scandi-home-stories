@@ -497,7 +497,7 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
               )}
 
               {/* Quantity */}
-              <div className="mb-6">
+              <div className="mb-5">
                 <p className="text-sm font-medium text-foreground mb-2.5">{t("product.quantity")}</p>
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} max={9999} />
               </div>
