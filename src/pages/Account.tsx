@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { Package, MapPin, LogOut, Plus, Pencil, Trash2, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
@@ -82,7 +82,7 @@ const FloatingInput = ({
 type Tab = "orders" | "addresses" | "profile";
 
 const Account = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("orders");
 
@@ -91,6 +91,7 @@ const Account = () => {
   const addAddress = useAddresses((s) => s.addAddress);
   const updateAddress = useAddresses((s) => s.updateAddress);
   const removeAddress = useAddresses((s) => s.removeAddress);
+  const setDefault = useAddresses((s) => s.setDefault);
   const profile = useProfile((s) => s.profile);
   const updateProfile = useProfile((s) => s.updateProfile);
 
@@ -108,7 +109,6 @@ const Account = () => {
     <Layout>
       <section className="mt-14 md:mt-20 py-8 md:py-12">
         <div className="w-full max-w-[1000px] mx-auto px-6">
-          {/* Tab navigation */}
           <div className="flex items-center justify-between border-b border-border mb-8">
             <div className="flex gap-6">
               {tabs.map((tab) => (
@@ -116,51 +116,29 @@ const Account = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`pb-3 text-sm font-semibold transition-colors relative ${
-                    activeTab === tab.id
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                    activeTab === tab.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="account-tab-underline"
-                      className="absolute bottom-0 inset-x-0 h-0.5 bg-foreground"
-                    />
+                    <motion.div layoutId="account-tab-underline" className="absolute bottom-0 inset-x-0 h-0.5 bg-foreground" />
                   )}
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 pb-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={handleLogout} className="flex items-center gap-1.5 pb-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <LogOut className="w-4 h-4" />
               {t("auth.logout")}
             </button>
           </div>
 
-          {/* Tab content */}
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeTab === "orders" && <OrdersTab />}
               {activeTab === "addresses" && (
-                <AddressesTab
-                  addresses={addresses}
-                  onAdd={addAddress}
-                  onUpdate={updateAddress}
-                  onRemove={removeAddress}
-                />
+                <AddressesTab addresses={addresses} onAdd={addAddress} onUpdate={updateAddress} onRemove={removeAddress} onSetDefault={setDefault} />
               )}
-              {activeTab === "profile" && (
-                <ProfileTab profile={profile} onUpdate={updateProfile} />
-              )}
+              {activeTab === "profile" && <ProfileTab profile={profile} onUpdate={updateProfile} />}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -171,8 +149,10 @@ const Account = () => {
 
 /* ============ ORDERS TAB ============ */
 const OrdersTab = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
   const orders = useOrders((s) => s.orders);
+
+  const ArrowIcon = locale === "he" || locale === "ar" ? ChevronLeft : ChevronRight;
 
   if (orders.length === 0) {
     return (
@@ -182,10 +162,7 @@ const OrdersTab = () => {
         </div>
         <p className="text-lg font-semibold text-foreground mb-2">{t("account.noOrders")}</p>
         <p className="text-sm text-muted-foreground mb-6">{t("account.noOrdersText")}</p>
-        <Link
-          to={localePath("/shop")}
-          className="h-12 px-8 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors"
-        >
+        <Link to={localePath("/shop")} className="h-12 px-8 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
           {t("cart.startShopping")}
         </Link>
       </div>
@@ -204,10 +181,10 @@ const OrdersTab = () => {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case "pending": return "text-amber-600 bg-amber-50";
-      case "confirmed": return "text-blue-600 bg-blue-50";
-      case "shipped": return "text-purple-600 bg-purple-50";
-      case "delivered": return "text-green-600 bg-green-50";
+      case "pending": return "text-amber-700 bg-amber-50";
+      case "confirmed": return "text-blue-700 bg-blue-50";
+      case "shipped": return "text-purple-700 bg-purple-50";
+      case "delivered": return "text-green-700 bg-green-50";
       default: return "text-muted-foreground bg-muted/20";
     }
   };
@@ -215,35 +192,44 @@ const OrdersTab = () => {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <div key={order.id} className="bg-white rounded-xl border border-border p-5 hover:shadow-sm transition-shadow">
+        <Link
+          key={order.id}
+          to={localePath(`/account/order/${order.id}`)}
+          className="block bg-white rounded-xl border border-border p-5 hover:shadow-md hover:border-foreground/10 transition-all group"
+        >
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="text-sm font-bold text-foreground">{t("account.orderNumber")} {order.orderNumber}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{order.date}</p>
             </div>
-            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColor(order.status)}`}>
+            <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${statusColor(order.status)}`}>
               {statusLabel(order.status)}
             </span>
           </div>
-          {/* Order items preview */}
+
+          {/* Items preview with images */}
           {order.items && order.items.length > 0 && (
             <div className="flex gap-3 mb-3 overflow-x-auto pb-1">
               {order.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2 shrink-0">
-                  <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover border border-border" />
+                <div key={idx} className="flex items-center gap-2.5 shrink-0">
+                  <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover border border-border" />
                   <div className="text-xs">
-                    <p className="font-medium text-foreground line-clamp-1">{item.name}</p>
+                    <p className="font-medium text-foreground line-clamp-1 max-w-[140px]">{item.name}</p>
                     <p className="text-muted-foreground">x{item.quantity}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
+
           <div className="flex items-center justify-between pt-3 border-t border-border">
             <span className="text-sm text-muted-foreground">{t("cart.total")}</span>
-            <span className="text-sm font-bold">{t("common.currency")}{order.total.toLocaleString()}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold">{t("common.currency")}{order.total.toLocaleString()}</span>
+              <ArrowIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
@@ -255,9 +241,10 @@ interface AddressesTabProps {
   onAdd: (address: Omit<SavedAddress, "id">) => void;
   onUpdate: (id: string, data: Partial<SavedAddress>) => void;
   onRemove: (id: string) => void;
+  onSetDefault: (id: string) => void;
 }
 
-const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProps) => {
+const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove, onSetDefault }: AddressesTabProps) => {
   const { t } = useLocale();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -284,10 +271,7 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold">{t("account.savedAddresses")}</h2>
         {!showForm && (
-          <button
-            onClick={() => { setEditingId(null); setShowForm(true); }}
-            className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
-          >
+          <button onClick={() => { setEditingId(null); setShowForm(true); }} className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors">
             <Plus className="w-4 h-4" />
             {t("account.addAddress")}
           </button>
@@ -295,11 +279,7 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
       </div>
 
       {showForm && (
-        <AddressForm
-          initial={editingAddress}
-          onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditingId(null); }}
-        />
+        <AddressForm initial={editingAddress} onSave={handleSave} onCancel={() => { setShowForm(false); setEditingId(null); }} />
       )}
 
       {!showForm && addresses.length === 0 && (
@@ -314,9 +294,9 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
       {!showForm && addresses.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
           {addresses.map((addr) => (
-            <div key={addr.id} className="bg-white rounded-xl border border-border p-5 relative">
+            <div key={addr.id} className={`bg-white rounded-xl border p-5 relative transition-colors ${addr.isDefault ? "border-foreground/30" : "border-border"}`}>
               {addr.isDefault && (
-                <span className="absolute top-3 end-3 text-[10px] font-semibold text-foreground bg-muted/30 px-2 py-0.5 rounded-full">
+                <span className="absolute top-3 end-3 text-[10px] font-semibold text-foreground bg-accent/30 px-2 py-0.5 rounded-full">
                   {t("account.defaultAddress")}
                 </span>
               )}
@@ -324,13 +304,18 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
               <p className="text-sm text-muted-foreground mt-1">{addr.city}</p>
               <p className="text-sm text-muted-foreground">{addr.street} {addr.houseNumber}{addr.apartment ? `, ${addr.apartment}` : ""}</p>
               <p className="text-sm text-muted-foreground">{addr.phone}</p>
-              <div className="flex gap-3 mt-4 pt-3 border-t border-border">
+              <div className="flex gap-3 mt-4 pt-3 border-t border-border flex-wrap">
                 <button onClick={() => handleEdit(addr)} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                   <Pencil className="w-3.5 h-3.5" /> {t("account.edit")}
                 </button>
                 <button onClick={() => onRemove(addr.id)} className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-600 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" /> {t("account.delete")}
                 </button>
+                {!addr.isDefault && (
+                  <button onClick={() => onSetDefault(addr.id)} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors ms-auto">
+                    <Star className="w-3.5 h-3.5" /> {t("account.setDefault")}
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -340,7 +325,7 @@ const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove }: AddressesTabProp
   );
 };
 
-/* ============ ADDRESS FORM (with validation) ============ */
+/* ============ ADDRESS FORM ============ */
 interface AddressFormProps {
   initial?: SavedAddress;
   onSave: (data: Omit<SavedAddress, "id">) => void;
@@ -392,7 +377,6 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
     } else {
       setForm((p) => ({ ...p, [name]: value }));
     }
-    // Clear error on change
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -459,7 +443,7 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
   );
 };
 
-/* ============ PROFILE TAB (with validation) ============ */
+/* ============ PROFILE TAB ============ */
 interface ProfileTabProps {
   profile: { firstName: string; lastName: string; email: string; phone: string };
   onUpdate: (data: Partial<{ firstName: string; lastName: string; email: string; phone: string }>) => void;
@@ -471,7 +455,6 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
-  // Sync form with store when profile changes externally
   useEffect(() => {
     setForm({ ...profile });
   }, [profile]);
@@ -508,7 +491,6 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 max-w-lg space-y-4">
       <h2 className="text-lg font-bold mb-2">{t("account.personalInfo")}</h2>
-      {/* Email / Username - disabled */}
       <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={handleChange} type="email" inputMode="email" disabled error={errors.email} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
@@ -520,10 +502,7 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
           {t("account.saveChanges")}
         </button>
         {saved && (
-          <motion.span
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="text-sm text-green-600 font-medium"
-          >
+          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
             ✓ {t("account.saved")}
           </motion.span>
         )}
