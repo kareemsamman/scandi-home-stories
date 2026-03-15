@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -9,6 +8,20 @@ interface MobileNavDrawerProps {
   open: boolean;
   onClose: () => void;
 }
+
+const CloseIcon = () => (
+  <svg
+    role="presentation"
+    strokeWidth="2"
+    focusable="false"
+    width="19"
+    height="19"
+    className="icon icon-close"
+    viewBox="0 0 24 24"
+  >
+    <path d="M17.658 6.343 6.344 17.657M17.658 17.657 6.344 6.343" stroke="currentColor" />
+  </svg>
+);
 
 export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   const { t, locale, localePath } = useLocale();
@@ -24,68 +37,79 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/40 z-50"
             onClick={onClose}
           />
 
-          {/* Drawer */}
+          {/* Centered modal card */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="fixed top-0 bottom-0 end-0 w-[85vw] max-w-sm bg-dark z-50 overflow-y-auto"
-            style={{ insetInlineEnd: 0, insetInlineStart: "auto" }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="fixed inset-0 z-50 flex items-start justify-center pt-16 pointer-events-none"
           >
-            <div className="p-6">
-              {/* Close */}
-              <div className="flex items-center justify-between mb-10">
-                <span className="text-lg font-bold text-white">AMG Pergola</span>
-                <button onClick={onClose} className="p-2 text-white/60 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
+            <div
+              className="pointer-events-auto relative bg-background rounded-2xl shadow-xl overflow-y-auto max-h-[80vh]"
+              style={{ width: "calc(100% - 32px)", maxWidth: 480 }}
+            >
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 end-4 p-1 text-foreground/60 hover:text-foreground z-10"
+                aria-label="Close"
+              >
+                <CloseIcon />
+              </button>
+
+              <div className="px-6 pt-6 pb-2">
+                <span className="text-lg font-bold text-foreground">AMG Pergola</span>
               </div>
 
               {/* Nav links */}
-              <nav className="space-y-1 mb-8">
+              <nav className="px-6">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     to={link.href}
                     onClick={onClose}
-                    className="block py-3 text-base font-medium text-white/80 hover:text-white border-b border-white/10 transition-colors"
+                    className="flex items-center justify-between py-[18px] text-base font-medium text-foreground border-b border-foreground/10 transition-colors hover:text-foreground/70"
                   >
                     {link.label}
+                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" className="text-foreground/40 rtl:rotate-180">
+                      <path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </Link>
                 ))}
               </nav>
 
               {/* Collections */}
-              <div className="mb-8">
-                <p className="text-xs font-semibold text-white/40 mb-4">
+              <div className="px-6 mt-4 pb-2">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">
                   {t("nav.collections")}
                 </p>
-                <div className="space-y-1">
-                  {collections.map((col) => (
-                    <Link
-                      key={col.id}
-                      to={localePath(`/shop?collection=${col.slug}`)}
-                      onClick={onClose}
-                      className="block py-2.5 text-sm text-white/60 hover:text-white transition-colors"
-                    >
-                      {col.name[locale]}
-                    </Link>
-                  ))}
-                </div>
+                {collections.map((col) => (
+                  <Link
+                    key={col.id}
+                    to={localePath(`/shop?collection=${col.slug}`)}
+                    onClick={onClose}
+                    className="flex items-center justify-between py-3 text-sm text-foreground/70 hover:text-foreground border-b border-foreground/10 transition-colors"
+                  >
+                    {col.name[locale]}
+                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" className="text-foreground/30 rtl:rotate-180">
+                      <path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                ))}
               </div>
 
               {/* Locale switcher */}
-              <div className="text-white">
+              <div className="px-6 py-5">
                 <LocaleSwitcher />
               </div>
             </div>

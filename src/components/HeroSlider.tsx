@@ -41,7 +41,7 @@ export const HeroSlider = () => {
   if (!Array.isArray(slides)) return null;
 
   return (
-    <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-20">
+    <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem]">
       <div ref={emblaRef} className="h-full">
         <div className="flex h-full">
           {slides.map((slide, index) => (
