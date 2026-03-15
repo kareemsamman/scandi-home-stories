@@ -247,7 +247,7 @@ const RetailProductPage = ({ product }: { product: RetailProduct }) => {
   return (
     <Layout>
       {/* Breadcrumb — light, no border */}
-      <div className="section-container pt-2 pb-1 mt-14 md:mt-16">
+      <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
