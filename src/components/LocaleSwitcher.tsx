@@ -21,7 +21,7 @@ export const LocaleSwitcher = ({ icon }: LocaleSwitcherProps) => {
   return (
     <button
       onClick={toggleLocale}
-      className="flex items-center gap-1 p-2 text-white/70 hover:text-white transition-colors"
+      className="flex items-center gap-1 p-2 text-white hover:text-white/80 transition-colors"
       aria-label="Switch language"
     >
       {icon}
