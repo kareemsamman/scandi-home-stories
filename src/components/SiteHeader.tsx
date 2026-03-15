@@ -113,8 +113,7 @@ export const SiteHeader = () => {
       <header
         className={cn(
           "site-header sticky z-40",
-          isAtTop && "is-at-top top-[40px]",
-          isScrolled && !isAtTop && "is-scrolled top-0",
+          isAtTop ? "is-at-top top-[40px]" : "is-scrolled top-0",
           isHidden && "is-hidden"
         )}
       >
