@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Ruler } from "lucide-react";
 import { Product, RetailProduct, ContractorProduct, collections, getLocaleText } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
@@ -30,7 +31,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const retail = isRetail ? (product as RetailProduct) : null;
   const contractor = isContractor ? (product as ContractorProduct) : null;
 
-  // Check if product has options (colors or sizes)
   const hasOptions = (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -43,6 +43,9 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     }
   };
 
+  // Get display price - for contractor, show base price or first size price
+  const displayPrice = contractor?.sizes?.[0]?.price || product.price;
+
   if (isContractor && contractor) {
     return (
       <>
@@ -51,7 +54,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.5, delay: index * 0.08 }}
-          className="group border border-border rounded-lg overflow-hidden bg-background"
+          className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow"
         >
           <Link to={localePath(`/product/${product.slug}`)} className="block">
             <div className="relative aspect-square overflow-hidden bg-muted">
@@ -66,7 +69,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                   {t("product.newBadge")}
                 </span>
               )}
-              {/* Quick add button */}
               <button
                 onClick={handleQuickAdd}
                 className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors"
@@ -76,42 +78,49 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               </button>
             </div>
           </Link>
-          <div className="p-3 space-y-1">
-            <h3 className="text-sm font-semibold text-foreground group-hover:text-accent-strong transition-colors">
+          <div className="p-3 space-y-1.5">
+            <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">
               {product.name}
             </h3>
             <p className="text-[11px] text-muted-foreground">
               {t("contractor.sku")}: {contractor.sku}
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Ruler className="w-3 h-3" />
               {t("contractor.length")}: {getLocaleText(contractor.length, locale)}
             </p>
-            <p className="text-sm font-semibold text-foreground">
-              {t("common.currency")}{product.price.toLocaleString()}
+            <p className="text-sm font-bold text-foreground">
+              {t("common.currency")}{displayPrice.toLocaleString()}
             </p>
 
-            {/* Color swatches on card */}
+            {/* Color label + swatches */}
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
-              <div className="flex gap-1 pt-1">
-                {contractor.colorGroups[0].colors.slice(0, 5).map((color) => (
-                  <span
-                    key={color.id}
-                    className="w-4 h-4 rounded-full border border-border"
-                    style={{ backgroundColor: color.hex }}
-                    title={color.name[locale]}
-                  />
-                ))}
-                {contractor.colorGroups[0].colors.length > 5 && (
-                  <span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 5}</span>
-                )}
+              <div className="pt-1">
+                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
+                <div className="flex gap-1">
+                  {contractor.colorGroups[0].colors.slice(0, 5).map((color) => (
+                    <span
+                      key={color.id}
+                      className="w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name[locale]}
+                    />
+                  ))}
+                  {contractor.colorGroups[0].colors.length > 5 && (
+                    <span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 5}</span>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Size options on card */}
+            {/* Size label + options */}
             {contractor.sizes.length > 0 && (
-              <p className="text-[11px] text-muted-foreground">
-                {contractor.sizes.map(s => s.label).join(" · ")}
-              </p>
+              <div className="pt-0.5">
+                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {contractor.sizes.map(s => s.label).join(" · ")}
+                </p>
+              </div>
             )}
           </div>
         </motion.article>
@@ -128,7 +137,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.5, delay: index * 0.08 }}
-        className="group border border-border rounded-lg overflow-hidden bg-background"
+        className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow"
       >
         <Link to={localePath(`/product/${product.slug}`)} className="block">
           <div className="relative aspect-square overflow-hidden bg-muted">
@@ -160,7 +169,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                 </span>
               )}
             </div>
-            {/* Quick add button */}
             <button
               onClick={handleQuickAdd}
               className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors"
@@ -177,27 +185,30 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               {collection.name[locale]}
             </p>
           )}
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-accent-strong transition-colors">
+          <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">
             {product.name}
           </h3>
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-bold text-foreground">
             {t("common.currency")}{product.price.toLocaleString()}
           </p>
 
           {/* Color swatches on card */}
           {retail && retail.colors.length > 0 && (
-            <div className="flex gap-1.5 pt-0.5">
-              {retail.colors.slice(0, 5).map((color) => (
-                <span
-                  key={color.id}
-                  className="w-4 h-4 rounded-full border border-border"
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name[locale]}
-                />
-              ))}
-              {retail.colors.length > 5 && (
-                <span className="text-[10px] text-muted-foreground self-center">+{retail.colors.length - 5}</span>
-              )}
+            <div className="pt-0.5">
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
+              <div className="flex gap-1.5">
+                {retail.colors.slice(0, 5).map((color) => (
+                  <span
+                    key={color.id}
+                    className="w-4 h-4 rounded-full border border-border"
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name[locale]}
+                  />
+                ))}
+                {retail.colors.length > 5 && (
+                  <span className="text-[10px] text-muted-foreground self-center">+{retail.colors.length - 5}</span>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -494,11 +494,12 @@ export const translations: Record<Locale, Record<string, any>> = {
     contractor: {
       sku: 'رقم القطعة',
       length: 'الطول',
-      size: 'الحجم',
+      size: 'المقاس',
       color: 'اللون',
       selectedColor: 'اللون المحدد',
-      selectSize: 'يرجى اختيار الحجم',
+      selectSize: 'يرجى اختيار المقاس',
       selectColor: 'يرجى اختيار اللون',
+      customColor: 'اختر لون مخصص',
     },
     miniCart: {
       empty: 'سلتك فارغة',
