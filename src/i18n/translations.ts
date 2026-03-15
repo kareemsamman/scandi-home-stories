@@ -403,6 +403,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       cart: 'سلة التسوق',
       search: 'بحث',
       collections: 'المجموعات',
+      account: 'حساب',
     },
     announcement: {
       messages: [
