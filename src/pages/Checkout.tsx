@@ -302,8 +302,8 @@ const Checkout = () => {
 
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
-  /* ---------- Discount code block ---------- */
-  const DiscountBlock = () => (
+  /* ---------- inline discount block JSX ---------- */
+  const discountBlockJSX = (
     <div className="py-4">
       <div className="flex gap-2">
         <input
@@ -332,8 +332,8 @@ const Checkout = () => {
     </div>
   );
 
-  /* ---------- Order summary content ---------- */
-  const OrderSummaryContent = () => (
+  /* ---------- inline order summary JSX ---------- */
+  const orderSummaryJSX = (
     <>
       {/* Product list */}
       <div className="space-y-4 mb-4">
@@ -368,7 +368,7 @@ const Checkout = () => {
       </div>
 
       {/* Discount code */}
-      <DiscountBlock />
+      {discountBlockJSX}
 
       {/* Pricing — no top border */}
       <div className="space-y-3 pt-2">
