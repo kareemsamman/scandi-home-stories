@@ -530,6 +530,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       city: 'المدينة',
       discountPlaceholder: 'رمز الخصم أو بطاقة هدية',
       applyDiscount: 'تطبيق',
+      invalidDiscount: 'أدخل رمز خصم أو بطاقة هدية صالحة',
+      discount: 'خصم',
       refundPolicy: 'سياسة الاسترداد',
       shippingPolicy: 'الشحن',
       privacyPolicy: 'سياسة الخصوصية',
