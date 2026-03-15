@@ -137,7 +137,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                     >
                       <span>{s.label}</span>
                       {s.price && (
-                        <span className={cn("text-[9px]", idx === 0 ? "opacity-80" : "text-muted-foreground")}>
+                        <span className="text-[9px] text-muted-foreground">
                           {t("common.currency")}{s.price}
                         </span>
                       )}
