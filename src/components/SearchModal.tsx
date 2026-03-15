@@ -157,14 +157,13 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     });
   }, [debouncedQuery, locale]);
 
+  // Collections: show collections that contain matching products
   const filteredCollections = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
-    const q = debouncedQuery.toLowerCase();
-    return collections.filter(c =>
-      getLocaleName(c, locale).toLowerCase().includes(q) ||
-      getLocaleText(c.description, locale).toLowerCase().includes(q)
-    );
-  }, [debouncedQuery, locale]);
+    // Get unique collection IDs from filtered products
+    const matchedCollectionIds = new Set(filteredProducts.map(p => p.collection));
+    return collections.filter(c => matchedCollectionIds.has(c.id));
+  }, [debouncedQuery, locale, filteredProducts]);
 
   const hasResults = filteredProducts.length > 0 || filteredCollections.length > 0;
   const hasQuery = query.trim().length > 0;
