@@ -37,7 +37,7 @@ const SEED_ORDERS: Order[] = [
     total: 47000,
     status: "pending",
     items: [
-      { name: "פרגולה ביוקלימטית Beak", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80", price: 38000, quantity: 1, color: "שחור" },
+      { name: "פרגולה ביוקלימטית Beak", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80", price: 38000, quantity: 1, color: "שחור", size: "600×400 cm" },
       { name: "תאורת LED משולבת", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=200&q=80", price: 4500, quantity: 2 },
     ],
     shippingAddress: {
@@ -57,7 +57,7 @@ const SEED_ORDERS: Order[] = [
     total: 22500,
     status: "confirmed",
     items: [
-      { name: "מערכת למלות מוטורית Gate Tube", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=200&q=80", price: 22500, quantity: 1, color: "לבן", size: "600×400 cm" },
+      { name: "מערכת למלות מוטורית Gate Tube", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=200&q=80", price: 22500, quantity: 1, color: "לבן", size: "500×350 cm" },
     ],
     shippingAddress: {
       firstName: "אחמד",
@@ -75,8 +75,8 @@ const SEED_ORDERS: Order[] = [
     total: 15800,
     status: "delivered",
     items: [
-      { name: "פרופיל אלומיניום 900YSL1500", image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=200&q=80", price: 1200, quantity: 6, color: "לבן", size: "3m" },
-      { name: "אביזרי חיבור פרימיום", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80", price: 3200, quantity: 2 },
+      { name: "פרופיל אלומיניום 900YSL1500", image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=200&q=80", price: 1200, quantity: 6, color: "RAL 7016 – Anthracite Grey", size: "3m" },
+      { name: "אביזרי חיבור פרימיום", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80", price: 3200, quantity: 2, color: "לבן" },
     ],
     shippingAddress: {
       firstName: "אחמד",

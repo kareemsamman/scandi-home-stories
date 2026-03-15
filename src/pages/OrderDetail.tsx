@@ -59,7 +59,7 @@ const OrderDetail = () => {
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="mt-14 md:mt-20 py-8 md:py-12"
+        className="mt-4 pb-8 md:pb-12"
       >
         <div className="w-full max-w-[800px] mx-auto px-6">
           {/* Back button */}
