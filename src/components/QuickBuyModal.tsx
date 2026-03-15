@@ -141,15 +141,36 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                 {standardColors.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-foreground mb-2.5">
-                      {t("contractor.color")}: <span className="text-muted-foreground font-normal">{selectedColor?.name || standardColors[0].name[locale]}</span>
+                      {t("contractor.color")}:{" "}
+                      <span className="text-muted-foreground font-normal">
+                        {selectedColor?.name || standardColors[0].name[locale]}
+                      </span>
                     </p>
-                    <div className="flex gap-2 flex-wrap">
+
+                    {/* Custom color indicator */}
+                    {isCustomColor && selectedColor && (
+                      <div className="flex items-center gap-2.5 mb-3 p-2.5 rounded-xl border border-foreground bg-muted">
+                        <span
+                          className="w-8 h-8 rounded-lg border border-foreground flex-shrink-0"
+                          style={{ backgroundColor: selectedColor.hex }}
+                        />
+                        <span className="text-sm font-medium text-foreground flex-1">{selectedColor.name}</span>
+                        <button
+                          onClick={() => { setIsCustomColor(false); setSelectedColor(null); }}
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
+                        >
+                          {t("contractor.cancel")}
+                        </button>
+                      </div>
+                    )}
+
+                    <div className={cn("flex gap-2 flex-wrap", isCustomColor && "opacity-40 pointer-events-none")}>
                       {standardColors.map((color) => {
-                        const isActive = selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id);
+                        const isActive = !isCustomColor && (selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id));
                         return (
                           <button
                             key={color.id}
-                            onClick={() => setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex })}
+                            onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setIsCustomColor(false); }}
                             className={cn(
                               "w-10 h-10 rounded border-2 transition-all",
                               isActive ? "border-foreground scale-110" : "border-border hover:border-muted-foreground"
@@ -164,7 +185,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                     {hasCustomColors && (
                       <button
                         onClick={() => setCustomColorOpen(true)}
-                        className="mt-3 px-5 py-3 text-sm font-semibold rounded-xl border-2 border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors w-full"
+                        className={cn(
+                          "mt-3 px-5 py-3.5 text-sm font-semibold rounded-2xl w-full transition-colors",
+                          isCustomColor
+                            ? "bg-foreground text-background"
+                            : "bg-foreground text-background hover:opacity-90"
+                        )}
                       >
                         {t("contractor.customColor")}
                       </button>
