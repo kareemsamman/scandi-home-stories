@@ -18,15 +18,15 @@ export const QuantitySelector = ({ quantity, onQuantityChange, min = 1, max = 10
   };
 
   return (
-    <div className={cn("flex items-center gap-0 border border-border rounded-xl overflow-hidden", className)}>
+    <div className={cn("flex items-center border border-border rounded-xl overflow-hidden w-full", className)}>
       <Button
         variant="ghost"
         size="icon"
         onClick={() => quantity > min && onQuantityChange(quantity - 1)}
         disabled={quantity <= min}
-        className="h-12 w-12 rounded-none text-foreground"
+        className="h-14 w-14 rounded-none text-foreground flex-shrink-0"
       >
-        <Minus className="w-4 h-4" />
+        <Minus className="w-5 h-5" />
       </Button>
       <input
         type="number"
@@ -34,16 +34,16 @@ export const QuantitySelector = ({ quantity, onQuantityChange, min = 1, max = 10
         onChange={handleInputChange}
         min={min}
         max={max}
-        className="w-14 h-12 text-center text-sm font-semibold tabular-nums bg-transparent border-x border-border outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="flex-1 h-14 text-center text-base font-semibold tabular-nums bg-transparent border-x border-border outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <Button
         variant="ghost"
         size="icon"
         onClick={() => quantity < max && onQuantityChange(quantity + 1)}
         disabled={quantity >= max}
-        className="h-12 w-12 rounded-none text-foreground"
+        className="h-14 w-14 rounded-none text-foreground flex-shrink-0"
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="w-5 h-5" />
       </Button>
     </div>
   );
