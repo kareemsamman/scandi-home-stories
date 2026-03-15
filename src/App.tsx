@@ -71,7 +71,10 @@ const App = () => (
               }
             >
               <Route index element={<AdminDashboard />} />
-              {/* Future admin pages will be nested here */}
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="hero-slides" element={<AdminHeroSlides />} />
             </Route>
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
