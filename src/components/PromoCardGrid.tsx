@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 const promoImages = [
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
@@ -42,8 +42,8 @@ export const PromoCardGrid = () => {
                     <p className="text-xs text-white/60 mb-1">{promo.subtitle}</p>
                     <h3 className="text-lg font-semibold text-white">{promo.title}</h3>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <ArrowRight className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <ArrowLeft className="w-4 h-4 text-background" />
                   </div>
                 </div>
               </Link>

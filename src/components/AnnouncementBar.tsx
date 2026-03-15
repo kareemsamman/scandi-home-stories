@@ -17,8 +17,8 @@ export const AnnouncementBar = () => {
   if (!Array.isArray(messages)) return null;
 
   return (
-    <div className="bg-primary text-primary-foreground">
-      <div className="section-container flex items-center justify-center h-10">
+    <div className="sticky top-0 z-50 bg-primary text-primary-foreground">
+      <div className="section-container flex items-center justify-center h-[40px]">
         <p className="text-xs font-medium text-center transition-opacity duration-300">
           {messages[current]}
         </p>

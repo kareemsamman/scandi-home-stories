@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const heroImages = [
@@ -41,7 +41,7 @@ export const HeroSlider = () => {
   if (!Array.isArray(slides)) return null;
 
   return (
-    <section className="relative h-[65vh] md:h-[80vh] overflow-hidden">
+    <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-20">
       <div ref={emblaRef} className="h-full">
         <div className="flex h-full">
           {slides.map((slide, index) => (
@@ -64,11 +64,11 @@ export const HeroSlider = () => {
                   <Button
                     asChild
                     size="lg"
-                    className="rounded-lg px-8 py-6 text-sm font-semibold"
+                    className="rounded-lg px-8 py-6 text-sm font-semibold bg-foreground text-background hover:bg-foreground/90"
                   >
                     <Link to={localePath("/shop")}>
                       {slide.cta}
-                      <ArrowRight className="w-4 h-4 ms-2" />
+                      <ArrowLeft className="w-4 h-4 ms-2" />
                     </Link>
                   </Button>
                 </div>
