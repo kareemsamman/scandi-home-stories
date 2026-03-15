@@ -392,9 +392,7 @@ export const products: Product[] = [
     materials: "Aluminum 6063-T5",
     sizes: defaultSizes,
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileGateTubeImg],
   },
   {
     id: "gate-stopper",
