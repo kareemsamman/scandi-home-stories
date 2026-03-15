@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
-import { products, collections, getCollectionBySlug } from "@/data/products";
+import { products, collections, getCollectionBySlug, profileSubCategories, ContractorProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,8 +16,10 @@ const Products = () => {
   const { t, locale, localePath } = useLocale();
   const activeCollection = searchParams.get("collection") || "all";
   const activeSort = (searchParams.get("sort") as SortOption) || "featured";
+  const activeSubCategory = searchParams.get("sub") || "all";
 
   const sortOptions: any[] = t("shop.sortOptions") || [];
+  const isProfilesCollection = activeCollection === "profiles";
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
@@ -26,6 +27,17 @@ const Products = () => {
       const col = collections.find((c) => c.slug === activeCollection);
       if (col) result = result.filter((p) => p.collection === col.id);
     }
+
+    // Apply subcategory filter for profiles
+    if (isProfilesCollection && activeSubCategory !== "all") {
+      result = result.filter((p) => {
+        if (p.type === "contractor") {
+          return (p as ContractorProduct).subCategory === activeSubCategory;
+        }
+        return false;
+      });
+    }
+
     switch (activeSort) {
       case "newest": result = result.filter((p) => p.new).concat(result.filter((p) => !p.new)); break;
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
@@ -34,13 +46,20 @@ const Products = () => {
       default: result = result.filter((p) => p.featured).concat(result.filter((p) => !p.featured)); break;
     }
     return result;
-  }, [activeCollection, activeSort]);
+  }, [activeCollection, activeSort, activeSubCategory, isProfilesCollection]);
 
   const currentCollection = activeCollection !== "all" ? getCollectionBySlug(activeCollection) : null;
 
   const handleFilterChange = (slug: string) => {
     const p = new URLSearchParams(searchParams);
     if (slug === "all") p.delete("collection"); else p.set("collection", slug);
+    p.delete("sub"); // reset subcategory when switching collection
+    setSearchParams(p);
+  };
+
+  const handleSubCategoryChange = (subId: string) => {
+    const p = new URLSearchParams(searchParams);
+    if (subId === "all") p.delete("sub"); else p.set("sub", subId);
     setSearchParams(p);
   };
 
@@ -93,13 +112,52 @@ const Products = () => {
         </div>
       </section>
 
+      {/* Subcategory filters for profiles */}
+      {isProfilesCollection && (
+        <section className="py-3 border-b border-border bg-background">
+          <div className="section-container">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSubCategoryChange("all")}
+                className={cn(
+                  "rounded-full px-4 text-xs whitespace-nowrap border",
+                  activeSubCategory === "all"
+                    ? "border-foreground bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+                    : "border-border"
+                )}
+              >
+                {t("shop.filterAll")}
+              </Button>
+              {profileSubCategories.map((sub) => (
+                <Button
+                  key={sub.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSubCategoryChange(sub.id)}
+                  className={cn(
+                    "rounded-full px-4 text-xs whitespace-nowrap border",
+                    activeSubCategory === sub.id
+                      ? "border-foreground bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+                      : "border-border"
+                  )}
+                >
+                  {sub.name[locale]}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Grid */}
       <section className="py-10 md:py-16">
         <div className="section-container">
           {filteredAndSortedProducts.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground mb-8">{filteredAndSortedProducts.length} {t("product.pieces")}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
                 {filteredAndSortedProducts.map((product, i) => (
                   <ProductCard key={product.id} product={product} index={i} />
                 ))}

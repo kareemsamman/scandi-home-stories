@@ -1,4 +1,7 @@
 import type { Locale } from "@/i18n/translations";
+import profileGateTubeImg from "@/assets/profile-gate-tube.png";
+import profileBeakImg from "@/assets/profile-beak.png";
+import profileHitechImg from "@/assets/profile-hitech.png";
 
 export interface LocaleString {
   he: string;
@@ -29,7 +32,13 @@ export interface ColorGroup {
 export interface SizeOption {
   id: string;
   label: string;
-  price?: number; // override price for this size
+  price?: number;
+}
+
+// Subcategory for contractor product filtering
+export interface SubCategory {
+  id: string;
+  name: LocaleString;
 }
 
 // Base product fields
@@ -62,9 +71,19 @@ export interface ContractorProduct extends BaseProduct {
   sizes: SizeOption[];
   colorGroups: ColorGroup[];
   maxQuantity?: number;
+  subCategory?: string; // references SubCategory.id
 }
 
 export type Product = RetailProduct | ContractorProduct;
+
+// Subcategories for aluminum profiles
+export const profileSubCategories: SubCategory[] = [
+  { id: "gate-profiles", name: { he: "פרופילי שער", ar: "بروفيلات بوابات" } },
+  { id: "accessories", name: { he: "אביזרים", ar: "إكسسوارات" } },
+  { id: "angles", name: { he: "זוויות שווה-ש", ar: "زوايا متساوية" } },
+  { id: "fences-gates", name: { he: "גדרות ושערים", ar: "أسوار وبوابات" } },
+  { id: "hitech", name: { he: "הייטק אטום", ar: "هايتك مغلق" } },
+];
 
 export const collections: Collection[] = [
   {
@@ -150,21 +169,9 @@ const woodFinishColors: ColorOption[] = [
 ];
 
 const contractorColorGroups: ColorGroup[] = [
-  {
-    id: "standard",
-    name: { he: "סטנדרט", ar: "قياسي" },
-    colors: standardColors,
-  },
-  {
-    id: "ral",
-    name: { he: "צבעי RAL", ar: "ألوان RAL" },
-    colors: ralColors,
-  },
-  {
-    id: "wood",
-    name: { he: "גימור עץ", ar: "تشطيب خشبي" },
-    colors: woodFinishColors,
-  },
+  { id: "standard", name: { he: "סטנדרט", ar: "قياسي" }, colors: standardColors },
+  { id: "ral", name: { he: "צבעי RAL", ar: "ألوان RAL" }, colors: ralColors },
+  { id: "wood", name: { he: "גימור עץ", ar: "تشطيب خشبي" }, colors: woodFinishColors },
 ];
 
 const defaultSizes: SizeOption[] = [
@@ -359,6 +366,7 @@ export const products: Product[] = [
     name: "פרופיל שער צינור",
     slug: "profile-gate-tube",
     collection: "profiles",
+    subCategory: "gate-profiles",
     price: 180,
     sku: "900YSL1300-60",
     length: { he: "6 מטר", ar: "6 متر" },
@@ -367,9 +375,24 @@ export const products: Product[] = [
     materials: "Aluminum 6063-T5",
     sizes: defaultSizes,
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileGateTubeImg],
+  },
+  {
+    id: "profile-hinge",
+    type: "contractor",
+    name: "פרופיל ציר",
+    slug: "profile-hinge",
+    collection: "profiles",
+    subCategory: "gate-profiles",
+    price: 95,
+    sku: "900YSL1310-50",
+    length: { he: "5 מטר", ar: "5 متر" },
+    description: { he: "פרופיל ציר לשערי אלומיניום", ar: "بروفيل محور لبوابات ألمنيوم" },
+    longDescription: { he: "פרופיל ציר מאלומיניום לחיבור דלתות ושערים. מתאים לשערים דו-כנפיים וחד-כנפיים.", ar: "بروفيل محور من الألمنيوم لربط الأبواب والبوابات." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileGateTubeImg],
   },
   {
     id: "gate-stopper",
@@ -377,6 +400,7 @@ export const products: Product[] = [
     name: "סטופר לשער",
     slug: "gate-stopper",
     collection: "profiles",
+    subCategory: "accessories",
     price: 45,
     sku: "900YSL1400-25",
     length: { he: "2.5 מטר", ar: "2.5 متر" },
@@ -389,27 +413,24 @@ export const products: Product[] = [
       { id: "4m", label: "4m" },
     ],
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileGateTubeImg],
   },
   {
     id: "beak-profile",
     type: "contractor",
-    name: "משופע מקור",
+    name: "משופע מקור 40x20 6 מ׳",
     slug: "beak-profile",
     collection: "profiles",
+    subCategory: "gate-profiles",
     price: 120,
     sku: "900YSL1500-40",
-    length: { he: "4 מטר", ar: "4 متر" },
+    length: { he: "6 מטר", ar: "6 متر" },
     description: { he: "פרופיל משופע מקור לגימור עליון", ar: "بروفيل مائل للتشطيب العلوي" },
     longDescription: { he: "פרופיל אלומיניום משופע בצורת מקור לגימור עליון של גדרות ושערים. מעניק מראה מקצועי ומוגמר.", ar: "بروفيل ألمنيوم مائل بشكل منقار للتشطيب العلوي للأسوار والبوابات." },
     materials: "Aluminum 6063-T5",
     sizes: defaultSizes,
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileBeakImg],
     featured: true,
   },
   {
@@ -418,6 +439,7 @@ export const products: Product[] = [
     name: "למלת גדר",
     slug: "fence-slat",
     collection: "profiles",
+    subCategory: "fences-gates",
     price: 95,
     sku: "900YSL1600-35",
     length: { he: "6 מטר", ar: "6 متر" },
@@ -431,10 +453,132 @@ export const products: Product[] = [
       { id: "6m", label: "6m" },
     ],
     colorGroups: contractorColorGroups,
-    images: [
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    ],
+    images: [profileHitechImg],
     new: true,
+  },
+  {
+    id: "diamond-40x20",
+    type: "contractor",
+    name: "מעוין 40x20",
+    slug: "diamond-40x20",
+    collection: "profiles",
+    subCategory: "gate-profiles",
+    price: 135,
+    sku: "900YSL1700-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "פרופיל מעוין 40x20 מ\"מ", ar: "بروفيل معيني 40x20 مم" },
+    longDescription: { he: "פרופיל אלומיניום בצורת מעוין 40x20 מ\"מ לגדרות ושערים. חוזק מירבי ומראה ייחודי.", ar: "بروفيل ألمنيوم بشكل معيني 40x20 مم للأسوار والبوابات." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileBeakImg],
+  },
+  {
+    id: "hitech-sealed-20",
+    type: "contractor",
+    name: "הייטק אטום 20",
+    slug: "hitech-sealed-20",
+    collection: "profiles",
+    subCategory: "hitech",
+    price: 110,
+    sku: "900YSL1800-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "פרופיל הייטק אטום 20 מ\"מ", ar: "بروفيل هايتك مغلق 20 مم" },
+    longDescription: { he: "פרופיל הייטק אטום 20 מ\"מ לגדרות מודרניות. עיצוב נקי ומינימליסטי, אטום לחלוטין.", ar: "بروفيل هايتك مغلق 20 مم لأسوار عصرية. تصميم نظيف وبسيط." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileHitechImg],
+  },
+  {
+    id: "hitech-sealed-40",
+    type: "contractor",
+    name: "הייטק אטום 40",
+    slug: "hitech-sealed-40",
+    collection: "profiles",
+    subCategory: "hitech",
+    price: 155,
+    sku: "900YSL1900-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "פרופיל הייטק אטום 40 מ\"מ", ar: "بروفيل هايتك مغلق 40 مم" },
+    longDescription: { he: "פרופיל הייטק אטום 40 מ\"מ רחב יותר לגדרות ומחיצות. מראה מקצועי ופרימיום.", ar: "بروفيل هايتك مغلق 40 مم أعرض للأسوار والحواجز." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileHitechImg],
+    featured: true,
+  },
+  {
+    id: "equal-angle-25",
+    type: "contractor",
+    name: "זווית שווה 25x25",
+    slug: "equal-angle-25",
+    collection: "profiles",
+    subCategory: "angles",
+    price: 65,
+    sku: "900YSL2000-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "זווית אלומיניום שווה 25x25 מ\"מ", ar: "زاوية ألمنيوم متساوية 25x25 مم" },
+    longDescription: { he: "זווית אלומיניום שווה-שוקיים 25x25 מ\"מ. שימושי לחיבורים, פינות וגימורים.", ar: "زاوية ألمنيوم متساوية الأضلاع 25x25 مم. مفيدة للتوصيلات والزوايا." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileGateTubeImg],
+  },
+  {
+    id: "equal-angle-40",
+    type: "contractor",
+    name: "זווית שווה 40x40",
+    slug: "equal-angle-40",
+    collection: "profiles",
+    subCategory: "angles",
+    price: 85,
+    sku: "900YSL2100-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "זווית אלומיניום שווה 40x40 מ\"מ", ar: "زاوية ألمنيوم متساوية 40x40 مم" },
+    longDescription: { he: "זווית אלומיניום שווה-שוקיים 40x40 מ\"מ. חזקה ומתאימה לפרויקטים גדולים.", ar: "زاوية ألمنيوم متساوية الأضلاع 40x40 مم. قوية ومناسبة للمشاريع الكبيرة." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileGateTubeImg],
+  },
+  {
+    id: "fence-post-60",
+    type: "contractor",
+    name: "עמוד גדר 60x60",
+    slug: "fence-post-60",
+    collection: "profiles",
+    subCategory: "fences-gates",
+    price: 210,
+    sku: "900YSL2200-30",
+    length: { he: "3 מטר", ar: "3 متر" },
+    description: { he: "עמוד אלומיניום 60x60 לגדרות", ar: "عمود ألمنيوم 60x60 للأسوار" },
+    longDescription: { he: "עמוד אלומיניום 60x60 מ\"מ לגדרות ושערים. חוזק מרבי, מתאים לכל סוגי הגדרות.", ar: "عمود ألمنيوم 60x60 مم للأسوار والبوابات. قوة قصوى." },
+    materials: "Aluminum 6063-T5",
+    sizes: [
+      { id: "2m", label: "2m" },
+      { id: "2.5m", label: "2.5m" },
+      { id: "3m", label: "3m" },
+    ],
+    colorGroups: contractorColorGroups,
+    images: [profileGateTubeImg],
+  },
+  {
+    id: "u-channel-20",
+    type: "contractor",
+    name: "פרופיל U 20x20",
+    slug: "u-channel-20",
+    collection: "profiles",
+    subCategory: "accessories",
+    price: 55,
+    sku: "900YSL2300-60",
+    length: { he: "6 מטר", ar: "6 متر" },
+    description: { he: "פרופיל U אלומיניום 20x20 מ\"מ", ar: "بروفيل U ألمنيوم 20x20 مم" },
+    longDescription: { he: "פרופיל U מאלומיניום 20x20 מ\"מ. שימושי לגימורים, מסילות ואביזרי חיבור.", ar: "بروفيل U من الألمنيوم 20x20 مم. مفيد للتشطيبات والقضبان." },
+    materials: "Aluminum 6063-T5",
+    sizes: defaultSizes,
+    colorGroups: contractorColorGroups,
+    images: [profileGateTubeImg],
   },
 ];
 

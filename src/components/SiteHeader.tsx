@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
@@ -46,10 +46,14 @@ const MenuIcon = () => (
 );
 
 export const SiteHeader = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
+  const location = useLocation();
   const itemCount = useCart((s) => s.getItemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Detect homepage: /:locale or /:locale/
+  const isHomePage = location.pathname === `/${locale}` || location.pathname === `/${locale}/`;
 
   // Scroll states
   const [isAtTop, setIsAtTop] = useState(true);
@@ -65,7 +69,6 @@ export const SiteHeader = () => {
     const scrollingDown = currentY > prevY;
     const atTop = currentY <= 2;
 
-    // Announcement bar: strictly position-based, NOT direction-based
     setIsAtTop(atTop);
     const bar = document.querySelector(".announcement-bar");
 
@@ -74,7 +77,6 @@ export const SiteHeader = () => {
       setIsHidden(false);
       if (bar) bar.classList.remove("is-hidden");
     } else {
-      // Any scroll > 0: hide announcement, show sticky header
       setIsScrolled(true);
       if (bar) bar.classList.add("is-hidden");
 
@@ -106,9 +108,12 @@ export const SiteHeader = () => {
     { label: t("nav.contact"), href: localePath("/contact") },
   ];
 
-  // Color classes based on scroll state
-  const textColor = isScrolled ? "text-foreground" : "text-white";
-  const textHover = isScrolled ? "hover:text-foreground/70" : "hover:text-white/80";
+  // On homepage: transparent at top, frosted on scroll
+  // On other pages: always solid black with white text
+  const isSolidBlack = !isHomePage;
+  const textColor = isSolidBlack ? "text-white" : (isScrolled ? "text-foreground" : "text-white");
+  const textHover = isSolidBlack ? "hover:text-white/80" : (isScrolled ? "hover:text-foreground/70" : "hover:text-white/80");
+  const showInvert = !isSolidBlack && isScrolled;
 
   return (
     <>
@@ -116,8 +121,10 @@ export const SiteHeader = () => {
         className={cn(
           "site-header sticky z-40",
           isAtTop ? "is-at-top top-[40px]" : "is-scrolled top-0",
-          isHidden && "is-hidden"
+          isHidden && "is-hidden",
+          isSolidBlack && "!bg-[hsl(var(--dark))]"
         )}
+        style={isSolidBlack && !isScrolled ? { top: 0 } : undefined}
       >
         <div className="px-6 md:px-10">
           {/* Desktop */}
@@ -129,7 +136,7 @@ export const SiteHeader = () => {
                   alt="AMG Pergola"
                   className={cn(
                     "h-16 w-auto transition-all duration-[240ms]",
-                    isScrolled && "invert"
+                    showInvert && "invert"
                   )}
                 />
               </Link>
@@ -159,7 +166,7 @@ export const SiteHeader = () => {
               >
                 <SearchIcon />
               </button>
-              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isScrolled} />
+              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidBlack ? false : isScrolled} />
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
@@ -180,7 +187,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        isScrolled ? "bg-foreground text-background" : "bg-white text-dark"
+                        isSolidBlack ? "bg-white text-dark" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
@@ -216,7 +223,7 @@ export const SiteHeader = () => {
                 alt="AMG Pergola"
                 className={cn(
                   "h-9 w-auto transition-all duration-[240ms]",
-                  isScrolled && "invert"
+                  showInvert && "invert"
                 )}
               />
             </Link>
@@ -242,7 +249,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        isScrolled ? "bg-foreground text-background" : "bg-white text-dark"
+                        isSolidBlack ? "bg-white text-dark" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
