@@ -622,11 +622,11 @@ const Checkout = () => {
           {/* Vertical divider */}
           <div className="hidden md:block" style={{ backgroundColor: "rgb(210,210,210)" }} />
 
-          {/* RIGHT: Order Summary (desktop) — full-width white bg with border */}
-          <div className="hidden md:block bg-white" style={{ borderInlineStart: "1px solid rgb(210,210,210)" }}>
+          {/* RIGHT: Order Summary (desktop) — full-width white bg, no border-inline-start */}
+          <div className="hidden md:block bg-white">
             <div className="sticky top-20 p-8 max-w-[600px]" style={{ maxHeight: "calc(100vh - 5rem)", overflowY: "auto" }}>
               <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
-              <OrderSummaryContent />
+              {orderSummaryJSX}
             </div>
           </div>
         </div>
