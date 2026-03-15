@@ -49,6 +49,8 @@ const Products = () => {
 
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const handleFilterChange = useCallback((partial: Partial<FilterState>) => {
     setFilters((prev) => {
       const next = { ...prev, ...partial };
@@ -60,6 +62,10 @@ const Products = () => {
       setSearchParams(p, { replace: true });
       return next;
     });
+    // Scroll to product grid area
+    setTimeout(() => {
+      gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   }, [setSearchParams]);
 
   const handleClearAll = useCallback(() => {
