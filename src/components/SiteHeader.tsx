@@ -109,11 +109,11 @@ export const SiteHeader = () => {
   ];
 
   // On homepage: transparent at top, frosted on scroll
-  // On other pages: always solid black with white text
-  const isSolidBlack = !isHomePage;
-  const textColor = isSolidBlack ? "text-white" : (isScrolled ? "text-foreground" : "text-white");
-  const textHover = isSolidBlack ? "hover:text-white/80" : (isScrolled ? "hover:text-foreground/70" : "hover:text-white/80");
-  const showInvert = !isSolidBlack && isScrolled;
+  // On other pages: solid white background with black text
+  const isSolidPage = !isHomePage;
+  const textColor = isSolidPage ? "text-foreground" : (isScrolled ? "text-foreground" : "text-white");
+  const textHover = isSolidPage ? "hover:text-foreground/70" : (isScrolled ? "hover:text-foreground/70" : "hover:text-white/80");
+  const showInvert = isSolidPage || isScrolled;
 
   return (
     <>
@@ -122,9 +122,9 @@ export const SiteHeader = () => {
           "site-header sticky z-40",
           isAtTop ? "is-at-top top-[40px]" : "is-scrolled top-0",
           isHidden && "is-hidden",
-          isSolidBlack && "!bg-[hsl(var(--dark))]"
+          isSolidPage && "!bg-background border-b border-border"
         )}
-        style={isSolidBlack && !isScrolled ? { top: 0 } : undefined}
+        style={isSolidPage && !isScrolled ? { top: 0 } : undefined}
       >
         <div className="px-6 md:px-10">
           {/* Desktop */}
@@ -166,7 +166,7 @@ export const SiteHeader = () => {
               >
                 <SearchIcon />
               </button>
-              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidBlack ? false : isScrolled} />
+              <LocaleSwitcher icon={<LanguageIcon />} scrolled={isSolidPage || isScrolled} />
               <button
                 className={cn("p-2 transition-colors duration-[240ms]", textColor, textHover)}
                 aria-label="Account"
@@ -187,7 +187,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        isSolidBlack ? "bg-white text-dark" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
+                        isSolidPage ? "bg-foreground text-background" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
@@ -249,7 +249,7 @@ export const SiteHeader = () => {
                       exit={{ scale: 0 }}
                       className={cn(
                         "absolute -top-0.5 -end-0.5 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center transition-colors duration-[240ms]",
-                        isSolidBlack ? "bg-white text-dark" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
+                        isSolidPage ? "bg-foreground text-background" : (isScrolled ? "bg-foreground text-background" : "bg-white text-dark")
                       )}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
