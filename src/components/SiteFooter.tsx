@@ -1,14 +1,7 @@
 import { Link } from "react-router-dom";
 import { useLocale } from "@/i18n/useLocale";
 
-const PaymentIcon = ({ name }: { name: string }) => (
-  <div
-    className="h-7 px-2 rounded-sm flex items-center justify-center text-[10px] font-semibold tracking-tight select-none"
-    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
-  >
-    {name}
-  </div>
-);
+
 
 const SocialIcon = ({ type, href }: { type: string; href?: string }) => {
   const icons: Record<string, React.ReactNode> = {
