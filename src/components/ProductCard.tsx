@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Product, RetailProduct, ContractorProduct, collections, getLocaleText } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { QuickBuyModal } from "./QuickBuyModal";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -11,47 +12,71 @@ interface ProductCardProps {
   index?: number;
 }
 
+const QuickCartIcon = () => (
+  <svg role="presentation" fill="none" strokeWidth="2" focusable="false" width="16" height="14" viewBox="0 0 16 14">
+    <path d="M7.75 4.75H2.283a1 1 0 0 0-.97 1.244l1.574 6.25a1 1 0 0 0 .97.756h7.787a1 1 0 0 0 .97-.756l1.573-6.25a1 1 0 0 0-.97-1.244H7.75Zm0 0V1" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addItem: addToCart } = useCart();
   const { locale, localePath, t } = useLocale();
   const collection = collections.find((c) => c.id === product.collection);
   const hasSecondImage = product.images.length > 1;
+  const [quickBuyOpen, setQuickBuyOpen] = useState(false);
+
+  const isRetail = product.type === "retail";
+  const isContractor = product.type === "contractor";
+  const retail = isRetail ? (product as RetailProduct) : null;
+  const contractor = isContractor ? (product as ContractorProduct) : null;
+
+  // Check if product has options (colors or sizes)
+  const hasOptions = (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (product.type === "retail") {
-      const retail = product as RetailProduct;
-      const defaultColor = retail.colors.length > 0 ? { id: retail.colors[0].id, name: retail.colors[0].name[locale], hex: retail.colors[0].hex } : undefined;
-      addToCart(product, 1, defaultColor ? { color: defaultColor } : undefined);
+    if (hasOptions) {
+      setQuickBuyOpen(true);
+    } else {
+      addToCart(product, 1);
     }
   };
 
-  if (product.type === "contractor") {
-    const contractor = product as ContractorProduct;
+  if (isContractor && contractor) {
     return (
-      <motion.article
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5, delay: index * 0.08 }}
-        className="group"
-      >
-        <Link to={localePath(`/product/${product.slug}`)} className="block">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted mb-4">
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
-              loading="lazy"
-            />
-            {product.new && (
-              <span className="absolute top-3 start-3 px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">
-                {t("product.newBadge")}
-              </span>
-            )}
-          </div>
-          <div className="space-y-1">
+      <>
+        <motion.article
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5, delay: index * 0.08 }}
+          className="group border border-border rounded-lg overflow-hidden bg-background"
+        >
+          <Link to={localePath(`/product/${product.slug}`)} className="block">
+            <div className="relative aspect-square overflow-hidden bg-muted">
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              {product.new && (
+                <span className="absolute top-3 start-3 px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">
+                  {t("product.newBadge")}
+                </span>
+              )}
+              {/* Quick add button */}
+              <button
+                onClick={handleQuickAdd}
+                className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors"
+                aria-label={t("product.addToBag")}
+              >
+                <QuickCartIcon />
+              </button>
+            </div>
+          </Link>
+          <div className="p-3 space-y-1">
             <h3 className="text-sm font-semibold text-foreground group-hover:text-accent-strong transition-colors">
               {product.name}
             </h3>
@@ -64,68 +89,89 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             <p className="text-sm font-semibold text-foreground">
               {t("common.currency")}{product.price.toLocaleString()}
             </p>
+
+            {/* Color swatches on card */}
+            {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
+              <div className="flex gap-1 pt-1">
+                {contractor.colorGroups[0].colors.slice(0, 5).map((color) => (
+                  <span
+                    key={color.id}
+                    className="w-4 h-4 rounded-full border border-border"
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name[locale]}
+                  />
+                ))}
+                {contractor.colorGroups[0].colors.length > 5 && (
+                  <span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 5}</span>
+                )}
+              </div>
+            )}
+
+            {/* Size options on card */}
+            {contractor.sizes.length > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                {contractor.sizes.map(s => s.label).join(" · ")}
+              </p>
+            )}
           </div>
-        </Link>
-      </motion.article>
+        </motion.article>
+        <QuickBuyModal product={product} open={quickBuyOpen} onClose={() => setQuickBuyOpen(false)} />
+      </>
     );
   }
 
   // Retail product card
-  const retail = product as RetailProduct;
-
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="group"
-    >
-      <Link to={localePath(`/product/${product.slug}`)} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted mb-4">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className={cn(
-              "w-full h-full object-cover transition-all duration-500",
-              hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
-            )}
-            loading="lazy"
-          />
-          {hasSecondImage && (
+    <>
+      <motion.article
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, delay: index * 0.08 }}
+        className="group border border-border rounded-lg overflow-hidden bg-background"
+      >
+        <Link to={localePath(`/product/${product.slug}`)} className="block">
+          <div className="relative aspect-square overflow-hidden bg-muted">
             <img
-              src={product.images[1]}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100"
+              src={product.images[0]}
+              alt={product.name}
+              className={cn(
+                "w-full h-full object-cover transition-all duration-500",
+                hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
+              )}
+              loading="lazy"
             />
-          )}
-
-          <div className="absolute top-3 start-3 flex flex-col gap-1.5">
-            {product.new && (
-              <span className="px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">
-                {t("product.newBadge")}
-              </span>
+            {hasSecondImage && (
+              <img
+                src={product.images[1]}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100"
+              />
             )}
-            {product.featured && (
-              <span className="px-2.5 py-1 text-[10px] font-semibold bg-foreground text-background rounded-md">
-                {t("product.featuredBadge")}
-              </span>
-            )}
-          </div>
-
-          {/* Quick add to cart button */}
-          <div className="absolute bottom-0 start-0 end-0 flex justify-center pb-4 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+            <div className="absolute top-3 start-3 flex flex-col gap-1.5">
+              {product.new && (
+                <span className="px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">
+                  {t("product.newBadge")}
+                </span>
+              )}
+              {product.featured && (
+                <span className="px-2.5 py-1 text-[10px] font-semibold bg-foreground text-background rounded-md">
+                  {t("product.featuredBadge")}
+                </span>
+              )}
+            </div>
+            {/* Quick add button */}
             <button
               onClick={handleQuickAdd}
-              className="px-5 py-2 text-xs font-medium bg-white/95 backdrop-blur-sm text-foreground rounded-lg shadow-lg flex items-center gap-2 hover:bg-foreground hover:text-background transition-colors"
+              className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors"
+              aria-label={t("product.addToBag")}
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              {t("product.addToBag")}
+              <QuickCartIcon />
             </button>
           </div>
-        </div>
+        </Link>
 
-        <div className="space-y-1.5">
+        <div className="p-3 space-y-1.5">
           {collection && (
             <p className="text-[11px] font-medium text-muted-foreground">
               {collection.name[locale]}
@@ -134,16 +180,13 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           <h3 className="text-sm font-semibold text-foreground group-hover:text-accent-strong transition-colors">
             {product.name}
           </h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {getLocaleText(product.description, locale)}
-          </p>
           <p className="text-sm font-semibold text-foreground">
             {t("common.currency")}{product.price.toLocaleString()}
           </p>
 
-          {/* Color swatches */}
-          {retail.colors.length > 0 && (
-            <div className="flex gap-1.5 pt-1">
+          {/* Color swatches on card */}
+          {retail && retail.colors.length > 0 && (
+            <div className="flex gap-1.5 pt-0.5">
               {retail.colors.slice(0, 5).map((color) => (
                 <span
                   key={color.id}
@@ -158,7 +201,8 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </div>
           )}
         </div>
-      </Link>
-    </motion.article>
+      </motion.article>
+      <QuickBuyModal product={product} open={quickBuyOpen} onClose={() => setQuickBuyOpen(false)} />
+    </>
   );
 };
