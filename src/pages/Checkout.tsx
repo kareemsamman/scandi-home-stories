@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
@@ -24,17 +24,44 @@ const LockIcon = () => (
   </svg>
 );
 
+/* ---------- Israeli cities ---------- */
+const ISRAELI_CITIES_HE = [
+  "תל אביב", "ירושלים", "חיפה", "ראשון לציון", "פתח תקווה",
+  "נתניה", "אשדוד", "באר שבע", "חולון", "בת ים",
+  "בני ברק", "רמת גן", "אשקלון", "הרצליה", "כפר סבא",
+  "רעננה", "מודיעין", "לוד", "רמלה", "נצרת",
+  "עכו", "קריית גת", "אילת", "טבריה", "צפת",
+  "כרמיאל", "עפולה", "יבנה", "אור יהודה", "גבעתיים",
+];
+
+const ISRAELI_CITIES_AR = [
+  "تل أبيب", "القدس", "حيفا", "ريشون لتسيون", "بيتح تكفا",
+  "نتانيا", "أشدود", "بئر السبع", "حولون", "بات يام",
+  "بني براك", "رمات غان", "عسقلان", "هرتسليا", "كفار سابا",
+  "رعنانا", "موديعين", "اللد", "الرملة", "الناصرة",
+  "عكا", "كريات غات", "إيلات", "طبريا", "صفد",
+  "كرميئيل", "العفولة", "يبنة", "أور يهودا", "جفعاتايم",
+];
+
 /* ---------- validation ---------- */
 interface FormErrors {
   firstName?: string;
   lastName?: string;
   email?: string;
   phone?: string;
+  city?: string;
   address?: string;
 }
 
 const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const validatePhone = (v: string) => /^\d{10}$/.test(v.replace(/\s/g, ""));
+
+/* ---------- input style ---------- */
+const baseInputClass =
+  "w-full h-12 px-4 rounded-lg border text-sm bg-muted/30 placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors";
+const focusRing = "focus:ring-[#4f6df5]/30 focus:border-[#4f6df5]";
+const errorBorder = "border-red-400";
+const normalBorder = "border-border";
 
 /* ---------- component ---------- */
 const Checkout = () => {
@@ -55,22 +82,46 @@ const Checkout = () => {
   const [summaryOpen, setSummaryOpen] = useState(!isMobile);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [discountCode, setDiscountCode] = useState("");
+  const [cityQuery, setCityQuery] = useState("");
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
+    city: "",
     address: "",
     apartment: "",
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const cityRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     firstInputRef.current?.focus();
   }, []);
+
+  /* close city dropdown on outside click */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (cityRef.current && !cityRef.current.contains(e.target as Node)) {
+        setShowCitySuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const cities = locale === "ar" ? ISRAELI_CITIES_AR : ISRAELI_CITIES_HE;
+
+  const filteredCities = useMemo(() => {
+    if (!cityQuery.trim()) return cities.slice(0, 8);
+    const q = cityQuery.trim().toLowerCase();
+    return cities.filter((c) => c.toLowerCase().includes(q)).slice(0, 8);
+  }, [cityQuery, cities]);
 
   /* validation */
   const validate = useCallback((): FormErrors => {
@@ -81,6 +132,7 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.required");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
+    if (!form.city.trim()) e.city = t("checkout.required");
     if (!form.address.trim()) e.address = t("checkout.required");
     return e;
   }, [form, t]);
@@ -89,7 +141,6 @@ const Checkout = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Phone: allow only digits
     if (name === "phone") {
       const cleaned = value.replace(/\D/g, "").slice(0, 10);
       setForm((p) => ({ ...p, phone: cleaned }));
@@ -107,7 +158,7 @@ const Checkout = () => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
-    setTouched({ firstName: true, lastName: true, email: true, phone: true, address: true });
+    setTouched({ firstName: true, lastName: true, email: true, phone: true, city: true, address: true });
 
     if (Object.keys(errs).length > 0) {
       const firstErrorField = Object.keys(errs)[0];
@@ -138,13 +189,76 @@ const Checkout = () => {
     );
   }
 
-  /* field helper */
   const fieldError = (name: keyof FormErrors) => touched[name] && errors[name];
 
-  const inputClass = (name: keyof FormErrors) =>
-    `w-full h-12 px-4 rounded-lg border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-colors ${
-      fieldError(name) ? "border-red-400" : "border-border"
-    }`;
+  const inputCls = (name: keyof FormErrors) =>
+    `${baseInputClass} ${focusRing} ${fieldError(name) ? errorBorder : normalBorder}`;
+
+  /* ---------- Order summary content (shared mobile/desktop) ---------- */
+  const OrderSummaryContent = ({ showDiscount = true }: { showDiscount?: boolean }) => (
+    <>
+      <div className="space-y-4 mb-6">
+        {items.map((item) => (
+          <div key={getItemKey(item)} className="flex gap-4">
+            <div className="relative w-16 h-16 md:w-[72px] md:h-[72px] rounded-lg overflow-hidden border border-border bg-white flex-shrink-0">
+              <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">
+                {item.quantity}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{item.product.name}</p>
+              {item.options?.color && (
+                <p className="text-xs text-muted-foreground mt-0.5">{item.options.color.name}</p>
+              )}
+              {item.options?.size && (
+                <p className="text-xs text-muted-foreground">{item.options.size}</p>
+              )}
+            </div>
+            <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-border pt-4 space-y-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">{t("cart.subtotal")}</span>
+          <span className="font-medium">{t("common.currency")}{subtotal.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">{t("cart.shipping")}</span>
+          <span className="font-medium">{t("cart.complimentary")}</span>
+        </div>
+      </div>
+
+      <div className="border-t border-border mt-4 pt-4">
+        <div className="flex justify-between text-lg font-bold">
+          <span>{t("cart.total")}</span>
+          <span>{t("common.currency")}{subtotal.toLocaleString()}</span>
+        </div>
+      </div>
+
+      {/* Discount code */}
+      {showDiscount && (
+        <div className="border-t border-border mt-6 pt-6">
+          <div className="flex gap-2">
+            <input
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value)}
+              placeholder={t("checkout.discountPlaceholder")}
+              className={`flex-1 h-11 px-4 rounded-lg border ${normalBorder} text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${focusRing} transition-colors`}
+            />
+            <button
+              type="button"
+              className="h-11 px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+            >
+              {t("checkout.applyDiscount")}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
@@ -165,10 +279,10 @@ const Checkout = () => {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-[1200px] mx-auto px-6 md:px-10 pb-16">
+      {/* Main content — no horizontal padding on container */}
+      <main className="max-w-[1200px] mx-auto pb-16">
         {/* Mobile: collapsible order summary */}
-        <div className="md:hidden mb-6">
+        <div className="md:hidden mb-6 px-6">
           <button
             onClick={() => setSummaryOpen(!summaryOpen)}
             className="w-full flex items-center justify-between py-4 border-b border-border"
@@ -190,42 +304,8 @@ const Checkout = () => {
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
-                <div className="py-4 space-y-4">
-                  {items.map((item) => (
-                    <div key={getItemKey(item)} className="flex gap-3">
-                      <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-border bg-white flex-shrink-0">
-                        <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
-                        <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product.name}</p>
-                        {item.options?.color && (
-                          <p className="text-xs text-muted-foreground">{item.options.color.name}</p>
-                        )}
-                        {item.options?.size && (
-                          <p className="text-xs text-muted-foreground">{item.options.size}</p>
-                        )}
-                      </div>
-                      <span className="text-sm font-medium">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
-                    </div>
-                  ))}
-
-                  <div className="border-t border-border pt-3 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                      <span>{t("common.currency")}{subtotal.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                      <span>{t("cart.complimentary")}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
-                      <span>{t("cart.total")}</span>
-                      <span>{t("common.currency")}{subtotal.toLocaleString()}</span>
-                    </div>
-                  </div>
+                <div className="py-4">
+                  <OrderSummaryContent showDiscount />
                 </div>
               </motion.div>
             )}
@@ -233,100 +313,51 @@ const Checkout = () => {
         </div>
 
         {/* Desktop two-column grid */}
-        <div className="grid md:grid-cols-[40%_60%] gap-0">
+        <div className="grid md:grid-cols-[1fr_1px_1fr] gap-0">
 
-          {/* LEFT: Order Summary (desktop only) */}
-          <div className="hidden md:block">
-            <div className="sticky top-20 bg-white rounded-2xl p-8 me-8" style={{ maxHeight: "calc(100vh - 6rem)", overflowY: "auto" }}>
-              <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
-
-              <div className="space-y-4 mb-6">
-                {items.map((item) => (
-                  <div key={getItemKey(item)} className="flex gap-4">
-                    <div className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-border bg-muted/30 flex-shrink-0">
-                      <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
-                      <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{item.product.name}</p>
-                      {item.options?.color && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.options.color.name}</p>
-                      )}
-                      {item.options?.size && (
-                        <p className="text-xs text-muted-foreground">{item.options.size}</p>
-                      )}
-                    </div>
-                    <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t border-border pt-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                  <span className="font-medium">{t("common.currency")}{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                  <span className="font-medium">{t("cart.complimentary")}</span>
-                </div>
-              </div>
-
-              <div className="border-t border-border mt-4 pt-4">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>{t("cart.total")}</span>
-                  <span>{t("common.currency")}{subtotal.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: Checkout Form */}
-          <div>
+          {/* LEFT: Checkout Form */}
+          <div className="px-6 md:px-10">
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
               {/* Contact Info */}
               <div>
                 <h2 className="text-lg font-bold mb-4">{t("checkout.contactInfo")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.firstName")} *</label>
                     <input
                       ref={firstInputRef}
                       name="firstName"
                       value={form.firstName}
                       onChange={handleChange}
                       onBlur={() => handleBlur("firstName")}
-                      className={inputClass("firstName")}
+                      placeholder={t("checkout.firstName")}
+                      className={inputCls("firstName")}
                     />
                     {fieldError("firstName") && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.lastName")} *</label>
                     <input
                       name="lastName"
                       value={form.lastName}
                       onChange={handleChange}
                       onBlur={() => handleBlur("lastName")}
-                      className={inputClass("lastName")}
+                      placeholder={t("checkout.lastName")}
+                      className={inputCls("lastName")}
                     />
                     {fieldError("lastName") && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.email")} *</label>
                     <input
                       name="email"
                       type="email"
                       value={form.email}
                       onChange={handleChange}
                       onBlur={() => handleBlur("email")}
-                      className={inputClass("email")}
+                      placeholder={t("checkout.email")}
+                      className={inputCls("email")}
                     />
                     {fieldError("email") && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.phone")} *</label>
                     <input
                       name="phone"
                       type="tel"
@@ -334,8 +365,8 @@ const Checkout = () => {
                       value={form.phone}
                       onChange={handleChange}
                       onBlur={() => handleBlur("phone")}
-                      placeholder="05XXXXXXXX"
-                      className={inputClass("phone")}
+                      placeholder={t("checkout.phone")}
+                      className={inputCls("phone")}
                     />
                     {fieldError("phone") && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
@@ -345,27 +376,68 @@ const Checkout = () => {
               {/* Shipping Address */}
               <div>
                 <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
+                  {/* City with autocomplete */}
+                  <div ref={cityRef} className="relative">
+                    <input
+                      name="city"
+                      value={cityQuery || form.city}
+                      onChange={(e) => {
+                        setCityQuery(e.target.value);
+                        setForm((p) => ({ ...p, city: e.target.value }));
+                        setShowCitySuggestions(true);
+                      }}
+                      onFocus={() => setShowCitySuggestions(true)}
+                      onBlur={() => {
+                        // delay to allow click on suggestion
+                        setTimeout(() => handleBlur("city"), 150);
+                      }}
+                      placeholder={t("checkout.city")}
+                      className={inputCls("city")}
+                      autoComplete="off"
+                    />
+                    {fieldError("city") && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
+
+                    {/* City suggestions dropdown */}
+                    {showCitySuggestions && filteredCities.length > 0 && (
+                      <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredCities.map((city) => (
+                          <button
+                            key={city}
+                            type="button"
+                            className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setForm((p) => ({ ...p, city }));
+                              setCityQuery(city);
+                              setShowCitySuggestions(false);
+                            }}
+                          >
+                            {city}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.address")} *</label>
                     <input
                       name="address"
                       value={form.address}
                       onChange={handleChange}
                       onBlur={() => handleBlur("address")}
-                      placeholder={t("checkout.addressPlaceholder")}
-                      className={inputClass("address")}
+                      placeholder={t("checkout.address")}
+                      className={inputCls("address")}
                     />
                     {fieldError("address") && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("checkout.apartment")}</label>
                     <input
                       name="apartment"
                       value={form.apartment}
                       onChange={handleChange}
-                      placeholder={t("checkout.apartmentPlaceholder")}
-                      className="w-full h-12 px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-colors"
+                      placeholder={t("checkout.apartment")}
+                      className={`${baseInputClass} ${focusRing} ${normalBorder}`}
                     />
                   </div>
                 </div>
@@ -407,7 +479,37 @@ const Checkout = () => {
                   </>
                 )}
               </button>
+
+              {/* Bottom links */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-4">
+                <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                  {t("checkout.refundPolicy")}
+                </Link>
+                <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                  {t("checkout.shippingPolicy")}
+                </Link>
+                <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                  {t("checkout.privacyPolicy")}
+                </Link>
+                <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                  {t("checkout.termsOfService")}
+                </Link>
+                <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+                  {t("nav.contact")}
+                </Link>
+              </div>
             </form>
+          </div>
+
+          {/* Vertical divider */}
+          <div className="hidden md:block bg-border" />
+
+          {/* RIGHT: Order Summary (desktop only) */}
+          <div className="hidden md:block">
+            <div className="sticky top-20 bg-white p-8" style={{ maxHeight: "calc(100vh - 6rem)", overflowY: "auto" }}>
+              <h2 className="text-lg font-bold mb-6">{t("cart.orderSummary")}</h2>
+              <OrderSummaryContent showDiscount />
+            </div>
           </div>
         </div>
       </main>
