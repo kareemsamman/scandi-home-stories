@@ -348,16 +348,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             borderRadius: 2,
           }}
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 end-4 w-8 h-8 border border-foreground/10 rounded-full grid place-items-center text-foreground z-10"
-            aria-label="Close"
-          >
-            <CloseIcon />
-          </button>
 
-          <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, paddingTop: 48, ...contentStyle }}>
+          <div className="flex-1 overflow-y-auto flex flex-col" style={{ padding: 24, ...contentStyle }}>
             {renderContent()}
           </div>
         </div>
