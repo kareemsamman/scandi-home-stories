@@ -40,8 +40,20 @@ export const MiniCart = () => {
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
 
-  const cartIds = new Set(items.map((i) => i.product.id));
-  const buyWithProducts = products.filter((p) => !cartIds.has(p.id) && p.type === "retail").slice(0, 6);
+  // Build related "buy with" products based on cart contents
+  const buyWithProducts = useMemo(() => {
+    const cartIds = new Set(items.map((i) => i.product.id));
+    const cartCollections = new Set(items.map((i) => i.product.collection));
+    
+    // First try to find products from the same collections
+    const related = products.filter((p) => !cartIds.has(p.id) && cartCollections.has(p.collection));
+    
+    // If not enough, fill with other products
+    if (related.length >= 10) return related.slice(0, 10);
+    
+    const remaining = products.filter((p) => !cartIds.has(p.id) && !cartCollections.has(p.collection));
+    return [...related, ...remaining].slice(0, 10);
+  }, [items]);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
