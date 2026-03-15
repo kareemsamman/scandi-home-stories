@@ -295,11 +295,24 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
             </label>
             <input
               type="text"
-              value={filters.skuSearch}
-              onChange={(e) => onFilterChange({ skuSearch: e.target.value })}
+              value={localSku}
+              onChange={(e) => handleSkuChange(e.target.value)}
               placeholder={t("shop.filters.skuPlaceholder")}
               className="w-full h-9 px-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
             />
+            {isSkuSearching && (
+              <div className="mt-2 space-y-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-2 animate-pulse">
+                    <div className="w-8 h-8 rounded bg-muted-foreground/10" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-2.5 bg-muted-foreground/10 rounded w-3/4" />
+                      <div className="h-2 bg-muted-foreground/10 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
