@@ -313,9 +313,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
               )
             )}
 
-            {activeTab === "blog" && (
-              <EmptyState message={t("search.noResults")} />
-            )}
+
+
           </div>
         </div>
       )}
