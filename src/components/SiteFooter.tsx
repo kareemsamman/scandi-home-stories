@@ -34,14 +34,14 @@ export const SiteFooter = () => {
         className="mx-auto"
         style={{ maxWidth: 1400, paddingTop: 80, paddingBottom: 60, paddingInlineStart: 40, paddingInlineEnd: 40 }}
       >
-        {/* Desktop: 5-col grid / Mobile: single column */}
+        {/* Desktop: 5-col grid / Mobile: 2-col grid */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5"
+          className="grid grid-cols-2 md:grid-cols-5"
           style={{ columnGap: 80, rowGap: 40 }}
         >
           {Array.isArray(columns) &&
             columns.map((col: any, idx: number) => (
-              <div key={idx} className={idx === columns.length - 1 ? "" : ""}>
+              <div key={idx}>
                 <h4
                   className="font-semibold"
                   style={{ fontSize: 16, color: "#ffffff", marginBottom: 18 }}
@@ -76,11 +76,8 @@ export const SiteFooter = () => {
         </div>
 
         {/* Social row */}
-        <div className="flex items-center" style={{ marginTop: 40, gap: 24 }}>
-          <SocialIcon type="instagram" />
-          <SocialIcon type="facebook" />
-          <SocialIcon type="pinterest" />
-          <SocialIcon type="tiktok" href="https://www.tiktok.com/@amg.pergola" />
+        <div className="flex items-center" style={{ marginTop: 40 }}>
+          <TiktokIcon />
         </div>
       </div>
 
