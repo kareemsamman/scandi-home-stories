@@ -356,11 +356,53 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
       <section className="py-8 md:py-14">
         <div className="section-container">
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-14">
-            {/* LEFT: Product image */}
-            <div className="lg:col-span-5">
-              <div className="aspect-square overflow-hidden rounded-xl bg-muted sticky top-28">
-                <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+            {/* LEFT: Product image gallery */}
+            <div className="lg:col-span-5 space-y-3">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-muted sticky top-28 group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentImg}
+                    src={product.images[currentImg]}
+                    alt={product.name}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full h-full object-cover"
+                  />
+                </AnimatePresence>
+                <button className="absolute bottom-4 end-4 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                {product.images.length > 1 && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p - 1 + product.images.length) % product.images.length); }}
+                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setCurrentImg((p) => (p + 1) % product.images.length); }}
+                      className="absolute end-14 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
               </div>
+              {product.images.length > 1 && (
+                <div className="flex gap-2.5">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentImg(i)}
+                      className={cn(
+                        "w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
+                        i === currentImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* RIGHT: Fast ordering interface */}
