@@ -49,6 +49,7 @@ export const SiteHeader = () => {
   const { t, localePath } = useLocale();
   const itemCount = useCart((s) => s.getItemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Scroll states
   const [isAtTop, setIsAtTop] = useState(true);
