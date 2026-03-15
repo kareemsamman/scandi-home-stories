@@ -24,7 +24,38 @@ interface ShopFilterSidebarProps {
 
 export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
-  const sortOptions: any[] = t("shop.sortOptions") || [];
+
+  // Debounced search
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  const [localSku, setLocalSku] = useState(filters.skuSearch);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSkuSearching, setIsSkuSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const skuTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleSearchChange = (value: string) => {
+    setLocalSearch(value);
+    setIsSearching(true);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      onFilterChange({ search: value });
+      setIsSearching(false);
+    }, 800);
+  };
+
+  const handleSkuChange = (value: string) => {
+    setLocalSku(value);
+    setIsSkuSearching(true);
+    clearTimeout(skuTimer.current);
+    skuTimer.current = setTimeout(() => {
+      onFilterChange({ skuSearch: value });
+      setIsSkuSearching(false);
+    }, 800);
+  };
+
+  useEffect(() => {
+    return () => { clearTimeout(searchTimer.current); clearTimeout(skuTimer.current); };
+  }, []);
 
   const isProfilesCollection = filters.collection === "profiles";
 
