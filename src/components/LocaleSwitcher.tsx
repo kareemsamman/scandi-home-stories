@@ -25,9 +25,11 @@ export const LocaleSwitcher = ({ icon, scrolled }: LocaleSwitcherProps) => {
       onClick={toggleLocale}
       className={cn(
         "flex items-center gap-1 p-2 transition-colors duration-[240ms]",
-        scrolled
-          ? "text-foreground hover:text-foreground/70"
-          : "text-white hover:text-white/80"
+        icon
+          ? (scrolled
+              ? "text-foreground hover:text-foreground/70"
+              : "text-white hover:text-white/80")
+          : "text-foreground hover:text-foreground/70"
       )}
       aria-label="Switch language"
     >

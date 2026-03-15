@@ -33,8 +33,14 @@
     --accent-strong: 43 65% 56%;
     --container-max: 1320px;
 
-    --font-body: 'Heebo', 'Alexandria', 'Inter', system-ui, sans-serif;
-    --font-heading: 'Heebo', 'Alexandria', 'Inter', system-ui, sans-serif;
+    --font-body: 'Heebo', 'Alexandria', system-ui, sans-serif;
+    --font-heading: 'Heebo', 'Alexandria', system-ui, sans-serif;
+  }
+
+  html[lang="ar"] {
+    --font-body: 'Alexandria', system-ui, sans-serif;
+    --font-heading: 'Alexandria', system-ui, sans-serif;
+    font-size: 15px;
 
     --sidebar-background: 228 11% 9%;
     --sidebar-foreground: 0 0% 100%;
