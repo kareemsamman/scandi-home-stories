@@ -84,33 +84,33 @@ export const translations: Record<Locale, Record<string, any>> = {
     footer: {
       description: 'מומחים בפרגולות ופתרונות הצללה מתקדמים.',
       columns: [
-        { title: 'מוצרים', links: [
+        { title: 'קולקציות מובחרות', links: [
           { label: 'פרגולות ביוקלימטיות', href: '/shop?collection=bioclimatic' },
           { label: 'מערכות למלות', href: '/shop?collection=motorized' },
           { label: 'פרגולות קבועות', href: '/shop?collection=fixed' },
           { label: 'גגות נפתחים', href: '/shop?collection=retractable' },
           { label: 'אביזרים', href: '/shop?collection=accessories' },
         ]},
-        { title: 'החברה', links: [
-          { label: 'אודות', href: '/about' },
-          { label: 'צור קשר', href: '/contact' },
-        ]},
         { title: 'תמיכה', links: [
           { label: 'שאלות נפוצות', href: '/contact' },
           { label: 'אחריות', href: '/contact' },
+          { label: 'משלוחים והחזרות', href: '/contact' },
+        ]},
+        { title: 'מדיניות', links: [
+          { label: 'מדיניות פרטיות', href: '#' },
+          { label: 'תנאי שימוש', href: '#' },
+          { label: 'נגישות', href: '#' },
+        ]},
+        { title: 'Mirador', links: [
+          { label: 'אודות', href: '/about' },
+          { label: 'הסיפור שלנו', href: '/about' },
         ]},
         { title: 'יצירת קשר', links: [
-          { label: 'info@amgpergola.co.il', href: 'mailto:info@amgpergola.co.il' },
-          { label: '03-1234567', href: 'tel:+97231234567' },
-          { label: 'א-ה 08:00-17:00', href: '#' },
+          { label: 'Support@miradoroutdoor.com', href: 'mailto:Support@miradoroutdoor.com' },
+          { label: '877-506-4777', href: 'tel:+18775064777' },
         ]},
       ],
-      copyright: '© {year} AMG Pergola Ltd. כל הזכויות שמורות.',
-      policies: [
-        { label: 'מדיניות פרטיות', href: '#' },
-        { label: 'תנאי שימוש', href: '#' },
-        { label: 'נגישות', href: '#' },
-      ],
+      copyright: '© {year}, Mirador Outdoor',
     },
     product: {
       addToBag: 'הוסף לסל',
