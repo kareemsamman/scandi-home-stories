@@ -61,35 +61,25 @@ export const SiteHeader = () => {
     const currentY = window.scrollY;
     const prevY = lastScrollY.current;
     const scrollingDown = currentY > prevY;
-    const atTop = currentY <= 10;
-    const pastAnnouncement = currentY > 50;
+    const atTop = currentY <= 2;
 
+    // Announcement bar: strictly position-based, NOT direction-based
     setIsAtTop(atTop);
+    const bar = document.querySelector(".announcement-bar");
 
     if (atTop) {
-      // At top: transparent, show announcement bar
       setIsScrolled(false);
       setIsHidden(false);
-    } else if (pastAnnouncement) {
-      // Past announcement bar
+      if (bar) bar.classList.remove("is-hidden");
+    } else {
+      // Any scroll > 0: hide announcement, show sticky header
       setIsScrolled(true);
+      if (bar) bar.classList.add("is-hidden");
 
       if (scrollingDown && currentY > 200) {
-        // Scrolling down past threshold: hide header
         setIsHidden(true);
       } else if (!scrollingDown) {
-        // Scrolling up: show header
         setIsHidden(false);
-      }
-    }
-
-    // Toggle announcement bar
-    const bar = document.querySelector(".announcement-bar");
-    if (bar) {
-      if (pastAnnouncement) {
-        bar.classList.add("is-hidden");
-      } else {
-        bar.classList.remove("is-hidden");
       }
     }
 
@@ -123,8 +113,7 @@ export const SiteHeader = () => {
       <header
         className={cn(
           "site-header sticky z-40",
-          isAtTop && "is-at-top top-[40px]",
-          isScrolled && !isAtTop && "is-scrolled top-0",
+          isAtTop ? "is-at-top top-[40px]" : "is-scrolled top-0",
           isHidden && "is-hidden"
         )}
       >
