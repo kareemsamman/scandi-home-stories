@@ -23,6 +23,10 @@ import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminCategories from "./pages/admin/Categories";
+import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
+import AdminHeroSlides from "./pages/admin/HeroSlides";
 
 const queryClient = new QueryClient();
 
@@ -67,7 +71,10 @@ const App = () => (
               }
             >
               <Route index element={<AdminDashboard />} />
-              {/* Future admin pages will be nested here */}
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="hero-slides" element={<AdminHeroSlides />} />
             </Route>
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
