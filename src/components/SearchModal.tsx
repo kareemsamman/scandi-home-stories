@@ -423,7 +423,7 @@ function ProductResultItem({
   const currency = "₪";
   return (
     <Link
-      to={localePath(`/products/${product.slug}`)}
+      to={localePath(`/product/${product.slug}`)}
       onClick={onClose}
       className="flex items-center gap-4 group"
     >
