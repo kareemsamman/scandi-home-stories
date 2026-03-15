@@ -226,6 +226,17 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'צריכים עזרה?',
       helpText: 'אנחנו כאן בשבילכם',
     },
+    miniCart: {
+      empty: 'הסל שלך ריק',
+      continueShopping: 'המשך קניות',
+      freeShipping: 'אתם זכאים למשלוח חינם.',
+      remove: 'הסר',
+      buyWith: 'קנו יחד עם',
+      add: 'הוסף',
+      taxNote: 'מיסים ומשלוח יחושבו בתשלום',
+      orderNote: 'הוסיפו הערה להזמנה',
+      viewCart: 'צפייה בסל',
+    },
     search: {
       placeholder: 'חיפוש...',
       clear: 'נקה',
