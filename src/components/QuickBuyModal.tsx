@@ -78,6 +78,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       if (!isContractor) {
         onClose();
         setSelectedColor(null);
+        setIsCustomColor(false);
         setSelectedSize(null);
         setQuantity(1);
       }
