@@ -87,10 +87,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </p>
             <p className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Ruler className="w-3 h-3" />
-              {t("contractor.length")}: {getLocaleText(contractor.length, locale)}
-            </p>
-            <p className="text-sm font-bold text-foreground">
-              {t("common.currency")}{displayPrice.toLocaleString()}
+              {getLocaleText(contractor.length, locale)} – {t("common.currency")}{displayPrice.toLocaleString()}
             </p>
 
             {/* Color label + swatches */}
