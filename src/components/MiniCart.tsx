@@ -166,27 +166,48 @@ export const MiniCart = () => {
               className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
               style={{ scrollSnapType: "x mandatory" }}
             >
-              {buyWithProducts.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex-shrink-0 rounded-xl p-3 flex gap-3 items-center"
-                  style={{ width: 280, scrollSnapAlign: "start", backgroundColor: "rgb(242,242,242)" }}
-                >
-                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+              {buyWithProducts.map((p) => {
+                const hasColors = p.type === "contractor"
+                  ? p.colorGroups?.some((g) => g.colors.length > 0)
+                  : p.colors && p.colors.length > 0;
+                const colorSwatches = p.type === "contractor"
+                  ? p.colorGroups?.flatMap((g) => g.colors).slice(0, 5) ?? []
+                  : (p.colors ?? []).slice(0, 5);
+                const lengthLabel = p.type === "contractor" && p.sizes?.length
+                  ? `${p.sizes[p.sizes.length - 1].label}–${p.sizes[0].label}`
+                  : null;
+                return (
+                  <div
+                    key={p.id}
+                    className="flex-shrink-0 rounded-xl p-3 flex gap-3"
+                    style={{ width: 300, scrollSnapAlign: "start", backgroundColor: "rgb(242,242,242)" }}
+                  >
+                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                      <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <p className="text-xs font-semibold truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
+                      {hasColors && colorSwatches.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {colorSwatches.map((c) => (
+                            <span key={c.id} className="w-3.5 h-3.5 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
+                          ))}
+                        </div>
+                      )}
+                      {lengthLabel && (
+                        <p className="text-[10px] text-muted-foreground">{t("contractor.length")}: {lengthLabel}</p>
+                      )}
+                      <button
+                        onClick={() => handleBuyWithAdd(p)}
+                        className="text-xs font-semibold border border-foreground rounded-full px-4 py-1 text-foreground hover:bg-foreground hover:text-background transition-colors"
+                      >
+                        + {t("miniCart.add")}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="text-xs font-semibold truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
-                    <button
-                      onClick={() => handleBuyWithAdd(p)}
-                      className="text-xs font-semibold border border-foreground rounded-full px-4 py-1 text-foreground hover:bg-foreground hover:text-background transition-colors"
-                    >
-                      + {t("miniCart.add")}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
