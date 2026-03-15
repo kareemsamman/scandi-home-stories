@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const { t, localePath } = useLocale();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,10 +23,14 @@ const Login = () => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) return;
     setLoading(true);
-    // Placeholder — will integrate with auth later
-    await new Promise((r) => setTimeout(r, 1500));
-    toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+    const { error } = await signIn({ email: identifier.trim(), password });
     setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+      navigate(localePath("/account"));
+    }
   };
 
   return (
@@ -33,7 +40,6 @@ const Login = () => {
           <h1 className="text-xl font-bold text-foreground text-center">{t("auth.login")}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Identifier */}
             <div className="relative">
               <input
                 type="text"
@@ -41,21 +47,16 @@ const Login = () => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 onFocus={() => setFocusedField("identifier")}
                 onBlur={() => setFocusedField(null)}
-                className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
+                className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
                 placeholder=" "
               />
-              <label
-                className={`absolute start-4 transition-all duration-200 pointer-events-none ${
-                  identifierActive
-                    ? "top-1.5 text-[10px] text-muted-foreground"
-                    : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                }`}
-              >
+              <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+                identifierActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+              }`}>
                 {t("auth.identifier")}
               </label>
             </div>
 
-            {/* Password */}
             <div className="relative">
               <input
                 type="password"
@@ -63,25 +64,18 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setFocusedField("password")}
                 onBlur={() => setFocusedField(null)}
-                className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
+                className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
                 placeholder=" "
               />
-              <label
-                className={`absolute start-4 transition-all duration-200 pointer-events-none ${
-                  passwordActive
-                    ? "top-1.5 text-[10px] text-muted-foreground"
-                    : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                }`}
-              >
+              <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+                passwordActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+              }`}>
                 {t("auth.password")}
               </label>
             </div>
 
             <div className="flex justify-end">
-              <Link
-                to={localePath("/forgot-password")}
-                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-              >
+              <Link to={localePath("/forgot-password")} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
                 {t("auth.forgotPassword")}
               </Link>
             </div>
@@ -97,10 +91,7 @@ const Login = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.noAccount")}{" "}
-            <Link
-              to={localePath("/signup")}
-              className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors"
-            >
+            <Link to={localePath("/signup")} className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors">
               {t("auth.signupLink")}
             </Link>
           </p>
