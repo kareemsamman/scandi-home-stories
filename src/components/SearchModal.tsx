@@ -102,7 +102,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, [open]);
 
-  // Debounce: wait 600ms after typing stops, then show loading, then results
+  // Debounce: wait 1000ms after typing stops, show skeleton during wait, then results
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (loadingRef.current) clearTimeout(loadingRef.current);
@@ -113,16 +113,14 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       return;
     }
 
-    // Start debounce
+    // Show skeleton immediately while waiting
+    setIsLoading(true);
+
+    // After 1s debounce, show actual results
     debounceRef.current = setTimeout(() => {
-      // Show loading skeleton
-      setIsLoading(true);
-      // After 2s, show actual results
-      loadingRef.current = setTimeout(() => {
-        setDebouncedQuery(query);
-        setIsLoading(false);
-      }, 2000);
-    }, 600);
+      setDebouncedQuery(query);
+      setIsLoading(false);
+    }, 1000);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
