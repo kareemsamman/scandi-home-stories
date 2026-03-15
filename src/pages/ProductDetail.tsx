@@ -353,9 +353,9 @@ const ContractorProductPage = ({ product }: { product: ContractorProduct }) => {
         </div>
       </div>
 
-      <section className="py-8 md:py-14">
+      <section className="py-6 md:py-10">
         <div className="section-container">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-14">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
             {/* LEFT: Product image gallery */}
             <div className="lg:col-span-5 space-y-3">
               <div className="relative aspect-square overflow-hidden rounded-xl bg-muted sticky top-28 group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
