@@ -113,20 +113,33 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount }: Shop
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              value={filters.search}
-              onChange={(e) => onFilterChange({ search: e.target.value })}
+              value={localSearch}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={t("shop.filters.searchPlaceholder")}
               className="w-full h-9 ps-9 pe-3 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground transition-colors"
             />
-            {filters.search && (
+            {localSearch && (
               <button
-                onClick={() => onFilterChange({ search: "" })}
+                onClick={() => { setLocalSearch(""); onFilterChange({ search: "" }); setIsSearching(false); }}
                 className="absolute end-2 top-1/2 -translate-y-1/2"
               >
                 <X className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             )}
           </div>
+          {isSearching && (
+            <div className="mt-2 space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-2 animate-pulse">
+                  <div className="w-8 h-8 rounded bg-muted-foreground/10" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-2.5 bg-muted-foreground/10 rounded w-3/4" />
+                    <div className="h-2 bg-muted-foreground/10 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Category */}
