@@ -298,7 +298,7 @@ const Products = () => {
                       }, 600);
                       setFilters((prev) => ({ ...prev, search: val }));
                     }}
-                    placeholder={t("filter.searchPlaceholder")}
+                    placeholder={t("shop.filters.searchPlaceholder")}
                     className="w-full h-10 ps-9 pe-9 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                   {filters.search && (
