@@ -126,10 +126,27 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             {/* Size/length options */}
             {contractor.sizes.length > 0 && (
               <div className="pt-0.5">
-                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {contractor.sizes.map(s => s.label).join(" · ")}
-                </p>
+                <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {contractor.sizes.map((s, idx) => (
+                    <span
+                      key={s.id}
+                      className={cn(
+                        "px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight",
+                        idx === 0
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border text-muted-foreground"
+                      )}
+                    >
+                      <span>{s.label}</span>
+                      {s.price && (
+                        <span className={cn("text-[9px]", idx === 0 ? "opacity-80" : "text-muted-foreground")}>
+                          {t("common.currency")}{s.price}
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
