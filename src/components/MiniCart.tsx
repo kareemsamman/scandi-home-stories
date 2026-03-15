@@ -78,8 +78,7 @@ export const MiniCart = () => {
   const renderItems = () => (
     <>
       <div className="px-6 pb-3">
-        <p className="text-xs text-muted-foreground">{t("miniCart.freeShipping")}</p>
-        <div className="mt-2 h-px bg-border" />
+        <div className="h-px bg-border" />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6">
