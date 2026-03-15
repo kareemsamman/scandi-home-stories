@@ -360,10 +360,26 @@ const Checkout = () => {
     setIsSubmittingReceipt(true);
     await new Promise((r) => setTimeout(r, 1500));
     const orderNumber = generateOrderNumber();
+    const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
+    // Save order
+    addOrder({
+      orderNumber,
+      date: orderDate,
+      total: totalAfterDiscount,
+      status: "pending",
+      items: items.map((item) => ({
+        name: item.product.name,
+        image: item.product.images[0],
+        price: item.product.price,
+        quantity: item.quantity,
+        size: item.options?.size,
+        color: item.options?.color?.name,
+      })),
+    });
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
-      state: { orderNumber, total: totalAfterDiscount, date: new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA") },
+      state: { orderNumber, total: totalAfterDiscount, date: orderDate },
     });
   };
 
