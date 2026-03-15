@@ -120,7 +120,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       materials: 'חומרים',
       dimensions: 'מידות',
       shipping: 'משלוח',
-      shippingText: 'משלוח חינם מעל ₪5,000',
+      shippingText: 'משלוח חינם',
       returns: 'החזרות',
       returnsText: '14 ימי החזרה',
       warranty: 'אחריות',
