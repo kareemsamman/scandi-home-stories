@@ -153,11 +153,11 @@ const Products = () => {
 
       {/* Grid */}
       <section className="py-10 md:py-16">
-        <div className="section-container">
+        <div className="section-container md:!max-w-[90%]">
           {filteredAndSortedProducts.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground mb-8">{filteredAndSortedProducts.length} {t("product.pieces")}</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {filteredAndSortedProducts.map((product, i) => (
                   <ProductCard key={product.id} product={product} index={i} />
                 ))}
