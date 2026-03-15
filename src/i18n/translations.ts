@@ -226,6 +226,17 @@ export const translations: Record<Locale, Record<string, any>> = {
       needHelp: 'צריכים עזרה?',
       helpText: 'אנחנו כאן בשבילכם',
     },
+    search: {
+      placeholder: 'חיפוש...',
+      featuredCollections: 'קולקציות מובחרות',
+      noResults: 'לא נמצאו תוצאות.',
+      tabs: {
+        products: 'מוצרים',
+        suggestions: 'הצעות',
+        collections: 'קולקציות',
+        blog: 'בלוג',
+      },
+    },
     notFound: {
       title: 'הדף לא נמצא',
       text: 'הדף שחיפשתם לא קיים.',
