@@ -706,6 +706,10 @@ export const translations: Record<Locale, Record<string, any>> = {
       saveChanges: 'حفظ التغييرات',
       saved: 'تم الحفظ',
       selectAddress: 'اختر عنوان',
+      cityRequired: 'المدينة مطلوبة',
+      streetRequired: 'الشارع مطلوب',
+      houseNumberRequired: 'رقم المبنى مطلوب',
+      username: 'اسم المستخدم',
     },
     about: {
       heroTitle: 'هندسة خارجية.\nبمستوى آخر.',
