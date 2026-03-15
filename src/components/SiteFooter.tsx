@@ -50,10 +50,6 @@ const SocialIcon = ({ type, href }: { type: string; href?: string }) => {
   );
 };
 
-const PAYMENT_METHODS = [
-  "Amex", "Apple Pay", "Diners", "Discover", "Google Pay",
-  "Mastercard", "PayPal", "Shop Pay", "Venmo", "Visa",
-];
 
 export const SiteFooter = () => {
   const { t, localePath } = useLocale();
