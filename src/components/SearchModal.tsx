@@ -204,7 +204,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       {/* STATE 1: Initial — Featured Collections */}
       {!hasQuery && !isLoading && (
         <div style={{ marginTop: 16 }}>
-          <h3 className="text-foreground" style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "#676767" }}>
             {t("search.featuredCollections")}
           </h3>
           <div className="flex flex-col" style={{ gap: 10 }}>
