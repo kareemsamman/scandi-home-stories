@@ -177,7 +177,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                           {t("shop.filters.length")}
                         </label>
                         <div className="space-y-2">
-                          {allLengths.map((len) => (
+                          {availableLengths.map((len) => (
                             <label key={len} className="flex items-center gap-3 cursor-pointer text-sm text-foreground">
                               <input
                                 type="checkbox"
