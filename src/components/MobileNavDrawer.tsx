@@ -57,7 +57,6 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
     { label: t("nav.shop"), href: localePath("/shop") },
     { label: t("nav.about"), href: localePath("/about") },
     { label: t("nav.contact"), href: localePath("/contact") },
-    { label: t("nav.cart"), href: localePath("/cart") },
   ];
 
   useEffect(() => {
