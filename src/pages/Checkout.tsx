@@ -246,14 +246,14 @@ const Checkout = () => {
 
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
-    if (!form.firstName.trim()) e.firstName = t("checkout.required");
-    if (!form.lastName.trim()) e.lastName = t("checkout.required");
-    if (!form.email.trim()) e.email = t("checkout.required");
+    if (!form.firstName.trim()) e.firstName = t("checkout.firstNameRequired");
+    if (!form.lastName.trim()) e.lastName = t("checkout.lastNameRequired");
+    if (!form.email.trim()) e.email = t("checkout.emailRequired");
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
-    if (!form.phone.trim()) e.phone = t("checkout.required");
+    if (!form.phone.trim()) e.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
     if (!form.city.trim() || !citySelected) e.city = t("checkout.selectCity");
-    if (!form.address.trim()) e.address = t("checkout.required");
+    if (!form.address.trim()) e.address = t("checkout.addressRequired");
     return e;
   }, [form, t, citySelected]);
 
