@@ -442,7 +442,7 @@ const Checkout = () => {
                 className="overflow-hidden"
               >
                 <div className="py-4">
-                  <OrderSummaryContent />
+                  {orderSummaryJSX}
                 </div>
               </motion.div>
             )}
