@@ -673,6 +673,36 @@ const Checkout = () => {
                 {/* Shipping Address */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
+                  {savedAddresses.length > 1 && (
+                    <select
+                      value={selectedAddressId}
+                      onChange={(e) => {
+                        const addr = savedAddresses.find((a) => a.id === e.target.value);
+                        if (addr) {
+                          setSelectedAddressId(addr.id);
+                          setForm((p) => ({
+                            ...p,
+                            firstName: addr.firstName,
+                            lastName: addr.lastName,
+                            phone: addr.phone,
+                            city: addr.city,
+                            address: `${addr.street} ${addr.houseNumber}`,
+                            apartment: addr.apartment,
+                          }));
+                          setCityQuery(addr.city);
+                          setCitySelected(true);
+                        }
+                      }}
+                      className="w-full h-[48px] px-4 rounded-lg border border-border bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
+                    >
+                      <option value="">{t("account.selectAddress")}</option>
+                      {savedAddresses.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.firstName} {a.lastName} – {a.city}, {a.street} {a.houseNumber}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <div className="space-y-3">
                     <div ref={cityRef} className="relative">
                       <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
