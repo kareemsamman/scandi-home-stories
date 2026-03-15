@@ -27,9 +27,7 @@ const Cart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
   const { t, locale, localePath } = useLocale();
   const subtotal = getSubtotal();
-  const shipping = subtotal > 5000 ? 0 : 250;
-  const total = subtotal + shipping;
-  const freeShipping = subtotal >= 5000;
+  const total = subtotal;
   const [shippingOpen, setShippingOpen] = useState(false);
 
   /* ── Empty state ── */
