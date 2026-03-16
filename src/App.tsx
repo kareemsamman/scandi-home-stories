@@ -76,6 +76,7 @@ const App = () => (
               <Route path="products" element={<AdminProducts />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="hero-slides" element={<AdminHeroSlides />} />
+              <Route path="users" element={<AdminUsers />} />
             </Route>
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
