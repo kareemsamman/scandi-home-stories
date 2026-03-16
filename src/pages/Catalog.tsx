@@ -2,15 +2,22 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
-import { collections, profileSubCategories } from "@/data/products";
-
-// Map which collections have subcategories
-const collectionSubCategories: Record<string, typeof profileSubCategories> = {
-  profiles: profileSubCategories,
-};
+import { useShopData } from "@/hooks/useShopData";
+import { Loader2 } from "lucide-react";
 
 const Catalog = () => {
   const { t, locale, localePath } = useLocale();
+  const { collections, profileSubCategories, profilesCategorySlug, isLoading } = useShopData();
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <section className="section-container py-8 md:py-12 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </section>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -24,7 +31,7 @@ const Catalog = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {collections.map((col, index) => {
-            const subs = collectionSubCategories[col.slug];
+            const hasSubs = col.slug === profilesCategorySlug && profileSubCategories.length > 0;
             return (
               <motion.div
                 key={col.id}
@@ -38,7 +45,7 @@ const Catalog = () => {
                   className="block relative rounded-xl overflow-hidden group aspect-[4/3]"
                 >
                   <img
-                    src={col.image}
+                    src={col.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"}
                     alt={col.name[locale]}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
@@ -54,10 +61,9 @@ const Catalog = () => {
                   </div>
                 </Link>
 
-                {/* Subcategories */}
-                {subs && subs.length > 0 && (
+                {hasSubs && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {subs.map((sub) => (
+                    {profileSubCategories.map((sub) => (
                       <Link
                         key={sub.id}
                         to={localePath(`/shop?collection=${col.slug}&sub=${sub.id}`)}

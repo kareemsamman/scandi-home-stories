@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
-import { collections, profileSubCategories, products, ContractorProduct, RetailProduct } from "@/data/products";
+import type { Collection, SubCategory, Product, ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +21,13 @@ interface ShopFilterSidebarProps {
   onFilterChange: (filters: Partial<FilterState>) => void;
   resultCount: number;
   onSearchingChange?: (isSearching: boolean) => void;
+  collections: Collection[];
+  products: Product[];
+  subCategories: SubCategory[];
+  profilesCategorySlug: string;
 }
 
-export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSearchingChange }: ShopFilterSidebarProps) => {
+export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSearchingChange, collections, products, subCategories, profilesCategorySlug }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
 
   // Debounced search
@@ -62,13 +66,13 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
     return () => { clearTimeout(searchTimer.current); clearTimeout(skuTimer.current); };
   }, []);
 
-  const isProfilesCollection = filters.collection === "profiles";
+  const isProfilesCollection = filters.collection === profilesCategorySlug;
 
   // Compute available lengths and colors based on current collection filter
   const { availableLengths, availableColors, hasContractorProducts } = useMemo(() => {
     let relevantProducts = [...products];
 
-    // Filter by collection
+    // Collection filter
     if (filters.collection !== "all") {
       const col = collections.find((c) => c.slug === filters.collection);
       if (col) relevantProducts = relevantProducts.filter((p) => p.collection === col.id);
@@ -104,7 +108,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
       availableColors: Array.from(colorMap.values()),
       hasContractorProducts: contractorProducts.length > 0,
     };
-  }, [filters.collection, filters.subCategory, isProfilesCollection]);
+  }, [filters.collection, filters.subCategory, isProfilesCollection, products, collections]);
 
   return (
     <aside className="w-[260px] flex-shrink-0 hidden md:block">
@@ -179,7 +183,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
         </div>
 
         {/* Subcategory */}
-        {isProfilesCollection && (
+        {isProfilesCollection && subCategories.length > 0 && (
           <div>
             <label className="text-xs font-semibold text-foreground mb-2 block">
               {t("shop.filters.subCategory")}
@@ -195,7 +199,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
                 />
                 {t("shop.filterAll")}
               </label>
-              {profileSubCategories.map((sub) => (
+              {subCategories.map((sub) => (
                 <label key={sub.id} className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
                   <input
                     type="radio"
@@ -235,7 +239,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
           </div>
         </div>
 
-        {/* Length - only shown when contractor products exist in current filter */}
+        {/* Length */}
         {availableLengths.length > 0 && (
           <div>
             <label className="text-xs font-semibold text-foreground mb-2 block">
@@ -292,7 +296,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
           </div>
         )}
 
-        {/* SKU - only for contractor products */}
+        {/* SKU */}
         {hasContractorProducts && (
           <div>
             <label className="text-xs font-semibold text-foreground mb-2 block">
@@ -320,7 +324,6 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
             )}
           </div>
         )}
-
       </div>
     </aside>
   );

@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const { t, localePath } = useLocale();
@@ -28,12 +29,28 @@ const Login = () => {
     if (error) {
       const hebrewErrors: Record<string, string> = {
         "Invalid login credentials": "שם משתמש או סיסמה שגויים",
-        "Email not confirmed": "כתובת האימייל לא אומתה",
+        "Email not confirmed": "כתובת האימייל לא אומתה, בדקו את תיבת הדואר",
         "Too many requests": "יותר מדי ניסיונות, נסו שוב מאוחר יותר",
+        "User not found": "משתמש לא נמצא",
+        "Invalid email or password": "שם משתמש או סיסמה שגויים",
+        "Signups not allowed for this instance": "הרשמה אינה זמינה כרגע",
       };
       const msg = hebrewErrors[error.message] || "שגיאה בהתחברות, נסו שוב";
       toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } else {
+      // Check if user is admin — redirect to /admin
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id);
+        if (roles?.some(r => r.role === "admin")) {
+          toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+          navigate("/admin");
+          return;
+        }
+      }
       toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
       navigate(localePath("/account"));
     }

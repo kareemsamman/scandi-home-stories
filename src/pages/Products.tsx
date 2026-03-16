@@ -1,12 +1,13 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ShopFilterSidebar } from "@/components/ShopFilterSidebar";
 import { MobileFilterBar } from "@/components/MobileFilterBar";
-import { products, collections, getCollectionBySlug, profileSubCategories, ContractorProduct, RetailProduct } from "@/data/products";
+import { useShopData } from "@/hooks/useShopData";
+import type { ContractorProduct, RetailProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,8 +41,8 @@ const Products = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale, localePath } = useLocale();
+  const { collections, profileSubCategories, profilesCategorySlug, products, isLoading, getCollectionBySlug } = useShopData();
 
-  // Initialize filters from URL params
   const [filters, setFilters] = useState<FilterState>(() => ({
     ...defaultFilters,
     collection: searchParams.get("collection") || "all",
@@ -50,14 +51,12 @@ const Products = () => {
   }));
 
   const sortOptions: any[] = t("shop.sortOptions") || [];
-
   const gridRef = useRef<HTMLDivElement>(null);
   const mobileSearchTimerRef = useRef<number | null>(null);
 
   const handleFilterChange = useCallback((partial: Partial<FilterState>) => {
     setFilters((prev) => {
       const next = { ...prev, ...partial };
-      // Sync URL
       const p = new URLSearchParams();
       if (next.collection !== "all") p.set("collection", next.collection);
       if (next.subCategory !== "all") p.set("sub", next.subCategory);
@@ -65,7 +64,6 @@ const Products = () => {
       setSearchParams(p, { replace: true });
       return next;
     });
-    // Scroll to product grid area
     setTimeout(() => {
       gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
@@ -76,7 +74,7 @@ const Products = () => {
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  const isProfilesCollection = filters.collection === "profiles";
+  const isProfilesCollection = filters.collection === profilesCategorySlug;
   const currentCollection = filters.collection !== "all" ? getCollectionBySlug(filters.collection) : null;
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -96,7 +94,7 @@ const Products = () => {
       });
     }
 
-    // Search filter - flexible: case-insensitive, ignores dashes/spaces
+    // Search
     if (filters.search) {
       const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "");
       const q = normalize(filters.search);
@@ -124,7 +122,7 @@ const Products = () => {
         if (p.type === "contractor") {
           return (p as ContractorProduct).sizes.some((s) => filters.lengths.includes(s.label));
         }
-        return true; // Don't filter out retail products by length
+        return true;
       });
     }
 
@@ -165,7 +163,30 @@ const Products = () => {
       default: result = result.filter((p) => p.featured).concat(result.filter((p) => !p.featured)); break;
     }
     return result;
-  }, [filters, isProfilesCollection]);
+  }, [filters, isProfilesCollection, products, collections]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <section className="relative h-[28vh] md:h-[40vh] bg-muted animate-pulse" />
+        <section className="py-8 md:py-12">
+          <div className="section-container">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden border border-border bg-background animate-pulse">
+                  <div className="aspect-square bg-muted" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -183,35 +204,16 @@ const Products = () => {
         </div>
       </section>
 
-      {/* Desktop category tabs removed — filtering is handled by sidebar */}
-
-      {/* Subcategory pills (when profiles selected) */}
-      {isProfilesCollection && (
+      {/* Subcategory pills */}
+      {isProfilesCollection && profileSubCategories.length > 0 && (
         <section className="py-3 border-b border-border bg-background hidden md:block">
           <div className="section-container">
             <div className="flex gap-2 overflow-x-auto pb-1">
-              <button
-                onClick={() => handleFilterChange({ subCategory: "all" })}
-                className={cn(
-                  "rounded-full px-4 py-1.5 text-xs font-medium whitespace-nowrap border transition-colors",
-                  filters.subCategory === "all"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border hover:border-muted-foreground text-foreground"
-                )}
-              >
+              <button onClick={() => handleFilterChange({ subCategory: "all" })} className={cn("rounded-full px-4 py-1.5 text-xs font-medium whitespace-nowrap border transition-colors", filters.subCategory === "all" ? "border-foreground bg-foreground text-background" : "border-border hover:border-muted-foreground text-foreground")}>
                 {t("shop.filterAll")}
               </button>
               {profileSubCategories.map((sub) => (
-                <button
-                  key={sub.id}
-                  onClick={() => handleFilterChange({ subCategory: sub.id })}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 text-xs font-medium whitespace-nowrap border transition-colors",
-                    filters.subCategory === sub.id
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border hover:border-muted-foreground text-foreground"
-                  )}
-                >
+                <button key={sub.id} onClick={() => handleFilterChange({ subCategory: sub.id })} className={cn("rounded-full px-4 py-1.5 text-xs font-medium whitespace-nowrap border transition-colors", filters.subCategory === sub.id ? "border-foreground bg-foreground text-background" : "border-border hover:border-muted-foreground text-foreground")}>
                   {sub.name[locale]}
                 </button>
               ))}
@@ -220,25 +222,24 @@ const Products = () => {
         </section>
       )}
 
-      {/* Main content: Sidebar + Grid */}
+      {/* Main content */}
       <section ref={gridRef} className="py-8 md:py-12 pb-24 md:pb-12">
         <div className="section-container md:!max-w-[94%]">
           <div className="flex gap-8">
-            {/* Desktop sidebar */}
             <ShopFilterSidebar
               filters={filters}
               onFilterChange={handleFilterChange}
               resultCount={filteredAndSortedProducts.length}
               onSearchingChange={setIsSearching}
+              collections={collections}
+              products={products}
+              subCategories={profileSubCategories}
+              profilesCategorySlug={profilesCategorySlug}
             />
 
-            {/* Product grid area */}
             <div className="flex-1 min-w-0">
-              {/* Top bar: count + sort */}
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground">
-                  {filteredAndSortedProducts.length} {t("product.pieces")}
-                </p>
+                <p className="text-sm text-muted-foreground">{filteredAndSortedProducts.length} {t("product.pieces")}</p>
                 <div className="hidden md:flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">{t("shop.sortBy")}</span>
                   <Select value={filters.sort} onValueChange={(v) => handleFilterChange({ sort: v })}>
@@ -252,34 +253,19 @@ const Products = () => {
                 </div>
               </div>
 
-              {/* Mobile search bar */}
+              {/* Mobile search */}
               <div className="md:hidden mb-4">
                 <div className="relative">
                   <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    value={filters.search}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setIsSearching(true);
-                      if (mobileSearchTimerRef.current) clearTimeout(mobileSearchTimerRef.current);
-                      mobileSearchTimerRef.current = window.setTimeout(() => {
-                        handleFilterChange({ search: val });
-                        setIsSearching(false);
-                      }, 600);
-                      setFilters((prev) => ({ ...prev, search: val }));
-                    }}
-                    placeholder={t("shop.filters.searchPlaceholder")}
-                    className="w-full h-10 ps-9 pe-9 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  <input type="text" value={filters.search} onChange={(e) => {
+                    const val = e.target.value;
+                    setIsSearching(true);
+                    if (mobileSearchTimerRef.current) clearTimeout(mobileSearchTimerRef.current);
+                    mobileSearchTimerRef.current = window.setTimeout(() => { handleFilterChange({ search: val }); setIsSearching(false); }, 600);
+                    setFilters((prev) => ({ ...prev, search: val }));
+                  }} placeholder={t("shop.filters.searchPlaceholder")} className="w-full h-10 ps-9 pe-9 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
                   {filters.search && (
-                    <button
-                      onClick={() => {
-                        handleFilterChange({ search: "" });
-                        setIsSearching(false);
-                      }}
-                      className="absolute end-3 top-1/2 -translate-y-1/2"
-                    >
+                    <button onClick={() => { handleFilterChange({ search: "" }); setIsSearching(false); }} className="absolute end-3 top-1/2 -translate-y-1/2">
                       <X className="w-4 h-4 text-muted-foreground" />
                     </button>
                   )}
@@ -319,12 +305,15 @@ const Products = () => {
         </div>
       </section>
 
-      {/* Mobile filter bar */}
       <MobileFilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         resultCount={filteredAndSortedProducts.length}
         onClearAll={handleClearAll}
+        collections={collections}
+        products={products}
+        subCategories={profileSubCategories}
+        profilesCategorySlug={profilesCategorySlug}
       />
     </Layout>
   );
