@@ -1,18 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Trash2, ShieldCheck, ShieldX, Search } from "lucide-react";
+import { Loader2, Trash2, ShieldCheck, ShieldX, Search, Plus, X, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminUser {
-  id: string;
-  email: string;
-  created_at: string;
-  last_sign_in_at: string | null;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  roles: string[];
+  id: string; email: string; created_at: string; last_sign_in_at: string | null;
+  first_name: string; last_name: string; phone: string; roles: string[];
 }
 
 const ROLES = ["admin", "worker", "customer"] as const;
@@ -21,17 +18,34 @@ const AdminUsers = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [newUser, setNewUser] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("admin-users", {
-        method: "GET",
-      });
+      const res = await supabase.functions.invoke("admin-users", { method: "GET" });
       if (res.error) throw res.error;
       return res.data as AdminUser[];
     },
+  });
+
+  const createUser = useMutation({
+    mutationFn: async () => {
+      const res = await supabase.functions.invoke("admin-users", {
+        method: "POST",
+        body: newUser,
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      setShowCreate(false);
+      setNewUser({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
+      toast({ title: "User created" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const roleMutation = useMutation({
@@ -42,10 +56,7 @@ const AdminUsers = () => {
       });
       if (res.error) throw res.error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "Role updated" });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "Role updated" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
@@ -57,10 +68,7 @@ const AdminUsers = () => {
       });
       if (res.error) throw res.error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "User deleted" });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "User deleted" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
@@ -77,17 +85,48 @@ const AdminUsers = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Users ({users.length})</h1>
+        <Button onClick={() => setShowCreate(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <UserPlus className="w-4 h-4 mr-2" /> Create User
+        </Button>
       </div>
+
+      {showCreate && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Create New User</h3>
+            <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}><X className="w-4 h-4" /></Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input placeholder="First Name" value={newUser.firstName} onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })} />
+            <Input placeholder="Last Name" value={newUser.lastName} onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} />
+            <Input placeholder="Phone" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input placeholder="Password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} />
+            <Select value={newUser.role} onValueChange={(v) => setNewUser({ ...newUser, role: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customer">Customer</SelectItem>
+                <SelectItem value="worker">Worker</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={() => createUser.mutate()} disabled={createUser.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              Create
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full ps-10 pe-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-        />
+        <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="ps-10" />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -117,18 +156,12 @@ const AdminUsers = () => {
                         return (
                           <button
                             key={role}
-                            onClick={() => roleMutation.mutate({
-                              userId: u.id,
-                              action: hasRole ? "remove_role" : "add_role",
-                              role,
-                            })}
+                            onClick={() => roleMutation.mutate({ userId: u.id, action: hasRole ? "remove_role" : "add_role", role })}
                             disabled={roleMutation.isPending}
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                               hasRole
-                                ? role === "admin"
-                                  ? "bg-red-100 text-red-700 hover:bg-red-200"
-                                  : role === "worker"
-                                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                ? role === "admin" ? "bg-red-100 text-red-700 hover:bg-red-200"
+                                  : role === "worker" ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
                                   : "bg-green-100 text-green-700 hover:bg-green-200"
                                 : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                             }`}
@@ -145,11 +178,7 @@ const AdminUsers = () => {
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => {
-                        if (confirm(`Delete user ${u.email}?`)) {
-                          deleteMutation.mutate(u.id);
-                        }
-                      }}
+                      onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }}
                       disabled={deleteMutation.isPending}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                     >

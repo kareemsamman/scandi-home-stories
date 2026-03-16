@@ -1,27 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { AdminLanguageProvider, useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
-  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Grid3X3
+  Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu,
+  Grid3X3, BarChart3,
 } from "lucide-react";
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
-  { label: "Categories", icon: Grid3X3, path: "/admin/categories" },
-  { label: "Products", icon: Package, path: "/admin/products" },
-  { label: "Orders", icon: ShoppingBag, path: "/admin/orders" },
-  { label: "Hero Slides", icon: Image, path: "/admin/hero-slides" },
-  { label: "Users", icon: Users, path: "/admin/users" },
-  { label: "Settings", icon: Settings, path: "/admin/settings" },
+interface NavItem {
+  label: string;
+  icon: any;
+  path: string;
+  roles: string[];
+}
+
+const navItems: NavItem[] = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/admin", roles: ["admin"] },
+  { label: "Pages", icon: FileText, path: "/admin/pages", roles: ["admin"] },
+  { label: "Categories", icon: Grid3X3, path: "/admin/categories", roles: ["admin"] },
+  { label: "Products", icon: Package, path: "/admin/products", roles: ["admin"] },
+  { label: "Orders", icon: ShoppingBag, path: "/admin/orders", roles: ["admin", "worker"] },
+  { label: "Inventory", icon: BarChart3, path: "/admin/inventory", roles: ["admin", "worker"] },
+  { label: "Hero Slides", icon: Image, path: "/admin/hero-slides", roles: ["admin"] },
+  { label: "Users", icon: Users, path: "/admin/users", roles: ["admin"] },
+  { label: "Settings", icon: Settings, path: "/admin/settings", roles: ["admin"] },
 ];
 
-const AdminLayout = () => {
-  const { user, profile, signOut } = useAuth();
+const LanguageSwitcher = () => {
+  const { locale, setLocale } = useAdminLanguage();
+  return (
+    <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+      <button
+        onClick={() => setLocale("he")}
+        className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+          locale === "he" ? "bg-white shadow-sm text-gray-900" : "text-gray-400 hover:text-gray-600"
+        }`}
+      >HE</button>
+      <button
+        onClick={() => setLocale("ar")}
+        className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+          locale === "ar" ? "bg-white shadow-sm text-gray-900" : "text-gray-400 hover:text-gray-600"
+        }`}
+      >AR</button>
+    </div>
+  );
+};
+
+const AdminLayoutInner = () => {
+  const { user, profile, roles, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isWorkerOnly = roles.includes("worker") && !roles.includes("admin");
+
+  const visibleNav = navItems.filter((item) =>
+    item.roles.some((r) => roles.includes(r as any))
+  );
+
+  // Redirect workers from admin-only pages
+  useEffect(() => {
+    if (!isWorkerOnly) return;
+    const workerPaths = ["/admin/orders", "/admin/inventory"];
+    const isAllowed = workerPaths.some((p) => location.pathname.startsWith(p));
+    if (!isAllowed) {
+      navigate("/admin/orders", { replace: true });
+    }
+  }, [location.pathname, isWorkerOnly, navigate]);
 
   const handleLogout = async () => {
     await signOut();
@@ -35,7 +82,6 @@ const AdminLayout = () => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Logo + back to site */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
         {!collapsed && (
           <div>
@@ -51,9 +97,8 @@ const AdminLayout = () => {
         </button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           return (
@@ -74,7 +119,6 @@ const AdminLayout = () => {
         })}
       </nav>
 
-      {/* User info + logout */}
       <div className="border-t border-white/10 p-4">
         {!collapsed && (
           <div className="mb-3">
@@ -97,28 +141,23 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex" dir="ltr" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar - mobile */}
       <aside className={`fixed inset-y-0 start-0 z-50 w-64 bg-[hsl(var(--dark))] transition-transform md:hidden ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         {sidebarContent}
       </aside>
 
-      {/* Sidebar - desktop */}
       <aside className={`hidden md:block shrink-0 bg-[hsl(var(--dark))] transition-all ${
         collapsed ? "w-16" : "w-60"
       }`}>
         {sidebarContent}
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
@@ -126,15 +165,19 @@ const AdminLayout = () => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="text-sm text-gray-500">
-            {navItems.find((n) => isActive(n.path))?.label || "Dashboard"}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">
+              {visibleNav.find((n) => isActive(n.path))?.label || "Dashboard"}
+            </span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-            {(profile?.first_name?.[0] || user?.email?.[0] || "A").toUpperCase()}
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+              {(profile?.first_name?.[0] || user?.email?.[0] || "A").toUpperCase()}
+            </div>
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <Outlet />
         </main>
@@ -142,5 +185,11 @@ const AdminLayout = () => {
     </div>
   );
 };
+
+const AdminLayout = () => (
+  <AdminLanguageProvider>
+    <AdminLayoutInner />
+  </AdminLanguageProvider>
+);
 
 export default AdminLayout;

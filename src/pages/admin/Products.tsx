@@ -1,158 +1,162 @@
 import { useState } from "react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts, useCategories, useSubCategories, type DbProduct } from "@/hooks/useDbData";
+import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const emptyProduct = (): Partial<DbProduct> => ({
-  slug: "", name: "", type: "retail", price: 0, sku: "",
-  description_he: "", description_ar: "", long_description_he: "", long_description_ar: "",
-  materials: "", dimensions: "", length_he: "", length_ar: "",
+const db = supabase as any;
+
+const emptyBase = (): any => ({
+  slug: "", type: "retail", price: 0, sku: "", materials: "", dimensions: "",
   is_featured: false, is_new: false, sort_order: 0, images: [], colors: [], sizes: [], use_color_groups: false,
 });
+const emptyTrans = () => ({ name: "", description: "", long_description: "", length: "" });
 
 const ProductForm = ({
-  initial, onSave, onCancel, isNew, categories, subCategories,
+  initialBase, initialTrans, onSave, onCancel, isNew, categories, subCategories, locale,
 }: {
-  initial: Partial<DbProduct>; onSave: (d: Partial<DbProduct>) => void;
-  onCancel: () => void; isNew: boolean;
-  categories: { id: string; name_he: string }[];
-  subCategories: { id: string; name_he: string; category_id: string }[];
+  initialBase: any; initialTrans: any; onSave: (base: any, trans: any) => void;
+  onCancel: () => void; isNew: boolean; categories: any[]; subCategories: any[]; locale: string;
 }) => {
-  const [form, setForm] = useState(initial);
-  const set = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
-  const filteredSubs = subCategories.filter((s) => s.category_id === form.category_id);
+  const [form, setForm] = useState(initialBase);
+  const [trans, setTrans] = useState(initialTrans);
+  const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+  const setT = (k: string, v: any) => setTrans((p: any) => ({ ...p, [k]: v }));
+  const filteredSubs = subCategories.filter((s: any) => s.category_id === form.category_id);
 
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6 space-y-4">
-      <h3 className="text-lg font-semibold text-white">{isNew ? "New Product" : "Edit Product"}</h3>
+    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">{isNew ? "New Product" : "Edit Product"}</h3>
+        <span className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 font-medium">
+          Editing: {locale === "he" ? "Hebrew" : "Arabic"}
+        </span>
+      </div>
 
+      {/* Translation fields */}
+      <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 space-y-3">
+        <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Translatable Fields ({locale.toUpperCase()})</p>
+        <Input placeholder="Product name" value={trans.name || ""} onChange={(e) => setT("name", e.target.value)} />
+        <Textarea placeholder="Description" value={trans.description || ""} onChange={(e) => setT("description", e.target.value)} rows={2} />
+        <Textarea placeholder="Long description" value={trans.long_description || ""} onChange={(e) => setT("long_description", e.target.value)} rows={3} />
+        {form.type === "contractor" && (
+          <Input placeholder="Length" value={trans.length || ""} onChange={(e) => setT("length", e.target.value)} />
+        )}
+      </div>
+
+      {/* Base fields */}
       <div className="grid grid-cols-3 gap-4">
-        <Input placeholder="Product name" value={form.name || ""} onChange={(e) => set("name", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        <Input placeholder="Slug" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} className="bg-white/5 border-white/10 text-white" />
+        <Input placeholder="Slug" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} />
         <Select value={form.type || "retail"} onValueChange={(v) => set("type", v)}>
-          <SelectTrigger className="bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger>
+          <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="retail">Retail</SelectItem>
             <SelectItem value="contractor">Contractor</SelectItem>
           </SelectContent>
         </Select>
+        <Input placeholder="Price" type="number" value={form.price || 0} onChange={(e) => set("price", +e.target.value)} />
       </div>
-
       <div className="grid grid-cols-3 gap-4">
-        <Input placeholder="Price" type="number" value={form.price || 0} onChange={(e) => set("price", +e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        <Input placeholder="SKU" value={form.sku || ""} onChange={(e) => set("sku", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        <Input placeholder="Sort order" type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} className="bg-white/5 border-white/10 text-white" />
+        <Input placeholder="SKU" value={form.sku || ""} onChange={(e) => set("sku", e.target.value)} />
+        <Input placeholder="Sort order" type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} />
+        <Input placeholder="Materials" value={form.materials || ""} onChange={(e) => set("materials", e.target.value)} />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <Select value={form.category_id || ""} onValueChange={(v) => set("category_id", v)}>
-          <SelectTrigger className="bg-white/5 border-white/10 text-white"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
-            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name_he}</SelectItem>)}
+            {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{locale === "ar" ? c.name_ar : c.name_he}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={form.sub_category_id || "none"} onValueChange={(v) => set("sub_category_id", v === "none" ? null : v)}>
-          <SelectTrigger className="bg-white/5 border-white/10 text-white"><SelectValue placeholder="Subcategory" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Subcategory" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            {filteredSubs.map((s) => <SelectItem key={s.id} value={s.id}>{s.name_he}</SelectItem>)}
+            {filteredSubs.map((s: any) => <SelectItem key={s.id} value={s.id}>{locale === "ar" ? s.name_ar : s.name_he}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Textarea placeholder="Description (Hebrew)" value={form.description_he || ""} onChange={(e) => set("description_he", e.target.value)} className="bg-white/5 border-white/10 text-white" rows={2} />
-        <Textarea placeholder="Description (Arabic)" value={form.description_ar || ""} onChange={(e) => set("description_ar", e.target.value)} className="bg-white/5 border-white/10 text-white" rows={2} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Textarea placeholder="Long description (Hebrew)" value={form.long_description_he || ""} onChange={(e) => set("long_description_he", e.target.value)} className="bg-white/5 border-white/10 text-white" rows={3} />
-        <Textarea placeholder="Long description (Arabic)" value={form.long_description_ar || ""} onChange={(e) => set("long_description_ar", e.target.value)} className="bg-white/5 border-white/10 text-white" rows={3} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <Input placeholder="Materials" value={form.materials || ""} onChange={(e) => set("materials", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        <Input placeholder="Dimensions" value={form.dimensions || ""} onChange={(e) => set("dimensions", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        <Input placeholder="Images (comma-separated URLs)" value={(form.images || []).join(", ")} onChange={(e) => set("images", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))} className="bg-white/5 border-white/10 text-white" />
-      </div>
-
-      {form.type === "contractor" && (
-        <div className="grid grid-cols-2 gap-4">
-          <Input placeholder="Length (Hebrew)" value={form.length_he || ""} onChange={(e) => set("length_he", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-          <Input placeholder="Length (Arabic)" value={form.length_ar || ""} onChange={(e) => set("length_ar", e.target.value)} className="bg-white/5 border-white/10 text-white" />
-        </div>
-      )}
-
+      <Input placeholder="Images (comma-separated URLs)" value={(form.images || []).join(", ")} onChange={(e) => set("images", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))} />
       {form.type === "contractor" && (
         <div>
-          <label className="text-white/60 text-xs block mb-1">Sizes (JSON array: [{`{"id":"3m","label":"3m","price":80}`}])</label>
-          <Textarea value={JSON.stringify(form.sizes || [], null, 2)} onChange={(e) => { try { set("sizes", JSON.parse(e.target.value)); } catch {} }} className="bg-white/5 border-white/10 text-white font-mono text-xs" rows={3} />
+          <label className="text-gray-500 text-xs block mb-1">Sizes JSON</label>
+          <Textarea value={JSON.stringify(form.sizes || [], null, 2)} onChange={(e) => { try { set("sizes", JSON.parse(e.target.value)); } catch {} }} className="font-mono text-xs" rows={3} />
         </div>
       )}
-
       {form.type === "retail" && (
         <div>
-          <label className="text-white/60 text-xs block mb-1">Colors (JSON array)</label>
-          <Textarea value={JSON.stringify(form.colors || [], null, 2)} onChange={(e) => { try { set("colors", JSON.parse(e.target.value)); } catch {} }} className="bg-white/5 border-white/10 text-white font-mono text-xs" rows={3} />
+          <label className="text-gray-500 text-xs block mb-1">Colors JSON</label>
+          <Textarea value={JSON.stringify(form.colors || [], null, 2)} onChange={(e) => { try { set("colors", JSON.parse(e.target.value)); } catch {} }} className="font-mono text-xs" rows={3} />
         </div>
       )}
-
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-white/70 text-sm">
-          <input type="checkbox" checked={form.is_featured || false} onChange={(e) => set("is_featured", e.target.checked)} />
-          Featured
+        <label className="flex items-center gap-2 text-gray-600 text-sm">
+          <input type="checkbox" checked={form.is_featured || false} onChange={(e) => set("is_featured", e.target.checked)} /> Featured
         </label>
-        <label className="flex items-center gap-2 text-white/70 text-sm">
-          <input type="checkbox" checked={form.is_new || false} onChange={(e) => set("is_new", e.target.checked)} />
-          New
+        <label className="flex items-center gap-2 text-gray-600 text-sm">
+          <input type="checkbox" checked={form.is_new || false} onChange={(e) => set("is_new", e.target.checked)} /> New
         </label>
         {form.type === "contractor" && (
-          <label className="flex items-center gap-2 text-white/70 text-sm">
-            <input type="checkbox" checked={form.use_color_groups || false} onChange={(e) => set("use_color_groups", e.target.checked)} />
-            Use shared color groups
+          <label className="flex items-center gap-2 text-gray-600 text-sm">
+            <input type="checkbox" checked={form.use_color_groups || false} onChange={(e) => set("use_color_groups", e.target.checked)} /> Shared color groups
           </label>
         )}
       </div>
-
       <div className="flex gap-2 justify-end">
-        <Button variant="ghost" onClick={onCancel} className="text-white/60">Cancel</Button>
-        <Button onClick={() => onSave(form)} className="bg-blue-600 hover:bg-blue-700">Save</Button>
+        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button onClick={() => onSave(form, trans)} className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
       </div>
     </div>
   );
 };
 
 const AdminProducts = () => {
+  const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
   const { data: subCategories = [] } = useSubCategories();
-  const [editingProduct, setEditingProduct] = useState<Partial<DbProduct> | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("all");
 
+  const { data: transMap = new Map() } = useQuery({
+    queryKey: ["admin_product_trans", locale],
+    queryFn: async () => {
+      const { data } = await db.from("product_translations").select("*").eq("locale", locale);
+      return new Map((data || []).map((t: any) => [t.product_id, t]));
+    },
+  });
+
   const save = useMutation({
-    mutationFn: async (data: Partial<DbProduct>) => {
-      if (data.id) {
-        const { error } = await supabase.from("products").update(data).eq("id", data.id);
+    mutationFn: async ({ base, trans }: { base: any; trans: any }) => {
+      let productId = base.id;
+      const { id, created_at, updated_at, ...baseData } = base;
+      if (productId) {
+        const { error } = await supabase.from("products").update(baseData).eq("id", productId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("products").insert(data as any);
+        const { data, error } = await supabase.from("products").insert(baseData).select("id").single();
         if (error) throw error;
+        productId = data.id;
       }
+      const { error: tErr } = await db.from("product_translations").upsert({
+        product_id: productId, locale, ...trans,
+      }, { onConflict: "product_id,locale" });
+      if (tErr) throw tErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["products"] });
-      setEditingProduct(null);
-      setIsNew(false);
+      qc.invalidateQueries({ queryKey: ["admin_product_trans"] });
+      setEditingId(null); setIsNew(false);
       toast({ title: "Saved" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -163,15 +167,13 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Deleted" });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast({ title: "Deleted" }); },
   });
 
   const filtered = products.filter((p) => {
     if (filterCat !== "all" && p.category_id !== filterCat) return false;
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
+    const pName = transMap.get(p.id)?.name || p.name || "";
+    if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -179,91 +181,88 @@ const AdminProducts = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-white/50 text-sm mt-1">{products.length} products total</p>
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-gray-500 text-sm mt-1">{products.length} products total</p>
         </div>
-        <Button onClick={() => { setEditingProduct(emptyProduct()); setIsNew(true); }} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => { setEditingId("new"); setIsNew(true); }} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Product
         </Button>
       </div>
 
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-          <Input placeholder="Search by name or SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-white/5 border-white/10 text-white pl-9" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input placeholder="Search by name or SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name_he}</SelectItem>)}
+            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{locale === "ar" ? c.name_ar : c.name_he}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      {isNew && editingProduct && (
+      {isNew && editingId === "new" && (
         <ProductForm
-          initial={editingProduct}
-          isNew
-          categories={categories}
-          subCategories={subCategories}
-          onSave={(d) => save.mutate({ ...d, sort_order: products.length + 1 })}
-          onCancel={() => { setEditingProduct(null); setIsNew(false); }}
+          initialBase={emptyBase()} initialTrans={emptyTrans()} isNew locale={locale}
+          categories={categories} subCategories={subCategories}
+          onSave={(b, t) => save.mutate({ base: { ...b, sort_order: products.length + 1 }, trans: t })}
+          onCancel={() => { setEditingId(null); setIsNew(false); }}
         />
       )}
 
-      {isLoading ? (
-        <div className="text-white/50">Loading...</div>
-      ) : (
+      {isLoading ? <p className="text-gray-400">Loading...</p> : (
         <div className="space-y-2">
           {filtered.map((product) => {
             const cat = categories.find((c) => c.id === product.category_id);
-            const isEditing = editingProduct?.id === product.id && !isNew;
+            const pTrans = transMap.get(product.id);
+            const displayName = pTrans?.name || product.name;
 
-            if (isEditing) {
+            if (editingId === product.id && !isNew) {
+              const { id, created_at, updated_at, name, description_he, description_ar, long_description_he, long_description_ar, length_he, length_ar, ...baseFields } = product as any;
               return (
                 <ProductForm
                   key={product.id}
-                  initial={editingProduct!}
-                  isNew={false}
-                  categories={categories}
-                  subCategories={subCategories}
-                  onSave={(d) => save.mutate(d)}
-                  onCancel={() => setEditingProduct(null)}
+                  initialBase={{ id, ...baseFields }}
+                  initialTrans={pTrans ? { name: pTrans.name, description: pTrans.description, long_description: pTrans.long_description, length: pTrans.length } : emptyTrans()}
+                  isNew={false} locale={locale} categories={categories} subCategories={subCategories}
+                  onSave={(b, t) => save.mutate({ base: b, trans: t })}
+                  onCancel={() => setEditingId(null)}
                 />
               );
             }
 
             return (
-              <div key={product.id} className="flex items-center gap-4 p-4 bg-[#1a1a2e] border border-white/10 rounded-xl">
+              <div key={product.id} className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl">
                 {product.images?.[0] ? (
                   <img src={product.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover" />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-white/20" />
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-gray-300" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium text-sm">{product.name}</h3>
-                  <p className="text-white/40 text-xs">
-                    {cat?.name_he || "—"} · {product.type} · ₪{product.price}
+                  <h3 className="text-gray-900 font-medium text-sm">{displayName}</h3>
+                  <p className="text-gray-400 text-xs">
+                    {cat ? (locale === "ar" ? cat.name_ar : cat.name_he) : "—"} · {product.type} · ₪{product.price}
                     {product.sku && ` · ${product.sku}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {product.is_featured && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">Featured</span>}
-                  {product.is_new && <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">New</span>}
-                  <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(product); setIsNew(false); }} className="text-white/60 hover:text-white">
+                  {product.is_featured && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
+                  {product.is_new && <span className="text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}
+                  <Button variant="ghost" size="icon" onClick={() => { setEditingId(product.id); setIsNew(false); }}>
                     <Pencil className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete?")) del.mutate(product.id); }} className="text-red-400/60 hover:text-red-400">
+                  <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete?")) del.mutate(product.id); }} className="text-red-500 hover:text-red-700">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             );
           })}
-          {filtered.length === 0 && <p className="text-white/30 text-center py-8">No products found</p>}
+          {filtered.length === 0 && <p className="text-gray-400 text-center py-8">No products found</p>}
         </div>
       )}
     </div>
