@@ -27,6 +27,7 @@ import AdminCategories from "./pages/admin/Categories";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminHeroSlides from "./pages/admin/HeroSlides";
+import AdminUsers from "./pages/admin/Users";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="products" element={<AdminProducts />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="hero-slides" element={<AdminHeroSlides />} />
+              <Route path="users" element={<AdminUsers />} />
             </Route>
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>

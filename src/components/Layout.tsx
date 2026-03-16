@@ -4,6 +4,7 @@ import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import { AnnouncementBar } from "./AnnouncementBar";
 import { MiniCart } from "./MiniCart";
+import { AdminTopBar } from "./AdminTopBar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col">
+      <AdminTopBar />
       <AnnouncementBar />
       <SiteHeader />
       <motion.main

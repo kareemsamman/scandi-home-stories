@@ -35,9 +35,14 @@ const AdminLayout = () => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {/* Logo + back to site */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-        {!collapsed && <span className="text-lg font-bold text-white">AMG Admin</span>}
+        {!collapsed && (
+          <div>
+            <span className="text-lg font-bold text-white">AMG Admin</span>
+            <a href="/he" className="block text-[10px] text-white/40 hover:text-white/70 transition-colors mt-0.5">← Back to Website</a>
+          </div>
+        )}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-white/10 text-white/60 transition-colors"
