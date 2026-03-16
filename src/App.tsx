@@ -27,6 +27,7 @@ import AdminCategories from "./pages/admin/Categories";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminHeroSlides from "./pages/admin/HeroSlides";
+import AdminUsers from "./pages/admin/Users";
 
 const queryClient = new QueryClient();
 
