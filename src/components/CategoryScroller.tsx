@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
-import { collections } from "@/data/products";
+import { useCategories, getLocaleName } from "@/hooks/useDbData";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const CategoryScroller = () => {
   const { locale, localePath } = useLocale();
+  const { data: categories } = useCategories();
   const isRtl = locale === "he" || locale === "ar";
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
@@ -33,6 +34,8 @@ export const CategoryScroller = () => {
     emblaApi.on("reInit", onSelect);
     onSelect();
   }, [emblaApi, onSelect]);
+
+  if (!categories || categories.length === 0) return null;
 
   return (
     <section className="py-10 md:py-14">
@@ -65,9 +68,9 @@ export const CategoryScroller = () => {
 
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-4">
-            {collections.map((col, index) => (
+            {categories.map((cat, index) => (
               <motion.div
-                key={col.id}
+                key={cat.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -75,19 +78,19 @@ export const CategoryScroller = () => {
                 className="flex-[0_0_200px] md:flex-[0_0_240px] min-w-0"
               >
                 <Link
-                  to={localePath(`/shop?collection=${col.slug}`)}
+                  to={localePath(`/shop?collection=${cat.slug}`)}
                   className="block relative h-[260px] md:h-[300px] rounded-lg overflow-hidden group"
                 >
                   <img
-                    src={col.image}
-                    alt={col.name[locale]}
+                    src={cat.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"}
+                    alt={getLocaleName(cat, locale)}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 start-0 end-0 p-4">
                     <h3 className="text-sm font-semibold text-white">
-                      {col.name[locale]}
+                      {getLocaleName(cat, locale)}
                     </h3>
                   </div>
                 </Link>

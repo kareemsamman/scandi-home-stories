@@ -35,10 +35,18 @@ const Signup = () => {
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      const hebrewErrors: Record<string, string> = {
+        "User already registered": "משתמש כבר רשום עם כתובת אימייל זו",
+        "Password should be at least 6 characters": "הסיסמה צריכה להיות לפחות 6 תווים",
+        "Unable to validate email address: invalid format": "כתובת אימייל לא תקינה",
+        "Signup requires a valid password": "נדרשת סיסמה תקינה",
+        "To signup, please provide your email": "יש להזין כתובת אימייל",
+      };
+      const msg = hebrewErrors[error.message] || "שגיאה ביצירת החשבון, נסו שוב";
+      toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } else {
       toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
-      navigate(localePath("/account"));
+      navigate(localePath("/login"));
     }
   };
 

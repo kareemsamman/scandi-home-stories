@@ -3,18 +3,13 @@ import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const heroImages = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80",
-  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80",
-];
+import { useHeroSlides, getLocaleField } from "@/hooks/useDbData";
 
 export const HeroSlider = () => {
-  const { t, localePath } = useLocale();
-  const slides: any[] = t("hero.slides");
+  const { locale, localePath } = useLocale();
+  const { data: dbSlides, isLoading } = useHeroSlides();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, direction: "rtl" });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -38,16 +33,25 @@ export const HeroSlider = () => {
     return () => clearInterval(timer);
   }, [emblaApi]);
 
-  if (!Array.isArray(slides)) return null;
+  if (isLoading) {
+    return (
+      <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem] bg-muted flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </section>
+    );
+  }
+
+  const slides = dbSlides || [];
+  if (slides.length === 0) return null;
 
   return (
     <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem]">
       <div ref={emblaRef} className="h-full">
         <div className="flex h-full">
           {slides.map((slide, index) => (
-            <div key={index} className="flex-[0_0_100%] min-w-0 relative h-full">
+            <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative h-full">
               <img
-                src={heroImages[index % heroImages.length]}
+                src={slide.image}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -56,18 +60,18 @@ export const HeroSlider = () => {
               <div className="relative section-container h-full flex flex-col justify-end pb-16 md:pb-24 pt-24">
                 <div className="max-w-xl">
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-[1.1] whitespace-pre-line">
-                    {slide.title}
+                    {getLocaleField(slide, "title", locale)}
                   </h1>
                   <p className="text-base md:text-lg text-white/70 mb-8 max-w-md">
-                    {slide.subtitle}
+                    {getLocaleField(slide, "subtitle", locale)}
                   </p>
                   <Button
                     asChild
                     size="lg"
                     className="rounded-lg px-8 py-6 text-sm font-semibold bg-foreground text-background hover:bg-foreground/90"
                   >
-                    <Link to={localePath("/shop")}>
-                      {slide.cta}
+                    <Link to={localePath(slide.link || "/shop")}>
+                      {getLocaleField(slide, "cta", locale) || (locale === "ar" ? "تسوق الآن" : "לחנות")}
                       <ArrowLeft className="w-4 h-4 ms-2" />
                     </Link>
                   </Button>
@@ -79,18 +83,20 @@ export const HeroSlider = () => {
       </div>
 
       {/* Dots */}
-      <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 rtl:translate-x-1/2 rtl:-translate-x-0">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={cn(
-              "w-8 h-1 rounded-full transition-all duration-300",
-              index === selectedIndex ? "bg-white" : "bg-white/30"
-            )}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 rtl:translate-x-1/2 rtl:-translate-x-0">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={cn(
+                "w-8 h-1 rounded-full transition-all duration-300",
+                index === selectedIndex ? "bg-white" : "bg-white/30"
+              )}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
