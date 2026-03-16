@@ -23,21 +23,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Check admin role
     const { data: roleData } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
     if (!roleData || roleData.length === 0) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const method = req.method;
-    const url = new URL(req.url);
 
+    // ─── GET: List all users ───
     if (method === "GET") {
-      // List all users
       const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       if (error) throw error;
 
-      // Get all profiles and roles
       const { data: profiles } = await supabaseAdmin.from("profiles").select("*");
       const { data: roles } = await supabaseAdmin.from("user_roles").select("*");
 
@@ -59,6 +56,41 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(enriched), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ─── POST: Create user ───
+    if (method === "POST") {
+      const body = await req.json();
+      const { email, password, firstName, lastName, phone, role } = body;
+
+      if (!email || !password) {
+        return new Response(JSON.stringify({ error: "Email and password are required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { first_name: firstName || "", last_name: lastName || "", phone: phone || "" },
+      });
+
+      if (createError) throw createError;
+
+      // The trigger auto-creates profile + customer role.
+      // Add extra role if not customer.
+      if (role && role !== "customer") {
+        await supabaseAdmin.from("user_roles").upsert(
+          { user_id: newUser.user.id, role },
+          { onConflict: "user_id,role" }
+        );
+      }
+
+      return new Response(JSON.stringify({ success: true, userId: newUser.user.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ─── PUT: Toggle role ───
     if (method === "PUT") {
       const body = await req.json();
       const { userId, action, role } = body;
@@ -72,6 +104,21 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ─── PATCH: Update user profile ───
+    if (method === "PATCH") {
+      const body = await req.json();
+      const { userId, firstName, lastName, phone } = body;
+
+      await supabaseAdmin.from("profiles").update({
+        first_name: firstName || "",
+        last_name: lastName || "",
+        phone: phone || "",
+      }).eq("user_id", userId);
+
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ─── DELETE: Delete user ───
     if (method === "DELETE") {
       const body = await req.json();
       const { userId } = body;

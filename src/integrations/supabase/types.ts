@@ -56,6 +56,38 @@ export type Database = {
         }
         Relationships: []
       }
+      category_translations: {
+        Row: {
+          category_id: string
+          description: string | null
+          id: string
+          locale: string
+          name: string
+        }
+        Insert: {
+          category_id: string
+          description?: string | null
+          id?: string
+          locale: string
+          name?: string
+        }
+        Update: {
+          category_id?: string
+          description?: string | null
+          id?: string
+          locale?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_translations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       color_groups: {
         Row: {
           colors: Json | null
@@ -79,6 +111,41 @@ export type Database = {
           sort_order?: number | null
         }
         Relationships: []
+      }
+      hero_slide_translations: {
+        Row: {
+          cta: string | null
+          hero_slide_id: string
+          id: string
+          locale: string
+          subtitle: string | null
+          title: string | null
+        }
+        Insert: {
+          cta?: string | null
+          hero_slide_id: string
+          id?: string
+          locale: string
+          subtitle?: string | null
+          title?: string | null
+        }
+        Update: {
+          cta?: string | null
+          hero_slide_id?: string
+          id?: string
+          locale?: string
+          subtitle?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hero_slide_translations_hero_slide_id_fkey"
+            columns: ["hero_slide_id"]
+            isOneToOne: false
+            referencedRelation: "hero_slides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hero_slides: {
         Row: {
@@ -124,6 +191,41 @@ export type Database = {
           title_he?: string
         }
         Relationships: []
+      }
+      inventory: {
+        Row: {
+          id: string
+          low_stock_threshold: number | null
+          product_id: string
+          stock_quantity: number | null
+          updated_at: string | null
+          variation_key: string | null
+        }
+        Insert: {
+          id?: string
+          low_stock_threshold?: number | null
+          product_id: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variation_key?: string | null
+        }
+        Update: {
+          id?: string
+          low_stock_threshold?: number | null
+          product_id?: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variation_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -238,6 +340,112 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      page_translations: {
+        Row: {
+          id: string
+          locale: string
+          page_id: string
+          sections: Json | null
+          seo_description: string | null
+          seo_title: string | null
+          title: string | null
+        }
+        Insert: {
+          id?: string
+          locale: string
+          page_id: string
+          sections?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title?: string | null
+        }
+        Update: {
+          id?: string
+          locale?: string
+          page_id?: string
+          sections?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_translations_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          created_at: string | null
+          id: string
+          slug: string
+          sort_order: number | null
+          status: string | null
+          template: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          slug: string
+          sort_order?: number | null
+          status?: string | null
+          template?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          slug?: string
+          sort_order?: number | null
+          status?: string | null
+          template?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      product_translations: {
+        Row: {
+          description: string | null
+          id: string
+          length: string | null
+          locale: string
+          long_description: string | null
+          name: string
+          product_id: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          length?: string | null
+          locale: string
+          long_description?: string | null
+          name?: string
+          product_id: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          length?: string | null
+          locale?: string
+          long_description?: string | null
+          name?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_translations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -432,6 +640,35 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_category_translations: {
+        Row: {
+          id: string
+          locale: string
+          name: string
+          sub_category_id: string
+        }
+        Insert: {
+          id?: string
+          locale: string
+          name?: string
+          sub_category_id: string
+        }
+        Update: {
+          id?: string
+          locale?: string
+          name?: string
+          sub_category_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_category_translations_sub_category_id_fkey"
+            columns: ["sub_category_id"]
+            isOneToOne: false
+            referencedRelation: "sub_categories"
             referencedColumns: ["id"]
           },
         ]
