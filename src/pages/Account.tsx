@@ -253,9 +253,15 @@ const OrdersTab = () => {
 
   const statusLabel = (status: string) => {
     switch (status) {
-      case "pending": return t("account.statusPending");
+      case "waiting_approval": return t("account.statusWaitingApproval");
+      case "in_process":       return t("account.statusInProcess");
+      case "in_delivery":      return t("account.statusInDelivery");
+      case "not_approved":     return t("account.statusNotApproved");
+      case "cancelled":        return t("account.statusCancelled");
+      // legacy
+      case "pending":   return t("account.statusPending");
       case "confirmed": return t("account.statusConfirmed");
-      case "shipped": return t("account.statusShipped");
+      case "shipped":   return t("account.statusShipped");
       case "delivered": return t("account.statusDelivered");
       default: return status;
     }
@@ -263,10 +269,15 @@ const OrdersTab = () => {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case "pending": return "text-amber-700 bg-amber-50";
+      case "waiting_approval":
+      case "pending":   return "text-amber-700 bg-amber-50";
+      case "in_process":
       case "confirmed": return "text-blue-700 bg-blue-50";
-      case "shipped": return "text-purple-700 bg-purple-50";
+      case "in_delivery":
+      case "shipped":   return "text-purple-700 bg-purple-50";
       case "delivered": return "text-green-700 bg-green-50";
+      case "not_approved": return "text-red-700 bg-red-50";
+      case "cancelled": return "text-gray-500 bg-gray-100";
       default: return "text-muted-foreground bg-muted/20";
     }
   };

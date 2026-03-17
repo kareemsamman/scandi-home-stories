@@ -13,6 +13,8 @@ import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hoo
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import { useCouponStore, recordCouponUse } from "@/hooks/useCoupons";
 import { CouponInput } from "@/components/CouponInput";
+import { useBankSettings, useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
+import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 
 /* ---------- icons ---------- */
@@ -186,6 +188,9 @@ const Checkout = () => {
 
   const { data: shippingSettings } = useShippingSettings();
   const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
+  const { data: bankSettings } = useBankSettings();
+  const { data: smsSettings } = useSmsSettings();
+  const { data: smsMessages } = useSmsMessages();
 
   const subtotal = getSubtotal();
   const { applied: appliedCoupon, remove: removeCoupon } = useCouponStore();
@@ -380,16 +385,46 @@ const Checkout = () => {
     handleFileSelect(e.dataTransfer.files);
   };
 
-  // Step 2: submit receipt → navigate to thank-you
+  // Step 2: submit receipt → upload files → save order → send SMS → navigate
   const handleSubmitReceipt = async () => {
     if (uploadedFiles.length === 0) return;
     setIsSubmittingReceipt(true);
-    await new Promise((r) => setTimeout(r, 1500));
+
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
-    // Save order to DB
+
+    // Upload receipt files to Supabase storage
+    let receiptUrl: string | undefined;
     try {
-      await addOrderMutation.mutateAsync({
+      const file = uploadedFiles[0].file;
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `receipts/${orderNumber}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("site-media")
+        .upload(path, file, { upsert: true });
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
+        receiptUrl = urlData.publicUrl;
+      }
+    } catch { /* receipt upload failure is non-blocking */ }
+
+    // Save marketing opt-in subscriber
+    if (emailMarketing) {
+      try {
+        await (supabase as any).from("marketing_subscribers").insert({
+          email: form.email,
+          phone: form.phone,
+          first_name: form.firstName,
+          last_name: form.lastName,
+          locale,
+        });
+      } catch { /* non-blocking */ }
+    }
+
+    // Save order to DB
+    let savedOrderId: string | undefined;
+    try {
+      const result = await addOrderMutation.mutateAsync({
         order: {
           orderNumber,
           total: totalAfterDiscount,
@@ -401,6 +436,11 @@ const Checkout = () => {
           city: form.city,
           address: form.address,
           apartment: form.apartment || undefined,
+          receiptUrl,
+          locale,
+          marketingOptIn: emailMarketing,
+          discountCode: appliedCoupon?.coupon.code,
+          discountAmount: appliedCoupon?.discountAmount,
         },
         items: items.map((item) => ({
           name: item.product.name,
@@ -411,18 +451,31 @@ const Checkout = () => {
           color: item.options?.color?.name,
         })),
       });
-    } catch {
-      // order save failed — still let user continue
-    }
+      savedOrderId = result?.id;
+    } catch { /* order save failed — still let user continue */ }
+
     // Record coupon use
     if (appliedCoupon) {
       await recordCouponUse(appliedCoupon.coupon.id, user?.id, orderNumber, appliedCoupon.discountAmount).catch(() => {});
       removeCoupon();
     }
+
+    // Send SMS notifications
+    if (smsSettings?.enabled && smsMessages) {
+      const customerMsg = smsMessages.order_received?.[locale as "he" | "ar"] || smsMessages.order_received?.he;
+      if (customerMsg && form.phone) {
+        sendSms(form.phone, formatSms(customerMsg, { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString() }));
+      }
+      // Admin notification
+      if (smsMessages.admin_new_order && smsSettings.admin_phone) {
+        sendSms(smsSettings.admin_phone, formatSms(smsMessages.admin_new_order, { name: `${form.firstName} ${form.lastName}`, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString() }));
+      }
+    }
+
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
-      state: { orderNumber, total: totalAfterDiscount, date: orderDate },
+      state: { orderNumber, total: totalAfterDiscount, date: orderDate, orderId: savedOrderId },
     });
   };
 
@@ -545,11 +598,11 @@ const Checkout = () => {
             </div>
             <div className="space-y-3">
               {[
-                { label: t("payment.bankName"), value: "בנק הפועלים" },
-                { label: t("payment.accountName"), value: "AMG Pergola LTD" },
-                { label: t("payment.accountNumber"), value: "12345678" },
-                { label: t("payment.branchNumber"), value: "123" },
-                { label: t("payment.bankCode"), value: "12" },
+                { label: t("payment.bankName"), value: bankSettings?.bank_name || "בנק הפועלים" },
+                { label: t("payment.accountName"), value: bankSettings?.account_name || "AMG Pergola LTD" },
+                { label: t("payment.accountNumber"), value: bankSettings?.account_number || "12345678" },
+                { label: t("payment.branchNumber"), value: bankSettings?.branch_number || "123" },
+                { label: t("payment.bankCode"), value: bankSettings?.bank_code || "12" },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">
                   <span className="text-muted-foreground">{row.label}</span>

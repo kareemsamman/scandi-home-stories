@@ -7,8 +7,9 @@ import logoWhite from "@/assets/logo-white.png";
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const state = (location.state as { orderNumber?: string; total?: number; date?: string }) || {};
+  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string }) || {};
   const orderNumber = state.orderNumber || "#00000";
+  const orderId = state.orderId;
   const total = state.total ?? 0;
   const date = state.date || new Date().toLocaleDateString();
 
@@ -75,12 +76,21 @@ const CheckoutThankYou = () => {
             >
               {t("thankYou.backToHome")}
             </Link>
-            <button
-              disabled
-              className="flex-1 h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] opacity-50 cursor-not-allowed"
-            >
-              {t("thankYou.viewOrder")}
-            </button>
+            {orderId ? (
+              <Link
+                to={localePath(`/account/order/${orderId}`)}
+                className="flex-1 h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+              >
+                {t("thankYou.viewOrder")}
+              </Link>
+            ) : (
+              <Link
+                to={localePath("/account")}
+                className="flex-1 h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+              >
+                {t("thankYou.viewOrder")}
+              </Link>
+            )}
           </div>
         </div>
       </motion.main>

@@ -4,6 +4,17 @@ import { useAuth } from "@/hooks/useAuth";
 
 const db = supabase as any;
 
+export type OrderStatus =
+  | "waiting_approval"
+  | "in_process"
+  | "in_delivery"
+  | "not_approved"
+  | "cancelled"
+  | "pending"     // legacy
+  | "confirmed"   // legacy
+  | "shipped"     // legacy
+  | "delivered";  // legacy
+
 export interface OrderItem {
   name: string;
   image: string;
@@ -18,9 +29,11 @@ export interface Order {
   orderNumber: string;
   date: string;
   total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered";
+  status: OrderStatus;
   items: OrderItem[];
   notes?: string;
+  receiptUrl?: string;
+  locale?: string;
 }
 
 /* ---- fetch orders for current user ---- */
@@ -44,8 +57,10 @@ export const useOrders = () => {
         orderNumber: o.order_number,
         date: new Date(o.created_at).toLocaleDateString("he-IL"),
         total: Number(o.total),
-        status: o.status as Order["status"],
+        status: o.status as OrderStatus,
         notes: o.notes || undefined,
+        receiptUrl: o.receipt_url || undefined,
+        locale: o.locale || "he",
         items: (o.order_items || []).map((item: any) => ({
           name: item.product_name,
           image: item.product_image,
@@ -81,6 +96,11 @@ export const useAddOrder = () => {
         city: string;
         address: string;
         apartment?: string;
+        receiptUrl?: string;
+        locale?: string;
+        marketingOptIn?: boolean;
+        discountCode?: string;
+        discountAmount?: number;
       };
       items: OrderItem[];
     }) => {
@@ -89,7 +109,7 @@ export const useAddOrder = () => {
         .insert({
           user_id: user?.id || null,
           order_number: order.orderNumber,
-          status: "pending",
+          status: "waiting_approval",
           total: order.total,
           notes: order.notes || null,
           first_name: order.firstName,
@@ -99,6 +119,11 @@ export const useAddOrder = () => {
           city: order.city,
           address: order.address,
           apartment: order.apartment || null,
+          receipt_url: order.receiptUrl || null,
+          locale: order.locale || "he",
+          marketing_opt_in: order.marketingOptIn || false,
+          discount_code: order.discountCode || null,
+          discount_amount: order.discountAmount || 0,
         })
         .select()
         .single();

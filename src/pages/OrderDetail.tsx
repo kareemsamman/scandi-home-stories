@@ -43,9 +43,14 @@ const OrderDetail = () => {
 
   const statusLabel = (status: string) => {
     switch (status) {
-      case "pending": return t("account.statusPending");
+      case "waiting_approval": return t("account.statusWaitingApproval");
+      case "in_process":       return t("account.statusInProcess");
+      case "in_delivery":      return t("account.statusInDelivery");
+      case "not_approved":     return t("account.statusNotApproved");
+      case "cancelled":        return t("account.statusCancelled");
+      case "pending":   return t("account.statusPending");
       case "confirmed": return t("account.statusConfirmed");
-      case "shipped": return t("account.statusShipped");
+      case "shipped":   return t("account.statusShipped");
       case "delivered": return t("account.statusDelivered");
       default: return status;
     }
@@ -53,16 +58,25 @@ const OrderDetail = () => {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case "pending": return "text-amber-700 bg-amber-50 border-amber-200";
+      case "waiting_approval":
+      case "pending":   return "text-amber-700 bg-amber-50 border-amber-200";
+      case "in_process":
       case "confirmed": return "text-blue-700 bg-blue-50 border-blue-200";
-      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
+      case "in_delivery":
+      case "shipped":   return "text-purple-700 bg-purple-50 border-purple-200";
       case "delivered": return "text-green-700 bg-green-50 border-green-200";
+      case "not_approved": return "text-red-700 bg-red-50 border-red-200";
+      case "cancelled": return "text-gray-500 bg-gray-100 border-gray-200";
       default: return "text-muted-foreground bg-muted/20";
     }
   };
 
-  const steps = ["pending", "confirmed", "shipped", "delivered"];
-  const currentStep = steps.indexOf(order.status);
+  const steps = ["waiting_approval", "in_process", "in_delivery"];
+  const normalStatus = order.status === "pending" ? "waiting_approval"
+    : order.status === "confirmed" ? "in_process"
+    : order.status === "shipped" ? "in_delivery"
+    : order.status;
+  const currentStep = ["not_approved", "cancelled"].includes(normalStatus) ? -1 : steps.indexOf(normalStatus);
 
   return (
     <Layout>
