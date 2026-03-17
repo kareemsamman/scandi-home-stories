@@ -1,18 +1,29 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Package, MapPin, Phone } from "lucide-react";
+import { ArrowRight, ArrowLeft, Package } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
+import { Loader2 } from "lucide-react";
 
 const OrderDetail = () => {
   const { t, localePath, locale } = useLocale();
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const orders = useOrders((s) => s.orders);
+  const { data: orders = [], isLoading } = useOrders();
   const order = orders.find((o) => o.id === orderId);
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ArrowRight : ArrowLeft;
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!order) {
     return (
@@ -146,27 +157,8 @@ const OrderDetail = () => {
             ))}
           </div>
 
-          {/* Address + Summary side by side on desktop, stacked on mobile */}
+          {/* Summary */}
           <div className="grid gap-3 sm:grid-cols-2">
-            {order.shippingAddress && (
-              <div className="bg-white rounded-xl border border-border p-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("checkout.shippingAddress")}</h3>
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  {order.shippingAddress.firstName} {order.shippingAddress.lastName}
-                </p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {order.shippingAddress.street} {order.shippingAddress.houseNumber}
-                  {order.shippingAddress.apartment ? ` / ${order.shippingAddress.apartment}` : ""}, {order.shippingAddress.city}
-                </p>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <Phone className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{order.shippingAddress.phone}</span>
-                </div>
-              </div>
-            )}
             <div className="bg-white rounded-xl border border-border p-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">{t("cart.orderSummary")}</h3>
               <div className="space-y-1.5">

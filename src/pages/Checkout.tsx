@@ -7,7 +7,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAddresses } from "@/hooks/useAddresses";
-import { useOrders } from "@/hooks/useOrders";
+import { useAddOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
@@ -181,7 +181,7 @@ const Checkout = () => {
   const savedAddresses = useAddresses((s) => s.addresses);
   const getDefaultAddress = useAddresses((s) => s.getDefault);
   const { user, profile: authProfile, signOut } = useAuth();
-  const addOrder = useOrders((s) => s.addOrder);
+  const addOrderMutation = useAddOrder();
 
   const { data: shippingSettings } = useShippingSettings();
   const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
@@ -402,22 +402,33 @@ const Checkout = () => {
     await new Promise((r) => setTimeout(r, 1500));
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
-    // Save order
-    addOrder({
-      orderNumber,
-      date: orderDate,
-      total: totalAfterDiscount,
-      status: "pending",
-      notes: form.note || undefined,
-      items: items.map((item) => ({
-        name: item.product.name,
-        image: item.product.images[0],
-        price: item.product.price,
-        quantity: item.quantity,
-        size: item.options?.size,
-        color: item.options?.color?.name,
-      })),
-    });
+    // Save order to DB
+    try {
+      await addOrderMutation.mutateAsync({
+        order: {
+          orderNumber,
+          total: totalAfterDiscount,
+          notes: form.note || undefined,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          city: form.city,
+          address: form.address,
+          apartment: form.apartment || undefined,
+        },
+        items: items.map((item) => ({
+          name: item.product.name,
+          image: item.product.images[0],
+          price: item.product.price,
+          quantity: item.quantity,
+          size: item.options?.size,
+          color: item.options?.color?.name,
+        })),
+      });
+    } catch {
+      // order save failed — still let user continue
+    }
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
@@ -711,7 +722,7 @@ const Checkout = () => {
                         {t("auth.logout")}
                       </button>
                     ) : (
-                      <Link to={localePath("/login")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
+                      <Link to={`${localePath("/login")}?redirect=${encodeURIComponent(localePath("/checkout"))}`} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
                         {t("checkout.loginLink")}
                       </Link>
                     )}

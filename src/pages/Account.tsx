@@ -88,7 +88,6 @@ const Account = () => {
   const [activeTab, setActiveTab] = useState<Tab>("orders");
   const { user, loading, signOut, profile: authProfile } = useAuth();
 
-  const orders = useOrders((s) => s.orders);
   const addresses = useAddresses((s) => s.addresses);
   const addAddress = useAddresses((s) => s.addAddress);
   const updateAddress = useAddresses((s) => s.updateAddress);
@@ -179,9 +178,17 @@ const Account = () => {
 /* ============ ORDERS TAB ============ */
 const OrdersTab = () => {
   const { t, localePath, locale } = useLocale();
-  const orders = useOrders((s) => s.orders);
+  const { data: orders = [], isLoading } = useOrders();
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ChevronLeft : ChevronRight;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (

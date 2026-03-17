@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
@@ -12,6 +12,8 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || localePath("/account");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ const Login = () => {
         }
       }
       toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
-      navigate(localePath("/account"));
+      navigate(redirectTo);
     }
   };
 
@@ -102,7 +104,7 @@ const Login = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.noAccount")}{" "}
-            <Link to={localePath("/signup")} className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors">
+            <Link to={`${localePath("/signup")}${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors">
               {t("auth.signupLink")}
             </Link>
           </p>

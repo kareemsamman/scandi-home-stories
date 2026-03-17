@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
@@ -33,6 +33,8 @@ const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,7 +69,7 @@ const Signup = () => {
       toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } else {
       toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
-      navigate(localePath("/login"));
+      navigate(redirectTo || localePath("/login"));
     }
   };
 
