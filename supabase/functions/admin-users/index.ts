@@ -13,7 +13,7 @@ const jsonResponse = (body: unknown, status = 200) =>
   });
 
 const upsertProfile = async (
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: any,
   userId: string,
   firstName: string,
   lastName: string,
