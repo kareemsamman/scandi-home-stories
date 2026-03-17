@@ -705,26 +705,32 @@ const Checkout = () => {
                 {/* Shipping Address */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingAddress")}</h2>
-                  {savedAddresses.length > 1 && (
+                  {savedAddresses.length > 0 && (
                     <select
                       value={selectedAddressId}
                       onChange={(e) => {
-                        const addr = savedAddresses.find((a) => a.id === e.target.value);
-                        if (addr) {
-                          setSelectedAddressId(addr.id);
-                          setForm((p) => ({
-                            ...p,
-                            firstName: addr.firstName,
-                            lastName: addr.lastName,
-                            phone: addr.phone,
-                            city: addr.city,
-                            address: `${addr.street} ${addr.houseNumber}`,
-                            apartment: addr.apartment,
-                          }));
-                          setCityQuery(addr.city);
-                          setCitySelected(true);
-                          const z = detectZoneFromCity(addr.city);
-                          if (z) setSelectedZone(z);
+                        const val = e.target.value;
+                        if (val === "__new__") {
+                          setSelectedAddressId("__new__");
+                          setForm((p) => ({ ...p, city: "", address: "", apartment: "" }));
+                          setCityQuery("");
+                          setCitySelected(false);
+                          setSelectedZone("");
+                        } else {
+                          const addr = savedAddresses.find((a) => a.id === val);
+                          if (addr) {
+                            setSelectedAddressId(addr.id);
+                            setForm((p) => ({
+                              ...p,
+                              city: addr.city,
+                              address: `${addr.street} ${addr.houseNumber}`,
+                              apartment: addr.apartment,
+                            }));
+                            setCityQuery(addr.city);
+                            setCitySelected(true);
+                            const z = detectZoneFromCity(addr.city);
+                            if (z) setSelectedZone(z);
+                          }
                         }
                       }}
                       className="w-full h-[48px] px-4 rounded-lg border border-border bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
@@ -735,6 +741,7 @@ const Checkout = () => {
                           {a.firstName} {a.lastName} – {a.city}, {a.street} {a.houseNumber}
                         </option>
                       ))}
+                      <option value="__new__">+ {t("checkout.newAddress")}</option>
                     </select>
                   )}
                   <div className="space-y-3">
