@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Trash2, ShieldCheck, ShieldX, Search, Plus, X, UserPlus } from "lucide-react";
+import { Loader2, Trash2, ShieldCheck, ShieldX, Search, Plus, X, UserPlus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,6 +23,8 @@ const AdminUsers = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newUser, setNewUser] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", phone: "", newPassword: "" });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -74,6 +77,36 @@ const AdminUsers = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "User deleted" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
+
+  const editMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingUser) return;
+      const res = await supabase.functions.invoke("admin-users", {
+        method: "PATCH",
+        body: {
+          userId: editingUser.id,
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          email: editForm.email,
+          phone: editForm.phone,
+          ...(editForm.newPassword ? { newPassword: editForm.newPassword } : {}),
+        },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      setEditingUser(null);
+      toast({ title: "User updated" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const openEdit = (u: AdminUser) => {
+    setEditingUser(u);
+    setEditForm({ firstName: u.first_name, lastName: u.last_name, email: u.email, phone: u.phone, newPassword: "" });
+  };
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
@@ -180,15 +213,23 @@ const AdminUsers = () => {
                     {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}
                   </td>
                   <td className="px-4 py-3">
-                    {u.id !== currentUser?.id && (
+                    <div className="flex items-center gap-1">
                       <button
-                        onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }}
-                        disabled={deleteMutation.isPending}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => openEdit(u)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
-                    )}
+                      {u.id !== currentUser?.id && (
+                        <button
+                          onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }}
+                          disabled={deleteMutation.isPending}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -199,6 +240,30 @@ const AdminUsers = () => {
           </table>
         </div>
       </div>
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => { if (!open) setEditingUser(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="First Name" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} autoComplete="off" />
+              <Input placeholder="Last Name" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} autoComplete="off" />
+            </div>
+            <Input placeholder="Email" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} autoComplete="off" />
+            <Input placeholder="Phone" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} autoComplete="off" />
+            <Input placeholder="New Password (leave blank to keep current)" type="password" value={editForm.newPassword} onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })} autoComplete="new-password" />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+              <Button onClick={() => editMutation.mutate()} disabled={editMutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+                {editMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

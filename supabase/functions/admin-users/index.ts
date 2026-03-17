@@ -110,16 +110,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ─── PATCH: Update user profile ───
+    // ─── PATCH: Update user profile + auth ───
     if (method === "PATCH") {
       const body = await req.json();
-      const { userId, firstName, lastName, phone } = body;
+      const { userId, firstName, lastName, phone, email, newPassword } = body;
 
       await supabaseAdmin.from("profiles").update({
         first_name: firstName || "",
         last_name: lastName || "",
         phone: phone || "",
       }).eq("user_id", userId);
+
+      const authUpdates: Record<string, string> = {};
+      if (email) authUpdates.email = email;
+      if (newPassword) authUpdates.password = newPassword;
+      if (Object.keys(authUpdates).length > 0) {
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdates);
+        if (error) throw error;
+      }
 
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
