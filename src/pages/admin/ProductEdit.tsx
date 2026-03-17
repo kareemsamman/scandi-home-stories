@@ -407,6 +407,14 @@ const ProductEdit = () => {
   const [comboPrice, setComboPrice] = useState<Record<string, string>>({});
   const [imageUrl, setImageUrl] = useState("");
 
+  // Custom Colors
+  const [customColorsEnabled, setCustomColorsEnabled] = useState(false);
+  const [customColorGroups, setCustomColorGroups] = useState<Array<{
+    id: string; name_he: string; name_ar: string;
+    colors: Array<{ id: string; name_he: string; name_ar: string; hex: string }>;
+  }>>([]);
+  const [activeGroupIdx, setActiveGroupIdx] = useState(0);
+
   /* ── Populate on load ── */
   useEffect(() => {
     if (!productData) return;
@@ -474,6 +482,9 @@ const ProductEdit = () => {
       }
     }
     setComboPrice(cp);
+
+    setCustomColorsEnabled(p.custom_colors_enabled || false);
+    setCustomColorGroups(Array.isArray(p.custom_color_groups) ? p.custom_color_groups : []);
   }, [productData]);
 
   /* ── Derived ── */
@@ -500,6 +511,29 @@ const ProductEdit = () => {
 
   const setStock = (colorId: string, lengthId: string, val: string) => {
     setComboStock(prev => ({ ...prev, [`${colorId}|${lengthId}`]: val }));
+  };
+
+  /* ── Custom Color helpers ── */
+  const addColorGroup = () => {
+    const newGroup = { id: uid(), name_he: "", name_ar: "", colors: [] };
+    setCustomColorGroups(prev => [...prev, newGroup]);
+    setActiveGroupIdx(customColorGroups.length);
+  };
+  const removeColorGroup = (idx: number) => {
+    setCustomColorGroups(prev => prev.filter((_, i) => i !== idx));
+    setActiveGroupIdx(0);
+  };
+  const updateColorGroup = (idx: number, field: string, value: string) => {
+    setCustomColorGroups(prev => prev.map((g, i) => i === idx ? { ...g, [field]: value } : g));
+  };
+  const addCustomColor = (groupIdx: number) => {
+    setCustomColorGroups(prev => prev.map((g, i) => i === groupIdx ? { ...g, colors: [...g.colors, { id: uid(), name_he: "", name_ar: "", hex: "#cccccc" }] } : g));
+  };
+  const removeCustomColor = (groupIdx: number, colorIdx: number) => {
+    setCustomColorGroups(prev => prev.map((g, i) => i === groupIdx ? { ...g, colors: g.colors.filter((_, ci) => ci !== colorIdx) } : g));
+  };
+  const updateCustomColor = (groupIdx: number, colorIdx: number, field: string, value: string) => {
+    setCustomColorGroups(prev => prev.map((g, i) => i === groupIdx ? { ...g, colors: g.colors.map((c, ci) => ci === colorIdx ? { ...c, [field]: value } : c) } : g));
   };
 
   /* ── Image upload ── */
@@ -590,6 +624,8 @@ const ProductEdit = () => {
         sizes: sizesJson,
         use_color_groups: false,
         product_details: productDetails,
+        custom_colors_enabled: customColorsEnabled,
+        custom_color_groups: customColorGroups,
       };
 
       let pid = id;
@@ -953,6 +989,126 @@ const ProductEdit = () => {
           )}
         </div>
       </Section>
+
+      {/* Custom Colors */}
+      {base.type === "contractor" && (
+        <Section title="Custom Colors (בחירת צבע מותאם אישית)">
+          {/* Toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCustomColorsEnabled(p => !p)}
+              className={`relative inline-flex w-11 h-6 rounded-full transition-colors flex-shrink-0 ${customColorsEnabled ? "bg-gray-900" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${customColorsEnabled ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
+            <span className="text-sm font-medium text-gray-700">
+              {customColorsEnabled ? "Custom color picker enabled — customers can choose from color tabs" : "Custom color picker disabled"}
+            </span>
+          </div>
+
+          {customColorsEnabled && (
+            <div className="space-y-4 pt-2 border-t border-gray-100">
+              {/* Tab bar */}
+              <div className="flex items-center gap-1 flex-wrap border-b border-gray-200">
+                {customColorGroups.map((group, gi) => (
+                  <button
+                    key={gi}
+                    type="button"
+                    onClick={() => setActiveGroupIdx(gi)}
+                    className={`px-4 py-2 text-sm border-b-2 transition-colors -mb-px ${
+                      activeGroupIdx === gi ? "border-gray-900 text-gray-900 font-medium" : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {group.name_he || `Group ${gi + 1}`}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={addColorGroup}
+                  className="flex items-center gap-1 px-3 py-2 text-xs text-blue-600 hover:text-blue-800 -mb-px"
+                >
+                  <Plus className="w-3 h-3" /> Add Tab
+                </button>
+              </div>
+
+              {/* Active group editor */}
+              {customColorGroups[activeGroupIdx] ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Tab Name (Hebrew)">
+                      <Input
+                        value={customColorGroups[activeGroupIdx].name_he}
+                        onChange={e => updateColorGroup(activeGroupIdx, "name_he", e.target.value)}
+                        placeholder="e.g. RAL צבע קוד"
+                      />
+                    </Field>
+                    <Field label="Tab Name (Arabic)">
+                      <Input
+                        value={customColorGroups[activeGroupIdx].name_ar}
+                        onChange={e => updateColorGroup(activeGroupIdx, "name_ar", e.target.value)}
+                        placeholder="e.g. RAL كود اللون"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Colors in this tab ({customColorGroups[activeGroupIdx].colors.length})</p>
+                    {customColorGroups[activeGroupIdx].colors.map((color, ci) => (
+                      <div key={ci} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
+                        <div className="relative flex-shrink-0">
+                          <input
+                            type="color"
+                            value={color.hex}
+                            onChange={e => updateCustomColor(activeGroupIdx, ci, "hex", e.target.value)}
+                            className="w-9 h-9 rounded-lg cursor-pointer border border-gray-200 p-0.5"
+                          />
+                        </div>
+                        <Input
+                          value={color.name_he}
+                          onChange={e => updateCustomColor(activeGroupIdx, ci, "name_he", e.target.value)}
+                          placeholder="Name (Hebrew)"
+                          className="h-8 text-sm flex-1"
+                        />
+                        <Input
+                          value={color.name_ar}
+                          onChange={e => updateCustomColor(activeGroupIdx, ci, "name_ar", e.target.value)}
+                          placeholder="Name (Arabic)"
+                          className="h-8 text-sm flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCustomColor(activeGroupIdx, ci)}
+                          className="text-red-400 hover:text-red-600 p-1 flex-shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addCustomColor(activeGroupIdx)}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1"
+                    >
+                      <Plus className="w-3 h-3" /> Add Color
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => removeColorGroup(activeGroupIdx)}
+                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-3 h-3" /> Remove this tab
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 text-center py-4">No color groups yet. Click "Add Tab" to create one.</p>
+              )}
+            </div>
+          )}
+        </Section>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-3 pb-8 flex-wrap">

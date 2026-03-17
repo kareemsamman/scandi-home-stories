@@ -27,6 +27,8 @@ export interface DbProduct {
   content_html_he: string;
   content_html_ar: string;
   product_details: any[];
+  custom_colors_enabled: boolean;
+  custom_color_groups: any[];
 }
 export interface DbColorGroup {
   id: string; name_he: string; name_ar: string;

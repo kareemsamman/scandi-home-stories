@@ -20,10 +20,9 @@ export const CustomColorModal = ({ open, onClose, onSelect, colorGroups, selecte
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
 
-  const colorTabKeys = ['ral', 'passivation', 'noColorMF', 'woodLook', 'iron', 'metal'] as const;
-  const tabs = colorTabKeys.map((key, idx) => ({
-    label: t(`contractor.colorTabs.${key}`),
-    colors: idx < colorGroups.length ? colorGroups[idx].colors : [] as ColorOption[],
+  const tabs = colorGroups.map(group => ({
+    label: group.name[locale] || group.name.he || "Colors",
+    colors: group.colors,
   }));
 
   const filteredColors = useMemo(() => {
