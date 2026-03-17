@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory ADD CONSTRAINT inventory_product_variation_unique UNIQUE (product_id, variation_key);
