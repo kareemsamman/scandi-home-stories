@@ -6,6 +6,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Convert Israeli local number to 019 international format */
+const formatPhone = (phone: string): string => {
+  const clean = phone.replace(/[\s\-\+]/g, "");
+  if (clean.startsWith("972")) return clean;
+  if (clean.startsWith("0")) return "972" + clean.slice(1);
+  return clean;
+};
+
+/** Escape XML special characters */
+const escapeXml = (str: string): string =>
+  str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -40,27 +57,34 @@ serve(async (req) => {
       });
     }
 
-    // 019 SMS API — POST JSON with token in body
+    const dlr = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const formattedPhone = formatPhone(phone);
+
+    // 019 SMS API — XML format (same as working PHP implementation)
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sms>
+    <user><username>${escapeXml(s.user)}</username></user>
+    <source>${escapeXml(s.source)}</source>
+    <destinations><phone id="${dlr}">${formattedPhone}</phone></destinations>
+    <message>${escapeXml(message)}</message>
+</sms>`;
+
     const response = await fetch("https://019sms.co.il/api", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "Authorization": `Bearer ${s.token}`,
+        "Content-Type": "application/xml",
+        "charset": "utf-8",
       },
-      body: JSON.stringify({
-        UserName: s.user,
-        Token: s.token,
-        Source: s.source,
-        Mobiles: phone,
-        Message: message,
-      }),
+      body: xml,
     });
 
     const result = await response.text();
 
-    return new Response(JSON.stringify({ success: true, status: response.status, result }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: response.ok, status: response.status, result }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,

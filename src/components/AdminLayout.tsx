@@ -5,7 +5,7 @@ import { AdminLanguageProvider, useAdminLanguage } from "@/contexts/AdminLanguag
 import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
   Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu,
-  Grid3X3, BarChart3, Home, Layout, Tag, Ticket,
+  Grid3X3, BarChart3, Home, Layout, Tag, Ticket, Mail,
 } from "lucide-react";
 
 interface NavItem {
@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { label: "Products", icon: Package, path: "/admin/products", roles: ["admin"] },
   { label: "Attributes", icon: Tag, path: "/admin/attributes", roles: ["admin"] },
   { label: "Coupons", icon: Ticket, path: "/admin/coupons", roles: ["admin"] },
+  { label: "Marketing", icon: Mail, path: "/admin/marketing", roles: ["admin"] },
   { label: "Orders", icon: ShoppingBag, path: "/admin/orders", roles: ["admin", "worker"] },
   { label: "Inventory", icon: BarChart3, path: "/admin/inventory", roles: ["admin", "worker"] },
   { label: "Hero Slides", icon: Image, path: "/admin/hero-slides", roles: ["admin"] },
