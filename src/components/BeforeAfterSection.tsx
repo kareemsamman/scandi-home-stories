@@ -58,7 +58,7 @@ export const BeforeAfterSection = () => {
         >
           {/* After (full) */}
           <img
-            src={dbData?.after_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"}
+            src={dbData?.after_image || "/assets/after-with-pergola.jpg"}
             alt={dbData?.after_label || t("beforeAfter.after")}
             className="absolute inset-0 w-full h-full object-cover"
           />
