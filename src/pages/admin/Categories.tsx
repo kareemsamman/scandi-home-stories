@@ -8,6 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+/* ── Sortable category row wrapper ── */
+const SortableCatRow = ({ id, children }: { id: string; children: (handleProps: any) => React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={isDragging ? "opacity-50 z-50" : ""}
+    >
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+};
 
 const db = supabase as any;
 
@@ -202,6 +223,37 @@ const AdminCategories = () => {
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
   const [isNewSub, setIsNewSub] = useState(false);
   const [newSubCatId, setNewSubCatId] = useState<string | null>(null);
+  const [orderedCatIds, setOrderedCatIds] = useState<string[] | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const allCats: any[] = orderedCatIds
+    ? orderedCatIds.map(id => (categories as any[]).find((c: any) => c.id === id)).filter(Boolean)
+    : (categories as any[]);
+
+  const saveCatOrder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (let i = 0; i < ids.length; i++) {
+        await db.from("categories").update({ sort_order: i }).eq("id", ids[i]);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["categories"] });
+      toast({ title: "Order saved" });
+    },
+    onError: (e: any) => toast({ title: "Failed to save order", description: e.message, variant: "destructive" }),
+  });
+
+  const handleCatDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = orderedCatIds ?? allCats.map((c: any) => c.id);
+    const oldIdx = ids.indexOf(active.id as string);
+    const newIdx = ids.indexOf(over.id as string);
+    const newIds = arrayMove(ids, oldIdx, newIdx);
+    setOrderedCatIds(newIds);
+    saveCatOrder.mutate(newIds);
+  };
 
   const { data: catTransMap = new Map() } = useQuery({
     queryKey: ["admin_cat_trans", locale],
@@ -294,8 +346,10 @@ const AdminCategories = () => {
       )}
 
       {isLoading ? <p className="text-gray-400">Loading...</p> : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCatDragEnd}>
+          <SortableContext items={allCats.map((c: any) => c.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-3">
-          {categories.map((cat) => {
+          {allCats.map((cat: any) => {
             const subs = allSubs.filter((s) => s.category_id === cat.id);
             const isExpanded = expandedCat === cat.id;
             const catTrans = catTransMap.get(cat.id);
@@ -315,9 +369,13 @@ const AdminCategories = () => {
             }
 
             return (
-              <div key={cat.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <SortableCatRow key={cat.id} id={cat.id}>
+                {(dragHandleProps) => (
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="flex items-center gap-4 p-4">
-                  <GripVertical className="w-4 h-4 text-gray-300 cursor-grab" />
+                  <button {...dragHandleProps} className="touch-none cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 p-1">
+                    <GripVertical className="w-4 h-4" />
+                  </button>
                   {cat.image ? (
                     <img src={cat.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-gray-100" />
                   ) : (
@@ -327,7 +385,7 @@ const AdminCategories = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-gray-900 font-semibold">{displayName}</h3>
-                    <p className="text-gray-400 text-xs">{cat.slug} · #{cat.sort_order}</p>
+                    <p className="text-gray-400 text-xs">{cat.slug}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     {subs.length > 0 && <span className="text-xs text-gray-400 mr-2">{subs.length} subs</span>}
@@ -404,9 +462,13 @@ const AdminCategories = () => {
                   </div>
                 )}
               </div>
+                )}
+              </SortableCatRow>
             );
           })}
         </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

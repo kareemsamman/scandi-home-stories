@@ -57,14 +57,35 @@ export const useShopData = () => {
       images: p.images || [],
       featured: p.is_featured,
       new: p.is_new,
+      sort_order: p.sort_order ?? 9999,
     };
 
     if (p.type === "contractor") {
       let colorGroups: ColorGroup[];
-      if (p.use_color_groups) {
+      const rawColors = (p.colors as any[]) || [];
+      const firstColor = rawColors[0];
+      // Detect new flat format (has tax_id or label_he directly on color object)
+      const isFlatFormat = firstColor && ('tax_id' in firstColor || 'label_he' in firstColor);
+
+      if (isFlatFormat) {
+        // New admin format: flat array of colors — wrap in single group
+        // Always prefer product-specific colors over shared groups
+        colorGroups = [{
+          id: "default",
+          name: { he: "", ar: "" },
+          colors: rawColors.map((c: any) => ({
+            id: c.tax_id || c.id || c.hex,
+            name: { he: c.label_he || c.name_he || c.name?.he || "", ar: c.label_ar || c.name_ar || c.name?.ar || "" },
+            hex: c.hex,
+            lengths: Array.isArray(c.lengths) ? c.lengths : [],
+          })),
+        }];
+      } else if (p.use_color_groups && rawColors.length === 0) {
+        // Only fall back to shared groups if product has NO own colors
         colorGroups = sharedColorGroupsList;
-      } else {
-        colorGroups = ((p.colors as any[]) || []).map((cg: any) => ({
+      } else if (rawColors.length > 0 && rawColors[0]?.colors) {
+        // Old nested format: array of color groups
+        colorGroups = rawColors.map((cg: any) => ({
           id: cg.id || "default",
           name: { he: cg.name_he || cg.name?.he || "", ar: cg.name_ar || cg.name?.ar || "" },
           colors: ((cg.colors as any[]) || []).map((c: any) => ({
@@ -73,6 +94,8 @@ export const useShopData = () => {
             hex: c.hex,
           })),
         }));
+      } else {
+        colorGroups = sharedColorGroupsList;
       }
 
       return {

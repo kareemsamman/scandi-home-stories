@@ -164,7 +164,7 @@ const Products = () => {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
       case "name-asc": result.sort((a, b) => a.name.localeCompare(b.name)); break;
-      default: result = result.filter((p) => p.featured).concat(result.filter((p) => !p.featured)); break;
+      default: result.sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999)); break;
     }
     return result;
   }, [filters, isProfilesCollection, products, collections]);

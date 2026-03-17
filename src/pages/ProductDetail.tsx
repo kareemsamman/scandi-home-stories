@@ -254,12 +254,21 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const customColorGroups = product.colorGroups.slice(1);
   const hasCustomColors = customColorGroups.length > 0 && customColorGroups.some(g => g.colors.length > 0);
 
+  // Sizes available for the currently selected color (per-color length selection from admin)
+  const availableSizes = (() => {
+    const colorObj = standardColors.find(c => c.id === selectedColor?.id);
+    if (colorObj?.lengths && colorObj.lengths.length > 0) {
+      return product.sizes.filter(s => colorObj.lengths!.includes(s.id));
+    }
+    return product.sizes;
+  })();
+
   const currentPrice = (() => {
     if (selectedSize) {
-      const s = product.sizes.find((s) => s.label === selectedSize);
+      const s = availableSizes.find((s) => s.label === selectedSize);
       if (s?.price) return s.price;
     }
-    return product.sizes[0]?.price || product.price;
+    return availableSizes[0]?.price || product.price;
   })();
 
   useEffect(() => {
@@ -267,6 +276,13 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
       setSelectedColor({ id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex });
     }
   }, []);
+
+  // When color changes, reset size to first available size for that color
+  useEffect(() => {
+    if (availableSizes.length > 0) {
+      setSelectedSize(availableSizes[0].label);
+    }
+  }, [selectedColor?.id]);
 
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
@@ -328,12 +344,12 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                 </div>
               )}
 
-              {product.sizes.length > 0 && (
+              {availableSizes.length > 0 && (
                 <div className="mb-4">
                   <p className="text-sm font-medium text-foreground mb-2">{t("contractor.size")}:</p>
                   <div className="flex gap-2 flex-wrap">
-                    {product.sizes.map((size) => {
-                      const isActive = selectedSize === size.label || (!selectedSize && size.id === product.sizes[0].id);
+                    {availableSizes.map((size) => {
+                      const isActive = selectedSize === size.label || (!selectedSize && size.id === availableSizes[0].id);
                       return (<button key={size.id} onClick={() => setSelectedSize(size.label)} className={cn("px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center", isActive ? "border-foreground bg-foreground text-background" : "border-border hover:border-muted-foreground")}><span>{size.label}</span>{size.price && (<span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>{t("common.currency")}{size.price}</span>)}</button>);
                     })}
                   </div>

@@ -21,6 +21,7 @@ export interface ColorOption {
   id: string;
   name: LocaleString;
   hex: string;
+  lengths?: string[]; // IDs of lengths available for this color (contractor variable products)
 }
 
 export interface ColorGroup {
@@ -55,6 +56,7 @@ interface BaseProduct {
   images: string[];
   featured?: boolean;
   new?: boolean;
+  sort_order?: number;
 }
 
 // TYPE 1: Retail products (Pergolas) — fixed size, color swatches only

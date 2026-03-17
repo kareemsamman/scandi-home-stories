@@ -405,12 +405,12 @@ const ProductEdit = () => {
       ]);
       const { id, created_at, updated_at, ...fields } = base;
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
         const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
-        await db.from("product_translations").insert({ ...tFields, product_id: newProduct.id });
+        await db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
       }
       for (const i of (inv || [])) {
         const { id: _iid, created_at: _ica, ...iFields } = i;
@@ -461,6 +461,7 @@ const ProductEdit = () => {
         name: transHe.name || base.slug,
         colors: colorsJson,
         sizes: sizesJson,
+        use_color_groups: false,
       };
 
       let pid = id;
@@ -553,9 +554,14 @@ const ProductEdit = () => {
       {/* Content */}
       <Section title={`Content — ${locale === "he" ? "Hebrew" : "Arabic"}`}>
         <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
-          <Field label={locale === "he" ? "שם מוצר" : "اسم المنتج"}>
-            <Input value={currentTrans.name} onChange={(e) => setCurrentTrans(p => ({ ...p, name: e.target.value }))} />
-          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label={locale === "he" ? "שם מוצר" : "اسم المنتج"}>
+              <Input value={currentTrans.name} onChange={(e) => setCurrentTrans(p => ({ ...p, name: e.target.value }))} />
+            </Field>
+            <Field label="Slug (URL)">
+              <Input value={base.slug} onChange={(e) => setBase((p: any) => ({ ...p, slug: e.target.value }))} placeholder="product-slug" dir="ltr" />
+            </Field>
+          </div>
           <Field label={locale === "he" ? "תיאור קצר" : "وصف قصير"}>
             <Textarea value={currentTrans.description} onChange={(e) => setCurrentTrans(p => ({ ...p, description: e.target.value }))} rows={2} />
           </Field>
@@ -567,10 +573,7 @@ const ProductEdit = () => {
 
       {/* Product Info */}
       <Section title="Product Info">
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Slug">
-            <Input value={base.slug} onChange={(e) => setBase((p: any) => ({ ...p, slug: e.target.value }))} placeholder="product-slug" />
-          </Field>
+        <div className="grid grid-cols-2 gap-4">
           <Field label="Type">
             <Select value={base.type} onValueChange={(v) => setBase((p: any) => ({ ...p, type: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>

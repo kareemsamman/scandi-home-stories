@@ -77,12 +77,12 @@ const AdminProducts = () => {
       ]);
       const { id, created_at, updated_at, ...fields } = product;
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
         const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
-        await db.from("product_translations").insert({ ...tFields, product_id: newProduct.id });
+        await db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
       }
       for (const i of (inv || [])) {
         const { id: _iid, created_at: _ica, ...iFields } = i;
