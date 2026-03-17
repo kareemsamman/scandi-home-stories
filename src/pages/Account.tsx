@@ -488,9 +488,22 @@ interface ProfileTabProps {
 
 const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
   const { t } = useLocale();
+  const { user, refreshProfile } = useAuth();
   const [form, setForm] = useState({ ...profile });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
+  const [pwSaved, setPwSaved] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
 
   useEffect(() => {
     setForm({ ...profile });
@@ -512,39 +525,128 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
     if (!form.lastName.trim()) errs.lastName = t("checkout.lastNameRequired");
     if (!form.phone.trim()) errs.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) errs.phone = t("checkout.invalidPhone");
-    if (form.email && !validateEmail(form.email)) errs.email = t("checkout.invalidEmail");
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    onUpdate(form);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!validate() || !user) return;
+    setSaving(true);
+    setSaveError("");
+    setSaved(false);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ first_name: form.firstName, last_name: form.lastName, phone: form.phone })
+      .eq("user_id", user.id);
+    setSaving(false);
+    if (error) {
+      setSaveError("שגיאה בשמירה, נסה שנית");
+    } else {
+      onUpdate(form);
+      await refreshProfile();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (newPassword.length < 6) errs.newPassword = "הסיסמה חייבת להיות לפחות 6 תווים";
+    if (newPassword !== confirmPassword) errs.confirmPassword = "הסיסמאות אינן תואמות";
+    setPwErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setPwSaving(true);
+    setPwError("");
+    setPwSaved(false);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPwSaving(false);
+    if (error) {
+      setPwError(error.message || "שגיאה בעדכון הסיסמה");
+    } else {
+      setPwSaved(true);
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPwSaved(false), 3000);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 max-w-lg space-y-4">
-      <h2 className="text-lg font-bold mb-2">{t("account.personalInfo")}</h2>
-      <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={handleChange} type="email" inputMode="email" disabled error={errors.email} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
-        <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
-      </div>
-      <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
-      <div className="flex items-center gap-3 pt-2">
-        <button type="submit" className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
-          {t("account.saveChanges")}
-        </button>
-        {saved && (
-          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
-            ✓ {t("account.saved")}
-          </motion.span>
-        )}
-      </div>
-    </form>
+    <div className="max-w-lg space-y-6">
+      {/* Personal Info Card */}
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4">
+        <h2 className="text-lg font-bold mb-2">{t("account.personalInfo")}</h2>
+        <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={handleChange} type="email" inputMode="email" disabled error={errors.email} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
+          <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
+        </div>
+        <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
+        <div className="flex items-center gap-3 pt-2">
+          <button type="submit" disabled={saving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("account.saveChanges")}
+          </button>
+          {saved && (
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
+              ✓ נשמר
+            </motion.span>
+          )}
+          {saveError && <span className="text-sm text-red-500 font-medium">{saveError}</span>}
+        </div>
+      </form>
+
+      {/* Password Change Card */}
+      <form onSubmit={handlePasswordSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4">
+        <h2 className="text-lg font-bold mb-2">שינוי סיסמה</h2>
+        <div>
+          <div className="relative">
+            <input
+              type={showNew ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => { setNewPassword(e.target.value); if (pwErrors.newPassword) setPwErrors((p) => ({ ...p, newPassword: "" })); }}
+              placeholder="סיסמה חדשה"
+              className={`peer w-full h-[48px] px-4 pe-12 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
+                pwErrors.newPassword ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
+              }`}
+            />
+            <button type="button" onClick={() => setShowNew(!showNew)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1">
+              {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {pwErrors.newPassword && <p className="text-xs text-red-500 mt-1">{pwErrors.newPassword}</p>}
+        </div>
+        <div>
+          <div className="relative">
+            <input
+              type={showConfirm ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => { setConfirmPassword(e.target.value); if (pwErrors.confirmPassword) setPwErrors((p) => ({ ...p, confirmPassword: "" })); }}
+              placeholder="אימות סיסמה"
+              className={`peer w-full h-[48px] px-4 pe-12 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
+                pwErrors.confirmPassword ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
+              }`}
+            />
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1">
+              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {pwErrors.confirmPassword && <p className="text-xs text-red-500 mt-1">{pwErrors.confirmPassword}</p>}
+        </div>
+        <div className="flex items-center gap-3 pt-2">
+          <button type="submit" disabled={pwSaving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50">
+            {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "עדכן סיסמה"}
+          </button>
+          {pwSaved && (
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
+              ✓ נשמר
+            </motion.span>
+          )}
+          {pwError && <span className="text-sm text-red-500 font-medium">{pwError}</span>}
+        </div>
+      </form>
+    </div>
   );
 };
 
