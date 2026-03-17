@@ -182,13 +182,18 @@ const AdminOrders = () => {
                     {order.receipt_url && (
                       <div>
                         <p className="text-gray-400 text-[10px] mb-2 font-bold uppercase tracking-wide">Receipt</p>
-                        <button
-                          onClick={() => setReceiptModal(order.receipt_url)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <Image className="w-4 h-4" />
-                          View Receipt
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {order.receipt_url.split("|").map((url: string, idx: number) => (
+                            <button
+                              key={idx}
+                              onClick={() => setReceiptModal(url)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Image className="w-4 h-4" />
+                              {order.receipt_url.split("|").length > 1 ? `Receipt ${idx + 1}` : "View Receipt"}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
 

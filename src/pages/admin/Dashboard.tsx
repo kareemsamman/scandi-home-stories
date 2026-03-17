@@ -1,28 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, Package, Users, DollarSign, Clock, AlertTriangle } from "lucide-react";
 
+const STATUS_LABELS: Record<string, string> = {
+  waiting_approval: "מחכה אישור",
+  in_process: "בתהליך",
+  in_delivery: "יצא למשלוח",
+  not_approved: "לא אושרה",
+  cancelled: "בוטלה",
+  pending: "ממתין",
+  confirmed: "אושרה",
+  shipped: "נשלחה",
+  delivered: "נמסרה",
+};
+
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { data: stats } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
       const [
         { count: totalOrders },
-        { count: pendingOrders },
         { data: revData },
         { count: totalProducts },
         { count: totalUsers },
         { data: recentOrders },
+        { data: waitingOrders },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }),
-        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("orders").select("total, status"),
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("orders").select("order_number, first_name, last_name, total, status, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("orders").select("id, order_number, first_name, last_name, total, status, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("orders").select("id, order_number, first_name, last_name, total, created_at").eq("status", "waiting_approval").order("created_at", { ascending: false }),
       ]);
       const revenue = (revData || []).filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total), 0);
-      return { totalOrders: totalOrders || 0, pendingOrders: pendingOrders || 0, revenue, totalProducts: totalProducts || 0, totalUsers: totalUsers || 0, recentOrders: recentOrders || [] };
+      return { totalOrders: totalOrders || 0, revenue, totalProducts: totalProducts || 0, totalUsers: totalUsers || 0, recentOrders: recentOrders || [], waitingOrders: waitingOrders || [] };
     },
   });
 
@@ -34,11 +48,15 @@ const AdminDashboard = () => {
   ];
 
   const statusColors: Record<string, string> = {
+    waiting_approval: "bg-amber-100 text-amber-700",
+    in_process: "bg-blue-100 text-blue-700",
+    in_delivery: "bg-purple-100 text-purple-700",
+    not_approved: "bg-red-100 text-red-700",
+    cancelled: "bg-gray-100 text-gray-500",
     pending: "bg-yellow-100 text-yellow-700",
     confirmed: "bg-blue-100 text-blue-700",
     shipped: "bg-purple-100 text-purple-700",
     delivered: "bg-green-100 text-green-700",
-    cancelled: "bg-red-100 text-red-700",
   };
 
   return (
@@ -74,7 +92,7 @@ const AdminDashboard = () => {
           ) : (
             <div className="space-y-3">
               {(stats?.recentOrders || []).map((order: any) => (
-                <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate("/admin/orders")}>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
                     <p className="text-xs text-gray-400">{order.first_name} {order.last_name}</p>
@@ -82,7 +100,7 @@ const AdminDashboard = () => {
                   <div className="text-end">
                     <p className="text-sm font-semibold text-gray-900">₪{Number(order.total).toLocaleString()}</p>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}>
-                      {order.status}
+                      {STATUS_LABELS[order.status] || order.status}
                     </span>
                   </div>
                 </div>
@@ -96,16 +114,23 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <h2 className="text-lg font-semibold text-gray-900">Pending Actions</h2>
-          </div>
-          <div className="space-y-3">
-            {(stats?.pendingOrders || 0) > 0 && (
-              <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
-                <span className="text-sm text-amber-800">Pending orders awaiting verification</span>
-                <span className="text-lg font-bold text-amber-700">{stats?.pendingOrders}</span>
-              </div>
+            {(stats?.waitingOrders || []).length > 0 && (
+              <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">{stats!.waitingOrders.length}</span>
             )}
-            {(stats?.pendingOrders || 0) === 0 && (
+          </div>
+          <div className="space-y-2">
+            {(stats?.waitingOrders || []).length === 0 ? (
               <p className="text-gray-400 text-sm">No pending actions</p>
+            ) : (
+              (stats!.waitingOrders as any[]).map((order: any) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors" onClick={() => navigate("/admin/orders")}>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">{order.order_number}</p>
+                    <p className="text-xs text-amber-700">{order.first_name} {order.last_name}</p>
+                  </div>
+                  <p className="text-sm font-bold text-amber-800">₪{Number(order.total).toLocaleString()}</p>
+                </div>
+              ))
             )}
           </div>
         </div>

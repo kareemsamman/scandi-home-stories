@@ -392,10 +392,6 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                     <div className="w-full h-12 flex items-center justify-center border-2 border-red-200 rounded-full text-red-500 font-medium text-sm">
                       אזל מהמלאי
                     </div>
-                  ) : cartFull ? (
-                    <div className="w-full h-12 flex items-center justify-center border-2 border-amber-200 rounded-full text-amber-600 font-medium text-sm">
-                      {locale === "ar" ? "الكمية المتاحة في السلة بالفعل" : "כל המלאי כבר בסל"}
-                    </div>
                   ) : addedConfirm ? (
                     <motion.div
                       key="confirmed"
@@ -407,6 +403,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                       <Check className="w-4 h-4" />
                       {t("contractor.addedToCart")}
                     </motion.div>
+                  ) : cartFull ? (
+                    <div className="w-full h-12 flex items-center justify-center border-2 border-amber-200 rounded-full text-amber-600 font-medium text-sm">
+                      {locale === "ar" ? "الكمية المتاحة في السلة بالفعل" : "כל המלאי כבר בסל"}
+                    </div>
                   ) : (
                     <motion.button
                       key="add"

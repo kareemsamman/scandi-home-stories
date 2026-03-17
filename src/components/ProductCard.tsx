@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Ruler } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Product, RetailProduct, ContractorProduct, getLocaleText } from "@/data/products";
 import { useShopData } from "@/hooks/useShopData";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { QuickBuyModal } from "./QuickBuyModal";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductCardProps {
   product: Product;
@@ -35,6 +37,17 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
 
   const hasOptions = (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
+  // OOS check: if all tracked inventory rows sum to 0
+  const { data: inventory = [] } = useQuery({
+    queryKey: ['product_inventory', product.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any).from('inventory').select('stock_quantity').eq('product_id', product.id);
+      return (data || []) as { stock_quantity: number }[];
+    },
+    staleTime: 1000 * 60,
+  });
+  const isOutOfStock = inventory.length > 0 && inventory.every(r => r.stock_quantity === 0);
+
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,9 +70,16 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         <motion.article initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
           <Link to={localePath(`/product/${product.slug}`)} className="block">
             <div className="relative aspect-square overflow-hidden bg-muted">
-              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" loading="lazy" />
+              <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+              {isOutOfStock && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
+                    {locale === "ar" ? "نفد من المخزون" : "אזל מהמלאי"}
+                  </span>
+                </div>
+              )}
               {product.new && (<span className="absolute top-3 start-3 px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">{t("product.newBadge")}</span>)}
-              <button onClick={handleQuickAdd} className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors" aria-label={t("product.addToBag")}><QuickCartIcon /></button>
+              <button onClick={handleQuickAdd} disabled={isOutOfStock} className={cn("absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md transition-colors", isOutOfStock ? "opacity-40 cursor-not-allowed" : "hover:bg-foreground hover:text-background")} aria-label={t("product.addToBag")}><QuickCartIcon /></button>
             </div>
           </Link>
           <div className="p-3 space-y-1.5">
@@ -97,13 +117,20 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       <motion.article initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
         <Link to={localePath(`/product/${product.slug}`)} className="block">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105")} loading="lazy" />
-            {hasSecondImage && (<img src={product.images[1]} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
+            <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+            {hasSecondImage && !isOutOfStock && (<img src={product.images[1]} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
+                  {locale === "ar" ? "نفد من المخزون" : "אזל מהמלאי"}
+                </span>
+              </div>
+            )}
             <div className="absolute top-3 start-3 flex flex-col gap-1.5">
               {product.new && (<span className="px-2.5 py-1 text-[10px] font-semibold bg-primary text-primary-foreground rounded-md">{t("product.newBadge")}</span>)}
               {product.featured && (<span className="px-2.5 py-1 text-[10px] font-semibold bg-foreground text-background rounded-md">{t("product.featuredBadge")}</span>)}
             </div>
-            <button onClick={handleQuickAdd} className="absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-foreground hover:text-background transition-colors" aria-label={t("product.addToBag")}><QuickCartIcon /></button>
+            <button onClick={handleQuickAdd} disabled={isOutOfStock} className={cn("absolute bottom-3 end-3 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md transition-colors", isOutOfStock ? "opacity-40 cursor-not-allowed" : "hover:bg-foreground hover:text-background")} aria-label={t("product.addToBag")}><QuickCartIcon /></button>
           </div>
         </Link>
         <div className="p-3 space-y-1.5">

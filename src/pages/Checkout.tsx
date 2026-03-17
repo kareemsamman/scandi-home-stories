@@ -289,26 +289,16 @@ const Checkout = () => {
     }
   }, [user]);
 
-  // When auth profile loads → fill contact + address fields
+  // When auth profile loads → fill contact fields only (address left empty for user to pick)
   useEffect(() => {
     if (user && authProfile) {
-      const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
       setForm((prev) => ({
         ...prev,
         firstName: authProfile.first_name || prev.firstName,
         lastName: authProfile.last_name || prev.lastName,
         email: user.email || prev.email,
         phone: authProfile.phone || prev.phone,
-        city: defaultAddr?.city || prev.city,
-        address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : prev.address,
-        apartment: defaultAddr?.apartment || prev.apartment,
       }));
-      if (defaultAddr?.city) {
-        setCityQuery(defaultAddr.city);
-        setCitySelected(true);
-        const z = detectZoneFromCity(defaultAddr.city);
-        if (z) setSelectedZone(z);
-      }
     }
   }, [user, authProfile]);
 
@@ -422,19 +412,23 @@ const Checkout = () => {
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
 
-    // Upload receipt files to Supabase storage
+    // Upload all receipt files to Supabase storage
     let receiptUrl: string | undefined;
     try {
-      const file = uploadedFiles[0].file;
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `receipts/${orderNumber}.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("site-media")
-        .upload(path, file, { upsert: true });
-      if (!uploadErr) {
-        const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
-        receiptUrl = urlData.publicUrl;
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i].file;
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `receipts/${orderNumber}_${i + 1}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("site-media")
+          .upload(path, file, { upsert: true });
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
+          uploadedUrls.push(urlData.publicUrl);
+        }
       }
+      if (uploadedUrls.length > 0) receiptUrl = uploadedUrls.join("|");
     } catch { /* receipt upload failure is non-blocking */ }
 
     // Save marketing opt-in subscriber
@@ -888,7 +882,7 @@ const Checkout = () => {
                       }}
                       className="w-full h-[48px] px-4 rounded-lg border border-border bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
                     >
-                      <option value="">{t("account.selectAddress")}</option>
+                      <option value="" disabled>{t("account.selectAddress")}</option>
                       {savedAddresses.map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.firstName} {a.lastName} – {a.city}, {a.street} {a.houseNumber}
