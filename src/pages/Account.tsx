@@ -288,9 +288,10 @@ const OrdersTab = () => {
         <Link
           key={order.id}
           to={localePath(`/account/order/${order.id}`)}
-          className="block bg-white rounded-xl border border-border p-5 hover:shadow-md hover:border-foreground/10 transition-all group"
+          className="block bg-white rounded-2xl border border-border hover:shadow-md hover:border-foreground/20 transition-all group overflow-hidden"
         >
-          <div className="flex items-start justify-between mb-3">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/60">
             <div>
               <p className="text-sm font-bold text-foreground">{t("account.orderNumber")} {order.orderNumber}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{order.date}</p>
@@ -300,25 +301,43 @@ const OrdersTab = () => {
             </span>
           </div>
 
-          {/* Items preview with images */}
+          {/* Items */}
           {order.items && order.items.length > 0 && (
-            <div className="flex gap-3 mb-3 overflow-x-auto pb-1">
+            <div className="divide-y divide-border/50">
               {order.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2.5 shrink-0">
-                  <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover border border-border" />
-                  <div className="text-xs">
-                    <p className="font-medium text-foreground line-clamp-1 max-w-[140px]">{item.name}</p>
-                    <p className="text-muted-foreground">x{item.quantity}</p>
+                <div key={idx} className="flex items-center gap-3 px-5 py-3">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden border border-border shrink-0 bg-muted/20">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground leading-snug">{item.name}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {item.color && (
+                        <span className="inline-flex items-center gap-1 text-[11px] bg-muted/60 px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                          {t("contractor.color")}: {item.color}
+                        </span>
+                      )}
+                      {item.size && (
+                        <span className="inline-flex items-center gap-1 text-[11px] bg-muted/60 px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                          {locale === "ar" ? "الطول" : "אורך"}: {item.size}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-end shrink-0">
+                    <p className="text-xs text-muted-foreground">×{item.quantity}</p>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">{t("common.currency")}{(item.price * item.quantity).toLocaleString()}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-3 border-t border-border">
-            <span className="text-sm text-muted-foreground">{t("cart.total")}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold">{t("common.currency")}{order.total.toLocaleString()}</span>
+          {/* Footer */}
+          <div className="flex items-center justify-between px-5 py-3 bg-muted/20 border-t border-border/60">
+            <span className="text-xs text-muted-foreground">{t("cart.total")}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-foreground">{t("common.currency")}{order.total.toLocaleString()}</span>
               <ArrowIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
           </div>

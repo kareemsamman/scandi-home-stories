@@ -36,6 +36,12 @@ export interface Order {
   notes?: string;
   receiptUrl?: string;
   locale?: string;
+  city?: string;
+  address?: string;
+  apartment?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
 }
 
 /* ---- Inventory adjustment helper ---- */
@@ -109,6 +115,12 @@ export const useOrders = () => {
         notes: o.notes || undefined,
         receiptUrl: o.receipt_url || undefined,
         locale: o.locale || "he",
+        city: o.city || undefined,
+        address: o.address || undefined,
+        apartment: o.apartment || undefined,
+        firstName: o.first_name || undefined,
+        lastName: o.last_name || undefined,
+        phone: o.phone || undefined,
         items: (o.order_items || []).map((item: any) => ({
           name: item.product_name,
           image: item.product_image,

@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Ban } from "lucide-react";
+import { ArrowRight, ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Ban, MapPin } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
@@ -181,21 +181,21 @@ const OrderDetail = () => {
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-snug mb-1.5">{item.name}</p>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {item.color && (
-                      <span className="text-[11px] bg-muted px-2 py-0.5 rounded-full font-medium text-muted-foreground">
-                        {t("contractor.color")}: {item.color}
-                      </span>
-                    )}
-                    {item.size && (
-                      <span className="text-[11px] bg-muted px-2 py-0.5 rounded-full font-medium text-muted-foreground">
-                        {t("contractor.size")}: {item.size}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">×{item.quantity}</span>
+                  <p className="text-base font-bold text-foreground leading-snug mb-2">{item.name}</p>
+                  {item.color && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[11px] font-semibold text-muted-foreground">{t("contractor.color")}:</span>
+                      <span className="text-[11px] font-bold text-foreground">{item.color}</span>
+                    </div>
+                  )}
+                  {item.size && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <span className="text-[11px] font-semibold text-muted-foreground">{locale === "ar" ? "الطول" : "אורך"}:</span>
+                      <span className="text-[11px] font-bold text-foreground">{item.size}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">×{item.quantity}</span>
                     <span className="text-sm font-bold text-foreground">
                       {t("common.currency")}{(item.price * item.quantity).toLocaleString()}
                     </span>
@@ -204,6 +204,26 @@ const OrderDetail = () => {
               </div>
             ))}
           </div>
+
+          {/* Shipping address */}
+          {(order.city || order.address) && (
+            <div className="bg-white rounded-2xl border border-border shadow-sm p-5 mb-3">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{locale === "ar" ? "عنوان الشحن" : "כתובת למשלוח"}</h3>
+              </div>
+              <div className="text-sm space-y-0.5">
+                {(order.firstName || order.lastName) && (
+                  <p className="font-semibold text-foreground">{order.firstName} {order.lastName}</p>
+                )}
+                {order.city && <p className="text-muted-foreground">{order.city}</p>}
+                {order.address && (
+                  <p className="text-muted-foreground">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
+                )}
+                {order.phone && <p className="text-muted-foreground">{order.phone}</p>}
+              </div>
+            </div>
+          )}
 
           {/* Summary */}
           <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
