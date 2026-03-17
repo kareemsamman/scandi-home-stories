@@ -294,10 +294,10 @@ const Checkout = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (citySelected) return;
-    if (cityQuery.trim().length < 2) { setCitySuggestions([]); return; }
+    if (cityQuery.trim().length < 1) { setCitySuggestions([]); setCityLoading(false); return; }
+    setCityLoading(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      setCityLoading(true);
       const results = await fetchCityStreets(cityQuery.trim());
       setCitySuggestions(results);
       setCityLoading(false);
@@ -815,7 +815,7 @@ const Checkout = () => {
                       <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
                         onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); }}
                         onFocus={() => setShowCitySuggestions(true)} onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
-                      {showCitySuggestions && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 2 && (
+                      {showCitySuggestions && !citySelected && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 1 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl overflow-hidden">
                           {cityLoading ? (
                             <div className="p-3 space-y-2">
