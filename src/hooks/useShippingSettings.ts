@@ -65,8 +65,8 @@ export const CITY_ZONE_MAP: Record<string, keyof ShippingSettings["zones"]> = {
   "נשר": "north", "זכרון יעקב": "north", "פרדס חנה-כרכור": "north",
   "פרדס חנה": "north", "כרכור": "north", "בנימינה": "north",
   "בית שאן": "north", "אור עקיבא": "north", "חדרה": "north",
-  "מגאר": "north", "שפרעם": "north", "כאבול": "north",
-  "דלית אל-כרמל": "north", "עוספיא": "north", "נשר": "north",
+  "מגאר": "north", "כאבול": "north",
+  "דלית אל-כרמל": "north", "עוספיא": "north",
   "קצרין": "north", "מעלות-תרשיחא": "north", "שלומי": "north",
   "גבעת עלייה": "north",
 
