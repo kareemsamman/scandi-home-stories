@@ -17,10 +17,10 @@ export const useProfile = create<ProfileStore>()(
   persist(
     (set) => ({
       profile: {
-        firstName: "אחמד",
-        lastName: "כנעאן",
-        email: "ahmad@example.com",
-        phone: "0521234567",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
       },
       updateProfile: (data) =>
         set((s) => ({ profile: { ...s.profile, ...data } })),

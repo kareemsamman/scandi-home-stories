@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, LogOut, Plus, Pencil, Trash2, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, MapPin, LogOut, Plus, Pencil, Trash2, Star, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
 import { useAddresses, SavedAddress } from "@/hooks/useAddresses";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 
 /* ---------- Israeli streets API ---------- */
 const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
@@ -85,6 +86,7 @@ const Account = () => {
   const { t, localePath, locale } = useLocale();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("orders");
+  const { user, loading, signOut, profile: authProfile } = useAuth();
 
   const orders = useOrders((s) => s.orders);
   const addresses = useAddresses((s) => s.addresses);
@@ -92,12 +94,39 @@ const Account = () => {
   const updateAddress = useAddresses((s) => s.updateAddress);
   const removeAddress = useAddresses((s) => s.removeAddress);
   const setDefault = useAddresses((s) => s.setDefault);
-  const profile = useProfile((s) => s.profile);
   const updateProfile = useProfile((s) => s.updateProfile);
 
-  const handleLogout = () => {
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate(localePath("/login"), { replace: true });
+    }
+  }, [loading, user, navigate, localePath]);
+
+  const handleLogout = async () => {
+    await signOut();
     navigate(localePath("/"));
   };
+
+  // Build profile object from Supabase auth data
+  const profile = {
+    firstName: authProfile?.first_name || "",
+    lastName: authProfile?.last_name || "",
+    email: user?.email || "",
+    phone: authProfile?.phone || "",
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) return null;
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "orders", label: t("account.orders") },

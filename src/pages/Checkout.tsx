@@ -7,8 +7,8 @@ import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAddresses } from "@/hooks/useAddresses";
-import { useProfile } from "@/hooks/useProfile";
 import { useOrders } from "@/hooks/useOrders";
+import { useAuth } from "@/hooks/useAuth";
 import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import logoWhite from "@/assets/logo-white.png";
@@ -180,7 +180,7 @@ const Checkout = () => {
   const clearCart = useCart((s) => s.clearCart);
   const savedAddresses = useAddresses((s) => s.addresses);
   const getDefaultAddress = useAddresses((s) => s.getDefault);
-  const profileData = useProfile((s) => s.profile);
+  const { user, profile: authProfile, signOut } = useAuth();
   const addOrder = useOrders((s) => s.addOrder);
 
   const { data: shippingSettings } = useShippingSettings();
@@ -221,14 +221,14 @@ const Checkout = () => {
   const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-fill from saved address or profile
+  // Auto-fill from Supabase auth profile + saved addresses (only when logged in)
   const [form, setForm] = useState(() => {
     const defaultAddr = getDefaultAddress();
     return {
-      firstName: profileData.firstName || defaultAddr?.firstName || "",
-      lastName: profileData.lastName || defaultAddr?.lastName || "",
-      email: profileData.email || "",
-      phone: profileData.phone || defaultAddr?.phone || "",
+      firstName: authProfile?.first_name || defaultAddr?.firstName || "",
+      lastName: authProfile?.last_name || defaultAddr?.lastName || "",
+      email: user?.email || "",
+      phone: authProfile?.phone || defaultAddr?.phone || "",
       city: defaultAddr?.city || "",
       address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : "",
       apartment: defaultAddr?.apartment || "",
@@ -676,9 +676,19 @@ const Checkout = () => {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold">{t("checkout.contactInfo")}</h2>
-                    <Link to={localePath("/login")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
-                      {t("checkout.loginLink")}
-                    </Link>
+                    {user ? (
+                      <button
+                        type="button"
+                        onClick={async () => { await signOut(); }}
+                        className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                      >
+                        {t("auth.logout")}
+                      </button>
+                    ) : (
+                      <Link to={localePath("/login")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
+                        {t("checkout.loginLink")}
+                      </Link>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FloatingInput inputRef={firstInputRef} name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} onBlur={() => handleBlur("firstName")} error={fieldError("firstName")} />
