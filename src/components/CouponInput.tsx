@@ -49,24 +49,24 @@ export const CouponInput = () => {
     <div>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Tag className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
           <input
             value={code}
             onChange={e => { setCode(e.target.value.toUpperCase()); setError(""); }}
             onKeyDown={e => e.key === "Enter" && handleApply()}
             placeholder={t("checkout.discountPlaceholder")}
-            className="w-full h-10 pl-9 pr-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20 placeholder:text-muted-foreground font-mono"
+            className="w-full h-12 ps-10 pe-3 rounded-xl border-2 border-border bg-white text-sm font-mono tracking-wider focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/60 placeholder:font-sans placeholder:tracking-normal"
           />
         </div>
         <button
           onClick={handleApply}
           disabled={!code.trim() || loading}
-          className="px-4 h-10 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50 shrink-0"
+          className="px-5 h-12 rounded-xl bg-foreground text-background text-sm font-semibold hover:bg-foreground/85 transition-colors disabled:opacity-40 shrink-0 flex items-center gap-2"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("checkout.applyDiscount")}
         </button>
       </div>
-      {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
+      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
     </div>
   );
 };
