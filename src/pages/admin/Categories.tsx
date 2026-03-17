@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, GripVertical, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, ChevronDown, ChevronRight, Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories, useSubCategories, type DbCategory, type DbSubCategory } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
@@ -10,6 +10,89 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 const db = supabase as any;
+
+// ─── ImageUpload ──────────────────────────────────────────────────────────────
+
+const ImageUpload = ({
+  value, onChange, label, small = false,
+}: {
+  value: string; onChange: (url: string) => void; label: string; small?: boolean;
+}) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `categories/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("site-media").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("site-media").getPublicUrl(path);
+      onChange(data.publicUrl);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-gray-600">{label}</label>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+      />
+
+      {value ? (
+        <div className="relative group">
+          <img
+            src={value}
+            alt=""
+            className={`w-full object-cover rounded-lg border border-gray-200 ${small ? "h-24" : "h-36"}`}
+          />
+          <div className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="p-1.5 bg-white rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="p-1.5 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className={`w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-gray-400 hover:text-blue-500 ${small ? "h-24" : "h-36"}`}
+        >
+          {uploading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <ImageIcon className="w-5 h-5" />
+          )}
+          <span className="text-xs">{uploading ? "Uploading..." : "Click to upload"}</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ─── CategoryForm ─────────────────────────────────────────────────────────────
 
 const CategoryForm = ({
   initialBase, initialTrans, onSave, onCancel, isNew, locale,
@@ -29,26 +112,41 @@ const CategoryForm = ({
           Editing: {locale === "he" ? "Hebrew" : "Arabic"}
         </span>
       </div>
+
+      {/* Translatable fields */}
       <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 space-y-3">
         <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Translatable ({locale.toUpperCase()})</p>
         <Input placeholder="Category name" value={trans.name} onChange={(e) => setTrans({ ...trans, name: e.target.value })} />
         <Textarea placeholder="Description" value={trans.description} onChange={(e) => setTrans({ ...trans, description: e.target.value })} rows={2} />
       </div>
+
+      {/* Slug + Sort */}
       <div className="grid grid-cols-2 gap-4">
-        <Input placeholder="Slug" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} />
-        <Input placeholder="Sort order" type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} />
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Slug</label>
+          <Input placeholder="e.g. pergolas" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Sort Order</label>
+          <Input type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} />
+        </div>
       </div>
+
+      {/* Images */}
       <div className="grid grid-cols-2 gap-4">
-        <Input placeholder="Image URL" value={form.image || ""} onChange={(e) => set("image", e.target.value)} />
-        <Input placeholder="Hero Image URL" value={form.hero_image || ""} onChange={(e) => set("hero_image", e.target.value)} />
+        <ImageUpload label="Category Image" value={form.image || ""} onChange={(url) => set("image", url)} />
+        <ImageUpload label="Hero Image" value={form.hero_image || ""} onChange={(url) => set("hero_image", url)} />
       </div>
-      <div className="flex gap-2 justify-end">
+
+      <div className="flex gap-2 justify-end pt-2">
         <Button variant="ghost" onClick={onCancel}>Cancel</Button>
         <Button onClick={() => onSave(form, trans)} className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
       </div>
     </div>
   );
 };
+
+// ─── SubCategoryForm ──────────────────────────────────────────────────────────
 
 const SubCategoryForm = ({
   initialBase, initialTrans, onSave, onCancel, isNew, locale,
@@ -63,9 +161,25 @@ const SubCategoryForm = ({
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
       <h4 className="text-sm font-semibold text-gray-900">{isNew ? "New Subcategory" : "Edit Subcategory"}</h4>
       <div className="p-3 bg-blue-50/50 rounded border border-blue-100 space-y-2">
-        <Input placeholder={`Name (${locale.toUpperCase()})`} value={trans.name} onChange={(e) => setTrans({ name: e.target.value })} className="text-sm" />
+        <Input
+          placeholder={`Name (${locale.toUpperCase()})`}
+          value={trans.name}
+          onChange={(e) => setTrans({ name: e.target.value })}
+          className="text-sm"
+        />
       </div>
-      <Input placeholder="Slug" value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="text-sm" />
+      <Input
+        placeholder="Slug"
+        value={form.slug || ""}
+        onChange={(e) => setForm({ ...form, slug: e.target.value })}
+        className="text-sm"
+      />
+      <ImageUpload
+        label="Subcategory Image"
+        value={form.image || ""}
+        onChange={(url) => setForm({ ...form, image: url })}
+        small
+      />
       <div className="flex gap-2 justify-end">
         <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs">Cancel</Button>
         <Button size="sm" onClick={() => onSave(form, trans)} className="bg-blue-600 hover:bg-blue-700 text-white text-xs">Save</Button>
@@ -73,6 +187,8 @@ const SubCategoryForm = ({
     </div>
   );
 };
+
+// ─── AdminCategories ──────────────────────────────────────────────────────────
 
 const AdminCategories = () => {
   const { locale } = useAdminLanguage();
@@ -202,7 +318,13 @@ const AdminCategories = () => {
               <div key={cat.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="flex items-center gap-4 p-4">
                   <GripVertical className="w-4 h-4 text-gray-300 cursor-grab" />
-                  {cat.image && <img src={cat.image} alt="" className="w-12 h-12 rounded-lg object-cover" />}
+                  {cat.image ? (
+                    <img src={cat.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-gray-100" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-gray-300" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-gray-900 font-semibold">{displayName}</h3>
                     <p className="text-gray-400 text-xs">{cat.slug} · #{cat.sort_order}</p>
@@ -232,7 +354,7 @@ const AdminCategories = () => {
 
                     {isNewSub && newSubCatId === cat.id && (
                       <SubCategoryForm
-                        initialBase={{ slug: "", sort_order: subs.length + 1, category_id: cat.id }}
+                        initialBase={{ slug: "", sort_order: subs.length + 1, category_id: cat.id, image: "" }}
                         initialTrans={{ name: "" }} isNew locale={locale}
                         onSave={(b, t) => saveSub.mutate({ base: b, trans: t })}
                         onCancel={() => { setEditingSubId(null); setIsNewSub(false); setNewSubCatId(null); }}
@@ -261,6 +383,13 @@ const AdminCategories = () => {
                       return (
                         <div key={sub.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white border border-gray-100">
                           <GripVertical className="w-3 h-3 text-gray-300" />
+                          {(sub as any).image ? (
+                            <img src={(sub as any).image} alt="" className="w-8 h-8 rounded object-cover border border-gray-100" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+                              <ImageIcon className="w-3.5 h-3.5 text-gray-300" />
+                            </div>
+                          )}
                           <span className="text-sm text-gray-900 flex-1">{subName}</span>
                           <span className="text-xs text-gray-400">{sub.slug}</span>
                           <Button variant="ghost" size="icon" onClick={() => { setEditingSubId(sub.id); setIsNewSub(false); }} className="w-7 h-7">
