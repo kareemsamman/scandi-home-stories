@@ -77,25 +77,14 @@ const QuickAddColor = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (c: 
 
   return (
     <div className="flex items-center gap-2 mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
-      {/* Color picker — click the swatch */}
-      <div className="relative shrink-0">
-        <div
-          className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-300 cursor-pointer flex items-center justify-center"
-          style={{ background: hex }}
-          onClick={() => colorInputRef.current?.click()}
-          title="Click to pick color"
-        >
-          <Pipette className="w-3 h-3 text-white drop-shadow" />
-        </div>
-        <input
-          ref={colorInputRef}
-          type="color"
-          value={hex}
-          onChange={(e) => setHex(e.target.value)}
-          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-          style={{ pointerEvents: "none" }}
-        />
+      {/* Color swatch — click to open picker */}
+      <div className="relative shrink-0 w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-300 overflow-hidden cursor-pointer" style={{ background: hex }}
+        onClick={() => colorInputRef.current?.click()} title="Click to pick color">
+        <Pipette className="absolute inset-0 m-auto w-3 h-3 text-white drop-shadow pointer-events-none" />
+        <input ref={colorInputRef} type="color" value={hex} onChange={(e) => setHex(e.target.value)}
+          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
       </div>
+      {/* Name */}
       <Input
         value={label}
         onChange={(e) => setLabel(e.target.value)}
@@ -105,11 +94,15 @@ const QuickAddColor = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (c: 
         onKeyDown={(e) => e.key === "Enter" && handleAdd()}
         autoFocus
       />
-      <button
-        onClick={handleAdd}
-        disabled={saveColors.isPending || !label.trim()}
-        className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0"
-      >
+      {/* Hex text input */}
+      <Input
+        value={hex}
+        onChange={(e) => setHex(e.target.value)}
+        placeholder="#3b82f6"
+        className="h-8 text-xs font-mono w-24"
+        maxLength={7}
+      />
+      <button onClick={handleAdd} disabled={saveColors.isPending || !label.trim()} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">
         <Check className="w-4 h-4" />
       </button>
       <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 text-xl leading-none">×</button>
