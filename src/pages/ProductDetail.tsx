@@ -1,8 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil } from "lucide-react";
+import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil, AlertCircle } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
@@ -125,7 +125,8 @@ const ProductImagesSection = ({ images }: { images: string[] }) => {
 /* ─── Retail Product Page ─── */
 const RetailProductPage = ({ product, collections, relatedProducts }: { product: RetailProduct; collections: any[]; relatedProducts: any[] }) => {
   const { t, locale, localePath } = useLocale();
-  const { addItem: addToCart } = useCart();
+  const { addItem: addToCart, items: cartItems } = useCart();
+  const qc = useQueryClient();
   const isMobile = useIsMobile();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
@@ -133,6 +134,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [addedConfirm, setAddedConfirm] = useState(false);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
   const collection = collections.find((c) => c.id === product.collection);
 
   // Inventory loading
@@ -148,17 +150,33 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
 
   const currentStock = selectedColor ? getColorStock(selectedColor.id) : (product.colors.length === 0 ? 9999 : 9999);
   const isOutOfStock = currentStock === 0;
-  const maxQty = isOutOfStock ? 0 : currentStock;
+  const activeColorId = selectedColor?.id || "";
+  const cartQty = cartItems
+    .filter(i => i.product.id === product.id && (i.options?.color?.id || "") === activeColorId)
+    .reduce((sum, i) => sum + i.quantity, 0);
+  const effectiveMax = isOutOfStock ? 0 : Math.max(0, currentStock - cartQty);
+  const cartFull = currentStock > 0 && effectiveMax === 0;
 
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
   const handleAdd = async () => {
-    if (isOutOfStock) return;
+    if (isOutOfStock || effectiveMax === 0) return;
+    setStockWarning(null);
     setIsAdding(true);
+    const { data: freshInv } = await (supabase as any).from('inventory').select('variation_key,stock_quantity').eq('product_id', product.id);
+    const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
+    const freshStock = activeColorId ? (freshMap.get(`color:${activeColorId}`) ?? 9999) : 9999;
+    const freshEffective = Math.max(0, freshStock - cartQty);
+    if (freshEffective === 0 && freshStock !== 9999) {
+      qc.invalidateQueries({ queryKey: ['product_inventory', product.id] });
+      setStockWarning(locale === "ar" ? "نفد المخزون — تم تحديث الكمية" : "אזל מהמלאי — המלאי עודכן");
+      setIsAdding(false);
+      return;
+    }
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
-    await new Promise((r) => setTimeout(r, 600));
-    addToCart(product, Math.min(quantity, maxQty), options);
+    await new Promise((r) => setTimeout(r, 300));
+    addToCart(product, Math.min(quantity, freshEffective), options);
     setQuantity(1);
     setIsAdding(false);
     setAddedConfirm(true);
@@ -217,18 +235,30 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                   </div>
                 </div>
               )}
+              {stockWarning && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />{stockWarning}
+                </div>
+              )}
               {isOutOfStock ? (
                 <div className="w-full h-14 flex items-center justify-center border-2 border-red-200 rounded-xl text-red-500 font-medium text-sm mb-5">
                   אזל מהמלאי
+                </div>
+              ) : cartFull ? (
+                <div className="w-full h-14 flex items-center justify-center border-2 border-amber-200 rounded-xl text-amber-700 font-medium text-sm mb-5">
+                  כל המלאי כבר בסל
                 </div>
               ) : (
                 <>
                   <div className="mb-5">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-foreground">{t("product.quantity")}</span>
-                      {maxQty < 9999 && <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {maxQty}</span>}
+                      <span className="text-xs text-muted-foreground">
+                        {currentStock < 9999 && <>{locale === "ar" ? "متوفر" : "במלאי"}: {effectiveMax}</>}
+                        {cartQty > 0 && <> · {cartQty} {locale === "ar" ? "في السلة" : "בסל"}</>}
+                      </span>
                     </div>
-                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))} max={maxQty} />
+                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, effectiveMax))} max={effectiveMax} />
                   </div>
                   <AnimatePresence mode="wait">
                     {addedConfirm ? (
@@ -312,7 +342,8 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
 /* ─── Contractor Product Page ─── */
 const ContractorProductPage = ({ product, collections, relatedProducts }: { product: ContractorProduct; collections: any[]; relatedProducts: any[] }) => {
   const { t, locale, localePath } = useLocale();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems } = useCart();
+  const qc = useQueryClient();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
@@ -320,6 +351,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
   const [customColorOpen, setCustomColorOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
@@ -367,11 +399,17 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   })();
 
   // Stock for current selection
+  const activeColorId = selectedColor?.id || standardColors[0]?.id || "";
+  const activeSizeLabel = selectedSize || availableSizes[0]?.label || "";
   const currentStock = selectedColor && selectedSizeObj
     ? getComboStock(selectedColor.id, selectedSizeObj.id)
     : 9999;
-  const isOutOfStock = currentStock === 0;
-  const maxQty = isOutOfStock ? 0 : currentStock;
+  const isOutOfStock = !isCustomColor && currentStock === 0;
+  const cartQty = cartItems
+    .filter(i => i.product.id === product.id && (i.options?.size || "") === activeSizeLabel && (i.options?.color?.id || "") === activeColorId)
+    .reduce((sum, i) => sum + i.quantity, 0);
+  const effectiveMax = isOutOfStock ? 0 : isCustomColor ? 9999 : Math.max(0, currentStock - cartQty);
+  const cartFull = !isCustomColor && currentStock > 0 && effectiveMax === 0;
 
   useEffect(() => {
     if (!selectedColor && standardColors.length > 0) {
@@ -392,14 +430,26 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
   const handleAdd = async () => {
+    if (isOutOfStock || effectiveMax === 0) return;
+    setStockWarning(null);
     setIsAdding(true);
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
-    await new Promise((r) => setTimeout(r, 500));
-    const cart = useCart.getState();
-    const key = `${product.id}__${selectedSize || ""}__${colorOption?.id || ""}`;
-    const existing = cart.items.find((i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === key);
-    if (existing) { cart.updateQuantity(key, Math.min(existing.quantity + quantity, 9999)); }
-    else { useCart.setState((state) => ({ items: [...state.items, { product, quantity, options: { color: colorOption, size: selectedSize || undefined } }] })); }
+    // Fresh DB check (skip for custom colors — no stock tracking)
+    if (!isCustomColor) {
+      const { data: freshInv } = await (supabase as any).from('inventory').select('variation_key,stock_quantity').eq('product_id', product.id);
+      const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
+      const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
+      const freshStock = activeColorId && sizeObj ? (freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999) : 9999;
+      const freshEffective = Math.max(0, freshStock - cartQty);
+      if (freshEffective === 0 && freshStock !== 9999) {
+        qc.invalidateQueries({ queryKey: ['product_inventory', product.id] });
+        setStockWarning(locale === "ar" ? "نفد المخزون — تم تحديث الكمية" : "אזל מהמלאי — המלאי עודכן");
+        setIsAdding(false);
+        return;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300));
+    addItem(product, Math.min(quantity, isCustomColor ? 9999 : effectiveMax), { color: colorOption, size: selectedSize || undefined });
     setIsAdding(false);
     setAddedConfirm(true);
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
@@ -484,20 +534,32 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                 </div>
               )}
 
+              {stockWarning && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />{stockWarning}
+                </div>
+              )}
               {isOutOfStock ? (
                 <div className="w-full h-14 flex items-center justify-center border-2 border-red-200 rounded-xl text-red-500 font-medium text-sm mb-4">
                   אזל מהמלאי
+                </div>
+              ) : cartFull ? (
+                <div className="w-full h-14 flex items-center justify-center border-2 border-amber-200 rounded-xl text-amber-700 font-medium text-sm mb-4">
+                  כל המלאי כבר בסל
                 </div>
               ) : (
                 <>
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-medium text-foreground">{t("product.quantity")}</p>
-                      {maxQty < 9999 && maxQty > 0 && (
-                        <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {maxQty}</span>
+                      {!isCustomColor && currentStock < 9999 && effectiveMax > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {locale === "ar" ? "متوفر" : "במלאי"}: {effectiveMax}
+                          {cartQty > 0 && <> · {cartQty} {locale === "ar" ? "في السلة" : "בסל"}</>}
+                        </span>
                       )}
                     </div>
-                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))} max={maxQty} />
+                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, effectiveMax))} max={effectiveMax} />
                   </div>
 
                   <AnimatePresence mode="wait">

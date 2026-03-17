@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { X, Check, AlertCircle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Product, RetailProduct, ContractorProduct } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
@@ -19,7 +19,8 @@ interface QuickBuyModalProps {
 
 export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) => {
   const { t, locale } = useLocale();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems } = useCart();
+  const qc = useQueryClient();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
@@ -27,6 +28,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [customColorOpen, setCustomColorOpen] = useState(false);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   const isRetail = product?.type === "retail";
   const isContractor = product?.type === "contractor";
@@ -107,33 +109,59 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   }, [isRetail, isContractor, isCustomColor, selectedColor, selectedSize, availableSizes, invMap]);
 
   const isOutOfStock = currentStock === 0;
-  const maxQty = isOutOfStock ? 0 : currentStock;
+
+  // Cart-aware effective max: subtract what's already in the cart for this exact combo
+  const activeColorId = selectedColor?.id || standardColors[0]?.id || "";
+  const activeSizeLabel = selectedSize || availableSizes[0]?.label || "";
+  const cartKey = product ? `${product.id}__${activeSizeLabel}__${activeColorId}` : "";
+  const cartQty = cartItems
+    .filter(i => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === cartKey)
+    .reduce((sum, i) => sum + i.quantity, 0);
+  const effectiveMax = isOutOfStock ? 0 : Math.max(0, currentStock - cartQty);
+  const cartFull = currentStock > 0 && effectiveMax === 0;
 
   if (!product) return null;
 
-  const handleAdd = () => {
-    if (isOutOfStock) return;
+  const handleAdd = async () => {
+    if (isOutOfStock || effectiveMax === 0) return;
+    setStockWarning(null);
+
+    // Fresh DB check — catches concurrent purchases by other users
+    const { data: freshInv } = await (supabase as any).from('inventory').select('variation_key,stock_quantity').eq('product_id', product.id);
+    const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
+
+    let freshStock = 9999;
+    if (isRetail && activeColorId) freshStock = freshMap.get(`color:${activeColorId}`) ?? 9999;
+    if (isContractor && !isCustomColor && activeColorId) {
+      const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
+      if (sizeObj) freshStock = freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999;
+    }
+
+    const freshEffective = Math.max(0, freshStock - cartQty);
+    if (freshEffective === 0 && freshStock !== 9999) {
+      qc.invalidateQueries({ queryKey: ['product_inventory', product.id] });
+      setStockWarning(locale === "ar" ? "نفد المخزون — تم تحديث الكمية" : "אזל מהמלאי — המלאי עודכן");
+      return;
+    }
+
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
-    const qty = Math.min(quantity, maxQty);
+    const qty = Math.min(quantity, freshEffective);
 
     if (isContractor) {
       const cart = useCart.getState();
-      const key = `${product.id}__${selectedSize || ""}__${colorOption?.id || ""}`;
+      const key = `${product.id}__${activeSizeLabel}__${colorOption?.id || ""}`;
       const existing = cart.items.find(
         (i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === key
       );
       if (existing) {
-        cart.updateQuantity(key, Math.min(existing.quantity + qty, maxQty));
+        cart.updateQuantity(key, Math.min(existing.quantity + qty, freshEffective));
       } else {
         useCart.setState((state) => ({
-          items: [...state.items, { product, quantity: qty, options: { color: colorOption, size: selectedSize || undefined } }],
+          items: [...state.items, { product, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined } }],
         }));
       }
     } else {
-      addItem(product, qty, {
-        color: colorOption,
-        size: selectedSize || undefined,
-      });
+      addItem(product, qty, { color: colorOption, size: activeSizeLabel || undefined });
     }
 
     setAddedConfirm(true);
@@ -321,17 +349,26 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                 )}
 
                 {/* Quantity */}
-                {!isOutOfStock && (
+                {!isOutOfStock && !cartFull && (
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
                       <p className="text-sm font-medium text-foreground">{t("product.quantity")}</p>
-                      {maxQty < 9999 && <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {maxQty}</span>}
+                      <div className="flex items-center gap-2">
+                        {cartQty > 0 && <span className="text-xs text-amber-600">{locale === "ar" ? `${cartQty} في السلة` : `${cartQty} בסל`}</span>}
+                        {currentStock < 9999 && <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {effectiveMax}</span>}
+                      </div>
                     </div>
                     <QuantitySelector
                       quantity={quantity}
-                      onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))}
-                      max={maxQty}
+                      onQuantityChange={(q) => setQuantity(Math.min(q, effectiveMax))}
+                      max={effectiveMax}
                     />
+                  </div>
+                )}
+                {stockWarning && (
+                  <div className="flex items-center gap-2 text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {stockWarning}
                   </div>
                 )}
               </div>
@@ -342,6 +379,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                   {isOutOfStock ? (
                     <div className="w-full h-12 flex items-center justify-center border-2 border-red-200 rounded-full text-red-500 font-medium text-sm">
                       אזל מהמלאי
+                    </div>
+                  ) : cartFull ? (
+                    <div className="w-full h-12 flex items-center justify-center border-2 border-amber-200 rounded-full text-amber-600 font-medium text-sm">
+                      {locale === "ar" ? "الكمية المتاحة في السلة بالفعل" : "כל המלאי כבר בסל"}
                     </div>
                   ) : addedConfirm ? (
                     <motion.div
