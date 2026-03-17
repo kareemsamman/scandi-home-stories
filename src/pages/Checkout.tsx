@@ -808,7 +808,7 @@ const Checkout = () => {
                         onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); }}
                         onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
                       {!citySelected && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 1 && (
-                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl overflow-hidden">
+                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
                           {cityLoading ? (
                             <div className="p-3 space-y-2">
                               {[80, 60, 72].map((w, i) => (
