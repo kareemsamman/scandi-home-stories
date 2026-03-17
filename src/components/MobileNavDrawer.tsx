@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { collections } from "@/data/products";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 interface MobileNavDrawerProps {
   open: boolean;
@@ -39,26 +40,25 @@ const ChevronCircle = () => (
   </span>
 );
 
-const TikTokIcon = () => (
-  <a href="#" aria-label="TikTok" className="text-foreground/60 hover:text-foreground transition-colors">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.87a8.16 8.16 0 0 0 3.76.92V6.34a4.81 4.81 0 0 1-.01.35z" />
-    </svg>
-  </a>
-);
 
 export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   const { t, locale, localePath } = useLocale();
   const [mounted, setMounted] = useState(false);
   const [animState, setAnimState] = useState<"closed" | "opening" | "open" | "closing">("closed");
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const { data: dbHeader } = useSiteContent("header", locale);
+  const { data: dbFooter } = useSiteContent("footer", locale);
 
-  const navLinks = [
-    { label: t("nav.shop"), href: localePath("/shop") },
-    { label: t("nav.catalog"), href: localePath("/catalog") },
-    { label: t("nav.about"), href: localePath("/about") },
-    { label: t("nav.contact"), href: localePath("/contact") },
-  ];
+  const navLinks = dbHeader?.nav_links?.length
+    ? dbHeader.nav_links.map((l: any) => ({ label: l.label, href: localePath(l.href) }))
+    : [
+        { label: t("nav.shop"), href: localePath("/shop") },
+        { label: t("nav.catalog"), href: localePath("/catalog") },
+        { label: t("nav.about"), href: localePath("/about") },
+        { label: t("nav.contact"), href: localePath("/contact") },
+      ];
+
+  const socialLinks: any[] = dbFooter?.social_links ?? [{ platform: "tiktok", url: "https://www.tiktok.com/@amg.pergola" }];
 
   useEffect(() => {
     if (open) {
@@ -153,8 +153,43 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
             {/* Bottom section */}
             <div className="mt-8 mb-4">
-              <div className="flex items-center justify-start">
-                <TikTokIcon />
+              <div className="flex items-center justify-start gap-4">
+                {socialLinks.map((s: any, i: number) => (
+                  <a
+                    key={i}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.platform}
+                    className="text-foreground/60 hover:text-foreground transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      {s.platform === "tiktok" && (
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.87a8.16 8.16 0 0 0 3.76.92V6.34a4.81 4.81 0 0 1-.01.35z" />
+                      )}
+                      {s.platform === "instagram" && (
+                        <>
+                          <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                          <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                          <circle cx="17.5" cy="6.5" r="1" />
+                        </>
+                      )}
+                      {s.platform === "facebook" && (
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                      )}
+                      {s.platform === "youtube" && (
+                        <>
+                          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                          <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+                        </>
+                      )}
+                      {s.platform === "whatsapp" && (
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      )}
+                      {!["tiktok","instagram","facebook","youtube","whatsapp"].includes(s.platform) && null}
+                    </svg>
+                  </a>
+                ))}
               </div>
               <div className="border-t border-foreground/10 mt-4 pt-4 space-y-1">
                 <Link to={localePath("/account")} onClick={onClose} className="flex items-center justify-between w-full py-2 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors">

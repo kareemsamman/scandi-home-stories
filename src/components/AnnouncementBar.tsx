@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export const AnnouncementBar = () => {
-  const { t } = useLocale();
-  const messages: string[] = t("announcement.messages");
+  const { t, locale } = useLocale();
+  const { data: dbHeader } = useSiteContent("header", locale);
+  const messages: string[] = (
+    dbHeader?.announcement_messages?.length
+      ? dbHeader.announcement_messages.map((m: any) => (typeof m === "string" ? m : m.message))
+      : t("announcement.messages")
+  ) as string[];
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {

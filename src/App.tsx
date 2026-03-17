@@ -32,6 +32,7 @@ import AdminHeroSlides from "./pages/admin/HeroSlides";
 import AdminHomePage from "./pages/admin/HomePage";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
+import AdminSiteContent from "./pages/admin/SiteContent";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="hero-slides" element={<AdminHeroSlides />} />
               <Route path="home" element={<AdminHomePage />} />
+              <Route path="site-content" element={<AdminSiteContent />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>

@@ -8,6 +8,7 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 import { cn } from "@/lib/utils";
 import logoWhite from "@/assets/logo-white.png";
 import { SearchModal } from "./SearchModal";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const SearchIcon = () => (
   <svg role="presentation" strokeWidth="2" focusable="false" width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -51,6 +52,7 @@ export const SiteHeader = () => {
   const itemCount = useCart((s) => s.getItemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { data: dbHeader } = useSiteContent("header", locale);
 
   // Detect homepage: /:locale or /:locale/
   const isHomePage = location.pathname === `/${locale}` || location.pathname === `/${locale}/`;
@@ -102,12 +104,14 @@ export const SiteHeader = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [handleScroll]);
 
-  const navLinks = [
-    { label: t("nav.shop"), href: localePath("/shop") },
-    { label: t("nav.catalog"), href: localePath("/catalog") },
-    { label: t("nav.about"), href: localePath("/about") },
-    { label: t("nav.contact"), href: localePath("/contact") },
-  ];
+  const navLinks = dbHeader?.nav_links?.length
+    ? dbHeader.nav_links.map((l: any) => ({ label: l.label, href: localePath(l.href) }))
+    : [
+        { label: t("nav.shop"), href: localePath("/shop") },
+        { label: t("nav.catalog"), href: localePath("/catalog") },
+        { label: t("nav.about"), href: localePath("/about") },
+        { label: t("nav.contact"), href: localePath("/contact") },
+      ];
 
   // On homepage: transparent at top, frosted on scroll
   // On other pages: solid white background with black text
@@ -133,7 +137,7 @@ export const SiteHeader = () => {
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
                 <img
-                  src={logoWhite}
+                  src={dbHeader?.logo || logoWhite}
                   alt="AMG Pergola"
                   className={cn(
                     "h-16 w-auto transition-all duration-[240ms]",
@@ -221,7 +225,7 @@ export const SiteHeader = () => {
 
             <Link to={localePath("/")} className="absolute start-1/2 -translate-x-1/2 rtl:translate-x-1/2">
               <img
-                src={logoWhite}
+                src={dbHeader?.logo || logoWhite}
                 alt="AMG Pergola"
                 className={cn(
                   "h-9 w-auto transition-all duration-[240ms]",
