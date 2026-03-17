@@ -112,6 +112,101 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_uses: {
+        Row: {
+          coupon_id: string | null
+          discount_amount: number | null
+          id: string
+          order_number: string | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id?: string | null
+          discount_amount?: number | null
+          id?: string
+          order_number?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string | null
+          discount_amount?: number | null
+          id?: string
+          order_number?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_uses_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          category_ids: string[] | null
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          max_uses: number | null
+          max_uses_per_user: number
+          min_order_amount: number
+          product_ids: string[] | null
+          type: string
+          updated_at: string | null
+          uses: number
+          valid_from: string | null
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          category_ids?: string[] | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          max_uses_per_user?: number
+          min_order_amount?: number
+          product_ids?: string[] | null
+          type?: string
+          updated_at?: string | null
+          uses?: number
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Update: {
+          category_ids?: string[] | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          max_uses_per_user?: number
+          min_order_amount?: number
+          product_ids?: string[] | null
+          type?: string
+          updated_at?: string | null
+          uses?: number
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       hero_slide_translations: {
         Row: {
           cta: string | null
@@ -317,9 +412,11 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          locale: string | null
           notes: string | null
           order_number: string
           phone: string
+          receipt_url: string | null
           status: string
           total: number
           updated_at: string | null
@@ -336,9 +433,11 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          locale?: string | null
           notes?: string | null
           order_number: string
           phone?: string
+          receipt_url?: string | null
           status?: string
           total?: number
           updated_at?: string | null
@@ -355,9 +454,11 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          locale?: string | null
           notes?: string | null
           order_number?: string
           phone?: string
+          receipt_url?: string | null
           status?: string
           total?: number
           updated_at?: string | null
@@ -435,6 +536,7 @@ export type Database = {
       }
       product_translations: {
         Row: {
+          content_html: string | null
           description: string | null
           id: string
           length: string | null
@@ -444,6 +546,7 @@ export type Database = {
           product_id: string
         }
         Insert: {
+          content_html?: string | null
           description?: string | null
           id?: string
           length?: string | null
@@ -453,6 +556,7 @@ export type Database = {
           product_id: string
         }
         Update: {
+          content_html?: string | null
           description?: string | null
           id?: string
           length?: string | null
@@ -476,6 +580,9 @@ export type Database = {
           category_id: string | null
           colors: Json | null
           created_at: string | null
+          custom_color_groups: Json | null
+          custom_color_prices: Json | null
+          custom_colors_enabled: boolean | null
           description_ar: string | null
           description_he: string | null
           dimensions: string | null
@@ -491,10 +598,12 @@ export type Database = {
           max_quantity: number | null
           name: string
           price: number
+          product_details: Json | null
           sizes: Json | null
           sku: string | null
           slug: string
           sort_order: number | null
+          status: string
           sub_category_id: string | null
           type: string
           updated_at: string | null
@@ -504,6 +613,9 @@ export type Database = {
           category_id?: string | null
           colors?: Json | null
           created_at?: string | null
+          custom_color_groups?: Json | null
+          custom_color_prices?: Json | null
+          custom_colors_enabled?: boolean | null
           description_ar?: string | null
           description_he?: string | null
           dimensions?: string | null
@@ -519,10 +631,12 @@ export type Database = {
           max_quantity?: number | null
           name: string
           price?: number
+          product_details?: Json | null
           sizes?: Json | null
           sku?: string | null
           slug: string
           sort_order?: number | null
+          status?: string
           sub_category_id?: string | null
           type?: string
           updated_at?: string | null
@@ -532,6 +646,9 @@ export type Database = {
           category_id?: string | null
           colors?: Json | null
           created_at?: string | null
+          custom_color_groups?: Json | null
+          custom_color_prices?: Json | null
+          custom_colors_enabled?: boolean | null
           description_ar?: string | null
           description_he?: string | null
           dimensions?: string | null
@@ -547,10 +664,12 @@ export type Database = {
           max_quantity?: number | null
           name?: string
           price?: number
+          product_details?: Json | null
           sizes?: Json | null
           sku?: string | null
           slug?: string
           sort_order?: number | null
+          status?: string
           sub_category_id?: string | null
           type?: string
           updated_at?: string | null

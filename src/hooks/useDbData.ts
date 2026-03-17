@@ -47,6 +47,7 @@ export interface DbOrder {
   first_name: string; last_name: string; email: string; phone: string;
   city: string; address: string; apartment: string; notes: string;
   created_at: string; updated_at: string;
+  receipt_url: string | null; locale: string | null;
 }
 export interface DbOrderItem {
   id: string; order_id: string; product_id: string | null;
@@ -148,6 +149,12 @@ export const useProductBySlug = (slug: string) =>
         long_description_ar: tm.get(p.id)?.ar?.long_description || p.long_description_ar || "",
         length_he: tm.get(p.id)?.he?.length || p.length_he || "",
         length_ar: tm.get(p.id)?.ar?.length || p.length_ar || "",
+        content_html_he: tm.get(p.id)?.he?.content_html || "",
+        content_html_ar: tm.get(p.id)?.ar?.content_html || "",
+        product_details: Array.isArray(p.product_details) ? p.product_details : [],
+        custom_colors_enabled: p.custom_colors_enabled ?? false,
+        custom_color_groups: Array.isArray(p.custom_color_groups) ? p.custom_color_groups : [],
+        custom_color_prices: p.custom_color_prices ?? null,
       } as DbProduct;
     },
     enabled: !!slug,
