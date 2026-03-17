@@ -82,8 +82,9 @@ const AdminUsers = () => {
     mutationFn: async () => {
       if (!editingUser) return;
       const res = await supabase.functions.invoke("admin-users", {
-        method: "PATCH",
+        method: "PUT",
         body: {
+          action: "update_user",
           userId: editingUser.id,
           firstName: editForm.firstName,
           lastName: editForm.lastName,

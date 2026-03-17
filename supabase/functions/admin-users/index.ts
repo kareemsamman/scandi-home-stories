@@ -116,10 +116,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── PUT: Toggle role / Delete user ───
+    // ─── PUT: Toggle role / Delete user / Update user ───
     if (method === "PUT") {
       const body = await req.json();
-      const { userId, action, role } = body;
+      const { userId, action, role, firstName, lastName, phone, email, newPassword } = body;
 
       if (action === "delete_user") {
         if (userId === user.id) {
@@ -130,56 +130,26 @@ Deno.serve(async (req) => {
         }
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
         if (error) throw error;
+      } else if (action === "update_user") {
+        await supabaseAdmin.from("profiles").update({
+          first_name: firstName || "",
+          last_name: lastName || "",
+          phone: phone || "",
+        }).eq("user_id", userId);
+
+        const authUpdates: Record<string, string> = {};
+        if (email) authUpdates.email = email;
+        if (newPassword) authUpdates.password = newPassword;
+        if (Object.keys(authUpdates).length > 0) {
+          const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdates);
+          if (error) throw error;
+        }
       } else if (action === "add_role") {
         await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
       } else if (action === "remove_role") {
         await supabaseAdmin.from("user_roles").delete().eq("user_id", userId).eq("role", role);
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ─── PATCH: Update user profile + auth ───
-    if (method === "PATCH") {
-      const body = await req.json();
-      const { userId, firstName, lastName, phone, email, newPassword } = body;
-
-      await supabaseAdmin
-        .from("profiles")
-        .update({
-          first_name: firstName || "",
-          last_name: lastName || "",
-          phone: phone || "",
-        })
-        .eq("user_id", userId);
-
-      const authUpdates: Record<string, string> = {};
-      if (email) authUpdates.email = email;
-      if (newPassword) authUpdates.password = newPassword;
-      if (Object.keys(authUpdates).length > 0) {
-        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdates);
-        if (error) throw error;
-      }
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ─── DELETE: Delete user ───
-    if (method === "DELETE") {
-      const body = await req.json();
-      const { userId } = body;
-      if (userId === user.id) {
-        return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-      if (error) throw error;
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
