@@ -33,7 +33,7 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli streets API ---------- */
+/* ---------- Israeli cities — fetch all once, filter client-side ---------- */
 const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
 const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
 
@@ -43,37 +43,50 @@ interface CityStreetResult {
   display: string;
 }
 
-const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
-  try {
-    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=100&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const records = data?.result?.records ?? [];
+// Module-level cache so we only fetch once per page load
+let allCitiesCache: string[] | null = null;
+let fetchPromise: Promise<string[]> | null = null;
 
-    // Collect unique city names only
-    const seen = new Set<string>();
-    const cities: string[] = [];
-    for (const r of records) {
-      const city = ((r["city_name"] as string) || "").trim();
-      if (!city || seen.has(city)) continue;
-      seen.add(city);
-      cities.push(city);
+const loadAllCities = (): Promise<string[]> => {
+  if (allCitiesCache) return Promise.resolve(allCitiesCache);
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = (async () => {
+    try {
+      const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=5000&fields=city_name`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await res.json();
+      const records = data?.result?.records ?? [];
+      const seen = new Set<string>();
+      for (const r of records) {
+        const city = ((r["city_name"] as string) || "").trim();
+        if (city) seen.add(city);
+      }
+      allCitiesCache = [...seen].sort((a, b) => a.localeCompare(b, "he"));
+      return allCitiesCache;
+    } catch {
+      return [];
     }
+  })();
+  return fetchPromise;
+};
 
-    // Sort: starts-with query first, then contains, alphabetical within each group
-    const q = query.trim();
-    cities.sort((a, b) => {
-      const aStarts = a.startsWith(q) ? 0 : 1;
-      const bStarts = b.startsWith(q) ? 0 : 1;
-      if (aStarts !== bStarts) return aStarts - bStarts;
-      return a.localeCompare(b, "he");
-    });
+const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
+  const cities = await loadAllCities();
+  const q = query.trim();
+  const lower = q.toLowerCase();
 
-    return cities.slice(0, 20).map((city) => ({ city, street: "", display: city }));
-  } catch {
-    return [];
+  const starts: string[] = [];
+  const contains: string[] = [];
+  for (const city of cities) {
+    const cl = city.toLowerCase();
+    if (cl.startsWith(lower)) starts.push(city);
+    else if (cl.includes(lower)) contains.push(city);
   }
+
+  return [...starts, ...contains]
+    .slice(0, 20)
+    .map((city) => ({ city, street: "", display: city }));
 };
 
 /* ---------- validation ---------- */
@@ -299,6 +312,9 @@ const Checkout = () => {
   }, [showSkeleton, step]);
 
 
+  // Preload cities as soon as the form mounts
+  useEffect(() => { loadAllCities(); }, []);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (citySelected) return;
@@ -309,7 +325,7 @@ const Checkout = () => {
       const results = await fetchCityStreets(cityQuery.trim());
       setCitySuggestions(results);
       setCityLoading(false);
-    }, 300);
+    }, 150);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [cityQuery, citySelected]);
 
