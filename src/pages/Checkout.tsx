@@ -9,6 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useProfile } from "@/hooks/useProfile";
 import { useOrders } from "@/hooks/useOrders";
+import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
+import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import logoWhite from "@/assets/logo-white.png";
 
 /* ---------- icons ---------- */
@@ -181,6 +183,9 @@ const Checkout = () => {
   const profileData = useProfile((s) => s.profile);
   const addOrder = useOrders((s) => s.addOrder);
 
+  const { data: shippingSettings } = useShippingSettings();
+  const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
+
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
 
@@ -207,6 +212,7 @@ const Checkout = () => {
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
+  const [selectedZone, setSelectedZone] = useState<keyof ShippingSettings["zones"] | "">("");
 
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
@@ -236,7 +242,9 @@ const Checkout = () => {
   const discountInputRef = useRef<HTMLInputElement>(null);
 
   const discountAmount = discountApplied ? 10 : 0;
-  const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
+  const isFreeShipping = subtotal - discountAmount >= shipping.threshold;
+  const shippingCost = isFreeShipping || !selectedZone ? 0 : shipping.zones[selectedZone];
+  const totalAfterDiscount = Math.max(0, subtotal - discountAmount) + shippingCost;
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSkeleton(false), 1000);
@@ -467,7 +475,13 @@ const Checkout = () => {
         )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.shipping")}</span>
-          <span className="font-medium">{t("cart.complimentary")}</span>
+          <span className={`font-medium ${shippingCost === 0 && selectedZone ? "text-green-600" : ""}`}>
+            {!selectedZone && !isFreeShipping
+              ? "—"
+              : shippingCost === 0
+              ? t("cart.complimentary")
+              : `${t("common.currency")}${shippingCost.toLocaleString()}`}
+          </span>
         </div>
       </div>
       <div className="border-t border-border mt-4 pt-4">
@@ -699,6 +713,8 @@ const Checkout = () => {
                           }));
                           setCityQuery(addr.city);
                           setCitySelected(true);
+                          const z = detectZoneFromCity(addr.city);
+                          if (z) setSelectedZone(z);
                         }
                       }}
                       className="w-full h-[48px] px-4 rounded-lg border border-border bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
@@ -720,7 +736,7 @@ const Checkout = () => {
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {citySuggestions.map((result, idx) => (
                             <button key={`${result.display}-${idx}`} type="button" className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                              onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); }}>
+                              onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
                               {result.display}
                             </button>
                           ))}
@@ -735,13 +751,46 @@ const Checkout = () => {
                 {/* Shipping Method */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingMethod")}</h2>
-                  <div className="rounded-lg border border-border bg-white p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold">{t("checkout.freeDelivery")}</p>
-                      <p className="text-xs text-muted-foreground">{t("checkout.deliveryTime")}</p>
+                  {isFreeShipping ? (
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-green-700">{t("checkout.freeDelivery")}</p>
+                        <p className="text-xs text-green-600">{(t("checkout.shippingFreeAbove") as string).replace("{amount}", shipping.threshold.toLocaleString())}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-green-700">{t("cart.complimentary")}</span>
                     </div>
-                    <span className="text-sm font-semibold">{t("cart.complimentary")}</span>
-                  </div>
+                  ) : (
+                    <div className="rounded-lg border border-border bg-white p-4 space-y-3">
+                      <p className="text-sm font-semibold">{t("checkout.shippingZone")}</p>
+                      {!citySelected ? (
+                        <p className="text-xs text-muted-foreground">{t("checkout.shippingZoneNote")}</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {(["north", "center", "south", "jerusalem"] as const).map((zone) => (
+                            <label key={zone} className="flex items-center justify-between p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/30 transition-colors has-[:checked]:border-foreground has-[:checked]:bg-muted/20">
+                              <div className="flex items-center gap-2.5">
+                                <input
+                                  type="radio"
+                                  name="shipping_zone"
+                                  value={zone}
+                                  checked={selectedZone === zone}
+                                  onChange={() => setSelectedZone(zone)}
+                                  className="accent-foreground"
+                                />
+                                <span className="text-sm font-medium">{(t("checkout.shippingZoneNames") as any)[zone]}</span>
+                              </div>
+                              <span className="text-sm font-semibold">{t("common.currency")}{shipping.zones[zone].toLocaleString()}</span>
+                            </label>
+                          ))}
+                          {!isFreeShipping && (
+                            <p className="text-xs text-muted-foreground pt-1">
+                              {(t("checkout.shippingFreeAbove") as string).replace("{amount}", shipping.threshold.toLocaleString())}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Payment Method */}

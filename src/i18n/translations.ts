@@ -225,6 +225,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailMarketing: 'שלח לי עדכונים, מבצעים והטבות בדוא״ל',
       acceptPrivacy: 'אני מאשר שקראתי ואני מסכים ל',
       loginLink: 'התחברות',
+      shippingZone: 'אזור משלוח',
+      shippingZonePlaceholder: 'בחרו אזור',
+      shippingZoneNote: 'הזינו עיר תחילה',
+      shippingFreeAbove: 'משלוח חינם בהזמנות מעל ₪{amount}',
+      shippingZoneNames: {
+        north: 'צפון',
+        center: 'מרכז',
+        south: 'דרום',
+        jerusalem: 'ירושלים',
+      },
     },
     payment: {
       title: 'השלמת תשלום',
@@ -649,6 +659,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailMarketing: 'أرسل لي تحديثات وعروض وخصومات عبر البريد الإلكتروني',
       acceptPrivacy: 'أقر بأنني قرأت وأوافق على',
       loginLink: 'تسجيل الدخول',
+      shippingZone: 'منطقة الشحن',
+      shippingZonePlaceholder: 'اختر المنطقة',
+      shippingZoneNote: 'أدخل المدينة أولاً',
+      shippingFreeAbove: 'شحن مجاني للطلبات فوق ₪{amount}',
+      shippingZoneNames: {
+        north: 'شمال',
+        center: 'مركاز',
+        south: 'جنوب',
+        jerusalem: 'القدس',
+      },
     },
     payment: {
       title: 'إتمام الدفع',
