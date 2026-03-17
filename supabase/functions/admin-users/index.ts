@@ -46,9 +46,9 @@ Deno.serve(async (req) => {
           email: u.email,
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at,
-          first_name: profile?.first_name || "",
-          last_name: profile?.last_name || "",
-          phone: profile?.phone || "",
+          first_name: profile?.first_name || u.user_metadata?.first_name || "",
+          last_name: profile?.last_name || u.user_metadata?.last_name || "",
+          phone: profile?.phone || u.user_metadata?.phone || "",
           roles: userRoles,
         };
       });
@@ -76,7 +76,12 @@ Deno.serve(async (req) => {
 
       if (createError) throw createError;
 
-      // The trigger auto-creates profile + customer role.
+      // The trigger auto-creates profile with first/last name but skips phone.
+      // Update profile explicitly to store phone.
+      if (phone) {
+        await supabaseAdmin.from("profiles").update({ phone, first_name: firstName || "", last_name: lastName || "" }).eq("user_id", newUser.user.id);
+      }
+
       // Add extra role if not customer.
       if (role && role !== "customer") {
         await supabaseAdmin.from("user_roles").upsert(
