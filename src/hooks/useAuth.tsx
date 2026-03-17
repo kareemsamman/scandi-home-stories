@@ -70,13 +70,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // THEN get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // THEN get initial session — await roles before clearing loading
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchRoles(session.user.id);
+        await Promise.all([fetchProfile(session.user.id), fetchRoles(session.user.id)]);
       }
       setLoading(false);
     });

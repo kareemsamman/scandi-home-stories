@@ -104,11 +104,11 @@ const AdminUsers = () => {
             <Input placeholder="Last Name" value={newUser.lastName} onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} />
+            <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} autoComplete="off" />
             <Input placeholder="Phone" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input placeholder="Password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} />
+            <Input placeholder="Password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} autoComplete="new-password" />
             <Select value={newUser.role} onValueChange={(v) => setNewUser({ ...newUser, role: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -129,7 +129,7 @@ const AdminUsers = () => {
 
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="ps-10" />
+        <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="ps-10" autoComplete="off" />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
