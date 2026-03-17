@@ -105,7 +105,7 @@ export const useProducts = () =>
     queryKey: ["products"],
     queryFn: async () => {
       const [{ data: prods }, { data: trans }] = await Promise.all([
-        supabase.from("products").select("*").order("sort_order"),
+        supabase.from("products").select("*").or("status.eq.published,status.is.null").order("sort_order"),
         db.from("product_translations").select("*"),
       ]);
       const tm = buildTransMap(trans, "product_id");

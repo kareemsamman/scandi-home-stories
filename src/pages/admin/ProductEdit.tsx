@@ -584,12 +584,9 @@ const ProductEdit = () => {
             <Input type="number" value={base.price} onChange={(e) => setBase((p: any) => ({ ...p, price: +e.target.value }))} />
           </Field>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <Field label="SKU">
             <Input value={base.sku} onChange={(e) => setBase((p: any) => ({ ...p, sku: e.target.value }))} />
-          </Field>
-          <Field label="Sort Order">
-            <Input type="number" value={base.sort_order} onChange={(e) => setBase((p: any) => ({ ...p, sort_order: +e.target.value }))} />
           </Field>
           <Field label="Materials">
             <Input value={base.materials} onChange={(e) => setBase((p: any) => ({ ...p, materials: e.target.value }))} />

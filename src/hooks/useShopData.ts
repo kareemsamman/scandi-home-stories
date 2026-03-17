@@ -81,8 +81,8 @@ export const useShopData = () => {
         sku: p.sku || "",
         length: { he: p.length_he || "", ar: p.length_ar || "" },
         sizes: ((p.sizes as any[]) || []).map((s: any) => ({
-          id: s.id || s.label,
-          label: s.label,
+          id: s.tax_id || s.id || s.value || s.label,
+          label: s.label_he || s.value || s.label || "",
           price: s.price ? Number(s.price) : undefined,
         })) as SizeOption[],
         colorGroups,
@@ -97,8 +97,8 @@ export const useShopData = () => {
       type: "retail" as const,
       dimensions: p.dimensions || undefined,
       colors: ((p.colors as any[]) || []).map((c: any) => ({
-        id: c.id || c.hex,
-        name: { he: c.name_he || c.name?.he || "", ar: c.name_ar || c.name?.ar || "" },
+        id: c.tax_id || c.id || c.hex,
+        name: { he: c.label_he || c.name_he || c.name?.he || "", ar: c.label_ar || c.name_ar || c.name?.ar || "" },
         hex: c.hex,
       })) as ColorOption[],
     } as RetailProduct;
