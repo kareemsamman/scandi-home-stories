@@ -205,7 +205,6 @@ const Checkout = () => {
   const [cityQuery, setCityQuery] = useState("");
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
@@ -283,13 +282,6 @@ const Checkout = () => {
     if (!showSkeleton && step === "form") firstInputRef.current?.focus();
   }, [showSkeleton, step]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setShowCitySuggestions(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -813,9 +805,9 @@ const Checkout = () => {
                   <div className="space-y-3">
                     <div ref={cityRef} className="relative">
                       <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
-                        onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); }}
-                        onFocus={() => setShowCitySuggestions(true)} onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
-                      {showCitySuggestions && !citySelected && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 1 && (
+                        onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); }}
+                        onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
+                      {!citySelected && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 1 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl overflow-hidden">
                           {cityLoading ? (
                             <div className="p-3 space-y-2">
@@ -829,7 +821,7 @@ const Checkout = () => {
                             citySuggestions.map((result, idx) => (
                               <button key={`${result.display}-${idx}`} type="button"
                                 className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/40 transition-colors border-b border-border/40 last:border-0"
-                                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
+                                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
                                 {result.display}
                               </button>
                             ))
