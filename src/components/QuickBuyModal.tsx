@@ -210,20 +210,14 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header with product image + info */}
-              <div className="flex items-start gap-4 p-5 border-b border-border">
+              <div className="flex items-center gap-4 p-5 border-b border-border">
                 <img
                   src={product.images[0]}
                   alt={product.name}
-                  className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-border"
+                  className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-border"
                 />
                 <div className="flex-1 min-w-0">
-                  <button
-                    onClick={onClose}
-                    className="absolute top-4 end-4 w-8 h-8 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <h3 className="text-base font-bold text-foreground">{product.name}</h3>
+                  <h3 className="text-base font-bold text-foreground pe-8">{product.name}</h3>
                   {contractor && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {t("contractor.sku")}: {contractor.sku}
@@ -233,6 +227,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                     {t("common.currency")}{currentPrice.toLocaleString()}
                   </p>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 border border-border transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: isMobile ? '58vh' : '50vh' }}>
@@ -278,8 +278,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                               }
                             }}
                             className={cn(
-                              "relative w-10 h-10 rounded border-2 transition-all",
-                              isActive ? "border-foreground scale-110" : colorOos ? "border-border opacity-50 cursor-not-allowed" : "border-border hover:border-muted-foreground"
+                              "relative w-10 h-10 rounded-xl border-2 transition-all",
+                              isActive
+                                ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
+                                : colorOos
+                                ? "border-border opacity-50 cursor-not-allowed"
+                                : "border-border/60 hover:border-foreground/40 hover:scale-105"
                             )}
                             style={{ backgroundColor: color.hex }}
                             title={color.name[locale]}
@@ -322,7 +326,9 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                         const sizeStock = cId ? getComboStock(cId, size.id) : 9999;
                         const sizeOos = sizeStock === 0;
                         const isActive = selectedSize === size.label || (!selectedSize && size.id === availableSizes[0].id);
-                        const sizePrice = cId ? (activeColorObj as any)?.combo_prices?.[size.id] : undefined;
+                        const sizePrice = isCustomColor
+                          ? selectedColor?.prices?.[size.id]
+                          : cId ? (activeColorObj as any)?.combo_prices?.[size.id] : undefined;
                         return (
                           <button
                             key={size.id}
@@ -434,6 +440,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
         }}
         colorGroups={customColorGroups}
         selectedColorId={selectedColor?.id}
+        selectedSizeId={availableSizes.find(s => s.label === (selectedSize || availableSizes[0]?.label))?.id}
       />
     </>
   );

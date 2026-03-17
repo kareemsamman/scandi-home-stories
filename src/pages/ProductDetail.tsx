@@ -220,15 +220,22 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                     {product.colors.map((color) => {
                       const colorStock = getColorStock(color.id);
                       const colorOos = colorStock === 0;
+                      const isActive = selectedColor?.id === color.id;
                       return (
                         <button
                           key={color.id}
                           onClick={() => { if (!colorOos) { setSelectedColor(color); setQuantity(1); } }}
-                          className={cn("relative w-9 h-9 rounded-full border-2 transition-all", selectedColor?.id === color.id ? "border-foreground scale-110" : colorOos ? "border-border opacity-50 cursor-not-allowed" : "border-border hover:border-muted-foreground")}
+                          className={cn("relative w-10 h-10 rounded-xl border-2 transition-all",
+                            isActive
+                              ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
+                              : colorOos
+                              ? "border-border/60 opacity-50 cursor-not-allowed"
+                              : "border-border/60 hover:border-foreground/40 hover:scale-105"
+                          )}
                           style={{ backgroundColor: color.hex }}
                           title={color.name[locale]}
                         >
-                          {colorOos && <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden"><div className="w-full h-px bg-red-400 rotate-[-45deg]" /></div>}
+                          {colorOos && <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden"><div className="w-full h-px bg-red-400 rotate-[-45deg]" /></div>}
                         </button>
                       );
                     })}
@@ -496,7 +503,19 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                   <div className={cn("flex gap-2.5 flex-wrap", isCustomColor && "opacity-40 pointer-events-none")}>
                     {standardColors.map((color) => {
                       const isActive = !isCustomColor && (selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id));
-                      return (<button key={color.id} onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setIsCustomColor(false); }} className={cn("w-10 h-10 rounded border-2 transition-all", isActive ? "border-foreground scale-110" : "border-border hover:border-muted-foreground")} style={{ backgroundColor: color.hex }} title={color.name[locale]} />);
+                      return (
+                        <button
+                          key={color.id}
+                          onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setIsCustomColor(false); }}
+                          className={cn("w-10 h-10 rounded-xl border-2 transition-all",
+                            isActive
+                              ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
+                              : "border-border/60 hover:border-foreground/40 hover:scale-105"
+                          )}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name[locale]}
+                        />
+                      );
                     })}
                   </div>
                   {hasCustomColors && (<button onClick={() => setCustomColorOpen(true)} className="mt-3 px-5 py-3 text-sm font-semibold rounded-xl w-full bg-foreground text-background hover:opacity-90 transition-opacity">{t("contractor.customColor")}</button>)}
@@ -631,14 +650,21 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
         </section>
       )}
 
-      <CustomColorModal open={customColorOpen} onClose={() => setCustomColorOpen(false)} onSelect={(color) => {
-        setSelectedColor(color);
-        setIsCustomColor(true);
-        if (color.prices) {
-          const firstSize = product.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
-          if (firstSize) setSelectedSize(firstSize.label);
-        }
-      }} colorGroups={customColorGroups} selectedColorId={selectedColor?.id} />
+      <CustomColorModal
+        open={customColorOpen}
+        onClose={() => setCustomColorOpen(false)}
+        onSelect={(color) => {
+          setSelectedColor(color);
+          setIsCustomColor(true);
+          if (color.prices) {
+            const firstSize = product.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
+            if (firstSize) setSelectedSize(firstSize.label);
+          }
+        }}
+        colorGroups={customColorGroups}
+        selectedColorId={selectedColor?.id}
+        selectedSizeId={selectedSizeObj?.id}
+      />
       <AnimatePresence>{lightboxOpen && (<ImageLightbox images={product.images} startIndex={lightboxStart} onClose={() => setLightboxOpen(false)} />)}</AnimatePresence>
     </Layout>
   );

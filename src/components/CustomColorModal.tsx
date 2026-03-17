@@ -12,9 +12,10 @@ interface CustomColorModalProps {
   onSelect: (color: { id: string; name: string; hex: string; prices?: Record<string, number> }) => void;
   colorGroups: ColorGroup[];
   selectedColorId?: string;
+  selectedSizeId?: string; // to show price for the active size under each color
 }
 
-export const CustomColorModal = ({ open, onClose, onSelect, colorGroups, selectedColorId }: CustomColorModalProps) => {
+export const CustomColorModal = ({ open, onClose, onSelect, colorGroups, selectedColorId, selectedSizeId }: CustomColorModalProps) => {
   const { t, locale } = useLocale();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(0);
@@ -123,25 +124,38 @@ export const CustomColorModal = ({ open, onClose, onSelect, colorGroups, selecte
                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 pt-2">
                   {filteredColors.map((color) => {
                     const isActive = selectedColorId === color.id;
+                    const prices = (color as any).prices as Record<string, number> | undefined;
+                    const displayPrice = selectedSizeId && prices?.[selectedSizeId]
+                      ? prices[selectedSizeId]
+                      : prices ? Math.min(...Object.values(prices)) : null;
                     return (
                       <button
                         key={color.id}
                         onClick={() => handleSelect(color)}
                         className={cn(
-                          "flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all",
-                          isActive ? "border-foreground bg-muted" : "border-transparent hover:border-border"
+                          "flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all",
+                          isActive
+                            ? "border-foreground bg-foreground/5 shadow-sm"
+                            : "border-transparent hover:border-border hover:bg-muted/40"
                         )}
                       >
                         <span
                           className={cn(
-                            "w-10 h-10 rounded-lg border",
-                            isActive ? "border-foreground ring-2 ring-foreground/20" : "border-border"
+                            "w-11 h-11 rounded-xl border-2 transition-all relative",
+                            isActive
+                              ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105"
+                              : "border-border/60"
                           )}
                           style={{ backgroundColor: color.hex }}
                         />
-                        <span className="text-[10px] font-medium text-foreground leading-tight text-center line-clamp-2">
+                        <span className="text-[10px] font-medium text-foreground leading-tight text-center line-clamp-2 mt-0.5">
                           {color.name[locale]}
                         </span>
+                        {displayPrice != null && (
+                          <span className={cn("text-[10px] font-semibold", isActive ? "text-foreground" : "text-muted-foreground")}>
+                            ₪{displayPrice}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
