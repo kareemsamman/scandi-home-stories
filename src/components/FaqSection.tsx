@@ -6,11 +6,19 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 export const FaqSection = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
   const faq = t("faq");
-  if (!faq?.items) return null;
+  const { data: dbData } = useHomeContent("faq", locale);
+
+  const title = dbData?.title || faq.title;
+  const subtitle = dbData?.subtitle || faq.subtitle;
+  const contactText = dbData?.contact_text || faq.contactText;
+  const items = dbData?.items?.length ? dbData.items : faq.items;
+
+  if (!items) return null;
 
   return (
     <section className="py-16 md:py-24 bg-surface">
@@ -25,10 +33,10 @@ export const FaqSection = () => {
             className="md:col-span-4"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              {faq.title}
+              {title}
             </h2>
-            <p className="text-muted-foreground mb-6">{faq.subtitle}</p>
-            <p className="text-sm text-muted-foreground">{faq.contactText}</p>
+            <p className="text-muted-foreground mb-6">{subtitle}</p>
+            <p className="text-sm text-muted-foreground">{contactText}</p>
           </motion.div>
 
           {/* Accordion */}
@@ -40,7 +48,7 @@ export const FaqSection = () => {
             className="md:col-span-8"
           >
             <Accordion type="single" collapsible className="w-full">
-              {faq.items.map((item: any, index: number) => (
+              {items.map((item: any, index: number) => (
                 <AccordionItem key={index} value={`item-${index}`} className="border-b border-border">
                   <AccordionTrigger className="text-start py-5 text-base font-medium hover:no-underline">
                     {item.question}

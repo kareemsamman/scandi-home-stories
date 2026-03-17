@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 export const BeforeAfterSection = () => {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { data: dbData } = useHomeContent("before_after", locale);
   const [position, setPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -42,9 +44,9 @@ export const BeforeAfterSection = () => {
           className="text-center mb-8"
         >
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {t("beforeAfter.title")}
+            {dbData?.title || t("beforeAfter.title")}
           </h2>
-          <p className="text-sm text-muted-foreground">{t("beforeAfter.subtitle")}</p>
+          <p className="text-sm text-muted-foreground">{dbData?.subtitle || t("beforeAfter.subtitle")}</p>
         </motion.div>
 
         <div
@@ -56,8 +58,8 @@ export const BeforeAfterSection = () => {
         >
           {/* After (full) */}
           <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"
-            alt={t("beforeAfter.after")}
+            src={dbData?.after_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"}
+            alt={dbData?.after_label || t("beforeAfter.after")}
             className="absolute inset-0 w-full h-full object-cover"
           />
 
@@ -67,8 +69,8 @@ export const BeforeAfterSection = () => {
             style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           >
             <img
-              src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"
-              alt={t("beforeAfter.before")}
+              src={dbData?.before_image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"}
+              alt={dbData?.before_label || t("beforeAfter.before")}
               className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
@@ -85,10 +87,10 @@ export const BeforeAfterSection = () => {
 
           {/* Labels */}
           <span className="absolute top-4 start-4 px-3 py-1 bg-black/50 text-white text-xs rounded-md z-10">
-            {t("beforeAfter.before")}
+            {dbData?.before_label || t("beforeAfter.before")}
           </span>
           <span className="absolute top-4 end-4 px-3 py-1 bg-black/50 text-white text-xs rounded-md z-10">
-            {t("beforeAfter.after")}
+            {dbData?.after_label || t("beforeAfter.after")}
           </span>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { ArrowLeft } from "lucide-react";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 const promoImages = [
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
@@ -10,8 +11,9 @@ const promoImages = [
 ];
 
 export const PromoCardGrid = () => {
-  const { t, localePath } = useLocale();
-  const promos: any[] = t("promos");
+  const { t, localePath, locale } = useLocale();
+  const { data: dbData } = useHomeContent("promo_grid", locale);
+  const promos: any[] = (dbData?.items?.length ? dbData.items : t("promos")) as any[];
   if (!Array.isArray(promos)) return null;
 
   return (
@@ -27,11 +29,11 @@ export const PromoCardGrid = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Link
-                to={localePath("/shop")}
+                to={localePath(promo.link || "/shop")}
                 className="block relative h-[320px] md:h-[400px] rounded-lg overflow-hidden group"
               >
                 <img
-                  src={promoImages[index % promoImages.length]}
+                  src={promo.image || promoImages[index % promoImages.length]}
                   alt={promo.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                   loading="lazy"

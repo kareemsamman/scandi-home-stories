@@ -1,12 +1,23 @@
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
-import { Shield, Droplets, Zap, Award } from "lucide-react";
+import { Shield, Droplets, Zap, Award, Star, Check } from "lucide-react";
+import { useHomeContent } from "@/hooks/useHomeContent";
 
 const icons = [Shield, Droplets, Zap, Award];
 
+const ICON_MAP: Record<string, any> = {
+  shield: Shield,
+  droplets: Droplets,
+  zap: Zap,
+  award: Award,
+  star: Star,
+  check: Check,
+};
+
 export const FeatureOverlaySection = () => {
-  const { t } = useLocale();
-  const features = t("features");
+  const { t, locale } = useLocale();
+  const { data: dbData } = useHomeContent("feature_overlay", locale);
+  const features = dbData && dbData.title ? dbData : t("features");
 
   if (!features?.items) return null;
 
@@ -15,7 +26,7 @@ export const FeatureOverlaySection = () => {
       <div className="section-container">
         <div className="relative rounded-lg overflow-hidden min-h-[500px] md:min-h-[600px]">
           <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"
+            src={dbData?.bg_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
@@ -40,7 +51,7 @@ export const FeatureOverlaySection = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 {features.items.map((item: any, index: number) => {
-                  const Icon = icons[index % icons.length];
+                  const Icon = ICON_MAP[item.icon] || icons[index % icons.length];
                   return (
                     <div key={index} className="text-center">
                       <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-primary/10 flex items-center justify-center">
