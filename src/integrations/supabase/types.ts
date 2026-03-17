@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -346,6 +364,36 @@ export type Database = {
           },
         ]
       }
+      marketing_subscribers: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          locale: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          locale?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          locale?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           color_hex: string | null
@@ -413,6 +461,7 @@ export type Database = {
           id: string
           last_name: string
           locale: string | null
+          marketing_opt_in: boolean | null
           notes: string | null
           order_number: string
           phone: string
@@ -434,6 +483,7 @@ export type Database = {
           id?: string
           last_name?: string
           locale?: string | null
+          marketing_opt_in?: boolean | null
           notes?: string | null
           order_number: string
           phone?: string
@@ -455,6 +505,7 @@ export type Database = {
           id?: string
           last_name?: string
           locale?: string | null
+          marketing_opt_in?: boolean | null
           notes?: string | null
           order_number?: string
           phone?: string
