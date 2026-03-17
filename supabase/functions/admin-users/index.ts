@@ -2,62 +2,112 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+};
+
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const upsertProfile = async (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  firstName: string,
+  lastName: string,
+  phone: string,
+) => {
+  const { data: existingProfile, error: lookupError } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (lookupError && lookupError.code !== "PGRST116") {
+    throw lookupError;
+  }
+
+  if (existingProfile?.id) {
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({ first_name: firstName, last_name: lastName, phone })
+      .eq("id", existingProfile.id);
+    if (updateError) throw updateError;
+    return;
+  }
+
+  const { error: insertError } = await supabaseAdmin
+    .from("profiles")
+    .insert({ user_id: userId, first_name: firstName, last_name: lastName, phone });
+  if (insertError) throw insertError;
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    // Verify caller is admin
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
+    if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+      return jsonResponse({ error: "Missing backend configuration" }, 500);
+    }
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
     const {
       data: { user },
       error: authError,
-    } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
+    } = await userClient.auth.getUser();
+
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const { data: roleData } = await supabaseAdmin
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin");
+
+    if (roleError) throw roleError;
+
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Forbidden" }, 403);
     }
 
-    const method = req.method;
-
-    // ─── GET: List all users ───
-    if (method === "GET") {
+    if (req.method === "GET") {
       const {
         data: { users },
         error,
       } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       if (error) throw error;
 
-      const { data: profiles } = await supabaseAdmin.from("profiles").select("*");
-      const { data: roles } = await supabaseAdmin.from("user_roles").select("*");
+      const [{ data: profiles, error: profilesError }, { data: roles, error: rolesError }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("user_id, first_name, last_name, phone"),
+        supabaseAdmin.from("user_roles").select("user_id, role"),
+      ]);
+
+      if (profilesError) throw profilesError;
+      if (rolesError) throw rolesError;
 
       const enriched = users.map((u: any) => {
         const profile = profiles?.find((p: any) => p.user_id === u.id);
         const userRoles = roles?.filter((r: any) => r.user_id === u.id).map((r: any) => r.role) || [];
+
         return {
           id: u.id,
           email: u.email,
@@ -65,108 +115,112 @@ Deno.serve(async (req) => {
           last_sign_in_at: u.last_sign_in_at,
           first_name: profile?.first_name || u.user_metadata?.first_name || "",
           last_name: profile?.last_name || u.user_metadata?.last_name || "",
-          phone: profile?.phone || u.user_metadata?.phone || "",
+          phone: profile?.phone || u.user_metadata?.phone || u.phone || "",
           roles: userRoles,
         };
       });
 
-      return new Response(JSON.stringify(enriched), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(enriched);
     }
 
-    // ─── POST: Create user ───
-    if (method === "POST") {
+    if (req.method === "POST") {
       const body = await req.json();
       const { email, password, firstName, lastName, phone, role } = body;
 
       if (!email || !password) {
-        return new Response(JSON.stringify({ error: "Email and password are required" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Email and password are required" }, 400);
       }
+
+      const first = firstName || "";
+      const last = lastName || "";
+      const phoneValue = phone || "";
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { first_name: firstName || "", last_name: lastName || "", phone: phone || "" },
+        user_metadata: { first_name: first, last_name: last, phone: phoneValue },
       });
 
-      if (createError) throw createError;
+      if (createError || !newUser.user) throw createError || new Error("Failed to create user");
 
-      // The trigger auto-creates profile with first/last name but skips phone.
-      // Update profile explicitly to store phone.
-      if (phone) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({ phone, first_name: firstName || "", last_name: lastName || "" })
-          .eq("user_id", newUser.user.id);
-      }
+      await upsertProfile(supabaseAdmin, newUser.user.id, first, last, phoneValue);
 
-      // Add extra role if not customer.
       if (role && role !== "customer") {
-        await supabaseAdmin
+        const { error: roleUpsertError } = await supabaseAdmin
           .from("user_roles")
           .upsert({ user_id: newUser.user.id, role }, { onConflict: "user_id,role" });
+        if (roleUpsertError) throw roleUpsertError;
       }
 
-      return new Response(JSON.stringify({ success: true, userId: newUser.user.id }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ success: true, userId: newUser.user.id });
     }
 
-    // ─── PUT: Toggle role / Delete user / Update user ───
-    if (method === "PUT") {
+    if (req.method === "PUT") {
       const body = await req.json();
       const { userId, action, role, firstName, lastName, phone, email, newPassword } = body;
 
-      if (action === "delete_user") {
-        if (userId === user.id) {
-          return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-        if (error) throw error;
-      } else if (action === "update_user") {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            first_name: firstName || "",
-            last_name: lastName || "",
-            phone: phone || "",
-          })
-          .eq("user_id", userId);
-
-        const authUpdates: Record<string, string> = {};
-        if (email) authUpdates.email = email;
-        if (newPassword) authUpdates.password = newPassword;
-        if (Object.keys(authUpdates).length > 0) {
-          const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdates);
-          if (error) throw error;
-        }
-      } else if (action === "add_role") {
-        await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
-      } else if (action === "remove_role") {
-        await supabaseAdmin.from("user_roles").delete().eq("user_id", userId).eq("role", role);
+      if (!userId || !action) {
+        return jsonResponse({ error: "Missing required fields" }, 400);
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (action === "delete_user") {
+        if (userId === user.id) {
+          return jsonResponse({ error: "Cannot delete yourself" }, 400);
+        }
+
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        if (deleteError) throw deleteError;
+
+        return jsonResponse({ success: true });
+      }
+
+      if (action === "update_user") {
+        const first = firstName || "";
+        const last = lastName || "";
+        const phoneValue = phone || "";
+
+        await upsertProfile(supabaseAdmin, userId, first, last, phoneValue);
+
+        const authUpdatePayload: Record<string, unknown> = {
+          user_metadata: { first_name: first, last_name: last, phone: phoneValue },
+        };
+
+        if (email) authUpdatePayload.email = email;
+        if (newPassword) authUpdatePayload.password = newPassword;
+
+        const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdatePayload);
+        if (updateAuthError) throw updateAuthError;
+
+        return jsonResponse({ success: true });
+      }
+
+      if (action === "add_role") {
+        const { error: addRoleError } = await supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
+        if (addRoleError) throw addRoleError;
+
+        return jsonResponse({ success: true });
+      }
+
+      if (action === "remove_role") {
+        const { error: removeRoleError } = await supabaseAdmin
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", role);
+        if (removeRoleError) throw removeRoleError;
+
+        return jsonResponse({ success: true });
+      }
+
+      return jsonResponse({ error: "Unknown action" }, 400);
     }
 
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Method not allowed" }, 405);
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("admin-users error", err);
+    return jsonResponse({ error: err?.message || "Unknown error" }, 500);
   }
 });
