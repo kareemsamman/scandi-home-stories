@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminUser {
   id: string; email: string; created_at: string; last_sign_in_at: string | null;
@@ -16,6 +17,7 @@ const ROLES = ["admin", "worker", "customer"] as const;
 
 const AdminUsers = () => {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -63,10 +65,11 @@ const AdminUsers = () => {
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
       const res = await supabase.functions.invoke("admin-users", {
-        method: "DELETE",
-        body: { userId },
+        method: "PUT",
+        body: { action: "delete_user", userId },
       });
       if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "User deleted" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -177,13 +180,15 @@ const AdminUsers = () => {
                     {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }}
-                      disabled={deleteMutation.isPending}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {u.id !== currentUser?.id && (
+                      <button
+                        onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }}
+                        disabled={deleteMutation.isPending}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

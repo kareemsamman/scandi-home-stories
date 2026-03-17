@@ -90,12 +90,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── PUT: Toggle role ───
+    // ─── PUT: Toggle role / Delete user ───
     if (method === "PUT") {
       const body = await req.json();
       const { userId, action, role } = body;
 
-      if (action === "add_role") {
+      if (action === "delete_user") {
+        if (userId === user.id) {
+          return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        if (error) throw error;
+      } else if (action === "add_role") {
         await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
       } else if (action === "remove_role") {
         await supabaseAdmin.from("user_roles").delete().eq("user_id", userId).eq("role", role);
