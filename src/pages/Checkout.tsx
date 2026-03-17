@@ -226,6 +226,7 @@ const Checkout = () => {
       city: defaultAddr?.city || "",
       address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : "",
       apartment: defaultAddr?.apartment || "",
+      note: "",
     };
   });
 
@@ -373,6 +374,7 @@ const Checkout = () => {
       date: orderDate,
       total: totalAfterDiscount,
       status: "pending",
+      notes: form.note || undefined,
       items: items.map((item) => ({
         name: item.product.name,
         image: item.product.images[0],
@@ -749,6 +751,18 @@ const Checkout = () => {
                     <p className="text-sm font-semibold mb-2">{t("checkout.bankTransfer")}</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">{t("checkout.bankTransferNote")}</p>
                   </div>
+                </div>
+
+                {/* Order Note */}
+                <div>
+                  <h2 className="text-lg font-bold mb-4">{t("checkout.orderNote")}</h2>
+                  <textarea
+                    value={form.note}
+                    onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
+                    placeholder={t("checkout.orderNotePlaceholder")}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-white text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors resize-none"
+                  />
                 </div>
 
                 {/* Privacy */}

@@ -194,6 +194,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       paymentMethod: 'אמצעי תשלום',
       bankTransfer: 'העברה בנקאית',
       bankTransferNote: 'לאחר ביצוע ההזמנה תקבלו הוראות להעברה בנקאית במייל. ההזמנה תטופל לאחר אישור התשלום.',
+      orderNote: 'הערה להזמנה',
+      orderNotePlaceholder: 'הוסיפו הערה מיוחדת להזמנה (אופציונלי)',
       placeOrder: 'ביצוע הזמנה',
       submitting: 'שולח...',
       successTitle: 'ההזמנה התקבלה',
@@ -402,7 +404,6 @@ export const translations: Record<Locale, Record<string, any>> = {
       buyWith: 'קנו יחד עם',
       add: 'הוסף',
       taxNote: 'מיסים ומשלוח יחושבו בתשלום',
-      orderNote: 'הוסיפו הערה להזמנה',
       viewCart: 'צפייה בסל',
     },
     search: {
@@ -617,6 +618,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       paymentMethod: 'طريقة الدفع',
       bankTransfer: 'تحويل بنكي',
       bankTransferNote: 'بعد تقديم الطلب ستتلقى تعليمات التحويل البنكي عبر البريد الإلكتروني. سيتم معالجة طلبك بعد تأكيد الدفع.',
+      orderNote: 'ملاحظة للطلب',
+      orderNotePlaceholder: 'أضف ملاحظة خاصة للطلب (اختياري)',
       placeOrder: 'تأكيد الطلب',
       submitting: 'جاري الإرسال...',
       successTitle: 'تم استلام الطلب',
@@ -825,7 +828,6 @@ export const translations: Record<Locale, Record<string, any>> = {
       buyWith: 'اشترِ مع',
       add: 'أضف',
       taxNote: 'الضرائب والشحن تُحسب عند الدفع',
-      orderNote: 'أضف ملاحظة للطلب',
       viewCart: 'عرض السلة',
     },
     search: {

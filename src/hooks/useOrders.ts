@@ -17,6 +17,7 @@ export interface Order {
   total: number;
   status: "pending" | "confirmed" | "shipped" | "delivered";
   items: OrderItem[];
+  notes?: string;
   shippingAddress?: {
     firstName: string;
     lastName: string;

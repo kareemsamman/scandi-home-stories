@@ -219,9 +219,6 @@ export const MiniCart = () => {
           <span className="text-sm font-semibold">{t("common.currency")}{subtotal.toLocaleString()}</span>
         </div>
         <p className="text-[11px] text-muted-foreground">{t("miniCart.taxNote")}</p>
-        <button className="text-xs underline text-muted-foreground hover:text-foreground transition-colors">
-          {t("miniCart.orderNote")}
-        </button>
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
