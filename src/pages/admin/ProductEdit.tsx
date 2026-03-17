@@ -276,7 +276,10 @@ const ColorVariantCard = ({
 const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef(value);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [isPreview, setIsPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -298,24 +301,43 @@ const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange:
     if (editorRef.current) { innerRef.current = editorRef.current.innerHTML; onChange(editorRef.current.innerHTML); }
   };
 
-  const insertImage = () => {
-    const url = prompt("Image URL:");
-    if (url) exec("insertHTML", `<img src="${url}" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="" />`);
+  const uploadAndInsert = async (file: File, type: "image" | "video") => {
+    setUploading(true);
+    try {
+      const path = `content/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+      const { error } = await supabase.storage.from("site-media").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("site-media").getPublicUrl(path);
+      if (type === "image") {
+        exec("insertHTML", `<img src="${publicUrl}" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="" />`);
+      } else {
+        exec("insertHTML", `<video src="${publicUrl}" controls style="max-width:100%;border-radius:8px;margin:8px 0;"></video>`);
+      }
+    } catch (e: any) {
+      alert("Upload failed: " + e.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const insertVideo = () => {
-    const url = prompt("YouTube URL or video URL:");
-    if (!url) return;
-    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
-    if (ytMatch) {
-      exec("insertHTML", `<div style="position:relative;padding-bottom:56.25%;height:0;margin:8px 0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`);
+    const url = prompt("YouTube URL (or leave blank to upload a video file):");
+    if (url) {
+      const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
+      if (ytMatch) {
+        exec("insertHTML", `<div style="position:relative;padding-bottom:56.25%;height:0;margin:8px 0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`);
+      } else {
+        exec("insertHTML", `<video src="${url}" controls style="max-width:100%;border-radius:8px;margin:8px 0;"></video>`);
+      }
     } else {
-      exec("insertHTML", `<video src="${url}" controls style="max-width:100%;border-radius:8px;margin:8px 0;"></video>`);
+      videoInputRef.current?.click();
     }
   };
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAndInsert(f, "image"); e.target.value = ""; }} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAndInsert(f, "video"); e.target.value = ""; }} />
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 p-2 bg-gray-50 border-b border-gray-200 flex-wrap">
         {[
@@ -332,8 +354,10 @@ const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange:
           </button>
         ))}
         <div className="w-px h-4 bg-gray-300 mx-1" />
-        <button onClick={insertImage} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1">📷 Image</button>
-        <button onClick={insertVideo} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1">▶ Video</button>
+        <button onClick={() => imageInputRef.current?.click()} disabled={uploading} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1 disabled:opacity-50">
+          📷 {uploading ? "Uploading…" : "Image"}
+        </button>
+        <button onClick={insertVideo} disabled={uploading} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1 disabled:opacity-50">▶ Video</button>
         <button onClick={() => { const url = prompt("Link URL:"); if (url) exec("createLink", url); }} className="px-2 py-1 text-xs hover:bg-gray-200 rounded">🔗 Link</button>
         <button onClick={() => exec("removeFormat")} className="px-2 py-1 text-xs hover:bg-gray-200 rounded text-gray-500">Clear</button>
         <div className="w-px h-4 bg-gray-300 mx-1" />
@@ -820,13 +844,6 @@ const ProductEdit = () => {
           <Field label={locale === "he" ? "תיאור מורחב" : "وصف مفصل"}>
             <Textarea value={currentTrans.long_description} onChange={(e) => setCurrentTrans(p => ({ ...p, long_description: e.target.value }))} rows={4} />
           </Field>
-          <Field label={locale === "he" ? "תוכן ויזואלי (HTML)" : "محتوى مرئي (HTML)"}>
-            <HtmlEditor
-              value={currentTrans.content_html}
-              onChange={(v) => setCurrentTrans(p => ({ ...p, content_html: v }))}
-              placeholder={locale === "he" ? "הכנס טקסט, תמונות, סרטונים..." : "أدخل نصاً، صوراً، مقاطع فيديو..."}
-            />
-          </Field>
         </div>
       </Section>
 
@@ -887,58 +904,69 @@ const ProductEdit = () => {
 
       {/* Product Details Repeater */}
       <Section title="Product Details (פרטי המוצר)">
-        <div className="space-y-2">
+        <div className="space-y-3">
+          {/* Column headers */}
+          {productDetails.length > 0 && (
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-3 px-1">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{locale === "he" ? "תווית" : "التسمية"}</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{locale === "he" ? "ערך" : "القيمة"}</span>
+              <span />
+            </div>
+          )}
           {productDetails.map((detail, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center">
+            <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
               <Input
-                value={detail.label_he}
-                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, label_he: e.target.value } : d))}
-                placeholder="Label (HE) e.g. חומר"
-                className="h-8 text-sm"
-                dir="rtl"
+                value={locale === "he" ? detail.label_he : detail.label_ar}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx
+                  ? locale === "he" ? { ...d, label_he: e.target.value } : { ...d, label_ar: e.target.value }
+                  : d))}
+                placeholder={locale === "he" ? "e.g. חומר" : "e.g. مادة"}
+                className="h-9 text-sm bg-white"
+                dir={locale === "he" ? "rtl" : "rtl"}
               />
               <Input
-                value={detail.value_he}
-                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, value_he: e.target.value } : d))}
-                placeholder="Value (HE) e.g. אלומיניום"
-                className="h-8 text-sm"
-                dir="rtl"
-              />
-              <Input
-                value={detail.label_ar}
-                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, label_ar: e.target.value } : d))}
-                placeholder="Label (AR) e.g. مادة"
-                className="h-8 text-sm"
-                dir="rtl"
-              />
-              <Input
-                value={detail.value_ar}
-                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, value_ar: e.target.value } : d))}
-                placeholder="Value (AR) e.g. ألومنيوم"
-                className="h-8 text-sm"
-                dir="rtl"
+                value={locale === "he" ? detail.value_he : detail.value_ar}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx
+                  ? locale === "he" ? { ...d, value_he: e.target.value } : { ...d, value_ar: e.target.value }
+                  : d))}
+                placeholder={locale === "he" ? "e.g. אלומיניום" : "e.g. ألومنيوم"}
+                className="h-9 text-sm bg-white"
+                dir={locale === "he" ? "rtl" : "rtl"}
               />
               <button
                 onClick={() => setProductDetails(prev => prev.filter((_, i) => i !== idx))}
-                className="text-red-400 hover:text-red-600 shrink-0"
+                className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           ))}
           {productDetails.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-3">No product details yet. Add rows below.</p>
+            <div className="text-center py-6 text-gray-400 text-sm border border-dashed border-gray-200 rounded-xl">
+              No details yet — add a row to get started.
+            </div>
           )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setProductDetails(prev => [...prev, { label_he: "", label_ar: "", value_he: "", value_ar: "" }])}
-            className="w-full border-dashed"
+            className="w-full border-dashed h-10 text-gray-500"
           >
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add Detail Row
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Row
           </Button>
         </div>
-        <p className="text-xs text-gray-400">Fill HE + AR columns. Leave blank fields empty — blank rows won't show on front-end.</p>
+        <p className="text-xs text-gray-400 mt-1">
+          {locale === "he" ? "ערכים ריקים לא יוצגו בחנות. עבור לכרטיסיית AR למילוי ערבית." : "القيم الفارغة لن تظهر في المتجر."}
+        </p>
+      </Section>
+
+      {/* Visual Content (HTML) */}
+      <Section title={locale === "he" ? "תוכן ויזואלי (HTML)" : "محتوى مرئي (HTML)"}>
+        <HtmlEditor
+          value={currentTrans.content_html}
+          onChange={(v) => setCurrentTrans(p => ({ ...p, content_html: v }))}
+          placeholder={locale === "he" ? "הכנס טקסט, תמונות, סרטונים..." : "أدخل نصاً، صوراً، مقاطع فيديو..."}
+        />
       </Section>
 
       {/* Images */}
