@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle } from "lucide-react";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
-  useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting,
+  useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
   type BankSettings, type SmsSettings, type SmsMessages,
 } from "@/hooks/useAppSettings";
 import { useToast } from "@/hooks/use-toast";
@@ -59,6 +59,17 @@ const AdminSettings = () => {
   const saveSms = useSaveSetting("sms");
   const [sms, setSms] = useState<SmsSettings>({ user: "", token: "", source: "", admin_phone: "", enabled: true });
   useEffect(() => { if (dbSms) setSms(dbSms); }, [dbSms]);
+
+  const [testPhone, setTestPhone] = useState("");
+  const [testStatus, setTestStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
+
+  const handleTestSms = async () => {
+    if (!testPhone.trim()) return;
+    setTestStatus("sending");
+    const ok = await sendSms(testPhone, `✅ SMS test from AMG Admin — 019 API is working!`);
+    setTestStatus(ok ? "ok" : "fail");
+    setTimeout(() => setTestStatus("idle"), 4000);
+  };
 
   /* SMS messages */
   const { data: dbMsgs } = useSmsMessages();
@@ -204,6 +215,39 @@ const AdminSettings = () => {
               placeholder="JWT token..." />
           </Field>
           <SaveBtn tab="sms" />
+
+          {/* Test SMS */}
+          <div className="border-t border-gray-100 pt-5">
+            <p className="text-sm font-semibold text-gray-700 mb-1">Send Test SMS</p>
+            <p className="text-xs text-gray-400 mb-3">Send a test message to verify the API is working correctly</p>
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                value={testPhone}
+                onChange={e => setTestPhone(e.target.value)}
+                placeholder="05XXXXXXXX"
+                className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+              />
+              <button
+                onClick={handleTestSms}
+                disabled={!testPhone.trim() || testStatus === "sending"}
+                className="flex items-center gap-2 px-4 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                {testStatus === "sending" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : testStatus === "ok" ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : testStatus === "fail" ? (
+                  <XCircle className="w-4 h-4 text-red-500" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                {testStatus === "sending" ? "Sending…" : testStatus === "ok" ? "Sent!" : testStatus === "fail" ? "Failed" : "Send Test"}
+              </button>
+            </div>
+            {testStatus === "ok" && <p className="text-xs text-green-600 mt-1.5">✓ Message sent successfully to {testPhone}</p>}
+            {testStatus === "fail" && <p className="text-xs text-red-500 mt-1.5">✗ Failed — check your credentials and deploy the edge function</p>}
+          </div>
         </div>
       )}
 
