@@ -228,51 +228,114 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 
 const SECTIONS = ["feature_overlay", "promo_grid", "brand_intro", "lifestyle_media", "before_after", "faq"] as const;
 
-const defaultFeatureOverlay = () => ({
-  bg_image: "",
-  title: "",
-  description: "",
-  items: [
-    { icon: "shield", title: "", description: "" },
-    { icon: "droplets", title: "", description: "" },
-    { icon: "zap", title: "", description: "" },
-    { icon: "award", title: "", description: "" },
-  ],
-});
+// Seeded defaults from current static translations — shown when no DB data exists yet
+const SEED_CONTENT: Record<string, Record<string, any>> = {
+  he: {
+    feature_overlay: {
+      bg_image: "",
+      title: "למה AMG?",
+      description: "הנדסה גרמנית, ייצור ישראלי, התקנה מקצועית",
+      items: [
+        { icon: "shield", title: "אלומיניום פרימיום", description: "חומרים עמידים לכל מזג אוויר" },
+        { icon: "droplets", title: "ניקוז מובנה", description: "מערכת ניקוז גשם משולבת" },
+        { icon: "zap", title: "שליטה חכמה", description: "מנוע חשמלי או ידני" },
+        { icon: "award", title: "אחריות מורחבת", description: "10 שנות אחריות מלאה" },
+      ],
+    },
+    promo_grid: {
+      items: [
+        { title: "הדגמים הפופולריים", subtitle: "הנמכרים ביותר שלנו", image: "", link: "/shop" },
+        { title: "עמידות מקסימלית", subtitle: "מערכות לכל מזג אוויר", image: "", link: "/shop" },
+        { title: "ייעוץ אישי", subtitle: "מצאו את הפרגולה המושלמת", image: "", link: "/shop" },
+      ],
+    },
+    brand_intro: {
+      title: "חיי חוץ. ללא פשרות.",
+      description: "AMG Pergola מתכננת, מייצרת ומתקינה פרגולות ומערכות הצללה מתקדמות. אנחנו מאמינים שהמרחב החיצוני שלכם ראוי לאותה רמת איכות, עיצוב והנדסה כמו הבית עצמו.",
+    },
+    lifestyle_media: {
+      image: "",
+      title: "חוויית חיים בחוץ",
+      description: "מרחב שמשלב נוחות, עיצוב ועמידות — להנאה בכל עונה.",
+      cta: "ראו פרויקטים",
+      cta_link: "/shop",
+    },
+    before_after: {
+      title: "לפני ואחרי",
+      subtitle: "גררו את הסליידר כדי לראות את ההבדל",
+      before_label: "לפני",
+      after_label: "אחרי",
+      before_image: "",
+      after_image: "",
+    },
+    faq: {
+      title: "שאלות נפוצות",
+      subtitle: "יש שאלה? אנחנו כאן לעזור.",
+      contact_text: "לא מצאתם תשובה? צרו קשר ונשמח לסייע.",
+      items: [
+        { question: "כמה זמן לוקחת ההתקנה?", answer: "התקנה סטנדרטית לוקחת בין יום אחד לשלושה ימים, בהתאם לגודל ולמורכבות הפרויקט." },
+        { question: "מאילו חומרים הפרגולות עשויות?", answer: "אלומיניום פרימיום בציפוי אלקטרוסטטי, עמיד לקורוזיה, UV ומזג אוויר קיצוני." },
+        { question: "האם הפרגולות עמידות בגשם?", answer: "בהחלט. פרגולות הלמלות המוטוריות כוללות מערכת ניקוז מובנית ואטימה מלאה." },
+        { question: "מה כוללת האחריות?", answer: "10 שנות אחריות על המבנה ו-5 שנים על המנועים והמערכות החשמליות." },
+        { question: "האם אתם מבצעים התקנה בכל הארץ?", answer: "כן, אנו מבצעים התקנות בכל רחבי ישראל עם צוות מקצועי." },
+      ],
+    },
+  },
+  ar: {
+    feature_overlay: {
+      bg_image: "",
+      title: "لماذا AMG؟",
+      description: "هندسة ألمانية، تصنيع إسرائيلي، تركيب احترافي",
+      items: [
+        { icon: "shield", title: "ألمنيوم فاخر", description: "مواد متينة لجميع الأحوال الجوية" },
+        { icon: "droplets", title: "تصريف مدمج", description: "نظام تصريف مياه الأمطار متكامل" },
+        { icon: "zap", title: "تحكم ذكي", description: "محرك كهربائي أو يدوي" },
+        { icon: "award", title: "ضمان ممتد", description: "10 سنوات ضمان شامل" },
+      ],
+    },
+    promo_grid: {
+      items: [
+        { title: "النماذج الأكثر شعبية", subtitle: "الأكثر مبيعاً لدينا", image: "", link: "/shop" },
+        { title: "متانة قصوى", subtitle: "أنظمة لجميع الأحوال الجوية", image: "", link: "/shop" },
+        { title: "استشارة شخصية", subtitle: "اعثر على البرجولة المثالية", image: "", link: "/shop" },
+      ],
+    },
+    brand_intro: {
+      title: "حياة في الهواء الطلق. بدون تنازلات.",
+      description: "AMG Pergola تصمم وتصنع وتركب برجولات وأنظمة تظليل متقدمة. نؤمن بأن مساحتكم الخارجية تستحق نفس مستوى الجودة والتصميم.",
+    },
+    lifestyle_media: {
+      image: "",
+      title: "تجربة الحياة في الهواء الطلق",
+      description: "مساحة تجمع بين الراحة والتصميم والمتانة.",
+      cta: "شاهد المشاريع",
+      cta_link: "/shop",
+    },
+    before_after: {
+      title: "قبل وبعد",
+      subtitle: "اسحب المقبض لرؤية الفرق",
+      before_label: "قبل",
+      after_label: "بعد",
+      before_image: "",
+      after_image: "",
+    },
+    faq: {
+      title: "الأسئلة الشائعة",
+      subtitle: "لديك سؤال؟ نحن هنا للمساعدة.",
+      contact_text: "لم تجد إجابة؟ تواصل معنا.",
+      items: [
+        { question: "كم يستغرق التركيب؟", answer: "التركيب القياسي يستغرق من يوم إلى ثلاثة أيام، حسب الحجم والتعقيد." },
+        { question: "من أي مواد تصنع البرجولات؟", answer: "ألمنيوم فاخر بطلاء إلكتروستاتيكي، مقاوم للتآكل والأشعة فوق البنفسجية." },
+        { question: "هل البرجولات مقاومة للمطر؟", answer: "بالتأكيد. تشمل نظام تصريف مدمج وعزل كامل." },
+        { question: "ماذا يشمل الضمان؟", answer: "10 سنوات على الهيكل و5 سنوات على المحركات والأنظمة الكهربائية." },
+        { question: "هل تقومون بالتركيب في جميع أنحاء البلاد؟", answer: "نعم، في جميع أنحاء إسرائيل مع فريق متخصص." },
+      ],
+    },
+  },
+};
 
-const defaultPromoGrid = () => ({
-  items: [
-    { title: "", subtitle: "", image: "", link: "/shop" },
-    { title: "", subtitle: "", image: "", link: "/shop" },
-    { title: "", subtitle: "", image: "", link: "/shop" },
-  ],
-});
-
-const defaultBrandIntro = () => ({ title: "", description: "" });
-
-const defaultLifestyleMedia = () => ({
-  image: "",
-  title: "",
-  description: "",
-  cta: "",
-  cta_link: "/shop",
-});
-
-const defaultBeforeAfter = () => ({
-  title: "",
-  subtitle: "",
-  before_label: "",
-  after_label: "",
-  before_image: "",
-  after_image: "",
-});
-
-const defaultFaq = () => ({
-  title: "",
-  subtitle: "",
-  contact_text: "",
-  items: [{ question: "", answer: "" }],
-});
+const getSeed = (locale: string, section: string) =>
+  SEED_CONTENT[locale]?.[section] ?? SEED_CONTENT.he[section];
 
 const AdminHomePage = () => {
   const { locale } = useAdminLanguage();
@@ -280,12 +343,12 @@ const AdminHomePage = () => {
   const queryClient = useQueryClient();
   const [initialized, setInitialized] = useState(false);
 
-  const [featureOverlay, setFeatureOverlay] = useState<any>(defaultFeatureOverlay());
-  const [promoGrid, setPromoGrid] = useState<any>(defaultPromoGrid());
-  const [brandIntro, setBrandIntro] = useState<any>(defaultBrandIntro());
-  const [lifestyleMedia, setLifestyleMedia] = useState<any>(defaultLifestyleMedia());
-  const [beforeAfter, setBeforeAfter] = useState<any>(defaultBeforeAfter());
-  const [faqData, setFaqData] = useState<any>(defaultFaq());
+  const [featureOverlay, setFeatureOverlay] = useState<any>(getSeed("he", "feature_overlay"));
+  const [promoGrid, setPromoGrid] = useState<any>(getSeed("he", "promo_grid"));
+  const [brandIntro, setBrandIntro] = useState<any>(getSeed("he", "brand_intro"));
+  const [lifestyleMedia, setLifestyleMedia] = useState<any>(getSeed("he", "lifestyle_media"));
+  const [beforeAfter, setBeforeAfter] = useState<any>(getSeed("he", "before_after"));
+  const [faqData, setFaqData] = useState<any>(getSeed("he", "faq"));
 
   const { data: allContent, isLoading } = useQuery({
     queryKey: ["home_content_all", locale],
@@ -305,12 +368,12 @@ const AdminHomePage = () => {
 
   useEffect(() => {
     if (!allContent) return;
-    setFeatureOverlay(allContent["feature_overlay"] ?? defaultFeatureOverlay());
-    setPromoGrid(allContent["promo_grid"] ?? defaultPromoGrid());
-    setBrandIntro(allContent["brand_intro"] ?? defaultBrandIntro());
-    setLifestyleMedia(allContent["lifestyle_media"] ?? defaultLifestyleMedia());
-    setBeforeAfter(allContent["before_after"] ?? defaultBeforeAfter());
-    setFaqData(allContent["faq"] ?? defaultFaq());
+    setFeatureOverlay(allContent["feature_overlay"] ?? getSeed(locale, "feature_overlay"));
+    setPromoGrid(allContent["promo_grid"] ?? getSeed(locale, "promo_grid"));
+    setBrandIntro(allContent["brand_intro"] ?? getSeed(locale, "brand_intro"));
+    setLifestyleMedia(allContent["lifestyle_media"] ?? getSeed(locale, "lifestyle_media"));
+    setBeforeAfter(allContent["before_after"] ?? getSeed(locale, "before_after"));
+    setFaqData(allContent["faq"] ?? getSeed(locale, "faq"));
     setInitialized(true);
   }, [allContent, locale]);
 
