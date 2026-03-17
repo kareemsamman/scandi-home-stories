@@ -35,6 +35,7 @@ import AdminHomePage from "./pages/admin/HomePage";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSiteContent from "./pages/admin/SiteContent";
+import ProductEdit from "./pages/admin/ProductEdit";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="pages" element={<AdminPages />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="products" element={<AdminProducts />} />
+              <Route path="products/edit/:productId" element={<ProductEdit />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="hero-slides" element={<AdminHeroSlides />} />

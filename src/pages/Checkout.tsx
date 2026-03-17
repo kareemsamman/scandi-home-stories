@@ -178,8 +178,7 @@ const Checkout = () => {
   const getItemCount = useCart((s) => s.getItemCount);
   const getItemKey = useCart((s) => s.getItemKey);
   const clearCart = useCart((s) => s.clearCart);
-  const savedAddresses = useAddresses((s) => s.addresses);
-  const getDefaultAddress = useAddresses((s) => s.getDefault);
+  const { data: savedAddresses = [] } = useAddresses();
   const { user, profile: authProfile, signOut } = useAuth();
   const addOrderMutation = useAddOrder();
 
@@ -257,7 +256,7 @@ const Checkout = () => {
   // When auth profile loads → fill contact + address fields
   useEffect(() => {
     if (user && authProfile) {
-      const defaultAddr = getDefaultAddress();
+      const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
       setForm((prev) => ({
         ...prev,
         firstName: authProfile.first_name || prev.firstName,

@@ -2,13 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, MapPin, LogOut, Plus, Pencil, Trash2, Star, ChevronLeft, ChevronRight, Loader2, Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
-import { useAddresses, SavedAddress } from "@/hooks/useAddresses";
-import { useProfile } from "@/hooks/useProfile";
+import { useAddresses, useAddAddress, useUpdateAddress, useRemoveAddress, useSetDefaultAddress, SavedAddress } from "@/hooks/useAddresses";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ---------- Israeli streets API ---------- */
 const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
@@ -81,6 +80,46 @@ const FloatingInput = ({
   );
 };
 
+/* ---------- Password Field with eye toggle ---------- */
+const PasswordField = ({
+  label, value, onChange, show, onToggle, error,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  show: boolean; onToggle: () => void; error?: string;
+}) => {
+  const [focused, setFocused] = useState(false);
+  const isActive = focused || value.length > 0;
+  return (
+    <div>
+      <div className="relative">
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder=" "
+          className={`w-full h-[48px] px-4 pt-4 pb-1 pe-11 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
+            error ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
+          }`}
+        />
+        <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
+          isActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+        }`}>{label}</label>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+};
+
 type Tab = "orders" | "addresses" | "profile";
 
 const Account = () => {
@@ -89,12 +128,11 @@ const Account = () => {
   const [activeTab, setActiveTab] = useState<Tab>("orders");
   const { user, loading, signOut, profile: authProfile } = useAuth();
 
-  const addresses = useAddresses((s) => s.addresses);
-  const addAddress = useAddresses((s) => s.addAddress);
-  const updateAddress = useAddresses((s) => s.updateAddress);
-  const removeAddress = useAddresses((s) => s.removeAddress);
-  const setDefault = useAddresses((s) => s.setDefault);
-  const updateProfile = useProfile((s) => s.updateProfile);
+  const { data: addresses = [], isLoading: addrLoading } = useAddresses();
+  const addAddress = useAddAddress();
+  const updateAddress = useUpdateAddress();
+  const removeAddress = useRemoveAddress();
+  const setDefault = useSetDefaultAddress();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -165,9 +203,16 @@ const Account = () => {
             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeTab === "orders" && <OrdersTab />}
               {activeTab === "addresses" && (
-                <AddressesTab addresses={addresses} onAdd={addAddress} onUpdate={updateAddress} onRemove={removeAddress} onSetDefault={setDefault} />
+                <AddressesTab
+                  addresses={addresses}
+                  isLoading={addrLoading}
+                  onAdd={(a) => addAddress.mutate(a)}
+                  onUpdate={(id, u) => updateAddress.mutate({ id, updates: u })}
+                  onRemove={(id) => removeAddress.mutate(id)}
+                  onSetDefault={(id) => setDefault.mutate(id)}
+                />
               )}
-              {activeTab === "profile" && <ProfileTab profile={profile} onUpdate={updateProfile} />}
+              {activeTab === "profile" && <ProfileTab profile={profile} />}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -275,13 +320,14 @@ const OrdersTab = () => {
 /* ============ ADDRESSES TAB ============ */
 interface AddressesTabProps {
   addresses: SavedAddress[];
+  isLoading: boolean;
   onAdd: (address: Omit<SavedAddress, "id">) => void;
   onUpdate: (id: string, data: Partial<SavedAddress>) => void;
   onRemove: (id: string) => void;
   onSetDefault: (id: string) => void;
 }
 
-const AddressesTab = ({ addresses, onAdd, onUpdate, onRemove, onSetDefault }: AddressesTabProps) => {
+const AddressesTab = ({ addresses, isLoading, onAdd, onUpdate, onRemove, onSetDefault }: AddressesTabProps) => {
   const { t } = useLocale();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -481,33 +527,27 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
 };
 
 /* ============ PROFILE TAB ============ */
-interface ProfileTabProps {
-  profile: { firstName: string; lastName: string; email: string; phone: string };
-  onUpdate: (data: Partial<{ firstName: string; lastName: string; email: string; phone: string }>) => void;
-}
-
-const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
+const ProfileTab = ({ profile }: { profile: { firstName: string; lastName: string; email: string; phone: string } }) => {
   const { t } = useLocale();
   const { user, refreshProfile } = useAuth();
   const [form, setForm] = useState({ ...profile });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Password change state
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  // Password change
+  const [pwForm, setPwForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
-  const [pwSaved, setPwSaved] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState("");
 
   useEffect(() => {
     setForm({ ...profile });
-  }, [profile]);
+  }, [profile.firstName, profile.lastName, profile.email, profile.phone]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -534,116 +574,103 @@ const ProfileTab = ({ profile, onUpdate }: ProfileTabProps) => {
     if (!validate() || !user) return;
     setSaving(true);
     setSaveError("");
-    setSaved(false);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ first_name: form.firstName, last_name: form.lastName, phone: form.phone })
-      .eq("user_id", user.id);
-    setSaving(false);
-    if (error) {
-      setSaveError("שגיאה בשמירה, נסה שנית");
-    } else {
-      onUpdate(form);
+    try {
+      const { error } = await supabase.from("profiles").update({
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        phone: form.phone.trim(),
+      }).eq("user_id", user.id);
+      if (error) throw error;
       await refreshProfile();
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaveError(t("account.saveError") || "שגיאה בשמירה");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validatePw = (): boolean => {
     const errs: Record<string, string> = {};
-    if (newPassword.length < 6) errs.newPassword = "הסיסמה חייבת להיות לפחות 6 תווים";
-    if (newPassword !== confirmPassword) errs.confirmPassword = "הסיסמאות אינן תואמות";
+    if (!pwForm.newPassword) errs.newPassword = t("account.passwordRequired") || "נדרשת סיסמה";
+    else if (pwForm.newPassword.length < 6) errs.newPassword = t("account.passwordTooShort") || "לפחות 6 תווים";
+    if (pwForm.newPassword !== pwForm.confirmPassword) errs.confirmPassword = t("account.passwordMismatch") || "הסיסמאות אינן תואמות";
     setPwErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    return Object.keys(errs).length === 0;
+  };
 
+  const handlePwSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePw()) return;
     setPwSaving(true);
     setPwError("");
-    setPwSaved(false);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setPwSaving(false);
-    if (error) {
-      setPwError(error.message || "שגיאה בעדכון הסיסמה");
-    } else {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pwForm.newPassword });
+      if (error) throw error;
       setPwSaved(true);
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setPwSaved(false), 3000);
+      setPwForm({ newPassword: "", confirmPassword: "" });
+      setTimeout(() => setPwSaved(false), 2500);
+    } catch (err: unknown) {
+      setPwError((err as { message?: string })?.message || t("account.saveError") || "שגיאה בשמירה");
+    } finally {
+      setPwSaving(false);
     }
   };
 
   return (
-    <div className="max-w-lg space-y-6">
-      {/* Personal Info Card */}
+    <div className="space-y-6 max-w-lg">
+      {/* Personal info */}
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4">
-        <h2 className="text-lg font-bold mb-2">{t("account.personalInfo")}</h2>
-        <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={handleChange} type="email" inputMode="email" disabled error={errors.email} />
+        <h2 className="text-lg font-bold">{t("account.personalInfo")}</h2>
+        <FloatingInput name="email" label={t("account.username")} value={form.email} onChange={() => {}} type="email" disabled />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
           <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
         </div>
         <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
-        <div className="flex items-center gap-3 pt-2">
-          <button type="submit" disabled={saving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50">
+        {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+        <div className="flex items-center gap-3 pt-1">
+          <button type="submit" disabled={saving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("account.saveChanges")}
           </button>
           {saved && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
-              ✓ נשמר
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 font-medium">
+              ✓ {t("account.saved")}
             </motion.span>
           )}
-          {saveError && <span className="text-sm text-red-500 font-medium">{saveError}</span>}
         </div>
       </form>
 
-      {/* Password Change Card */}
-      <form onSubmit={handlePasswordSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4">
-        <h2 className="text-lg font-bold mb-2">שינוי סיסמה</h2>
-        <div>
-          <div className="relative">
-            <input
-              type={showNew ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); if (pwErrors.newPassword) setPwErrors((p) => ({ ...p, newPassword: "" })); }}
-              placeholder="סיסמה חדשה"
-              className={`peer w-full h-[48px] px-4 pe-12 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
-                pwErrors.newPassword ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
-              }`}
-            />
-            <button type="button" onClick={() => setShowNew(!showNew)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1">
-              {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          {pwErrors.newPassword && <p className="text-xs text-red-500 mt-1">{pwErrors.newPassword}</p>}
-        </div>
-        <div>
-          <div className="relative">
-            <input
-              type={showConfirm ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); if (pwErrors.confirmPassword) setPwErrors((p) => ({ ...p, confirmPassword: "" })); }}
-              placeholder="אימות סיסמה"
-              className={`peer w-full h-[48px] px-4 pe-12 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 transition-colors ${
-                pwErrors.confirmPassword ? "border-red-400 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))]"
-              }`}
-            />
-            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1">
-              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          {pwErrors.confirmPassword && <p className="text-xs text-red-500 mt-1">{pwErrors.confirmPassword}</p>}
-        </div>
-        <div className="flex items-center gap-3 pt-2">
-          <button type="submit" disabled={pwSaving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50">
-            {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "עדכן סיסמה"}
+      {/* Password change */}
+      <form onSubmit={handlePwSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4">
+        <h2 className="text-lg font-bold">{t("account.changePassword") || "שינוי סיסמה"}</h2>
+        <PasswordField
+          label={t("account.newPassword") || "סיסמה חדשה"}
+          value={pwForm.newPassword}
+          onChange={(v) => { setPwForm((p) => ({ ...p, newPassword: v })); if (pwErrors.newPassword) setPwErrors((p) => ({ ...p, newPassword: "" })); }}
+          show={showNew}
+          onToggle={() => setShowNew((v) => !v)}
+          error={pwErrors.newPassword}
+        />
+        <PasswordField
+          label={t("account.confirmPassword") || "אימות סיסמה"}
+          value={pwForm.confirmPassword}
+          onChange={(v) => { setPwForm((p) => ({ ...p, confirmPassword: v })); if (pwErrors.confirmPassword) setPwErrors((p) => ({ ...p, confirmPassword: "" })); }}
+          show={showConfirm}
+          onToggle={() => setShowConfirm((v) => !v)}
+          error={pwErrors.confirmPassword}
+        />
+        {pwError && <p className="text-xs text-red-500">{pwError}</p>}
+        <div className="flex items-center gap-3 pt-1">
+          <button type="submit" disabled={pwSaving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-60">
+            {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("account.updatePassword") || "עדכן סיסמה"}
           </button>
           {pwSaved && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-green-600 font-medium">
-              ✓ נשמר
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 font-medium">
+              ✓ {t("account.saved")}
             </motion.span>
           )}
-          {pwError && <span className="text-sm text-red-500 font-medium">{pwError}</span>}
         </div>
       </form>
     </div>
