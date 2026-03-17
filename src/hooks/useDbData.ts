@@ -47,6 +47,7 @@ export interface DbOrder {
   first_name: string; last_name: string; email: string; phone: string;
   city: string; address: string; apartment: string; notes: string;
   created_at: string; updated_at: string;
+  receipt_url: string | null; locale: string | null;
 }
 export interface DbOrderItem {
   id: string; order_id: string; product_id: string | null;
