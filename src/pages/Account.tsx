@@ -143,7 +143,7 @@ const Account = () => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate(localePath("/"));
+    navigate(localePath("/login"));
   };
 
   // Build profile object from Supabase auth data
