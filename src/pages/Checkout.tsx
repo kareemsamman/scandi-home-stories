@@ -44,26 +44,32 @@ interface CityStreetResult {
 }
 
 // Module-level cache so we only fetch once per page load
-let allCitiesCache: string[] | null = null;
-let fetchPromise: Promise<string[]> | null = null;
+let allRecordsCache: CityStreetResult[] | null = null;
+let fetchPromise: Promise<CityStreetResult[]> | null = null;
 
-const loadAllCities = (): Promise<string[]> => {
-  if (allCitiesCache) return Promise.resolve(allCitiesCache);
+const loadAllRecords = (): Promise<CityStreetResult[]> => {
+  if (allRecordsCache) return Promise.resolve(allRecordsCache);
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async () => {
     try {
-      const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=5000&fields=city_name`;
+      const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=32000&fields=city_name,street_name`;
       const res = await fetch(url);
       if (!res.ok) return [];
       const data = await res.json();
       const records = data?.result?.records ?? [];
       const seen = new Set<string>();
+      const results: CityStreetResult[] = [];
       for (const r of records) {
         const city = ((r["city_name"] as string) || "").trim();
-        if (city) seen.add(city);
+        const street = ((r["street_name"] as string) || "").trim();
+        if (!city) continue;
+        const display = street ? `${city} – ${street}` : city;
+        if (seen.has(display)) continue;
+        seen.add(display);
+        results.push({ city, street, display });
       }
-      allCitiesCache = [...seen].sort((a, b) => a.localeCompare(b, "he"));
-      return allCitiesCache;
+      allRecordsCache = results;
+      return allRecordsCache;
     } catch {
       return [];
     }
@@ -72,21 +78,18 @@ const loadAllCities = (): Promise<string[]> => {
 };
 
 const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
-  const cities = await loadAllCities();
-  const q = query.trim();
-  const lower = q.toLowerCase();
+  const records = await loadAllRecords();
+  const lower = query.trim().toLowerCase();
 
-  const starts: string[] = [];
-  const contains: string[] = [];
-  for (const city of cities) {
-    const cl = city.toLowerCase();
-    if (cl.startsWith(lower)) starts.push(city);
-    else if (cl.includes(lower)) contains.push(city);
+  const starts: CityStreetResult[] = [];
+  const contains: CityStreetResult[] = [];
+  for (const r of records) {
+    const dl = r.display.toLowerCase();
+    if (dl.startsWith(lower)) starts.push(r);
+    else if (dl.includes(lower)) contains.push(r);
   }
 
-  return [...starts, ...contains]
-    .slice(0, 20)
-    .map((city) => ({ city, street: "", display: city }));
+  return [...starts, ...contains].slice(0, 20);
 };
 
 /* ---------- validation ---------- */
@@ -312,8 +315,8 @@ const Checkout = () => {
   }, [showSkeleton, step]);
 
 
-  // Preload cities as soon as the form mounts
-  useEffect(() => { loadAllCities(); }, []);
+  // Preload all cities+streets as soon as the form mounts
+  useEffect(() => { loadAllRecords(); }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
