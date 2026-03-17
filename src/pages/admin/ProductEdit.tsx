@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, ImageIcon, Check, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ImageIcon, Check, Upload, Pipette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
@@ -21,7 +21,9 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 /* ─── Types ─── */
 interface SimpleColorVariant { colorId: string; price: string; stock: string; }
-type ComboKey = string;
+// For variable: per-color selected length IDs
+// colorLengths[colorId] = string[] of lengthIds
+// comboStock[colorId|lengthId] = stock string
 
 /* ─── Helpers ─── */
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -41,11 +43,12 @@ const Section = ({ title, children, action }: { title: string; children: React.R
   </div>
 );
 
-/* ─── Quick-add inline form ─── */
+/* ─── Quick-add color inline ─── */
 const QuickAddColor = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (c: TaxColor) => void }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState("");
-  const [hex, setHex] = useState("#cccccc");
+  const [hex, setHex] = useState("#3b82f6");
+  const colorInputRef = useRef<HTMLInputElement>(null);
   const saveColors = useSaveColorTaxonomy();
   const { data: allColors = [] } = useColorTaxonomy();
   const qc = useQueryClient();
@@ -61,39 +64,60 @@ const QuickAddColor = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (c: 
     await saveColors.mutateAsync([...allColors, newColor]);
     qc.invalidateQueries({ queryKey: ["taxonomy", "colors"] });
     onAdded(newColor);
-    setLabel(""); setHex("#cccccc"); setOpen(false);
+    setLabel(""); setHex("#3b82f6"); setOpen(false);
   };
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors">
+      <button onClick={() => setOpen(true)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors mt-1">
         <Plus className="w-3 h-3" /> Quick add color
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-      <div className="w-7 h-7 rounded-full border border-gray-300 relative overflow-hidden shrink-0 cursor-pointer" style={{ background: hex }}>
-        <input type="color" value={hex} onChange={(e) => setHex(e.target.value)} className="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+    <div className="flex items-center gap-2 mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+      {/* Color picker — click the swatch */}
+      <div className="relative shrink-0">
+        <div
+          className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-300 cursor-pointer flex items-center justify-center"
+          style={{ background: hex }}
+          onClick={() => colorInputRef.current?.click()}
+          title="Click to pick color"
+        >
+          <Pipette className="w-3 h-3 text-white drop-shadow" />
+        </div>
+        <input
+          ref={colorInputRef}
+          type="color"
+          value={hex}
+          onChange={(e) => setHex(e.target.value)}
+          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+          style={{ pointerEvents: "none" }}
+        />
       </div>
       <Input
         value={label}
         onChange={(e) => setLabel(e.target.value)}
         placeholder={locale === "he" ? "שם הצבע" : "اسم اللون"}
-        className="h-7 text-xs flex-1"
+        className="h-8 text-sm flex-1"
         dir={locale === "ar" ? "rtl" : "ltr"}
         onKeyDown={(e) => e.key === "Enter" && handleAdd()}
         autoFocus
       />
-      <button onClick={handleAdd} disabled={saveColors.isPending} className="text-green-600 hover:text-green-800 shrink-0">
+      <button
+        onClick={handleAdd}
+        disabled={saveColors.isPending || !label.trim()}
+        className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0"
+      >
         <Check className="w-4 h-4" />
       </button>
-      <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 text-lg leading-none">×</button>
+      <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 text-xl leading-none">×</button>
     </div>
   );
 };
 
+/* ─── Quick-add length inline ─── */
 const QuickAddLength = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (l: TaxLength) => void }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState("");
@@ -119,13 +143,13 @@ const QuickAddLength = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (l:
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors">
-        <Plus className="w-3 h-3" /> Quick add length
+        <Plus className="w-3 h-3" /> Add length
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+    <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
       <Input
         value={label}
         onChange={(e) => setLabel(e.target.value)}
@@ -142,10 +166,94 @@ const QuickAddLength = ({ locale, onAdded }: { locale: "he" | "ar"; onAdded: (l:
         className="h-7 text-xs w-20"
         onKeyDown={(e) => e.key === "Enter" && handleAdd()}
       />
-      <button onClick={handleAdd} disabled={saveLengths.isPending} className="text-green-600 hover:text-green-800 shrink-0">
+      <button onClick={handleAdd} disabled={saveLengths.isPending || !label.trim()} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">
         <Check className="w-4 h-4" />
       </button>
-      <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 text-lg leading-none">×</button>
+      <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 text-xl leading-none">×</button>
+    </div>
+  );
+};
+
+/* ─── Per-color variable card ─── */
+const ColorVariantCard = ({
+  color, locale, allLengths,
+  selectedLengthIds, onToggleLength,
+  comboStock, onStockChange,
+  onAddLength,
+}: {
+  color: TaxColor;
+  locale: "he" | "ar";
+  allLengths: TaxLength[];
+  selectedLengthIds: string[];
+  onToggleLength: (lengthId: string) => void;
+  comboStock: Record<string, string>;
+  onStockChange: (lengthId: string, val: string) => void;
+  onAddLength: (l: TaxLength) => void;
+}) => {
+  const colorLabel = locale === "he" ? color.label_he : color.label_ar;
+  const selectedLengths = allLengths.filter(l => selectedLengthIds.includes(l.id));
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      {/* Color header */}
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+        <span className="w-4 h-4 rounded-full shrink-0 border border-gray-200" style={{ background: color.hex }} />
+        <span className="text-sm font-semibold text-gray-800">{colorLabel}</span>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Length pill selection for this color */}
+        <div>
+          <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-2">Select lengths for this color</p>
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {allLengths.map(l => {
+              const sel = selectedLengthIds.includes(l.id);
+              const lLabel = locale === "he" ? l.label_he : l.label_ar;
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => onToggleLength(l.id)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${
+                    sel ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                  }`}
+                >
+                  {lLabel || l.value}
+                  {l.value && lLabel && <span className="opacity-50">({l.value})</span>}
+                  {sel && <Check className="w-2.5 h-2.5" />}
+                </button>
+              );
+            })}
+            <QuickAddLength locale={locale} onAdded={onAddLength} />
+          </div>
+        </div>
+
+        {/* Stock inputs for selected lengths */}
+        {selectedLengths.length > 0 && (
+          <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
+            {selectedLengths.map(l => {
+              const stock = comboStock[`${color.id}|${l.id}`] ?? "0";
+              const inStock = Number(stock) > 0;
+              const lLabel = locale === "he" ? l.label_he : l.label_ar;
+              return (
+                <div key={l.id} className="flex flex-col items-center gap-1 min-w-[80px]">
+                  <span className="text-xs text-gray-500 font-medium">{lLabel || l.value}</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={stock}
+                    onChange={(e) => onStockChange(l.id, e.target.value)}
+                    className="h-8 text-xs text-center w-20"
+                    placeholder="0"
+                  />
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                    {inStock ? "In Stock" : "Out"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -179,7 +287,7 @@ const ProductEdit = () => {
     },
   });
 
-  /* ── Base form state ── */
+  /* ── Form state ── */
   const [base, setBase] = useState<any>({
     slug: "", type: "retail", price: 0, sku: "", materials: "", dimensions: "",
     is_featured: false, is_new: false, sort_order: 0, images: [],
@@ -191,28 +299,23 @@ const ProductEdit = () => {
   const [variantType, setVariantType] = useState<"simple" | "variable">("simple");
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
   const [simpleVariants, setSimpleVariants] = useState<Record<string, SimpleColorVariant>>({});
-  const [selectedLengthIds, setSelectedLengthIds] = useState<string[]>([]);
-  const [comboStock, setComboStock] = useState<Record<ComboKey, string>>({});
+
+  // Variable: per-color length selection { [colorId]: string[] }
+  const [colorLengths, setColorLengths] = useState<Record<string, string[]>>({});
+  // Variable: combo stock { [colorId|lengthId]: stockString }
+  const [comboStock, setComboStock] = useState<Record<string, string>>({});
   const [imageUrl, setImageUrl] = useState("");
 
-  /* ── Populate when data loads ── */
+  /* ── Populate on load ── */
   useEffect(() => {
     if (!productData) return;
     const { product: p, translations, inventory } = productData;
     setBase({
-      id: p.id,
-      slug: p.slug || "",
-      type: p.type || "retail",
-      price: p.price || 0,
-      sku: p.sku || "",
-      materials: p.materials || "",
-      dimensions: p.dimensions || "",
-      is_featured: p.is_featured || false,
-      is_new: p.is_new || false,
-      sort_order: p.sort_order || 0,
-      images: p.images || [],
-      category_id: p.category_id || "",
-      sub_category_id: p.sub_category_id || "",
+      id: p.id, slug: p.slug || "", type: p.type || "retail", price: p.price || 0,
+      sku: p.sku || "", materials: p.materials || "", dimensions: p.dimensions || "",
+      is_featured: p.is_featured || false, is_new: p.is_new || false,
+      sort_order: p.sort_order || 0, images: p.images || [],
+      category_id: p.category_id || "", sub_category_id: p.sub_category_id || "",
     });
 
     const he = translations.find((t: any) => t.locale === "he") || {};
@@ -227,8 +330,15 @@ const ProductEdit = () => {
 
     const colorIds = rawColors.map((c: any) => c.tax_id || c.id).filter(Boolean);
     setSelectedColorIds(colorIds);
-    const lengthIds = rawSizes.map((s: any) => s.tax_id || s.id).filter(Boolean);
-    setSelectedLengthIds(lengthIds);
+
+    // Per-color lengths: stored in colors json as c.lengths
+    const cl: Record<string, string[]> = {};
+    for (const c of rawColors) {
+      const taxId = c.tax_id || c.id;
+      if (!taxId) continue;
+      cl[taxId] = Array.isArray(c.lengths) ? c.lengths : [];
+    }
+    setColorLengths(cl);
 
     const sv: Record<string, SimpleColorVariant> = {};
     for (const c of rawColors) {
@@ -253,25 +363,25 @@ const ProductEdit = () => {
   const currentTrans = locale === "he" ? transHe : transAr;
   const setCurrentTrans = locale === "he" ? setTransHe : setTransAr;
   const isRtl = locale === "ar";
-
   const selectedColors = allColors.filter(c => selectedColorIds.includes(c.id));
-  const selectedLengths = allLengths.filter(l => selectedLengthIds.includes(l.id));
 
   const toggleColor = (id: string) => {
-    setSelectedColorIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-    if (!selectedColorIds.includes(id)) {
+    const wasSelected = selectedColorIds.includes(id);
+    setSelectedColorIds(prev => wasSelected ? prev.filter(x => x !== id) : [...prev, id]);
+    if (!wasSelected) {
       setSimpleVariants(prev => ({ ...prev, [id]: { colorId: id, price: "", stock: "0" } }));
+      setColorLengths(prev => ({ ...prev, [id]: [] }));
     }
   };
 
-  const toggleLength = (id: string) => {
-    setSelectedLengthIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const toggleColorLength = (colorId: string, lengthId: string) => {
+    setColorLengths(prev => {
+      const cur = prev[colorId] || [];
+      return { ...prev, [colorId]: cur.includes(lengthId) ? cur.filter(x => x !== lengthId) : [...cur, lengthId] };
+    });
   };
 
-  const getComboStock = (colorId: string, lengthId: string) => comboStock[`${colorId}|${lengthId}`] ?? "0";
-  const setComboStockVal = (colorId: string, lengthId: string, val: string) => {
+  const setStock = (colorId: string, lengthId: string, val: string) => {
     setComboStock(prev => ({ ...prev, [`${colorId}|${lengthId}`]: val }));
   };
 
@@ -297,6 +407,7 @@ const ProductEdit = () => {
       const colorsJson = selectedColors.map(c => {
         const sv = simpleVariants[c.id];
         const stock = Number(sv?.stock ?? 0);
+        const lengths = colorLengths[c.id] || [];
         return {
           tax_id: c.id,
           label_he: c.label_he,
@@ -304,11 +415,15 @@ const ProductEdit = () => {
           hex: c.hex,
           price: variantType === "simple" && sv?.price ? Number(sv.price) : undefined,
           in_stock: variantType === "simple" ? stock > 0 : true,
+          lengths: variantType === "variable" ? lengths : undefined,
         };
       });
 
+      // sizes = union of all selected lengths across all colors
+      const allSelectedLengthIds = [...new Set(Object.values(colorLengths).flat())];
       const sizesJson = variantType === "variable"
-        ? selectedLengths.map(l => ({ tax_id: l.id, label_he: l.label_he, label_ar: l.label_ar, value: l.value }))
+        ? allLengths.filter(l => allSelectedLengthIds.includes(l.id))
+            .map(l => ({ tax_id: l.id, label_he: l.label_he, label_ar: l.label_ar, value: l.value }))
         : [];
 
       const { id, created_at, updated_at, ...baseFields } = base;
@@ -348,9 +463,11 @@ const ProductEdit = () => {
         }
       } else {
         for (const c of selectedColors) {
-          for (const l of selectedLengths) {
+          const lengths = (colorLengths[c.id] || []).map(lid => allLengths.find(l => l.id === lid)).filter(Boolean) as TaxLength[];
+          for (const l of lengths) {
+            const stock = Number(comboStock[`${c.id}|${l.id}`] ?? 0);
             await db.from("inventory").upsert(
-              { product_id: pid, variation_key: `combo:${c.id}|${l.id}`, stock_quantity: Number(getComboStock(c.id, l.id)) },
+              { product_id: pid, variation_key: `combo:${c.id}|${l.id}`, stock_quantity: stock },
               { onConflict: "product_id,variation_key" }
             );
           }
@@ -367,13 +484,11 @@ const ProductEdit = () => {
 
   const filteredSubs = subCategories.filter((s: any) => s.category_id === base.category_id);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+    </div>
+  );
 
   const productName = locale === "he" ? transHe.name : transAr.name;
 
@@ -480,28 +595,11 @@ const ProductEdit = () => {
               </button>
             </div>
           ))}
-
-          {/* Upload file */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="w-full border-dashed h-10 text-gray-500"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {uploading ? "Uploading..." : "Upload image"}
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
+          <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full border-dashed h-10 text-gray-500">
+            <Upload className="w-4 h-4 mr-2" />{uploading ? "Uploading..." : "Upload image"}
           </Button>
-
-          {/* Or paste URL */}
           <div className="flex gap-2">
             <Input placeholder="Or paste image URL..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && imageUrl.trim()) { setBase((p: any) => ({ ...p, images: [...(p.images || []), imageUrl.trim()] })); setImageUrl(""); } }} />
@@ -514,21 +612,18 @@ const ProductEdit = () => {
 
       {/* Variant Type */}
       <Section title="Product Variants">
-        <div className="flex gap-3 mb-2">
+        <div className="flex gap-3">
           {(["simple", "variable"] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setVariantType(t)}
+            <button key={t} onClick={() => setVariantType(t)}
               className={`px-5 py-2 rounded-lg border text-sm font-medium transition-colors ${
                 variantType === t ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-              }`}
-            >
+              }`}>
               {t === "simple" ? "Simple (Colors only)" : "Variable (Colors × Lengths)"}
             </button>
           ))}
         </div>
         <p className="text-xs text-gray-400">
-          {variantType === "simple" ? "Each color has its own price and stock." : "Each color × length combination has its own stock."}
+          {variantType === "simple" ? "Each color has its own price and stock." : "Each color can have different lengths with individual stock."}
         </p>
       </Section>
 
@@ -543,13 +638,10 @@ const ProductEdit = () => {
             {allColors.map(c => {
               const selected = selectedColorIds.includes(c.id);
               return (
-                <button
-                  key={c.id}
-                  onClick={() => toggleColor(c.id)}
+                <button key={c.id} onClick={() => toggleColor(c.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
                     selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
+                  }`}>
                   <span className="w-3.5 h-3.5 rounded-full border border-white/30 shrink-0" style={{ background: c.hex }} />
                   {locale === "he" ? c.label_he : c.label_ar}
                   {selected && <Check className="w-3 h-3" />}
@@ -563,6 +655,7 @@ const ProductEdit = () => {
             onAdded={(c) => {
               setSelectedColorIds(prev => [...prev, c.id]);
               setSimpleVariants(prev => ({ ...prev, [c.id]: { colorId: c.id, price: "", stock: "0" } }));
+              setColorLengths(prev => ({ ...prev, [c.id]: [] }));
             }}
           />
 
@@ -572,8 +665,7 @@ const ProductEdit = () => {
               <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price & Stock per color</p>
               {selectedColors.map(c => {
                 const sv = simpleVariants[c.id] ?? { colorId: c.id, price: "", stock: "0" };
-                const stockNum = Number(sv.stock);
-                const inStock = stockNum > 0;
+                const inStock = Number(sv.stock) > 0;
                 return (
                   <div key={c.id} className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
                     <span className="w-5 h-5 rounded-full shrink-0 border border-gray-200" style={{ background: c.hex }} />
@@ -598,95 +690,30 @@ const ProductEdit = () => {
               })}
             </div>
           )}
+
+          {/* Variable: per-color length + stock cards */}
+          {variantType === "variable" && selectedColors.length > 0 && (
+            <div className="space-y-3 pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Lengths & Stock per color</p>
+              {selectedColors.map(c => (
+                <ColorVariantCard
+                  key={c.id}
+                  color={c}
+                  locale={locale}
+                  allLengths={allLengths}
+                  selectedLengthIds={colorLengths[c.id] || []}
+                  onToggleLength={(lid) => toggleColorLength(c.id, lid)}
+                  comboStock={comboStock}
+                  onStockChange={(lid, val) => setStock(c.id, lid, val)}
+                  onAddLength={(l) => {
+                    setColorLengths(prev => ({ ...prev, [c.id]: [...(prev[c.id] || []), l.id] }));
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </Section>
-
-      {/* Lengths (variable only) */}
-      {variantType === "variable" && (
-        <Section
-          title="Lengths (אורך)"
-          action={<Link to="/admin/attributes" className="text-xs text-blue-600 hover:underline">Manage attributes →</Link>}
-        >
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {allLengths.map(l => {
-                const selected = selectedLengthIds.includes(l.id);
-                return (
-                  <button
-                    key={l.id}
-                    onClick={() => toggleLength(l.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
-                      selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {locale === "he" ? l.label_he : l.label_ar}
-                    <span className="text-xs opacity-60">({l.value})</span>
-                    {selected && <Check className="w-3 h-3" />}
-                  </button>
-                );
-              })}
-            </div>
-            <QuickAddLength
-              locale={locale}
-              onAdded={(l) => setSelectedLengthIds(prev => [...prev, l.id])}
-            />
-          </div>
-        </Section>
-      )}
-
-      {/* Variable stock grid */}
-      {variantType === "variable" && selectedColors.length > 0 && selectedLengths.length > 0 && (
-        <Section title="Stock per Variant">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr>
-                  <th className="text-left text-xs text-gray-500 font-medium pb-2 pr-4">Color \ Length</th>
-                  {selectedLengths.map(l => (
-                    <th key={l.id} className="text-center text-xs text-gray-500 font-medium pb-2 px-2 whitespace-nowrap">
-                      {locale === "he" ? l.label_he : l.label_ar}
-                      <span className="text-gray-300 ml-1">({l.value})</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {selectedColors.map(c => (
-                  <tr key={c.id}>
-                    <td className="py-2 pr-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full shrink-0 border border-gray-200" style={{ background: c.hex }} />
-                        <span className="text-sm font-medium text-gray-700">{locale === "he" ? c.label_he : c.label_ar}</span>
-                      </div>
-                    </td>
-                    {selectedLengths.map(l => {
-                      const stock = getComboStock(c.id, l.id);
-                      const inStock = Number(stock) > 0;
-                      return (
-                        <td key={l.id} className="py-2 px-2">
-                          <div className="flex flex-col items-center gap-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={stock}
-                              onChange={(e) => setComboStockVal(c.id, l.id, e.target.value)}
-                              className="h-8 text-xs w-20 text-center"
-                            />
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                              {inStock ? "In Stock" : "Out"}
-                            </span>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-      )}
 
       {/* Actions */}
       <div className="flex items-center gap-3 pb-8">
