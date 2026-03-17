@@ -172,6 +172,7 @@ const ColorVariantCard = ({
   color, locale, allLengths,
   selectedLengthIds, onToggleLength,
   comboStock, onStockChange,
+  comboPrice, onPriceChange,
   onAddLength,
 }: {
   color: TaxColor;
@@ -181,6 +182,8 @@ const ColorVariantCard = ({
   onToggleLength: (lengthId: string) => void;
   comboStock: Record<string, string>;
   onStockChange: (lengthId: string, val: string) => void;
+  comboPrice: Record<string, string>;
+  onPriceChange: (lengthId: string, val: string) => void;
   onAddLength: (l: TaxLength) => void;
 }) => {
   const colorLabel = locale === "he" ? color.label_he : color.label_ar;
@@ -220,30 +223,47 @@ const ColorVariantCard = ({
           </div>
         </div>
 
-        {/* Stock inputs for selected lengths */}
+        {/* Price + Stock inputs for selected lengths */}
         {selectedLengths.length > 0 && (
-          <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
-            {selectedLengths.map(l => {
-              const stock = comboStock[`${color.id}|${l.id}`] ?? "0";
-              const inStock = Number(stock) > 0;
-              const lLabel = locale === "he" ? l.label_he : l.label_ar;
-              return (
-                <div key={l.id} className="flex flex-col items-center gap-1 min-w-[80px]">
-                  <span className="text-xs text-gray-500 font-medium">{lLabel || l.value}</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={stock}
-                    onChange={(e) => onStockChange(l.id, e.target.value)}
-                    className="h-8 text-xs text-center w-20"
-                    placeholder="0"
-                  />
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                    {inStock ? "In Stock" : "Out"}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-x-3 gap-y-1 items-center mb-1 px-1">
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Length</span>
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide text-center">Price (₪)</span>
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide text-center">Stock</span>
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Status</span>
+            </div>
+            <div className="space-y-1.5">
+              {selectedLengths.map(l => {
+                const stock = comboStock[`${color.id}|${l.id}`] ?? "0";
+                const price = comboPrice[`${color.id}|${l.id}`] ?? "";
+                const inStock = Number(stock) > 0;
+                const lLabel = locale === "he" ? l.label_he : l.label_ar;
+                return (
+                  <div key={l.id} className="grid grid-cols-[auto_1fr_1fr_auto] gap-x-3 items-center">
+                    <span className="text-xs font-medium text-gray-700 w-12">{lLabel || l.value}</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={price}
+                      onChange={(e) => onPriceChange(l.id, e.target.value)}
+                      className="h-8 text-xs text-center"
+                      placeholder="0"
+                    />
+                    <Input
+                      type="number"
+                      min="0"
+                      value={stock}
+                      onChange={(e) => onStockChange(l.id, e.target.value)}
+                      className="h-8 text-xs text-center"
+                      placeholder="0"
+                    />
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                      {inStock ? "In Stock" : "Out"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -297,6 +317,8 @@ const ProductEdit = () => {
   const [colorLengths, setColorLengths] = useState<Record<string, string[]>>({});
   // Variable: combo stock { [colorId|lengthId]: stockString }
   const [comboStock, setComboStock] = useState<Record<string, string>>({});
+  // Variable: combo price { [colorId|lengthId]: priceString }
+  const [comboPrice, setComboPrice] = useState<Record<string, string>>({});
   const [imageUrl, setImageUrl] = useState("");
 
   /* ── Populate on load ── */
@@ -351,6 +373,17 @@ const ProductEdit = () => {
       }
     }
     setComboStock(cs);
+
+    // Load combo prices from colors JSON
+    const cp: Record<string, string> = {};
+    for (const c of rawColors) {
+      const taxId = c.tax_id || c.id;
+      if (!taxId || !c.combo_prices) continue;
+      for (const [lengthId, price] of Object.entries(c.combo_prices as Record<string, number>)) {
+        cp[`${taxId}|${lengthId}`] = String(price);
+      }
+    }
+    setComboPrice(cp);
   }, [productData]);
 
   /* ── Derived ── */
@@ -434,6 +467,9 @@ const ProductEdit = () => {
         const sv = simpleVariants[c.id];
         const stock = Number(sv?.stock ?? 0);
         const lengths = colorLengths[c.id] || [];
+        const comboPrices = variantType === "variable"
+          ? Object.fromEntries(lengths.map(lid => [lid, Number(comboPrice[`${c.id}|${lid}`] || 0)]))
+          : undefined;
         return {
           tax_id: c.id,
           label_he: c.label_he,
@@ -442,6 +478,7 @@ const ProductEdit = () => {
           price: variantType === "simple" && sv?.price ? Number(sv.price) : undefined,
           in_stock: variantType === "simple" ? stock > 0 : true,
           lengths: variantType === "variable" ? lengths : undefined,
+          combo_prices: comboPrices,
         };
       });
 
@@ -748,6 +785,8 @@ const ProductEdit = () => {
                   onToggleLength={(lid) => toggleColorLength(c.id, lid)}
                   comboStock={comboStock}
                   onStockChange={(lid, val) => setStock(c.id, lid, val)}
+                  comboPrice={comboPrice}
+                  onPriceChange={(lid, val) => setComboPrice(prev => ({ ...prev, [`${c.id}|${lid}`]: val }))}
                   onAddLength={(l) => {
                     setColorLengths(prev => ({ ...prev, [c.id]: [...(prev[c.id] || []), l.id] }));
                   }}

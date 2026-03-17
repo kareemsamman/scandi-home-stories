@@ -78,6 +78,7 @@ export const useShopData = () => {
             name: { he: c.label_he || c.name_he || c.name?.he || "", ar: c.label_ar || c.name_ar || c.name?.ar || "" },
             hex: c.hex,
             lengths: Array.isArray(c.lengths) ? c.lengths : [],
+            combo_prices: c.combo_prices || {},
           })),
         }];
       } else if (p.use_color_groups && rawColors.length === 0) {

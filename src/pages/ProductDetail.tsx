@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
@@ -254,22 +256,47 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const customColorGroups = product.colorGroups.slice(1);
   const hasCustomColors = customColorGroups.length > 0 && customColorGroups.some(g => g.colors.length > 0);
 
-  // Sizes available for the currently selected color (per-color length selection from admin)
+  // Fetch inventory for this product (stock per combo)
+  const { data: inventory = [] } = useQuery({
+    queryKey: ['product_inventory', product.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any).from('inventory').select('*').eq('product_id', product.id);
+      return (data || []) as { variation_key: string; stock_quantity: number }[];
+    },
+  });
+  const invMap = new Map(inventory.map(i => [i.variation_key, i.stock_quantity]));
+
+  // Get stock quantity for a color+size combo
+  const getComboStock = (colorId: string, sizeId: string) =>
+    invMap.get(`combo:${colorId}|${sizeId}`) ?? 9999;
+
+  // Sizes available for selected color (filtered by per-color length selection)
+  const colorObj = standardColors.find(c => c.id === selectedColor?.id);
   const availableSizes = (() => {
-    const colorObj = standardColors.find(c => c.id === selectedColor?.id);
     if (colorObj?.lengths && colorObj.lengths.length > 0) {
       return product.sizes.filter(s => colorObj.lengths!.includes(s.id));
     }
     return product.sizes;
   })();
 
+  // Current selected size object
+  const selectedSizeObj = availableSizes.find(s => s.label === selectedSize);
+
+  // Price: from combo_prices if set, otherwise product base price
   const currentPrice = (() => {
-    if (selectedSize) {
-      const s = availableSizes.find((s) => s.label === selectedSize);
-      if (s?.price) return s.price;
+    if (colorObj && selectedSizeObj && colorObj.combo_prices) {
+      const p = colorObj.combo_prices[selectedSizeObj.id];
+      if (p && p > 0) return p;
     }
-    return availableSizes[0]?.price || product.price;
+    return selectedSizeObj?.price || product.price;
   })();
+
+  // Stock for current selection
+  const currentStock = selectedColor && selectedSizeObj
+    ? getComboStock(selectedColor.id, selectedSizeObj.id)
+    : 9999;
+  const isOutOfStock = currentStock === 0;
+  const maxQty = isOutOfStock ? 0 : currentStock;
 
   useEffect(() => {
     if (!selectedColor && standardColors.length > 0) {
@@ -277,12 +304,15 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
     }
   }, []);
 
-  // When color changes, reset size to first available size for that color
+  // When color changes, reset size to first in-stock size for that color
   useEffect(() => {
-    if (availableSizes.length > 0) {
-      setSelectedSize(availableSizes[0].label);
-    }
-  }, [selectedColor?.id]);
+    const firstInStock = availableSizes.find(s => {
+      if (!selectedColor) return true;
+      return getComboStock(selectedColor.id, s.id) > 0;
+    });
+    if (firstInStock) setSelectedSize(firstInStock.label);
+    else if (availableSizes.length > 0) setSelectedSize(availableSizes[0].label);
+  }, [selectedColor?.id, inventory.length]);
 
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
@@ -349,28 +379,57 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                   <p className="text-sm font-medium text-foreground mb-2">{t("contractor.size")}:</p>
                   <div className="flex gap-2 flex-wrap">
                     {availableSizes.map((size) => {
+                      const sizeStock = selectedColor ? getComboStock(selectedColor.id, size.id) : 9999;
+                      const sizeOutOfStock = sizeStock === 0;
                       const isActive = selectedSize === size.label || (!selectedSize && size.id === availableSizes[0].id);
-                      return (<button key={size.id} onClick={() => setSelectedSize(size.label)} className={cn("px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center", isActive ? "border-foreground bg-foreground text-background" : "border-border hover:border-muted-foreground")}><span>{size.label}</span>{size.price && (<span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>{t("common.currency")}{size.price}</span>)}</button>);
+                      const sizePrice = colorObj?.combo_prices?.[size.id];
+                      return (
+                        <button key={size.id} onClick={() => !sizeOutOfStock && setSelectedSize(size.label)}
+                          className={cn("px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center relative",
+                            isActive ? "border-foreground bg-foreground text-background" :
+                            sizeOutOfStock ? "border-border opacity-40 cursor-not-allowed" :
+                            "border-border hover:border-muted-foreground"
+                          )}>
+                          <span>{size.label}</span>
+                          {sizePrice != null && sizePrice > 0 && (
+                            <span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>
+                              {t("common.currency")}{sizePrice}
+                            </span>
+                          )}
+                          {sizeOutOfStock && <span className="text-[10px] text-red-400 mt-0.5">אזל</span>}
+                        </button>
+                      );
                     })}
                   </div>
                 </div>
               )}
 
-              <div className="mb-4">
-                <p className="text-sm font-medium text-foreground mb-2">{t("product.quantity")}</p>
-                <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} max={9999} />
-              </div>
+              {isOutOfStock ? (
+                <div className="w-full h-14 flex items-center justify-center border-2 border-red-200 rounded-xl text-red-500 font-medium text-sm mb-4">
+                  אזל מהמלאי
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-foreground mb-2">{t("product.quantity")}</p>
+                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))} max={maxQty} />
+                    {maxQty < 9999 && maxQty > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">{maxQty} {locale === "ar" ? "متوفر" : "במלאי"}</p>
+                    )}
+                  </div>
 
-              <AnimatePresence mode="wait">
-                {addedConfirm ? (
-                  <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full h-14 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl bg-green-600 text-white"><Check className="w-4 h-4" />{t("contractor.addedToCart")}</motion.div>
-                ) : (
-                  <motion.button key="add" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={handleAdd} disabled={isAdding} className={cn("w-full h-14 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-xl transition-colors", isAdding ? "opacity-70 cursor-not-allowed" : "text-foreground hover:bg-foreground hover:text-background")}>
-                    {isAdding ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ShoppingBag className="w-4 h-4 me-2" />}
-                    {isAdding ? t("product.adding") : t("product.addToBag")}
-                  </motion.button>
-                )}
-              </AnimatePresence>
+                  <AnimatePresence mode="wait">
+                    {addedConfirm ? (
+                      <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full h-14 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl bg-green-600 text-white"><Check className="w-4 h-4" />{t("contractor.addedToCart")}</motion.div>
+                    ) : (
+                      <motion.button key="add" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={handleAdd} disabled={isAdding} className={cn("w-full h-14 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-xl transition-colors", isAdding ? "opacity-70 cursor-not-allowed" : "text-foreground hover:bg-foreground hover:text-background")}>
+                        {isAdding ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ShoppingBag className="w-4 h-4 me-2" />}
+                        {isAdding ? t("product.adding") : t("product.addToBag")}
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
             </motion.div>
           </div>
         </div>
