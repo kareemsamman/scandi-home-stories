@@ -815,14 +815,25 @@ const Checkout = () => {
                       <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
                         onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); }}
                         onFocus={() => setShowCitySuggestions(true)} onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
-                      {showCitySuggestions && citySuggestions.length > 0 && (
-                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {citySuggestions.map((result, idx) => (
-                            <button key={`${result.display}-${idx}`} type="button" className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                              onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
-                              {result.display}
-                            </button>
-                          ))}
+                      {showCitySuggestions && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 2 && (
+                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl overflow-hidden">
+                          {cityLoading ? (
+                            <div className="p-3 space-y-2">
+                              {[80, 60, 72].map((w, i) => (
+                                <div key={i} className="flex items-center gap-2 px-1 py-1">
+                                  <div className="h-3 rounded-full bg-muted animate-pulse" style={{ width: `${w}%` }} />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            citySuggestions.map((result, idx) => (
+                              <button key={`${result.display}-${idx}`} type="button"
+                                className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/40 transition-colors border-b border-border/40 last:border-0"
+                                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
+                                {result.display}
+                              </button>
+                            ))
+                          )}
                         </div>
                       )}
                     </div>
