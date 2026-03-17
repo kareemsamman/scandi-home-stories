@@ -52,6 +52,8 @@ const LocaleRoutes = () => (
       <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/account" element={<Account />} />
       <Route path="/account/order/:orderId" element={<OrderDetail />} />
