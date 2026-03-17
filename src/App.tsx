@@ -17,6 +17,8 @@ import Checkout from "./pages/Checkout";
 import CheckoutThankYou from "./pages/CheckoutThankYou";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
 import OrderDetail from "./pages/OrderDetail";
