@@ -83,21 +83,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchRoles]);
 
+  const claimGuestOrders = async (userId: string, email: string) => {
+    const db = supabase as any;
+    await db.from("orders").update({ user_id: userId }).eq("email", email).is("user_id", null);
+  };
+
   const signUp = async ({ email, password, firstName, lastName, phone }: {
     email: string; password: string; firstName: string; lastName: string; phone: string;
   }) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { first_name: firstName, last_name: lastName, phone },
-      },
+      options: { data: { first_name: firstName, last_name: lastName, phone } },
     });
+    if (!error && data.user) await claimGuestOrders(data.user.id, email);
     return { error: error as Error | null };
   };
 
   const signIn = async ({ email, password }: { email: string; password: string }) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error && data.user) await claimGuestOrders(data.user.id, email);
     return { error: error as Error | null };
   };
 

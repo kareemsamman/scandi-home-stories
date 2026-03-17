@@ -17,20 +17,35 @@ const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [guestHint, setGuestHint] = useState(false);
+
+  const checkEmailHasGuestOrders = async (email: string) => {
+    const db = supabase as any;
+    const { data } = await db.from("orders").select("id").eq("email", email).is("user_id", null).limit(1);
+    return (data?.length ?? 0) > 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) return;
     setLoading(true);
+    setGuestHint(false);
     const { error } = await signIn({ email: identifier.trim(), password });
     setLoading(false);
     if (error) {
+      const isCredentialsError = error.message === "Invalid login credentials" || error.message === "Invalid email or password";
+      if (isCredentialsError) {
+        const hasGuestOrders = await checkEmailHasGuestOrders(identifier.trim());
+        if (hasGuestOrders) {
+          setGuestHint(true);
+          return;
+        }
+      }
       const hebrewErrors: Record<string, string> = {
         "Invalid login credentials": "שם משתמש או סיסמה שגויים",
         "Email not confirmed": "כתובת האימייל לא אומתה, בדקו את תיבת הדואר",
         "Too many requests": "יותר מדי ניסיונות, נסו שוב מאוחר יותר",
         "User not found": "משתמש לא נמצא",
-        "Invalid email or password": "שם משתמש או סיסמה שגויים",
         "Signups not allowed for this instance": "הרשמה אינה זמינה כרגע",
       };
       const msg = hebrewErrors[error.message] || "שגיאה בהתחברות, נסו שוב";
@@ -101,6 +116,27 @@ const Login = () => {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("auth.login")}
             </button>
           </form>
+
+          {guestHint && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 space-y-2">
+              <p className="font-semibold">נראה שביצעת הזמנה בעבר עם כתובת מייל זו ללא סיסמה.</p>
+              <p className="text-xs text-amber-700">כדי לצפות בהזמנות שלך, הירשם עם אותו מייל — ההזמנות יתחברו לחשבון שלך אוטומטית.</p>
+              <div className="flex gap-2 pt-1">
+                <Link
+                  to={`${localePath("/signup")}?redirect=${encodeURIComponent(redirectTo)}&email=${encodeURIComponent(identifier.trim())}`}
+                  className="flex-1 text-center text-xs font-bold py-2 rounded-lg bg-amber-900 text-white hover:bg-amber-800 transition-colors"
+                >
+                  יצירת חשבון
+                </Link>
+                <Link
+                  to={localePath("/forgot-password")}
+                  className="flex-1 text-center text-xs font-medium py-2 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
+                >
+                  שכחתי סיסמה
+                </Link>
+              </div>
+            </div>
+          )}
 
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.noAccount")}{" "}

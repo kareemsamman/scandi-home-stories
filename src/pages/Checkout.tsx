@@ -6,7 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAddresses } from "@/hooks/useAddresses";
+import { useAddresses, useAddAddress } from "@/hooks/useAddresses";
 import { useAddOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
@@ -215,6 +215,7 @@ const Checkout = () => {
   const getItemKey = useCart((s) => s.getItemKey);
   const clearCart = useCart((s) => s.clearCart);
   const { data: savedAddresses = [] } = useAddresses();
+  const addAddressMutation = useAddAddress();
   const { user, profile: authProfile, signOut } = useAuth();
   const addOrderMutation = useAddOrder();
 
@@ -239,6 +240,7 @@ const Checkout = () => {
   const [cityLoading, setCityLoading] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
   const [emailMarketing, setEmailMarketing] = useState(false);
+  const [saveAddress, setSaveAddress] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
   const [selectedZone, setSelectedZone] = useState<keyof ShippingSettings["zones"] | "">("");
@@ -448,6 +450,15 @@ const Checkout = () => {
       } catch { /* non-blocking */ }
     }
 
+    // If guest (not logged in), check if email matches an existing account's past order
+    const db = supabase as any;
+    let resolvedUserId: string | null = user?.id || null;
+    if (!resolvedUserId && form.email) {
+      const { data: existingOrder } = await db
+        .from("orders").select("user_id").eq("email", form.email).not("user_id", "is", null).limit(1).maybeSingle();
+      if (existingOrder?.user_id) resolvedUserId = existingOrder.user_id;
+    }
+
     // Save order to DB
     let savedOrderId: string | undefined;
     try {
@@ -479,7 +490,25 @@ const Checkout = () => {
         })),
       });
       savedOrderId = result?.id;
+      // Link to existing account if resolved via email lookup
+      if (savedOrderId && resolvedUserId && !user?.id) {
+        await db.from("orders").update({ user_id: resolvedUserId }).eq("id", savedOrderId);
+      }
     } catch { /* order save failed — still let user continue */ }
+
+    // Save address to profile if checkbox checked
+    if (user && saveAddress && form.city && form.address) {
+      addAddressMutation.mutate({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone,
+        city: form.city,
+        street: form.address,
+        houseNumber: "",
+        apartment: form.apartment || "",
+        isDefault: savedAddresses.length === 0,
+      });
+    }
 
     // Record coupon use
     if (appliedCoupon) {
@@ -897,6 +926,12 @@ const Checkout = () => {
                     <FloatingInput name="address" label={t("checkout.address")} value={form.address} onChange={handleChange} onBlur={() => handleBlur("address")} error={fieldError("address")} />
                     <FloatingInput name="apartment" label={t("checkout.apartment")} value={form.apartment} onChange={handleChange} />
                   </div>
+                  {user && selectedAddressId !== "__new__" && (
+                    <label className="flex items-center gap-2.5 mt-2 cursor-pointer select-none">
+                      <input type="checkbox" checked={saveAddress} onChange={e => setSaveAddress(e.target.checked)} className="w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
+                      <span className="text-xs text-muted-foreground">שמור כתובת זו לפרופיל שלי</span>
+                    </label>
+                  )}
                 </div>
 
                 {/* Shipping Method */}

@@ -37,7 +37,7 @@ const Signup = () => {
   const redirectTo = searchParams.get("redirect");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
