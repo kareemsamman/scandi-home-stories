@@ -15,9 +15,8 @@ interface ProductCardProps {
 }
 
 const QuickCartIcon = () => (
-  <svg role="presentation" fill="none" strokeWidth="2" focusable="false" width="16" height="14" viewBox="0 0 16 14">
-    <path d="m2.007 10.156.387-4.983a1 1 0 0 1 .997-.923h7.218a1 1 0 0 1 .997.923l.387 4.983c.11 1.403-1.16 2.594-2.764 2.594H4.771c-1.605 0-2.873-1.19-2.764-2.594" />
-    <path d="M5 3.5c0-1.243.895-2.25 2-2.25S9 2.257 9 3.5V5c0 1.243-.895 2.25-2 2.25S5 6.243 5 5z" />
+  <svg role="presentation" strokeWidth="2" focusable="false" width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <path d="M11 7H3.577A2 2 0 0 0 1.64 9.497l2.051 8A2 2 0 0 0 5.63 19H16.37a2 2 0 0 0 1.937-1.503l2.052-8A2 2 0 0 0 18.422 7H11Zm0 0V1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
