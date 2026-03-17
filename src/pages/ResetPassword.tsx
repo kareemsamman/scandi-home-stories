@@ -43,7 +43,8 @@ const ResetPassword = () => {
     const { error: err } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (err) {
-      setError(t("auth.resetPwError"));
+      console.error("Reset password error:", err.message, err);
+      setError(t("auth.resetPwError") + ` (${err.message})`);
     } else {
       setDone(true);
       setTimeout(() => navigate(localePath("/login")), 3000);
