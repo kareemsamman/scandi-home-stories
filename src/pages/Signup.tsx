@@ -6,6 +6,28 @@ import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
+/* Defined outside component so it is never recreated on re-render */
+const FloatingField = ({
+  name, label, value, onChange, type = "text",
+}: {
+  name: string; label: string; value: string;
+  onChange: (v: string) => void; type?: string;
+}) => (
+  <div className="relative">
+    <input
+      name={name}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
+      placeholder=" "
+    />
+    <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
+      {label}
+    </label>
+  </div>
+);
+
 const Signup = () => {
   const { t, localePath } = useLocale();
   const { toast } = useToast();
@@ -18,7 +40,6 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const isValid = firstName.trim() && lastName.trim() && email.trim() && phone.trim() && password.trim() && acceptPrivacy;
 
@@ -48,28 +69,6 @@ const Signup = () => {
       toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
       navigate(localePath("/login"));
     }
-  };
-
-  const FloatingField = ({ name, label, value, onChange, type = "text" }: { name: string; label: string; value: string; onChange: (v: string) => void; type?: string }) => {
-    const isActive = focusedField === name || value.length > 0;
-    return (
-      <div className="relative">
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocusedField(name)}
-          onBlur={() => setFocusedField(null)}
-          className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
-          placeholder=" "
-        />
-        <label className={`absolute start-4 transition-all duration-200 pointer-events-none ${
-          isActive ? "top-1.5 text-[10px] text-muted-foreground" : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-        }`}>
-          {label}
-        </label>
-      </div>
-    );
   };
 
   return (
