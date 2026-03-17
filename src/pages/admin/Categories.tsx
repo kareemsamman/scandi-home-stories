@@ -141,16 +141,22 @@ const CategoryForm = ({
         <Textarea placeholder="Description" value={trans.description} onChange={(e) => setTrans({ ...trans, description: e.target.value })} rows={2} />
       </div>
 
-      {/* Slug + Sort */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">Slug</label>
-          <Input placeholder="e.g. pergolas" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">Sort Order</label>
-          <Input type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} />
-        </div>
+      {/* Slug (URL identifier) */}
+      <div className="p-4 bg-amber-50/60 rounded-lg border border-amber-200 space-y-1.5">
+        <label className="text-xs font-semibold text-amber-800 uppercase tracking-wide">Slug — URL identifier</label>
+        <Input
+          placeholder="e.g. pergolas"
+          value={form.slug || ""}
+          onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))}
+          className="font-mono text-sm"
+        />
+        <p className="text-[11px] text-amber-700">Used in shop URLs: /shop?collection=<strong>{form.slug || "slug"}</strong></p>
+      </div>
+
+      {/* Sort */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-gray-600">Sort Order</label>
+        <Input type="number" value={form.sort_order || 0} onChange={(e) => set("sort_order", +e.target.value)} className="w-32" />
       </div>
 
       {/* Images */}

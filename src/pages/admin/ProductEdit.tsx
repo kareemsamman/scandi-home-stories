@@ -629,11 +629,14 @@ const ProductEdit = () => {
           }
         }
       }
+      return pid;
     },
-    onSuccess: () => {
+    onSuccess: (pid) => {
       qc.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Product saved" });
-      navigate("/admin/products");
+      qc.invalidateQueries({ queryKey: ["admin_product_edit", productId] });
+      toast({ title: "Saved", description: "Product saved successfully" });
+      // For new products, navigate to the real edit URL
+      if (isNew && pid) navigate(`/admin/products/edit/${pid}`, { replace: true });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });

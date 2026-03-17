@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts, useCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
@@ -212,6 +212,11 @@ const AdminProducts = () => {
                       {isDraft && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Draft</span>}
                       {product.is_featured && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
                       {product.is_new && <span className="text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}
+                      {product.slug && (
+                        <Button variant="ghost" size="icon" title="Preview" onClick={() => window.open(`/he/product/${product.slug}`, "_blank")}>
+                          <Eye className="w-4 h-4 text-gray-400" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" title="Duplicate" onClick={() => duplicate.mutate(product)} disabled={duplicate.isPending}>
                         <Copy className="w-4 h-4 text-gray-400" />
                       </Button>

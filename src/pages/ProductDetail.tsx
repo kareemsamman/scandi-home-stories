@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
@@ -12,6 +12,7 @@ import type { RetailProduct, ContractorProduct, ColorOption } from "@/data/produ
 import { getLocaleText } from "@/data/products";
 import { useCart, CartItemOptions } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -131,18 +132,37 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [addedConfirm, setAddedConfirm] = useState(false);
   const collection = collections.find((c) => c.id === product.collection);
+
+  // Inventory loading
+  const { data: inventory = [] } = useQuery({
+    queryKey: ['product_inventory', product.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any).from('inventory').select('*').eq('product_id', product.id);
+      return (data || []) as { variation_key: string; stock_quantity: number }[];
+    },
+  });
+  const invMap = new Map(inventory.map(i => [i.variation_key, i.stock_quantity]));
+  const getColorStock = (colorId: string) => invMap.get(`color:${colorId}`) ?? 9999;
+
+  const currentStock = selectedColor ? getColorStock(selectedColor.id) : (product.colors.length === 0 ? 9999 : 9999);
+  const isOutOfStock = currentStock === 0;
+  const maxQty = isOutOfStock ? 0 : currentStock;
 
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
   const handleAdd = async () => {
+    if (isOutOfStock) return;
     setIsAdding(true);
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
     await new Promise((r) => setTimeout(r, 600));
-    addToCart(product, quantity, options);
+    addToCart(product, Math.min(quantity, maxQty), options);
     setQuantity(1);
     setIsAdding(false);
+    setAddedConfirm(true);
+    setTimeout(() => setAddedConfirm(false), 1000);
   };
 
   return (
@@ -179,18 +199,51 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                 <div className="mb-5">
                   <span className="text-sm font-medium text-foreground block mb-2">{t("contractor.color")}: <span className="text-muted-foreground font-normal">{selectedColor?.name[locale]}</span></span>
                   <div className="flex flex-wrap gap-2.5">
-                    {product.colors.map((color) => (<button key={color.id} onClick={() => setSelectedColor(color)} className={cn("w-9 h-9 rounded-full border-2 transition-all", selectedColor?.id === color.id ? "border-foreground scale-110" : "border-border hover:border-muted-foreground")} style={{ backgroundColor: color.hex }} title={color.name[locale]} />))}
+                    {product.colors.map((color) => {
+                      const colorStock = getColorStock(color.id);
+                      const colorOos = colorStock === 0;
+                      return (
+                        <button
+                          key={color.id}
+                          onClick={() => { if (!colorOos) { setSelectedColor(color); setQuantity(1); } }}
+                          className={cn("relative w-9 h-9 rounded-full border-2 transition-all", selectedColor?.id === color.id ? "border-foreground scale-110" : colorOos ? "border-border opacity-50 cursor-not-allowed" : "border-border hover:border-muted-foreground")}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name[locale]}
+                        >
+                          {colorOos && <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden"><div className="w-full h-px bg-red-400 rotate-[-45deg]" /></div>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
-              <div className="mb-5">
-                <span className="text-sm font-medium text-foreground block mb-2">{t("product.quantity")}</span>
-                <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
-              </div>
-              <Button size="lg" onClick={handleAdd} disabled={isAdding} className="rounded-xl w-full py-6 text-sm font-semibold">
-                {isAdding ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ShoppingBag className="w-4 h-4 me-2" />}
-                {isAdding ? t("product.adding") : t("product.addToBag")}
-              </Button>
+              {isOutOfStock ? (
+                <div className="w-full h-14 flex items-center justify-center border-2 border-red-200 rounded-xl text-red-500 font-medium text-sm mb-5">
+                  אזל מהמלאי
+                </div>
+              ) : (
+                <>
+                  <div className="mb-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">{t("product.quantity")}</span>
+                      {maxQty < 9999 && <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {maxQty}</span>}
+                    </div>
+                    <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))} max={maxQty} />
+                  </div>
+                  <AnimatePresence mode="wait">
+                    {addedConfirm ? (
+                      <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full h-14 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl bg-green-600 text-white"><Check className="w-4 h-4" />{t("contractor.addedToCart")}</motion.div>
+                    ) : (
+                      <motion.div key="add">
+                        <Button size="lg" onClick={handleAdd} disabled={isAdding} className="rounded-xl w-full py-6 text-sm font-semibold">
+                          {isAdding ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ShoppingBag className="w-4 h-4 me-2" />}
+                          {isAdding ? t("product.adding") : t("product.addToBag")}
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
               <div className="mt-6 pt-5 border-t border-border grid grid-cols-3 gap-4">
                 <div className="flex flex-col items-center text-center gap-1.5"><Truck className="w-5 h-5 text-muted-foreground" /><p className="text-[10px] font-semibold text-muted-foreground">{t("product.shipping")}</p><p className="text-[10px] text-muted-foreground">{t("product.shippingText")}</p></div>
                 <div className="flex flex-col items-center text-center gap-1.5"><RotateCcw className="w-5 h-5 text-muted-foreground" /><p className="text-[10px] font-semibold text-muted-foreground">{t("product.returns")}</p><p className="text-[10px] text-muted-foreground">{t("product.returnsText")}</p></div>
@@ -516,6 +569,21 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   );
 };
 
+/* ─── Admin Edit FAB ─── */
+const AdminEditFab = ({ productId }: { productId: string }) => {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return null;
+  return (
+    <a
+      href={`/admin/products/edit/${productId}`}
+      className="fixed bottom-6 start-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+    >
+      <Pencil className="w-3.5 h-3.5" />
+      Edit Product
+    </a>
+  );
+};
+
 /* ─── Main Router ─── */
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -549,10 +617,20 @@ const ProductDetail = () => {
   const relatedProducts = getRelatedProducts(product.id);
 
   if (product.type === "contractor") {
-    return <ContractorProductPage product={product as ContractorProduct} collections={collections} relatedProducts={relatedProducts} />;
+    return (
+      <>
+        <ContractorProductPage product={product as ContractorProduct} collections={collections} relatedProducts={relatedProducts} />
+        <AdminEditFab productId={product.id} />
+      </>
+    );
   }
 
-  return <RetailProductPage product={product as RetailProduct} collections={collections} relatedProducts={relatedProducts} />;
+  return (
+    <>
+      <RetailProductPage product={product as RetailProduct} collections={collections} relatedProducts={relatedProducts} />
+      <AdminEditFab productId={product.id} />
+    </>
+  );
 };
 
 export default ProductDetail;
