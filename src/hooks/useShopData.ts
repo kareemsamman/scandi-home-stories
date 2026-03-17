@@ -22,7 +22,7 @@ export const useShopData = () => {
   const subCategoriesByCategory = new Map<string, SubCategory[]>();
   (dbSubCategories || []).forEach(sub => {
     const existing = subCategoriesByCategory.get(sub.category_id) || [];
-    existing.push({ id: sub.id, name: { he: sub.name_he, ar: sub.name_ar } });
+    existing.push({ id: sub.id, name: { he: sub.name_he, ar: sub.name_ar }, image: (sub as any).image || "" });
     subCategoriesByCategory.set(sub.category_id, existing);
   });
 

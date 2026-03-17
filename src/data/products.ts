@@ -39,6 +39,7 @@ export interface SizeOption {
 export interface SubCategory {
   id: string;
   name: LocaleString;
+  image?: string;
 }
 
 // Base product fields

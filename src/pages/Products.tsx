@@ -76,6 +76,10 @@ const Products = () => {
 
   const isProfilesCollection = filters.collection === profilesCategorySlug;
   const currentCollection = filters.collection !== "all" ? getCollectionBySlug(filters.collection) : null;
+  const activeSubCategory = filters.subCategory !== "all"
+    ? profileSubCategories.find((s) => s.id === filters.subCategory)
+    : null;
+  const heroImage = (activeSubCategory?.image) || currentCollection?.heroImage || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80";
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
@@ -192,7 +196,7 @@ const Products = () => {
     <Layout>
       {/* Hero */}
       <section className="relative h-[28vh] md:h-[40vh] overflow-hidden">
-        <img src={currentCollection?.heroImage || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80"} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
         <div className="relative section-container h-full flex flex-col justify-end pb-8 md:pb-12 pt-24">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
