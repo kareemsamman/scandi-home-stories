@@ -131,13 +131,9 @@ export const recordCouponUse = async (
     order_number: orderNumber,
     discount_amount: discountAmount,
   });
-  await db.from("coupons").update({ uses: db.rpc("uses") }).eq("id", couponId);
-  // Simpler increment:
-  await db.rpc("increment_coupon_uses", { coupon_id: couponId }).catch(() =>
-    db.from("coupons").select("uses").eq("id", couponId).single().then(({ data }: any) =>
-      db.from("coupons").update({ uses: (data?.uses ?? 0) + 1 }).eq("id", couponId)
-    )
-  );
+  // Increment uses counter
+  const { data: current } = await db.from("coupons").select("uses").eq("id", couponId).single();
+  await db.from("coupons").update({ uses: (current?.uses ?? 0) + 1 }).eq("id", couponId);
 };
 
 /* ── Admin hooks ── */
