@@ -450,7 +450,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
       const { data: freshInv } = await (supabase as any).from('inventory').select('variation_key,stock_quantity').eq('product_id', product.id);
       const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
       const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
-      const freshStock = activeColorId && sizeObj ? (freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999) : 9999;
+      const freshStock: number = activeColorId && sizeObj ? Number(freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999) : 9999;
       const freshEffective = Math.max(0, freshStock - cartQty);
       if (freshEffective === 0 && freshStock !== 9999) {
         qc.invalidateQueries({ queryKey: ['product_inventory', product.id] });

@@ -137,10 +137,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
 
     let freshStock = 9999;
-    if (isRetail && activeColorId) freshStock = freshMap.get(`color:${activeColorId}`) ?? 9999;
+    if (isRetail && activeColorId) freshStock = Number(freshMap.get(`color:${activeColorId}`) ?? 9999);
     if (isContractor && !isCustomColor && activeColorId) {
       const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
-      if (sizeObj) freshStock = freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999;
+      if (sizeObj) freshStock = Number(freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999);
     }
 
     const freshEffective = Math.max(0, freshStock - cartQty);
