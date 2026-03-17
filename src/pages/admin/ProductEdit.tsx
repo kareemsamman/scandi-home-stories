@@ -271,6 +271,91 @@ const ColorVariantCard = ({
   );
 };
 
+/* ─── HTML Content Editor ─── */
+const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef(value);
+  const [isPreview, setIsPreview] = useState(false);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = value;
+      innerRef.current = value;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (editorRef.current && value !== innerRef.current) {
+      editorRef.current.innerHTML = value;
+      innerRef.current = value;
+    }
+  }, [value]);
+
+  const exec = (cmd: string, val?: string) => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false, val);
+    if (editorRef.current) { innerRef.current = editorRef.current.innerHTML; onChange(editorRef.current.innerHTML); }
+  };
+
+  const insertImage = () => {
+    const url = prompt("Image URL:");
+    if (url) exec("insertHTML", `<img src="${url}" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="" />`);
+  };
+
+  const insertVideo = () => {
+    const url = prompt("YouTube URL or video URL:");
+    if (!url) return;
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
+    if (ytMatch) {
+      exec("insertHTML", `<div style="position:relative;padding-bottom:56.25%;height:0;margin:8px 0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`);
+    } else {
+      exec("insertHTML", `<video src="${url}" controls style="max-width:100%;border-radius:8px;margin:8px 0;"></video>`);
+    }
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center gap-0.5 p-2 bg-gray-50 border-b border-gray-200 flex-wrap">
+        {[
+          { label: "B", cmd: () => exec("bold"), title: "Bold", className: "font-bold" },
+          { label: "I", cmd: () => exec("italic"), title: "Italic", className: "italic" },
+          { label: "H2", cmd: () => exec("formatBlock", "h2"), title: "Heading 2", className: "font-semibold" },
+          { label: "H3", cmd: () => exec("formatBlock", "h3"), title: "Heading 3" },
+          { label: "• List", cmd: () => exec("insertUnorderedList"), title: "Bullet list" },
+          { label: "1. List", cmd: () => exec("insertOrderedList"), title: "Numbered list" },
+        ].map(btn => (
+          <button key={btn.label} onClick={btn.cmd} title={btn.title}
+            className={`px-2 py-1 text-xs hover:bg-gray-200 rounded ${btn.className || ""}`}>
+            {btn.label}
+          </button>
+        ))}
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+        <button onClick={insertImage} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1">📷 Image</button>
+        <button onClick={insertVideo} className="px-2 py-1 text-xs hover:bg-gray-200 rounded flex items-center gap-1">▶ Video</button>
+        <button onClick={() => { const url = prompt("Link URL:"); if (url) exec("createLink", url); }} className="px-2 py-1 text-xs hover:bg-gray-200 rounded">🔗 Link</button>
+        <button onClick={() => exec("removeFormat")} className="px-2 py-1 text-xs hover:bg-gray-200 rounded text-gray-500">Clear</button>
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+        <button onClick={() => setIsPreview(p => !p)} className={`px-2 py-1 text-xs rounded transition-colors ${isPreview ? "bg-blue-100 text-blue-700" : "hover:bg-gray-200"}`}>
+          {isPreview ? "Edit" : "Preview"}
+        </button>
+      </div>
+      {isPreview ? (
+        <div className="p-4 min-h-[180px] prose prose-sm max-w-none [&_img]:rounded-lg [&_video]:rounded-lg [&_iframe]:rounded-lg" dangerouslySetInnerHTML={{ __html: value }} />
+      ) : (
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={() => { if (editorRef.current) { innerRef.current = editorRef.current.innerHTML; onChange(editorRef.current.innerHTML); } }}
+          className="p-4 min-h-[180px] focus:outline-none text-sm [&_img]:rounded-lg [&_video]:rounded-lg [&_img]:max-w-full"
+          data-placeholder={placeholder}
+        />
+      )}
+    </div>
+  );
+};
+
 /* ─── Main Page ─── */
 const ProductEdit = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -306,8 +391,9 @@ const ProductEdit = () => {
     is_featured: false, is_new: false, sort_order: 0, images: [],
     category_id: "", sub_category_id: "", status: "published",
   });
-  const [transHe, setTransHe] = useState({ name: "", description: "", long_description: "", length: "" });
-  const [transAr, setTransAr] = useState({ name: "", description: "", long_description: "", length: "" });
+  const [transHe, setTransHe] = useState({ name: "", description: "", long_description: "", length: "", content_html: "" });
+  const [transAr, setTransAr] = useState({ name: "", description: "", long_description: "", length: "", content_html: "" });
+  const [productDetails, setProductDetails] = useState<{ label_he: string; label_ar: string; value_he: string; value_ar: string }[]>([]);
 
   const [variantType, setVariantType] = useState<"simple" | "variable">("simple");
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
@@ -336,8 +422,12 @@ const ProductEdit = () => {
 
     const he = translations.find((t: any) => t.locale === "he") || {};
     const ar = translations.find((t: any) => t.locale === "ar") || {};
-    setTransHe({ name: he.name || "", description: he.description || "", long_description: he.long_description || "", length: he.length || "" });
-    setTransAr({ name: ar.name || "", description: ar.description || "", long_description: ar.long_description || "", length: ar.length || "" });
+    setTransHe({ name: he.name || "", description: he.description || "", long_description: he.long_description || "", length: he.length || "", content_html: he.content_html || "" });
+    setTransAr({ name: ar.name || "", description: ar.description || "", long_description: ar.long_description || "", length: ar.length || "", content_html: ar.content_html || "" });
+
+    // Load product details
+    const pd = Array.isArray(p.product_details) ? p.product_details : [];
+    setProductDetails(pd);
 
     const rawColors: any[] = Array.isArray(p.colors) ? p.colors : [];
     const rawSizes: any[] = Array.isArray(p.sizes) ? p.sizes : [];
@@ -499,6 +589,7 @@ const ProductEdit = () => {
         colors: colorsJson,
         sizes: sizesJson,
         use_color_groups: false,
+        product_details: productDetails,
       };
 
       let pid = id;
@@ -605,6 +696,13 @@ const ProductEdit = () => {
           <Field label={locale === "he" ? "תיאור מורחב" : "وصف مفصل"}>
             <Textarea value={currentTrans.long_description} onChange={(e) => setCurrentTrans(p => ({ ...p, long_description: e.target.value }))} rows={4} />
           </Field>
+          <Field label={locale === "he" ? "תוכן ויזואלי (HTML)" : "محتوى مرئي (HTML)"}>
+            <HtmlEditor
+              value={currentTrans.content_html}
+              onChange={(v) => setCurrentTrans(p => ({ ...p, content_html: v }))}
+              placeholder={locale === "he" ? "הכנס טקסט, תמונות, סרטונים..." : "أدخل نصاً، صوراً، مقاطع فيديو..."}
+            />
+          </Field>
         </div>
       </Section>
 
@@ -661,6 +759,62 @@ const ProductEdit = () => {
             New
           </label>
         </div>
+      </Section>
+
+      {/* Product Details Repeater */}
+      <Section title="Product Details (פרטי המוצר)">
+        <div className="space-y-2">
+          {productDetails.map((detail, idx) => (
+            <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center">
+              <Input
+                value={detail.label_he}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, label_he: e.target.value } : d))}
+                placeholder="Label (HE) e.g. חומר"
+                className="h-8 text-sm"
+                dir="rtl"
+              />
+              <Input
+                value={detail.value_he}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, value_he: e.target.value } : d))}
+                placeholder="Value (HE) e.g. אלומיניום"
+                className="h-8 text-sm"
+                dir="rtl"
+              />
+              <Input
+                value={detail.label_ar}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, label_ar: e.target.value } : d))}
+                placeholder="Label (AR) e.g. مادة"
+                className="h-8 text-sm"
+                dir="rtl"
+              />
+              <Input
+                value={detail.value_ar}
+                onChange={(e) => setProductDetails(prev => prev.map((d, i) => i === idx ? { ...d, value_ar: e.target.value } : d))}
+                placeholder="Value (AR) e.g. ألومنيوم"
+                className="h-8 text-sm"
+                dir="rtl"
+              />
+              <button
+                onClick={() => setProductDetails(prev => prev.filter((_, i) => i !== idx))}
+                className="text-red-400 hover:text-red-600 shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+          {productDetails.length === 0 && (
+            <p className="text-xs text-gray-400 text-center py-3">No product details yet. Add rows below.</p>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setProductDetails(prev => [...prev, { label_he: "", label_ar: "", value_he: "", value_ar: "" }])}
+            className="w-full border-dashed"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" /> Add Detail Row
+          </Button>
+        </div>
+        <p className="text-xs text-gray-400">Fill HE + AR columns. Leave blank fields empty — blank rows won't show on front-end.</p>
       </Section>
 
       {/* Images */}

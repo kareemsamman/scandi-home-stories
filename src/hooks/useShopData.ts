@@ -58,6 +58,8 @@ export const useShopData = () => {
       featured: p.is_featured,
       new: p.is_new,
       sort_order: p.sort_order ?? 9999,
+      contentHtml: { he: (p as any).content_html_he || "", ar: (p as any).content_html_ar || "" },
+      productDetails: Array.isArray((p as any).product_details) ? (p as any).product_details : [],
     };
 
     if (p.type === "contractor") {

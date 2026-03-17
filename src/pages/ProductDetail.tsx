@@ -211,14 +211,34 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
             </div>
             <div>
               <h3 className="text-lg font-bold mb-4">{t("product.productDetails")}</h3>
-              <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.materials")}</span><span className="text-sm font-medium">{product.materials}</span></div>
-                {product.dimensions && (<div className="flex justify-between py-3.5 px-4"><span className="text-sm text-muted-foreground">{t("product.dimensions")}</span><span className="text-sm font-medium">{product.dimensions}</span></div>)}
-                <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.warranty")}</span><span className="text-sm font-medium">{t("product.warrantyText")}</span></div>
-              </div>
+              {(product as any).productDetails && (product as any).productDetails.length > 0 ? (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  {(product as any).productDetails.map((d: any, i: number) => {
+                    const label = locale === "ar" ? d.label_ar : d.label_he;
+                    const value = locale === "ar" ? d.value_ar : d.value_he;
+                    if (!label && !value) return null;
+                    return (
+                      <div key={i} className={cn("flex justify-between py-3.5 px-4", i % 2 === 0 ? "bg-muted/50" : "")}>
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                        <span className="text-sm font-medium">{value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.materials")}</span><span className="text-sm font-medium">{product.materials}</span></div>
+                  {product.dimensions && (<div className="flex justify-between py-3.5 px-4"><span className="text-sm text-muted-foreground">{t("product.dimensions")}</span><span className="text-sm font-medium">{product.dimensions}</span></div>)}
+                  <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.warranty")}</span><span className="text-sm font-medium">{t("product.warrantyText")}</span></div>
+                </div>
+              )}
             </div>
           </div>
-          <div className="mt-12"><ProductImagesSection images={product.images} /></div>
+          {(product as any).contentHtml?.[locale] ? (
+            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: (product as any).contentHtml[locale] }} />
+          ) : (
+            <div className="mt-12"><ProductImagesSection images={product.images} /></div>
+          )}
         </div>
       </section>
 
@@ -385,18 +405,23 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                       const sizePrice = colorObj?.combo_prices?.[size.id];
                       return (
                         <button key={size.id} onClick={() => !sizeOutOfStock && setSelectedSize(size.label)}
-                          className={cn("px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center relative",
+                          className={cn(
+                            "relative px-3 py-2.5 rounded-lg border text-sm font-medium transition-all min-w-[56px] text-center",
                             isActive ? "border-foreground bg-foreground text-background" :
-                            sizeOutOfStock ? "border-border opacity-40 cursor-not-allowed" :
+                            sizeOutOfStock ? "border-border text-muted-foreground cursor-not-allowed" :
                             "border-border hover:border-muted-foreground"
                           )}>
-                          <span>{size.label}</span>
+                          <span className={cn(sizeOutOfStock && "opacity-40")}>{size.label}</span>
                           {sizePrice != null && sizePrice > 0 && (
-                            <span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>
+                            <div className={cn("text-[10px] block", isActive ? "opacity-80" : "text-muted-foreground", sizeOutOfStock && "opacity-30")}>
                               {t("common.currency")}{sizePrice}
-                            </span>
+                            </div>
                           )}
-                          {sizeOutOfStock && <span className="text-[10px] text-red-400 mt-0.5">אזל</span>}
+                          {sizeOutOfStock && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-[calc(100%-8px)] h-px bg-red-400 rotate-[-15deg]" />
+                            </div>
+                          )}
                         </button>
                       );
                     })}
@@ -411,11 +436,13 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
               ) : (
                 <>
                   <div className="mb-4">
-                    <p className="text-sm font-medium text-foreground mb-2">{t("product.quantity")}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-foreground">{t("product.quantity")}</p>
+                      {maxQty < 9999 && maxQty > 0 && (
+                        <span className="text-xs text-muted-foreground">{locale === "ar" ? "متوفر" : "במלאי"}: {maxQty}</span>
+                      )}
+                    </div>
                     <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, maxQty))} max={maxQty} />
-                    {maxQty < 9999 && maxQty > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">{maxQty} {locale === "ar" ? "متوفر" : "במלאי"}</p>
-                    )}
                   </div>
 
                   <AnimatePresence mode="wait">
@@ -445,12 +472,32 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
             </div>
             <div>
               <h3 className="text-lg font-bold mb-4">{t("product.productDetails")}</h3>
-              <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.materials")}</span><span className="text-sm font-medium">{product.materials}</span></div>
-              </div>
+              {(product as any).productDetails && (product as any).productDetails.length > 0 ? (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  {(product as any).productDetails.map((d: any, i: number) => {
+                    const label = locale === "ar" ? d.label_ar : d.label_he;
+                    const value = locale === "ar" ? d.value_ar : d.value_he;
+                    if (!label && !value) return null;
+                    return (
+                      <div key={i} className={cn("flex justify-between py-3.5 px-4", i % 2 === 0 ? "bg-muted/50" : "")}>
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                        <span className="text-sm font-medium">{value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : product.materials ? (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  <div className="flex justify-between py-3.5 px-4 bg-muted/50"><span className="text-sm text-muted-foreground">{t("product.materials")}</span><span className="text-sm font-medium">{product.materials}</span></div>
+                </div>
+              ) : null}
             </div>
           </div>
-          <div className="mt-12"><ProductImagesSection images={product.images} /></div>
+          {(product as any).contentHtml?.[locale] ? (
+            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: (product as any).contentHtml[locale] }} />
+          ) : (
+            <div className="mt-12"><ProductImagesSection images={product.images} /></div>
+          )}
         </div>
       </section>
 
