@@ -29,6 +29,7 @@ export interface Order {
   orderNumber: string;
   date: string;
   total: number;
+  discountAmount: number;
   status: OrderStatus;
   items: OrderItem[];
   notes?: string;
@@ -57,6 +58,7 @@ export const useOrders = () => {
         orderNumber: o.order_number,
         date: new Date(o.created_at).toLocaleDateString("he-IL"),
         total: Number(o.total),
+        discountAmount: Number(o.discount_amount || 0),
         status: o.status as OrderStatus,
         notes: o.notes || undefined,
         receiptUrl: o.receipt_url || undefined,

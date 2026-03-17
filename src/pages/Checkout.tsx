@@ -489,13 +489,15 @@ const Checkout = () => {
 
     // Send SMS notifications
     if (smsSettings?.enabled && smsMessages) {
+      const itemsList = items.map(i => `• ${i.product.name} ×${i.quantity} – ₪${(i.product.price * i.quantity).toLocaleString()}`).join("\n");
+      const smsVars = { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString(), items: itemsList };
       const customerMsg = smsMessages.order_received?.[locale as "he" | "ar"] || smsMessages.order_received?.he;
       if (customerMsg && form.phone) {
-        sendSms(form.phone, formatSms(customerMsg, { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString() }));
+        sendSms(form.phone, formatSms(customerMsg, smsVars));
       }
       // Admin notification
       if (smsMessages.admin_new_order && smsSettings.admin_phone) {
-        sendSms(smsSettings.admin_phone, formatSms(smsMessages.admin_new_order, { name: `${form.firstName} ${form.lastName}`, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString() }));
+        sendSms(smsSettings.admin_phone, formatSms(smsMessages.admin_new_order, { ...smsVars, name: `${form.firstName} ${form.lastName}` }));
       }
     }
 

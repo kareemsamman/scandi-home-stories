@@ -40,29 +40,29 @@ const DEFAULT_BANK: BankSettings = {
 
 const DEFAULT_SMS_MESSAGES: SmsMessages = {
   order_received: {
-    he: "שלום {name}, הזמנה מספר {order_number} התקבלה בהצלחה. נבדוק את הקבלה ונאשר בקרוב.",
-    ar: "مرحباً {name}، تم استلام الطلب رقم {order_number} بنجاح. سنراجع إيصالك ونؤكد قريباً.",
+    he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n💰 סכום: ₪{total}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n💰 المبلغ: ₪{total}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🏗 AMG PERGOLA",
   },
-  admin_new_order: "הזמנה חדשה! {order_number} | {name} | {phone} | ₪{total}",
+  admin_new_order: "🛎 AMG PERGOLA - הזמנה חדשה!\n\n📋 הזמנה #{order_number}\n👤 {name}\n📞 {phone}\n💰 ₪{total}\n\n📦 מוצרים:\n{items}",
   waiting_approval: {
-    he: "שלום {name}, הזמנה מספר {order_number} ממתינה לאישור.",
-    ar: "مرحباً {name}، الطلب رقم {order_number} في انتظار الموافقة.",
+    he: "שלום {name} 👋\n⏳ הזמנה #{order_number} ממתינה לאישור\n\nנבדוק את הקבלה ונחזור אליך בקרוב ✅\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n⏳ الطلب #{order_number} في انتظار الموافقة\n\nسنراجع الإيصال ونتواصل معك قريباً ✅\n\n🏗 AMG PERGOLA",
   },
   in_process: {
-    he: "שלום {name}, הזמנה מספר {order_number} בטיפול.",
-    ar: "مرحباً {name}، الطلب رقم {order_number} قيد المعالجة.",
+    he: "שלום {name} 👋\n🔄 הזמנה #{order_number} בטיפול\n\nמתכוננים לשלוח את ההזמנה שלך 📦\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n🔄 الطلب #{order_number} قيد المعالجة\n\nنجهز طلبك للشحن 📦\n\n🏗 AMG PERGOLA",
   },
   in_delivery: {
-    he: "שלום {name}, הזמנה מספר {order_number} יצאה לדרך!",
-    ar: "مرحباً {name}، الطلب رقم {order_number} في الطريق إليك!",
+    he: "שלום {name} 🎉\n🚚 הזמנה #{order_number} יצאה לדרך!\n\nההזמנה שלך בדרך אליך ✨\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 🎉\n🚚 الطلب #{order_number} في الطريق إليك!\n\nطلبك على الطريق ✨\n\n🏗 AMG PERGOLA",
   },
   not_approved: {
-    he: "שלום {name}, הזמנה מספר {order_number} לא אושרה. אנא צור קשר.",
-    ar: "مرحباً {name}، الطلب رقم {order_number} لم تتم الموافقة عليه.",
+    he: "שלום {name}\n❌ הזמנה #{order_number} לא אושרה\n\nאנא צור קשר איתנו לפרטים נוספים 📞\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name}\n❌ الطلب #{order_number} لم تتم الموافقة عليه\n\nيرجى التواصل معنا للمزيد من التفاصيل 📞\n\n🏗 AMG PERGOLA",
   },
   cancelled: {
-    he: "שלום {name}, הזמנה מספר {order_number} בוטלה.",
-    ar: "مرحباً {name}، تم إلغاء الطلب رقم {order_number}.",
+    he: "שלום {name}\n🚫 הזמנה #{order_number} בוטלה\n\nבכל שאלה אנחנו כאן 😊\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name}\n🚫 تم إلغاء الطلب #{order_number}\n\nنحن هنا لأي استفسار 😊\n\n🏗 AMG PERGOLA",
   },
 };
 
