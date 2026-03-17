@@ -198,17 +198,11 @@ const Checkout = () => {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [cityQuery, setCityQuery] = useState(() => {
-    const defaultAddr = getDefaultAddress();
-    return defaultAddr?.city || "";
-  });
+  const [cityQuery, setCityQuery] = useState("");
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const [citySelected, setCitySelected] = useState(() => {
-    const defaultAddr = getDefaultAddress();
-    return !!defaultAddr?.city;
-  });
+  const [citySelected, setCitySelected] = useState(false);
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "">("");
@@ -221,19 +215,16 @@ const Checkout = () => {
   const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-fill from Supabase auth profile + saved addresses (only when logged in)
-  const [form, setForm] = useState(() => {
-    const defaultAddr = getDefaultAddress();
-    return {
-      firstName: authProfile?.first_name || defaultAddr?.firstName || "",
-      lastName: authProfile?.last_name || defaultAddr?.lastName || "",
-      email: user?.email || "",
-      phone: authProfile?.phone || defaultAddr?.phone || "",
-      city: defaultAddr?.city || "",
-      address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : "",
-      apartment: defaultAddr?.apartment || "",
-      note: "",
-    };
+  // Start empty — useEffect fills fields once auth loads
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    city: "",
+    address: "",
+    apartment: "",
+    note: "",
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -250,6 +241,41 @@ const Checkout = () => {
     const timer = setTimeout(() => setShowSkeleton(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // When user logs out → clear all contact + address fields
+  useEffect(() => {
+    if (!user) {
+      setForm({ firstName: "", lastName: "", email: "", phone: "", city: "", address: "", apartment: "", note: "" });
+      setCityQuery("");
+      setCitySelected(false);
+      setCitySuggestions([]);
+      setSelectedZone("");
+      setSelectedAddressId("");
+    }
+  }, [user]);
+
+  // When auth profile loads → fill contact + address fields
+  useEffect(() => {
+    if (user && authProfile) {
+      const defaultAddr = getDefaultAddress();
+      setForm((prev) => ({
+        ...prev,
+        firstName: authProfile.first_name || prev.firstName,
+        lastName: authProfile.last_name || prev.lastName,
+        email: user.email || prev.email,
+        phone: authProfile.phone || prev.phone,
+        city: defaultAddr?.city || prev.city,
+        address: defaultAddr ? `${defaultAddr.street} ${defaultAddr.houseNumber}` : prev.address,
+        apartment: defaultAddr?.apartment || prev.apartment,
+      }));
+      if (defaultAddr?.city) {
+        setCityQuery(defaultAddr.city);
+        setCitySelected(true);
+        const z = detectZoneFromCity(defaultAddr.city);
+        if (z) setSelectedZone(z);
+      }
+    }
+  }, [user, authProfile]);
 
   useEffect(() => {
     if (!showSkeleton && step === "form") firstInputRef.current?.focus();
