@@ -481,6 +481,7 @@ const Checkout = () => {
           discountAmount: appliedCoupon?.discountAmount,
         },
         items: items.map((item) => ({
+          productId: item.product.id,
           name: item.product.name,
           image: item.product.images[0],
           price: item.product.price,

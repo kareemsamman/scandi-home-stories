@@ -22,6 +22,7 @@ export interface OrderItem {
   quantity: number;
   size?: string;
   color?: string;
+  productId?: string;
 }
 
 export interface Order {
@@ -36,6 +37,51 @@ export interface Order {
   receiptUrl?: string;
   locale?: string;
 }
+
+/* ---- Inventory adjustment helper ---- */
+// delta: negative to deduct stock, positive to restore
+export const adjustInventory = async (
+  items: { productId?: string; quantity: number; color?: string; size?: string }[],
+  delta: -1 | 1
+) => {
+  for (const item of items) {
+    if (!item.productId) continue;
+
+    // Fetch all inventory rows for this product
+    const { data: rows } = await db
+      .from("inventory")
+      .select("id, variation_key, stock_quantity")
+      .eq("product_id", item.productId);
+
+    if (!rows || rows.length === 0) continue; // product not tracked
+
+    let targetRow = rows[0]; // default: first row
+
+    if (rows.length > 1) {
+      // Try to match variation_key by color/size
+      const candidates = [
+        item.color && item.size ? `${item.color}_${item.size}` : null,
+        item.color && item.size ? `${item.size}_${item.color}` : null,
+        item.color ?? null,
+        item.size ?? null,
+        "",
+      ].filter(Boolean) as string[];
+
+      for (const key of candidates) {
+        const match = rows.find(
+          (r: any) => r.variation_key.toLowerCase() === key.toLowerCase()
+        );
+        if (match) { targetRow = match; break; }
+      }
+    }
+
+    const newQty = Math.max(0, targetRow.stock_quantity + delta * item.quantity);
+    await db
+      .from("inventory")
+      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+      .eq("id", targetRow.id);
+  }
+};
 
 /* ---- fetch orders for current user ---- */
 export const useOrders = () => {
@@ -70,6 +116,7 @@ export const useOrders = () => {
           quantity: item.quantity,
           size: item.size || undefined,
           color: item.color_name || undefined,
+          productId: item.product_id || undefined,
         })),
       })) as Order[];
     },
@@ -136,6 +183,7 @@ export const useAddOrder = () => {
         const { error: itemsErr } = await db.from("order_items").insert(
           items.map((item) => ({
             order_id: newOrder.id,
+            product_id: item.productId || null,
             product_name: item.name,
             product_image: item.image,
             price: item.price,
@@ -147,8 +195,18 @@ export const useAddOrder = () => {
         if (itemsErr) throw itemsErr;
       }
 
+      // Deduct stock for each ordered item
+      await adjustInventory(
+        items.map(i => ({ productId: i.productId, quantity: i.quantity, color: i.color, size: i.size })),
+        -1
+      );
+
       return newOrder;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["user-orders"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-orders"] });
+      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+    },
   });
 };

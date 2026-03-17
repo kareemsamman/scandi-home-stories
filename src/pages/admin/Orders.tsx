@@ -6,6 +6,7 @@ import { useOrders, type DbOrderItem } from "@/hooks/useDbData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
+import { adjustInventory } from "@/hooks/useOrders";
 
 /* ── Status config ── */
 const STATUSES = [
@@ -52,7 +53,26 @@ const AdminOrders = () => {
   });
 
   const handleStatusChange = async (order: any, newStatus: string) => {
+    const prevStatus = order.status;
     await updateStatus.mutateAsync({ id: order.id, status: newStatus });
+
+    // Inventory adjustments
+    const cancelStatuses = ["not_approved", "cancelled"];
+    const orderItems = (order.order_items || []).map((i: any) => ({
+      productId: i.product_id || undefined,
+      quantity: i.quantity,
+      color: i.color_name || undefined,
+      size: i.size || undefined,
+    }));
+    if (cancelStatuses.includes(newStatus) && !cancelStatuses.includes(prevStatus)) {
+      // Order being cancelled/rejected → restore stock
+      await adjustInventory(orderItems, 1);
+      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
+    } else if (!cancelStatuses.includes(newStatus) && cancelStatuses.includes(prevStatus)) {
+      // Order being un-cancelled → deduct stock again
+      await adjustInventory(orderItems, -1);
+      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
+    }
 
     // Auto-send SMS on status change if SMS is enabled
     if (!smsSettings?.enabled || !smsMessages) return;
