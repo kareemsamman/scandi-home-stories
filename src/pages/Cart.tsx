@@ -9,6 +9,8 @@ import { useLocale } from "@/i18n/useLocale";
 import { getLocaleText } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CouponInput } from "@/components/CouponInput";
+import { useCouponStore } from "@/hooks/useCoupons";
 
 /* ── Lock icon for checkout button ── */
 const LockIcon = () => (
@@ -27,7 +29,9 @@ const Cart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
   const { t, locale, localePath } = useLocale();
   const subtotal = getSubtotal();
-  const total = subtotal;
+  const { applied: appliedCoupon } = useCouponStore();
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
+  const total = Math.max(0, subtotal - discountAmount);
   const [shippingOpen, setShippingOpen] = useState(false);
 
   /* ── Empty state ── */
@@ -166,17 +170,24 @@ const Cart = () => {
               <div className="rounded-xl border border-border bg-muted/30 p-6 lg:sticky lg:top-28 space-y-5">
                 <h2 className="text-lg font-bold">{t("cart.orderSummary")}</h2>
 
+                <CouponInput />
+
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                     <span className="font-medium">{t("common.currency")}{subtotal.toLocaleString()}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-green-700">
+                      <span className="font-medium">{t("checkout.discountAppliedLabel")} ({appliedCoupon?.coupon.code})</span>
+                      <span className="font-semibold">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.shipping")}</span>
                     <span className="font-medium">{t("cart.complimentary")}</span>
                   </div>
                 </div>
-
 
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between text-base font-bold">

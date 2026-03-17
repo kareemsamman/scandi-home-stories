@@ -11,6 +11,8 @@ import { useAddOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
+import { useCouponStore, recordCouponUse } from "@/hooks/useCoupons";
+import { CouponInput } from "@/components/CouponInput";
 import logoWhite from "@/assets/logo-white.png";
 
 /* ---------- icons ---------- */
@@ -186,6 +188,7 @@ const Checkout = () => {
   const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
 
   const subtotal = getSubtotal();
+  const { applied: appliedCoupon, remove: removeCoupon } = useCouponStore();
   const itemCount = getItemCount();
 
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -193,10 +196,7 @@ const Checkout = () => {
   const [summaryOpen, setSummaryOpen] = useState(!isMobile);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [discountCode, setDiscountCode] = useState("");
-  const [discountApplied, setDiscountApplied] = useState(false);
-  const [discountError, setDiscountError] = useState("");
-  const [discountLoading, setDiscountLoading] = useState(false);
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const [cityQuery, setCityQuery] = useState("");
   const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
   const [cityLoading, setCityLoading] = useState(false);
@@ -231,7 +231,6 @@ const Checkout = () => {
   const cityRef = useRef<HTMLDivElement>(null);
   const discountInputRef = useRef<HTMLInputElement>(null);
 
-  const discountAmount = discountApplied ? 10 : 0;
   const isFreeShipping = subtotal - discountAmount >= shipping.threshold;
   const shippingCost = isFreeShipping || !selectedZone ? 0 : shipping.zones[selectedZone];
   const totalAfterDiscount = Math.max(0, subtotal - discountAmount) + shippingCost;
@@ -331,18 +330,6 @@ const Checkout = () => {
     setErrors(validate());
   };
 
-  const handleApplyDiscount = async () => {
-    if (!discountCode.trim() || discountLoading) return;
-    setDiscountLoading(true);
-    setDiscountError("");
-    await new Promise((r) => setTimeout(r, 1000));
-    if (discountCode.trim().toLowerCase() === "code10") {
-      setDiscountApplied(true); setDiscountError("");
-    } else {
-      setDiscountApplied(false); setDiscountError(t("checkout.invalidDiscount"));
-    }
-    setDiscountLoading(false);
-  };
 
   // Step 1: validate form → move to payment step
   const handleSubmit = async (e: React.FormEvent) => {
@@ -428,6 +415,11 @@ const Checkout = () => {
     } catch {
       // order save failed — still let user continue
     }
+    // Record coupon use
+    if (appliedCoupon) {
+      await recordCouponUse(appliedCoupon.coupon.id, user?.id, orderNumber, appliedCoupon.discountAmount).catch(() => {});
+      removeCoupon();
+    }
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
@@ -455,21 +447,16 @@ const Checkout = () => {
   /* ---------- discount block ---------- */
   const discountBlockJSX = (
     <div className="py-4">
-      <div className="flex gap-2">
-        <input ref={discountInputRef} value={discountCode}
+      <CouponInput />
+      <div className="hidden">
+        <input ref={discountInputRef} value={""}
           onChange={(e) => setDiscountCode(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleApplyDiscount(); } }}
           placeholder={t("checkout.discountPlaceholder")}
-          className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/30 focus:border-[#4f6df5] transition-colors"
+          className="flex-1 h-[48px] px-4 rounded-lg border border-border text-sm bg-white placeholder:text-muted-foreground focus:outline-none"
+          readOnly
         />
-        <button type="button" onClick={handleApplyDiscount} disabled={discountLoading || !discountCode.trim()}
-          className="h-[48px] px-5 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors disabled:opacity-50 min-w-[70px] flex items-center justify-center"
-        >
-          {discountLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("checkout.applyDiscount")}
-        </button>
       </div>
-      {discountError && <p className="text-xs text-red-500 mt-1.5">{discountError}</p>}
-      {discountApplied && <p className="text-xs text-green-600 mt-1.5">{t("checkout.discountAppliedLabel")} -{t("common.currency")}10</p>}
     </div>
   );
 
@@ -503,10 +490,10 @@ const Checkout = () => {
           <span className="text-muted-foreground">{t("cart.subtotal")}</span>
           <span className="font-medium">{t("common.currency")}{subtotal.toLocaleString()}</span>
         </div>
-        {discountApplied && (
+        {discountAmount > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("checkout.discountAppliedLabel")}</span>
-            <span className="font-medium text-green-600">-{t("common.currency")}10</span>
+            <span className="text-green-700 font-medium">{t("checkout.discountAppliedLabel")} ({appliedCoupon?.coupon.code})</span>
+            <span className="font-semibold text-green-700">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
           </div>
         )}
         <div className="flex justify-between text-sm">
