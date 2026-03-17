@@ -18,21 +18,37 @@ Deno.serve(async (req) => {
     // Verify caller is admin
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const { data: roleData } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin");
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const method = req.method;
 
     // ─── GET: List all users ───
     if (method === "GET") {
-      const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const {
+        data: { users },
+        error,
+      } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       if (error) throw error;
 
       const { data: profiles } = await supabaseAdmin.from("profiles").select("*");
@@ -53,7 +69,9 @@ Deno.serve(async (req) => {
         };
       });
 
-      return new Response(JSON.stringify(enriched), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(enriched), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ─── POST: Create user ───
@@ -63,7 +81,8 @@ Deno.serve(async (req) => {
 
       if (!email || !password) {
         return new Response(JSON.stringify({ error: "Email and password are required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
@@ -79,15 +98,17 @@ Deno.serve(async (req) => {
       // The trigger auto-creates profile with first/last name but skips phone.
       // Update profile explicitly to store phone.
       if (phone) {
-        await supabaseAdmin.from("profiles").update({ phone, first_name: firstName || "", last_name: lastName || "" }).eq("user_id", newUser.user.id);
+        await supabaseAdmin
+          .from("profiles")
+          .update({ phone, first_name: firstName || "", last_name: lastName || "" })
+          .eq("user_id", newUser.user.id);
       }
 
       // Add extra role if not customer.
       if (role && role !== "customer") {
-        await supabaseAdmin.from("user_roles").upsert(
-          { user_id: newUser.user.id, role },
-          { onConflict: "user_id,role" }
-        );
+        await supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: newUser.user.id, role }, { onConflict: "user_id,role" });
       }
 
       return new Response(JSON.stringify({ success: true, userId: newUser.user.id }), {
@@ -102,7 +123,10 @@ Deno.serve(async (req) => {
 
       if (action === "delete_user") {
         if (userId === user.id) {
-          return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
         if (error) throw error;
@@ -112,7 +136,9 @@ Deno.serve(async (req) => {
         await supabaseAdmin.from("user_roles").delete().eq("user_id", userId).eq("role", role);
       }
 
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ─── PATCH: Update user profile + auth ───
@@ -120,11 +146,14 @@ Deno.serve(async (req) => {
       const body = await req.json();
       const { userId, firstName, lastName, phone, email, newPassword } = body;
 
-      await supabaseAdmin.from("profiles").update({
-        first_name: firstName || "",
-        last_name: lastName || "",
-        phone: phone || "",
-      }).eq("user_id", userId);
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          first_name: firstName || "",
+          last_name: lastName || "",
+          phone: phone || "",
+        })
+        .eq("user_id", userId);
 
       const authUpdates: Record<string, string> = {};
       if (email) authUpdates.email = email;
@@ -134,7 +163,9 @@ Deno.serve(async (req) => {
         if (error) throw error;
       }
 
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ─── DELETE: Delete user ───
@@ -142,15 +173,26 @@ Deno.serve(async (req) => {
       const body = await req.json();
       const { userId } = body;
       if (userId === user.id) {
-        return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
