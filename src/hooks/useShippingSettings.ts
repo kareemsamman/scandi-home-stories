@@ -84,7 +84,7 @@ export const CITY_ZONE_MAP: Record<string, keyof ShippingSettings["zones"]> = {
   "גדרה": "center", "קריית עקרון": "center", "כפר יונה": "center",
   "תל מונד": "center", "כפר נטר": "center", "אזור": "center",
   "בית דגן": "center", "פרדסיה": "center", "ג'לג'וליה": "center",
-  "כפר קאסם": "center", "ראש העין": "center", "ערערה": "center",
+  "כפר קאסם": "center", "ערערה": "center",
   "באקה אל-גרבייה": "center", "ג'ת": "center", "מועאוויה": "center",
   "כפר ברא": "center", "תירה": "center", "נעמת": "center",
 
