@@ -36,6 +36,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSiteContent from "./pages/admin/SiteContent";
 import ProductEdit from "./pages/admin/ProductEdit";
+import AdminAttributes from "./pages/admin/Attributes";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="site-content" element={<AdminSiteContent />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="attributes" element={<AdminAttributes />} />
             </Route>
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>

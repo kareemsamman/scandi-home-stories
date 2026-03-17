@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, GripVertical, ImageIcon, Check, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ImageIcon, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
+import { useColorTaxonomy, useLengthTaxonomy, TaxColor, TaxLength } from "@/hooks/useProductTaxonomy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,39 +15,18 @@ import { useToast } from "@/hooks/use-toast";
 const db = supabase as any;
 
 /* ─── Types ─── */
-interface ColorVariant {
-  _key: string; // local temp key for react
-  label_he: string;
-  label_ar: string;
-  hex: string;
+interface SimpleColorVariant {
+  colorId: string;
   price: string;
-  stock_quantity: string;
-  in_stock: boolean;
+  stock: string;
+  inStock: boolean;
 }
 
-interface LengthVariant {
-  _key: string;
-  label_he: string;
-  label_ar: string;
-  value: string;
-  price: string;
-  stock_quantity: string;
-  in_stock: boolean;
-}
+// For variable: stock per color+length combo
+type ComboKey = string; // `${colorId}|${lengthId}`
+interface ComboStock { stock: string; inStock: boolean; }
 
-const uid = () => Math.random().toString(36).slice(2);
-
-const emptyColor = (): ColorVariant => ({
-  _key: uid(), label_he: "", label_ar: "", hex: "#cccccc",
-  price: "", stock_quantity: "", in_stock: true,
-});
-
-const emptyLength = (): LengthVariant => ({
-  _key: uid(), label_he: "", label_ar: "", value: "",
-  price: "", stock_quantity: "", in_stock: true,
-});
-
-/* ─── Field ─── */
+/* ─── Helpers ─── */
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
     <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
@@ -54,126 +34,12 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 );
 
-/* ─── Color Variant Row ─── */
-const ColorRow = ({ v, onChange, onRemove }: {
-  v: ColorVariant;
-  onChange: (updated: ColorVariant) => void;
-  onRemove: () => void;
-}) => {
-  const set = (k: keyof ColorVariant, val: any) => onChange({ ...v, [k]: val });
-  return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-gray-300" />
-          <div
-            className="w-7 h-7 rounded-full border-2 border-white shadow-sm cursor-pointer relative overflow-hidden"
-            style={{ background: v.hex }}
-          >
-            <input
-              type="color"
-              value={v.hex}
-              onChange={(e) => set("hex", e.target.value)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          </div>
-          <span className="text-sm font-medium text-gray-700">{v.label_he || "צבע חדש"}</span>
-        </div>
-        <button onClick={onRemove} className="text-red-400 hover:text-red-600 transition-colors">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="שם (עברית)">
-          <Input value={v.label_he} onChange={(e) => set("label_he", e.target.value)} placeholder="לבן" />
-        </Field>
-        <Field label="שם (ערבית)">
-          <Input value={v.label_ar} onChange={(e) => set("label_ar", e.target.value)} placeholder="أبيض" />
-        </Field>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="מחיר (₪)">
-          <Input type="number" value={v.price} onChange={(e) => set("price", e.target.value)} placeholder="0" />
-        </Field>
-        <Field label="מלאי">
-          <Input type="number" value={v.stock_quantity} onChange={(e) => set("stock_quantity", e.target.value)} placeholder="0" />
-        </Field>
-        <Field label="סטטוס">
-          <button
-            type="button"
-            onClick={() => set("in_stock", !v.in_stock)}
-            className={`w-full h-9 rounded-md border text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${
-              v.in_stock
-                ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-            }`}
-          >
-            {v.in_stock ? <><Check className="w-3.5 h-3.5" /> במלאי</> : <><X className="w-3.5 h-3.5" /> אזל</>}
-          </button>
-        </Field>
-      </div>
-    </div>
-  );
-};
-
-/* ─── Length Variant Row ─── */
-const LengthRow = ({ v, onChange, onRemove }: {
-  v: LengthVariant;
-  onChange: (updated: LengthVariant) => void;
-  onRemove: () => void;
-}) => {
-  const set = (k: keyof LengthVariant, val: any) => onChange({ ...v, [k]: val });
-  return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-gray-300" />
-          <span className="text-sm font-medium text-gray-700">{v.label_he || "אורך חדש"}</span>
-        </div>
-        <button onClick={onRemove} className="text-red-400 hover:text-red-600 transition-colors">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="שם (עברית)">
-          <Input value={v.label_he} onChange={(e) => set("label_he", e.target.value)} placeholder="2 מטר" />
-        </Field>
-        <Field label="שם (ערבית)">
-          <Input value={v.label_ar} onChange={(e) => set("label_ar", e.target.value)} placeholder="متران" />
-        </Field>
-        <Field label="ערך">
-          <Input value={v.value} onChange={(e) => set("value", e.target.value)} placeholder="2m" />
-        </Field>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="מחיר (₪)">
-          <Input type="number" value={v.price} onChange={(e) => set("price", e.target.value)} placeholder="0" />
-        </Field>
-        <Field label="מלאי">
-          <Input type="number" value={v.stock_quantity} onChange={(e) => set("stock_quantity", e.target.value)} placeholder="0" />
-        </Field>
-        <Field label="סטטוס">
-          <button
-            type="button"
-            onClick={() => set("in_stock", !v.in_stock)}
-            className={`w-full h-9 rounded-md border text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${
-              v.in_stock
-                ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-            }`}
-          >
-            {v.in_stock ? <><Check className="w-3.5 h-3.5" /> במלאי</> : <><X className="w-3.5 h-3.5" /> אזל</>}
-          </button>
-        </Field>
-      </div>
-    </div>
-  );
-};
-
-/* ─── Section Card ─── */
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) => (
   <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">{title}</h2>
+    <div className="flex items-center justify-between">
+      <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">{title}</h2>
+      {action}
+    </div>
     {children}
   </div>
 );
@@ -188,6 +54,8 @@ const ProductEdit = () => {
   const { locale } = useAdminLanguage();
   const { data: categories = [] } = useCategories();
   const { data: subCategories = [] } = useSubCategories();
+  const { data: allColors = [] } = useColorTaxonomy();
+  const { data: allLengths = [] } = useLengthTaxonomy();
 
   /* ── Load product ── */
   const { data: productData, isLoading } = useQuery({
@@ -203,19 +71,31 @@ const ProductEdit = () => {
     },
   });
 
-  /* ── Form state ── */
+  /* ── Base form state ── */
   const [base, setBase] = useState<any>({
     slug: "", type: "retail", price: 0, sku: "", materials: "", dimensions: "",
-    is_featured: false, is_new: false, sort_order: 0, images: [],
-    use_color_groups: false,
+    is_featured: false, is_new: false, sort_order: 0, images: [], use_color_groups: false,
+    category_id: "", sub_category_id: "",
   });
   const [transHe, setTransHe] = useState({ name: "", description: "", long_description: "", length: "" });
   const [transAr, setTransAr] = useState({ name: "", description: "", long_description: "", length: "" });
-  const [colors, setColors] = useState<ColorVariant[]>([]);
-  const [lengths, setLengths] = useState<LengthVariant[]>([]);
+
+  // Variant type: "simple" (colors only) | "variable" (colors × lengths)
+  const [variantType, setVariantType] = useState<"simple" | "variable">("simple");
+
+  // Selected color IDs from taxonomy
+  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
+  // Per-color data for simple products
+  const [simpleVariants, setSimpleVariants] = useState<Record<string, SimpleColorVariant>>({});
+
+  // Selected length IDs from taxonomy (variable only)
+  const [selectedLengthIds, setSelectedLengthIds] = useState<string[]>([]);
+  // Per color+length combo stock (variable products)
+  const [comboStock, setComboStock] = useState<Record<ComboKey, ComboStock>>({});
+
   const [imageUrl, setImageUrl] = useState("");
 
-  /* ── Populate form when data loads ── */
+  /* ── Populate when data loads ── */
   useEffect(() => {
     if (!productData) return;
     const { product: p, translations, inventory } = productData;
@@ -241,57 +121,97 @@ const ProductEdit = () => {
     setTransHe({ name: he.name || "", description: he.description || "", long_description: he.long_description || "", length: he.length || "" });
     setTransAr({ name: ar.name || "", description: ar.description || "", long_description: ar.long_description || "", length: ar.length || "" });
 
-    // Build color variants from colors JSON + inventory
     const rawColors: any[] = Array.isArray(p.colors) ? p.colors : [];
-    setColors(rawColors.map((c: any) => {
-      const invRow = inventory.find((i: any) => i.variation_key === `color:${c.label_he || c.value || c.name_he}`);
-      return {
-        _key: uid(),
-        label_he: c.label_he || c.name_he || "",
-        label_ar: c.label_ar || c.name_ar || "",
-        hex: c.hex || c.value || "#cccccc",
-        price: String(c.price ?? ""),
-        stock_quantity: String(invRow?.stock_quantity ?? ""),
-        in_stock: invRow ? (invRow.stock_quantity ?? 0) > 0 : (c.in_stock !== false),
-      };
-    }));
-
-    // Build length variants from sizes JSON + inventory
     const rawSizes: any[] = Array.isArray(p.sizes) ? p.sizes : [];
-    setLengths(rawSizes.map((s: any) => {
-      const invRow = inventory.find((i: any) => i.variation_key === `length:${s.value || s.label_he || s.name_he}`);
-      return {
-        _key: uid(),
-        label_he: s.label_he || s.name_he || "",
-        label_ar: s.label_ar || s.name_ar || "",
-        value: s.value || "",
-        price: String(s.price ?? ""),
-        stock_quantity: String(invRow?.stock_quantity ?? ""),
-        in_stock: invRow ? (invRow.stock_quantity ?? 0) > 0 : (s.in_stock !== false),
+    const isVariable = rawSizes.length > 0;
+    setVariantType(isVariable ? "variable" : "simple");
+
+    // Match saved colors to taxonomy IDs (by label_he or hex)
+    // We store taxonomy id in colors json as "tax_id" field
+    const colorIds = rawColors.map((c: any) => c.tax_id || c.id).filter(Boolean);
+    setSelectedColorIds(colorIds);
+
+    const lengthIds = rawSizes.map((s: any) => s.tax_id || s.id).filter(Boolean);
+    setSelectedLengthIds(lengthIds);
+
+    // Rebuild simpleVariants
+    const sv: Record<string, SimpleColorVariant> = {};
+    for (const c of rawColors) {
+      const taxId = c.tax_id || c.id;
+      if (!taxId) continue;
+      const invRow = inventory.find((i: any) => i.variation_key === `color:${taxId}`);
+      sv[taxId] = {
+        colorId: taxId,
+        price: String(c.price ?? ""),
+        stock: String(invRow?.stock_quantity ?? ""),
+        inStock: invRow ? (invRow.stock_quantity ?? 0) > 0 : (c.in_stock !== false),
       };
-    }));
+    }
+    setSimpleVariants(sv);
+
+    // Rebuild comboStock for variable
+    const cs: Record<string, ComboStock> = {};
+    for (const inv_row of inventory) {
+      const key = inv_row.variation_key || "";
+      if (key.startsWith("combo:")) {
+        const comboKey = key.replace("combo:", "");
+        cs[comboKey] = { stock: String(inv_row.stock_quantity ?? ""), inStock: (inv_row.stock_quantity ?? 0) > 0 };
+      }
+    }
+    setComboStock(cs);
   }, [productData]);
+
+  /* ── Derived ── */
+  const currentTrans = locale === "he" ? transHe : transAr;
+  const setCurrentTrans = locale === "he" ? setTransHe : setTransAr;
+  const isRtl = locale === "ar";
+
+  const selectedColors = allColors.filter(c => selectedColorIds.includes(c.id));
+  const selectedLengths = allLengths.filter(l => selectedLengthIds.includes(l.id));
+
+  const toggleColor = (id: string) => {
+    setSelectedColorIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+    if (!selectedColorIds.includes(id)) {
+      setSimpleVariants(prev => ({
+        ...prev,
+        [id]: { colorId: id, price: "", stock: "", inStock: true },
+      }));
+    }
+  };
+
+  const toggleLength = (id: string) => {
+    setSelectedLengthIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const getCombo = (colorId: string, lengthId: string): ComboStock =>
+    comboStock[`${colorId}|${lengthId}`] ?? { stock: "", inStock: true };
+
+  const setCombo = (colorId: string, lengthId: string, val: Partial<ComboStock>) => {
+    const key = `${colorId}|${lengthId}`;
+    setComboStock(prev => ({ ...prev, [key]: { ...getCombo(colorId, lengthId), ...val } }));
+  };
 
   /* ── Save ── */
   const save = useMutation({
     mutationFn: async () => {
       // Build colors JSON
-      const colorsJson = colors.map((c) => ({
+      const colorsJson = selectedColors.map(c => ({
+        tax_id: c.id,
         label_he: c.label_he,
         label_ar: c.label_ar,
         hex: c.hex,
-        price: c.price ? Number(c.price) : undefined,
-        in_stock: c.in_stock,
+        price: variantType === "simple" ? (simpleVariants[c.id]?.price ? Number(simpleVariants[c.id].price) : undefined) : undefined,
+        in_stock: variantType === "simple" ? (simpleVariants[c.id]?.inStock ?? true) : true,
       }));
 
       // Build sizes JSON
-      const sizesJson = lengths.map((l) => ({
-        label_he: l.label_he,
-        label_ar: l.label_ar,
-        value: l.value,
-        price: l.price ? Number(l.price) : undefined,
-        in_stock: l.in_stock,
-      }));
+      const sizesJson = variantType === "variable"
+        ? selectedLengths.map(l => ({ tax_id: l.id, label_he: l.label_he, label_ar: l.label_ar, value: l.value }))
+        : [];
 
       const { id, created_at, updated_at, ...baseFields } = base;
       const payload = {
@@ -301,45 +221,44 @@ const ProductEdit = () => {
         sizes: sizesJson,
       };
 
-      let productId = id;
-      if (productId) {
-        const { error } = await db.from("products").update(payload).eq("id", productId);
+      let pid = id;
+      if (pid) {
+        const { error } = await db.from("products").update(payload).eq("id", pid);
         if (error) throw error;
       } else {
         const { data, error } = await db.from("products").insert(payload).select("id").single();
         if (error) throw error;
-        productId = data.id;
+        pid = data.id;
       }
 
-      // Upsert translations
+      // Translations
       for (const [loc, trans] of [["he", transHe], ["ar", transAr]] as const) {
         await db.from("product_translations").upsert(
-          { product_id: productId, locale: loc, ...trans },
+          { product_id: pid, locale: loc, ...trans },
           { onConflict: "product_id,locale" }
         );
       }
 
-      // Sync inventory for colors
-      for (const c of colors) {
-        if (!c.label_he) continue;
-        const key = `color:${c.label_he}`;
-        await db.from("inventory").upsert(
-          { product_id: productId, variation_key: key, stock_quantity: c.stock_quantity ? Number(c.stock_quantity) : 0 },
-          { onConflict: "product_id,variation_key" }
-        );
+      // Inventory
+      if (variantType === "simple") {
+        for (const c of selectedColors) {
+          const sv = simpleVariants[c.id];
+          await db.from("inventory").upsert(
+            { product_id: pid, variation_key: `color:${c.id}`, stock_quantity: sv?.stock ? Number(sv.stock) : 0 },
+            { onConflict: "product_id,variation_key" }
+          );
+        }
+      } else {
+        for (const c of selectedColors) {
+          for (const l of selectedLengths) {
+            const cs = getCombo(c.id, l.id);
+            await db.from("inventory").upsert(
+              { product_id: pid, variation_key: `combo:${c.id}|${l.id}`, stock_quantity: cs.stock ? Number(cs.stock) : 0 },
+              { onConflict: "product_id,variation_key" }
+            );
+          }
+        }
       }
-
-      // Sync inventory for lengths
-      for (const l of lengths) {
-        if (!l.value && !l.label_he) continue;
-        const key = `length:${l.value || l.label_he}`;
-        await db.from("inventory").upsert(
-          { product_id: productId, variation_key: key, stock_quantity: l.stock_quantity ? Number(l.stock_quantity) : 0 },
-          { onConflict: "product_id,variation_key" }
-        );
-      }
-
-      return productId;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["products"] });
@@ -359,65 +278,39 @@ const ProductEdit = () => {
     );
   }
 
+  const productName = locale === "he" ? transHe.name : transAr.name;
+
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate("/admin/products")}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Products
+        <button onClick={() => navigate("/admin/products")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Products
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {isNew ? "New Product" : (transHe.name || base.slug || "Edit Product")}
+        <h1 className="text-2xl font-bold text-gray-900 flex-1">
+          {isNew ? "New Product" : (productName || base.slug || "Edit Product")}
         </h1>
+        <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
+          Editing: {locale === "he" ? "Hebrew 🇮🇱" : "Arabic 🇸🇦"}
+        </span>
       </div>
 
-      {/* Translations */}
-      <Section title="Content">
-        <div className="grid grid-cols-2 gap-6">
-          {/* Hebrew */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Hebrew 🇮🇱</p>
-            <Field label="שם מוצר">
-              <Input value={transHe.name} onChange={(e) => setTransHe((p) => ({ ...p, name: e.target.value }))} placeholder="שם המוצר" />
-            </Field>
-            <Field label="תיאור קצר">
-              <Textarea value={transHe.description} onChange={(e) => setTransHe((p) => ({ ...p, description: e.target.value }))} rows={2} />
-            </Field>
-            <Field label="תיאור מורחב">
-              <Textarea value={transHe.long_description} onChange={(e) => setTransHe((p) => ({ ...p, long_description: e.target.value }))} rows={3} />
-            </Field>
-            {base.type === "contractor" && (
-              <Field label="אורך">
-                <Input value={transHe.length} onChange={(e) => setTransHe((p) => ({ ...p, length: e.target.value }))} placeholder="2 מטר" />
-              </Field>
-            )}
-          </div>
-          {/* Arabic */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Arabic 🇸🇦</p>
-            <Field label="اسم المنتج">
-              <Input value={transAr.name} onChange={(e) => setTransAr((p) => ({ ...p, name: e.target.value }))} placeholder="اسم المنتج" dir="rtl" />
-            </Field>
-            <Field label="وصف قصير">
-              <Textarea value={transAr.description} onChange={(e) => setTransAr((p) => ({ ...p, description: e.target.value }))} rows={2} dir="rtl" />
-            </Field>
-            <Field label="وصف مفصل">
-              <Textarea value={transAr.long_description} onChange={(e) => setTransAr((p) => ({ ...p, long_description: e.target.value }))} rows={3} dir="rtl" />
-            </Field>
-            {base.type === "contractor" && (
-              <Field label="الطول">
-                <Input value={transAr.length} onChange={(e) => setTransAr((p) => ({ ...p, length: e.target.value }))} dir="rtl" />
-              </Field>
-            )}
-          </div>
+      {/* Content (single language, based on admin toggle) */}
+      <Section title={`Content — ${locale === "he" ? "Hebrew" : "Arabic"}`}>
+        <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
+          <Field label={locale === "he" ? "שם מוצר" : "اسم المنتج"}>
+            <Input value={currentTrans.name} onChange={(e) => setCurrentTrans(p => ({ ...p, name: e.target.value }))} />
+          </Field>
+          <Field label={locale === "he" ? "תיאור קצר" : "وصف قصير"}>
+            <Textarea value={currentTrans.description} onChange={(e) => setCurrentTrans(p => ({ ...p, description: e.target.value }))} rows={2} />
+          </Field>
+          <Field label={locale === "he" ? "תיאור מורחב" : "وصف مفصل"}>
+            <Textarea value={currentTrans.long_description} onChange={(e) => setCurrentTrans(p => ({ ...p, long_description: e.target.value }))} rows={4} />
+          </Field>
         </div>
       </Section>
 
-      {/* Basic Info */}
+      {/* Product Info */}
       <Section title="Product Info">
         <div className="grid grid-cols-3 gap-4">
           <Field label="Slug">
@@ -452,9 +345,7 @@ const ProductEdit = () => {
             <Select value={base.category_id || ""} onValueChange={(v) => setBase((p: any) => ({ ...p, category_id: v, sub_category_id: "" }))}>
               <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
-                {categories.map((c: any) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name_he} / {c.name_ar}</SelectItem>
-                ))}
+                {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name_he} / {c.name_ar}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
@@ -463,9 +354,7 @@ const ProductEdit = () => {
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                {filteredSubs.map((s: any) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name_he} / {s.name_ar}</SelectItem>
-                ))}
+                {filteredSubs.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name_he} / {s.name_ar}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
@@ -479,12 +368,6 @@ const ProductEdit = () => {
             <input type="checkbox" className="w-4 h-4 rounded" checked={base.is_new} onChange={(e) => setBase((p: any) => ({ ...p, is_new: e.target.checked }))} />
             New
           </label>
-          {base.type === "contractor" && (
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded" checked={base.use_color_groups} onChange={(e) => setBase((p: any) => ({ ...p, use_color_groups: e.target.checked }))} />
-              Shared color groups
-            </label>
-          )}
         </div>
       </Section>
 
@@ -501,92 +384,196 @@ const ProductEdit = () => {
             </div>
           ))}
           <div className="flex gap-2">
-            <Input
-              placeholder="Image URL..."
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && imageUrl.trim()) {
-                  setBase((p: any) => ({ ...p, images: [...(p.images || []), imageUrl.trim()] }));
-                  setImageUrl("");
-                }
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                if (imageUrl.trim()) {
-                  setBase((p: any) => ({ ...p, images: [...(p.images || []), imageUrl.trim()] }));
-                  setImageUrl("");
-                }
-              }}
-            >
+            <Input placeholder="Image URL..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && imageUrl.trim()) { setBase((p: any) => ({ ...p, images: [...(p.images || []), imageUrl.trim()] })); setImageUrl(""); } }} />
+            <Button type="button" variant="outline" onClick={() => { if (imageUrl.trim()) { setBase((p: any) => ({ ...p, images: [...(p.images || []), imageUrl.trim()] })); setImageUrl(""); } }}>
               <ImageIcon className="w-4 h-4 mr-1" /> Add
             </Button>
           </div>
-          <p className="text-xs text-gray-400">Press Enter or click Add to add an image URL</p>
         </div>
       </Section>
 
-      {/* Colors — retail */}
-      {base.type === "retail" && (
-        <Section title="Colors / Variants">
-          <div className="space-y-3">
-            {colors.map((c, idx) => (
-              <ColorRow
-                key={c._key}
-                v={c}
-                onChange={(updated) => setColors((prev) => prev.map((x, i) => i === idx ? updated : x))}
-                onRemove={() => setColors((prev) => prev.filter((_, i) => i !== idx))}
-              />
-            ))}
+      {/* Variant Type */}
+      <Section title="Product Variants">
+        <div className="flex gap-3 mb-2">
+          {(["simple", "variable"] as const).map(t => (
             <button
-              type="button"
-              onClick={() => setColors((prev) => [...prev, emptyColor()])}
-              className="w-full h-10 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center gap-2 transition-colors"
+              key={t}
+              onClick={() => setVariantType(t)}
+              className={`px-5 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                variantType === t ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+              }`}
             >
-              <Plus className="w-4 h-4" /> Add Color
+              {t === "simple" ? "Simple (Colors only)" : "Variable (Colors × Lengths)"}
             </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400">
+          {variantType === "simple" ? "Each color has its own price and stock." : "Each color × length combination has its own stock."}
+        </p>
+      </Section>
+
+      {/* Colors */}
+      <Section
+        title="Colors"
+        action={<Link to="/admin/attributes" className="text-xs text-blue-600 hover:underline">Manage attributes →</Link>}
+      >
+        {allColors.length === 0 ? (
+          <p className="text-sm text-gray-400">No colors defined. <Link to="/admin/attributes" className="text-blue-600 hover:underline">Add colors in Attributes →</Link></p>
+        ) : (
+          <div className="space-y-4">
+            {/* Color checkboxes */}
+            <div className="flex flex-wrap gap-2">
+              {allColors.map(c => {
+                const selected = selectedColorIds.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => toggleColor(c.id)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                      selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/30 shrink-0" style={{ background: c.hex }} />
+                    {locale === "he" ? c.label_he : c.label_ar}
+                    {selected && <Check className="w-3 h-3" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Simple: per-color price + stock */}
+            {variantType === "simple" && selectedColors.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price & Stock per color</p>
+                {selectedColors.map(c => {
+                  const sv = simpleVariants[c.id] ?? { colorId: c.id, price: "", stock: "", inStock: true };
+                  return (
+                    <div key={c.id} className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
+                      <span className="w-5 h-5 rounded-full shrink-0 border border-gray-200" style={{ background: c.hex }} />
+                      <span className="text-sm font-medium text-gray-700 w-24 shrink-0">{locale === "he" ? c.label_he : c.label_ar}</span>
+                      <div className="flex items-center gap-1 flex-1">
+                        <span className="text-xs text-gray-400">₪</span>
+                        <Input type="number" placeholder="Price" value={sv.price}
+                          onChange={(e) => setSimpleVariants(p => ({ ...p, [c.id]: { ...sv, price: e.target.value } }))}
+                          className="h-8 text-sm w-28" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">Stock</span>
+                        <Input type="number" placeholder="0" value={sv.stock}
+                          onChange={(e) => setSimpleVariants(p => ({ ...p, [c.id]: { ...sv, stock: e.target.value } }))}
+                          className="h-8 text-sm w-20" />
+                      </div>
+                      <button
+                        onClick={() => setSimpleVariants(p => ({ ...p, [c.id]: { ...sv, inStock: !sv.inStock } }))}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors shrink-0 ${
+                          sv.inStock ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"
+                        }`}
+                      >
+                        {sv.inStock ? <><Check className="w-3 h-3" /> In Stock</> : <><X className="w-3 h-3" /> Out</>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+        )}
+      </Section>
+
+      {/* Lengths (variable only) */}
+      {variantType === "variable" && (
+        <Section
+          title="Lengths (אורך)"
+          action={<Link to="/admin/attributes" className="text-xs text-blue-600 hover:underline">Manage attributes →</Link>}
+        >
+          {allLengths.length === 0 ? (
+            <p className="text-sm text-gray-400">No lengths defined. <Link to="/admin/attributes" className="text-blue-600 hover:underline">Add lengths in Attributes →</Link></p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {allLengths.map(l => {
+                const selected = selectedLengthIds.includes(l.id);
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => toggleLength(l.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                      selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {locale === "he" ? l.label_he : l.label_ar}
+                    <span className="text-xs opacity-60">({l.value})</span>
+                    {selected && <Check className="w-3 h-3" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </Section>
       )}
 
-      {/* Lengths — contractor */}
-      {base.type === "contractor" && (
-        <Section title="Lengths / Variants">
-          <div className="space-y-3">
-            {lengths.map((l, idx) => (
-              <LengthRow
-                key={l._key}
-                v={l}
-                onChange={(updated) => setLengths((prev) => prev.map((x, i) => i === idx ? updated : x))}
-                onRemove={() => setLengths((prev) => prev.filter((_, i) => i !== idx))}
-              />
-            ))}
-            <button
-              type="button"
-              onClick={() => setLengths((prev) => [...prev, emptyLength()])}
-              className="w-full h-10 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add Length
-            </button>
+      {/* Variable stock grid */}
+      {variantType === "variable" && selectedColors.length > 0 && selectedLengths.length > 0 && (
+        <Section title="Stock per Variant">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left text-xs text-gray-500 font-medium pb-2 pr-4">Color \ Length</th>
+                  {selectedLengths.map(l => (
+                    <th key={l.id} className="text-center text-xs text-gray-500 font-medium pb-2 px-2 whitespace-nowrap">
+                      {locale === "he" ? l.label_he : l.label_ar}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {selectedColors.map(c => (
+                  <tr key={c.id}>
+                    <td className="py-2 pr-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full shrink-0 border border-gray-200" style={{ background: c.hex }} />
+                        <span className="text-sm font-medium text-gray-700">{locale === "he" ? c.label_he : c.label_ar}</span>
+                      </div>
+                    </td>
+                    {selectedLengths.map(l => {
+                      const cs = getCombo(c.id, l.id);
+                      return (
+                        <td key={l.id} className="py-2 px-2">
+                          <div className="flex flex-col items-center gap-1">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={cs.stock}
+                              onChange={(e) => setCombo(c.id, l.id, { stock: e.target.value })}
+                              className="h-8 text-xs w-20 text-center"
+                            />
+                            <button
+                              onClick={() => setCombo(c.id, l.id, { inStock: !cs.inStock })}
+                              className={`text-[10px] px-2 py-0.5 rounded border font-medium transition-colors ${
+                                cs.inStock ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-600"
+                              }`}
+                            >
+                              {cs.inStock ? "In Stock" : "Out"}
+                            </button>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Section>
       )}
 
       {/* Actions */}
       <div className="flex items-center gap-3 pb-8">
-        <Button
-          onClick={() => save.mutate()}
-          disabled={save.isPending}
-          className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8"
-        >
+        <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8">
           {save.isPending ? "Saving..." : "Save Product"}
         </Button>
-        <Button variant="outline" onClick={() => navigate("/admin/products")}>
-          Cancel
-        </Button>
+        <Button variant="outline" onClick={() => navigate("/admin/products")}>Cancel</Button>
       </div>
     </div>
   );
