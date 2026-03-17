@@ -65,8 +65,8 @@ export const CITY_ZONE_MAP: Record<string, keyof ShippingSettings["zones"]> = {
   "נשר": "north", "זכרון יעקב": "north", "פרדס חנה-כרכור": "north",
   "פרדס חנה": "north", "כרכור": "north", "בנימינה": "north",
   "בית שאן": "north", "אור עקיבא": "north", "חדרה": "north",
-  "מגאר": "north", "שפרעם": "north", "כאבול": "north",
-  "דלית אל-כרמל": "north", "עוספיא": "north", "נשר": "north",
+  "מגאר": "north", "כאבול": "north",
+  "דלית אל-כרמל": "north", "עוספיא": "north",
   "קצרין": "north", "מעלות-תרשיחא": "north", "שלומי": "north",
   "גבעת עלייה": "north",
 
@@ -84,7 +84,7 @@ export const CITY_ZONE_MAP: Record<string, keyof ShippingSettings["zones"]> = {
   "גדרה": "center", "קריית עקרון": "center", "כפר יונה": "center",
   "תל מונד": "center", "כפר נטר": "center", "אזור": "center",
   "בית דגן": "center", "פרדסיה": "center", "ג'לג'וליה": "center",
-  "כפר קאסם": "center", "ראש העין": "center", "ערערה": "center",
+  "כפר קאסם": "center", "ערערה": "center",
   "באקה אל-גרבייה": "center", "ג'ת": "center", "מועאוויה": "center",
   "כפר ברא": "center", "תירה": "center", "נעמת": "center",
 

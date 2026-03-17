@@ -192,6 +192,30 @@ export type Database = {
         }
         Relationships: []
       }
+      home_content: {
+        Row: {
+          data: Json
+          id: string
+          locale: string
+          section: string
+          updated_at: string | null
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          locale: string
+          section: string
+          updated_at?: string | null
+        }
+        Update: {
+          data?: Json
+          id?: string
+          locale?: string
+          section?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           id: string
@@ -611,6 +635,7 @@ export type Database = {
           category_id: string
           created_at: string | null
           id: string
+          image: string | null
           name_ar: string
           name_he: string
           slug: string
@@ -620,6 +645,7 @@ export type Database = {
           category_id: string
           created_at?: string | null
           id?: string
+          image?: string | null
           name_ar?: string
           name_he?: string
           slug: string
@@ -629,6 +655,7 @@ export type Database = {
           category_id?: string
           created_at?: string | null
           id?: string
+          image?: string | null
           name_ar?: string
           name_he?: string
           slug?: string
