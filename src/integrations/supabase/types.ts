@@ -700,6 +700,51 @@ export type Database = {
           },
         ]
       }
+      user_addresses: {
+        Row: {
+          apartment: string | null
+          city: string
+          created_at: string | null
+          first_name: string
+          house_number: string
+          id: string
+          is_default: boolean
+          last_name: string
+          phone: string
+          street: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          apartment?: string | null
+          city?: string
+          created_at?: string | null
+          first_name?: string
+          house_number?: string
+          id?: string
+          is_default?: boolean
+          last_name?: string
+          phone?: string
+          street?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          apartment?: string | null
+          city?: string
+          created_at?: string | null
+          first_name?: string
+          house_number?: string
+          id?: string
+          is_default?: boolean
+          last_name?: string
+          phone?: string
+          street?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
