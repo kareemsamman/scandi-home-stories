@@ -38,7 +38,7 @@ const DEFAULT_BANK: BankSettings = {
   bank_code: "12",
 };
 
-const DEFAULT_SMS_MESSAGES: SmsMessages = {
+export const DEFAULT_SMS_MESSAGES: SmsMessages = {
   order_received: {
     he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n💰 סכום: ₪{total}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🏗 AMG PERGOLA",
     ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n💰 المبلغ: ₪{total}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🏗 AMG PERGOLA",

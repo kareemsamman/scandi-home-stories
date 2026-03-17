@@ -4,6 +4,7 @@ import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
   useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
+  DEFAULT_SMS_MESSAGES,
   type BankSettings, type SmsSettings, type SmsMessages,
 } from "@/hooks/useAppSettings";
 import { useToast } from "@/hooks/use-toast";
@@ -254,14 +255,22 @@ const AdminSettings = () => {
       {/* ── SMS Messages ── */}
       {activeTab === "messages" && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-          <div>
-            <h2 className="text-base font-semibold">SMS Message Templates</h2>
-            <p className="text-xs text-gray-400 mt-1">
-              Variables: <code className="bg-gray-100 px-1 rounded text-[11px]">{"{name}"}</code>{" "}
-              <code className="bg-gray-100 px-1 rounded text-[11px]">{"{order_number}"}</code>{" "}
-              <code className="bg-gray-100 px-1 rounded text-[11px]">{"{phone}"}</code>{" "}
-              <code className="bg-gray-100 px-1 rounded text-[11px]">{"{total}"}</code>
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-base font-semibold">SMS Message Templates</h2>
+              <p className="text-xs text-gray-400 mt-1">
+                Variables:{" "}
+                {["{name}", "{order_number}", "{phone}", "{total}", "{items}"].map(v => (
+                  <code key={v} className="bg-gray-100 px-1 rounded text-[11px] me-1">{v}</code>
+                ))}
+              </p>
+            </div>
+            <button
+              onClick={() => { setMsgs(DEFAULT_SMS_MESSAGES); }}
+              className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              ↺ Reset to defaults
+            </button>
           </div>
 
           {msgs ? (
@@ -273,7 +282,8 @@ const AdminSettings = () => {
                   <p className="text-xs text-gray-400">Sent to admin phone when new order is submitted</p>
                 </div>
                 <Field label="Message">
-                  <TInput value={msgs.admin_new_order} onChange={v => setMsg("admin_new_order", "admin", v)} placeholder="הזמנה חדשה! ..." />
+                  <textarea rows={5} value={msgs.admin_new_order} onChange={e => setMsg("admin_new_order", "admin", e.target.value)} placeholder="הזמנה חדשה! ..."
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y font-mono" />
                 </Field>
               </div>
 
@@ -285,12 +295,12 @@ const AdminSettings = () => {
                     <p className="text-sm font-semibold text-gray-800">{label}</p>
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="עברית (HE)">
-                        <textarea value={entry.he} onChange={e => setMsg(key, "he", e.target.value)} rows={2} dir="rtl"
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none" />
+                        <textarea value={entry.he} onChange={e => setMsg(key, "he", e.target.value)} rows={5} dir="rtl"
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y font-mono" />
                       </Field>
                       <Field label="عربي (AR)">
-                        <textarea value={entry.ar} onChange={e => setMsg(key, "ar", e.target.value)} rows={2} dir="rtl"
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none" />
+                        <textarea value={entry.ar} onChange={e => setMsg(key, "ar", e.target.value)} rows={5} dir="rtl"
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y font-mono" />
                       </Field>
                     </div>
                   </div>
