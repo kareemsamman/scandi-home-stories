@@ -17,6 +17,8 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
   const [editing, setEditing] = useState(isNew);
   const [draft, setDraft] = useState(item);
   const [saving, setSaving] = useState(false);
+  // Mirror HE → AR until AR is explicitly touched
+  const [arTouched, setArTouched] = useState(!!item.label_ar);
 
   const label = locale === "he" ? item.label_he : item.label_ar;
   const placeholder = locale === "he" ? "שם הצבע" : "اسم اللون";
@@ -55,9 +57,17 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
 
       {/* Label field (HE or AR based on locale) */}
       {locale === "he" ? (
-        <Input value={draft.label_he} onChange={(e) => setDraft(p => ({ ...p, label_he: e.target.value }))} placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew} />
+        <Input
+          value={draft.label_he}
+          onChange={(e) => { const v = e.target.value; setDraft(p => ({ ...p, label_he: v, label_ar: arTouched ? p.label_ar : v })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew}
+        />
       ) : (
-        <Input value={draft.label_ar} onChange={(e) => setDraft(p => ({ ...p, label_ar: e.target.value }))} placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew} />
+        <Input
+          value={draft.label_ar}
+          onChange={(e) => { setArTouched(true); setDraft(p => ({ ...p, label_ar: e.target.value })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew}
+        />
       )}
 
       {/* Hex text input */}
@@ -91,6 +101,7 @@ const LengthRow = ({ item, locale, onSave, onDelete }: {
   const [editing, setEditing] = useState(isNew);
   const [draft, setDraft] = useState(item);
   const [saving, setSaving] = useState(false);
+  const [arTouched, setArTouched] = useState(!!item.label_ar);
 
   const label = locale === "he" ? item.label_he : item.label_ar;
   const placeholder = locale === "he" ? "שם האורך" : "اسم الطول";
@@ -116,9 +127,17 @@ const LengthRow = ({ item, locale, onSave, onDelete }: {
   return (
     <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
       {locale === "he" ? (
-        <Input value={draft.label_he} onChange={(e) => setDraft(p => ({ ...p, label_he: e.target.value }))} placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew} />
+        <Input
+          value={draft.label_he}
+          onChange={(e) => { const v = e.target.value; setDraft(p => ({ ...p, label_he: v, label_ar: arTouched ? p.label_ar : v })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew}
+        />
       ) : (
-        <Input value={draft.label_ar} onChange={(e) => setDraft(p => ({ ...p, label_ar: e.target.value }))} placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew} />
+        <Input
+          value={draft.label_ar}
+          onChange={(e) => { setArTouched(true); setDraft(p => ({ ...p, label_ar: e.target.value })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew}
+        />
       )}
       <Input value={draft.value} onChange={(e) => setDraft(p => ({ ...p, value: e.target.value }))} placeholder="e.g. 2m" className="w-24 h-8 text-xs" />
       <button onClick={handleSave} disabled={saving} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">

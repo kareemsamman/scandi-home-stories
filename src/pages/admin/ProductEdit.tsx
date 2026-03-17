@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, ImageIcon, Check, Upload, Pipette } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ImageIcon, Check, Upload, Pipette, Eye, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
@@ -284,7 +284,7 @@ const ProductEdit = () => {
   const [base, setBase] = useState<any>({
     slug: "", type: "retail", price: 0, sku: "", materials: "", dimensions: "",
     is_featured: false, is_new: false, sort_order: 0, images: [],
-    category_id: "", sub_category_id: "",
+    category_id: "", sub_category_id: "", status: "published",
   });
   const [transHe, setTransHe] = useState({ name: "", description: "", long_description: "", length: "" });
   const [transAr, setTransAr] = useState({ name: "", description: "", long_description: "", length: "" });
@@ -309,6 +309,7 @@ const ProductEdit = () => {
       is_featured: p.is_featured || false, is_new: p.is_new || false,
       sort_order: p.sort_order || 0, images: p.images || [],
       category_id: p.category_id || "", sub_category_id: p.sub_category_id || "",
+      status: p.status || "published",
     });
 
     const he = translations.find((t: any) => t.locale === "he") || {};
@@ -394,9 +395,41 @@ const ProductEdit = () => {
     }
   };
 
+  /* ── Duplicate ── */
+  const duplicate = useMutation({
+    mutationFn: async () => {
+      if (!base.id) return;
+      const [{ data: trans }, { data: inv }] = await Promise.all([
+        db.from("product_translations").select("*").eq("product_id", base.id),
+        db.from("inventory").select("*").eq("product_id", base.id),
+      ]);
+      const { id, created_at, updated_at, ...fields } = base;
+      const { data: newProduct, error } = await db.from("products")
+        .insert({ ...fields, slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
+        .select("id").single();
+      if (error) throw error;
+      for (const t of (trans || [])) {
+        const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
+        await db.from("product_translations").insert({ ...tFields, product_id: newProduct.id });
+      }
+      for (const i of (inv || [])) {
+        const { id: _iid, created_at: _ica, ...iFields } = i;
+        await db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
+      }
+      return newProduct.id;
+    },
+    onSuccess: (newId) => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Duplicated — saved as draft" });
+      navigate(`/admin/products/edit/${newId}`);
+    },
+    onError: (e: any) => toast({ title: "Duplicate failed", description: e.message, variant: "destructive" }),
+  });
+
   /* ── Save ── */
   const save = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (statusOverride?: "published" | "draft") => {
+      const effectiveStatus = statusOverride ?? base.status ?? "published";
       const colorsJson = selectedColors.map(c => {
         const sv = simpleVariants[c.id];
         const stock = Number(sv?.stock ?? 0);
@@ -422,6 +455,7 @@ const ProductEdit = () => {
       const { id, created_at, updated_at, ...baseFields } = base;
       const payload = {
         ...baseFields,
+        status: effectiveStatus,
         category_id: baseFields.category_id || null,
         sub_category_id: baseFields.sub_category_id || null,
         name: transHe.name || base.slug,
@@ -488,16 +522,32 @@ const ProductEdit = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => navigate("/admin/products")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Products
         </button>
         <h1 className="text-2xl font-bold text-gray-900 flex-1">
           {isNew ? "New Product" : (productName || base.slug || "Edit Product")}
         </h1>
+        {/* Draft badge */}
+        {base.status === "draft" && (
+          <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">Draft</span>
+        )}
         <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
-          Editing: {locale === "he" ? "Hebrew 🇮🇱" : "Arabic 🇸🇦"}
+          {locale === "he" ? "Hebrew 🇮🇱" : "Arabic 🇸🇦"}
         </span>
+        {/* Preview */}
+        {!isNew && base.slug && (
+          <Button variant="outline" size="sm" onClick={() => window.open(`/he/product/${base.slug}`, "_blank")}>
+            <Eye className="w-3.5 h-3.5 mr-1.5" /> Preview
+          </Button>
+        )}
+        {/* Duplicate */}
+        {!isNew && (
+          <Button variant="outline" size="sm" onClick={() => duplicate.mutate()} disabled={duplicate.isPending}>
+            <Copy className="w-3.5 h-3.5 mr-1.5" /> Duplicate
+          </Button>
+        )}
       </div>
 
       {/* Content */}
@@ -709,11 +759,23 @@ const ProductEdit = () => {
       </Section>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pb-8">
-        <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8">
-          {save.isPending ? "Saving..." : "Save Product"}
+      <div className="flex items-center gap-3 pb-8 flex-wrap">
+        <Button
+          onClick={() => save.mutate("published")}
+          disabled={save.isPending}
+          className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8"
+        >
+          {save.isPending ? "Saving..." : "Save & Publish"}
         </Button>
-        <Button variant="outline" onClick={() => navigate("/admin/products")}>Cancel</Button>
+        <Button
+          variant="outline"
+          onClick={() => save.mutate("draft")}
+          disabled={save.isPending}
+          className="h-11 border-amber-300 text-amber-700 hover:bg-amber-50"
+        >
+          Save as Draft
+        </Button>
+        <Button variant="outline" onClick={() => navigate("/admin/products")} className="h-11">Cancel</Button>
       </div>
     </div>
   );

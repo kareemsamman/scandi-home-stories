@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts, useCategories, useSubCategories } from "@/hooks/useDbData";
+import { useProducts, useCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,9 @@ const AdminProducts = () => {
   const navigate = useNavigate();
   const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
-  const { data: subCategories = [] } = useSubCategories();
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const { data: transMap = new Map() } = useQuery({
     queryKey: ["admin_product_trans", locale],
@@ -39,8 +39,41 @@ const AdminProducts = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast({ title: "Deleted" }); },
   });
 
-  const filtered = products.filter((p) => {
+  const duplicate = useMutation({
+    mutationFn: async (product: any) => {
+      const [{ data: trans }, { data: inv }] = await Promise.all([
+        db.from("product_translations").select("*").eq("product_id", product.id),
+        db.from("inventory").select("*").eq("product_id", product.id),
+      ]);
+
+      const { id, created_at, updated_at, ...fields } = product;
+      const newSlug = `${fields.slug}-copy`;
+      const { data: newProduct, error } = await db.from("products")
+        .insert({ ...fields, slug: newSlug, status: "draft", is_featured: false })
+        .select("id").single();
+      if (error) throw error;
+
+      for (const t of (trans || [])) {
+        const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
+        await db.from("product_translations").insert({ ...tFields, product_id: newProduct.id });
+      }
+      for (const i of (inv || [])) {
+        const { id: _iid, created_at: _ica, ...iFields } = i;
+        await db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
+      }
+      return newProduct.id;
+    },
+    onSuccess: (newId) => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Product duplicated — saved as draft" });
+      navigate(`/admin/products/edit/${newId}`);
+    },
+    onError: (e: any) => toast({ title: "Duplicate failed", description: e.message, variant: "destructive" }),
+  });
+
+  const filtered = products.filter((p: any) => {
     if (filterCat !== "all" && p.category_id !== filterCat) return false;
+    if (filterStatus !== "all" && (p.status || "published") !== filterStatus) return false;
     const pName = transMap.get(p.id)?.name || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -64,25 +97,34 @@ const AdminProducts = () => {
           <Input placeholder="Search by name or SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((c) => <SelectItem key={c.id} value={c.id}>{locale === "ar" ? c.name_ar : c.name_he}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {isLoading ? <p className="text-gray-400">Loading...</p> : (
         <div className="space-y-2">
-          {filtered.map((product) => {
+          {filtered.map((product: any) => {
             const cat = categories.find((c) => c.id === product.category_id);
             const pTrans = transMap.get(product.id);
             const displayName = pTrans?.name || product.name;
-            const colorsCount = Array.isArray((product as any).colors) ? (product as any).colors.length : 0;
-            const sizesCount = Array.isArray((product as any).sizes) ? (product as any).sizes.length : 0;
+            const colorsCount = Array.isArray(product.colors) ? product.colors.length : 0;
+            const sizesCount = Array.isArray(product.sizes) ? product.sizes.length : 0;
+            const isDraft = (product.status || "published") === "draft";
 
             return (
-              <div key={product.id} className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-colors">
+              <div key={product.id} className={`flex items-center gap-4 p-4 bg-white border rounded-xl hover:border-gray-300 transition-colors ${isDraft ? "border-amber-200 bg-amber-50/30" : "border-gray-200"}`}>
                 {product.images?.[0] ? (
                   <img src={product.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                 ) : (
@@ -100,8 +142,12 @@ const AdminProducts = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
+                  {isDraft && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Draft</span>}
                   {product.is_featured && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
                   {product.is_new && <span className="text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}
+                  <Button variant="ghost" size="icon" title="Duplicate" onClick={() => duplicate.mutate(product)} disabled={duplicate.isPending}>
+                    <Copy className="w-4 h-4 text-gray-400" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/products/edit/${product.id}`)}>
                     <Pencil className="w-4 h-4" />
                   </Button>
