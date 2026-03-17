@@ -45,23 +45,33 @@ interface CityStreetResult {
 
 const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
   try {
-    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
+    const q = encodeURIComponent(JSON.stringify({ city_name: query }));
+    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=200&q=${q}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
     const records = data?.result?.records ?? [];
+
+    // Collect unique city names only
     const seen = new Set<string>();
-    return records
-      .map((r: Record<string, unknown>) => {
-        const city = ((r["city_name"] as string) || "").trim();
-        const street = ((r["street_name"] as string) || "").trim();
-        if (!city) return null;
-        const display = street ? `${city} – ${street}` : city;
-        if (seen.has(display)) return null;
-        seen.add(display);
-        return { city, street, display };
-      })
-      .filter(Boolean) as CityStreetResult[];
+    const cities: string[] = [];
+    for (const r of records) {
+      const city = ((r["city_name"] as string) || "").trim();
+      if (!city || seen.has(city)) continue;
+      seen.add(city);
+      cities.push(city);
+    }
+
+    // Sort: starts-with query first, then contains, alphabetical within each group
+    const q2 = query.trim();
+    cities.sort((a, b) => {
+      const aStarts = a.startsWith(q2) ? 0 : 1;
+      const bStarts = b.startsWith(q2) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return a.localeCompare(b, "he");
+    });
+
+    return cities.slice(0, 20).map((city) => ({ city, street: "", display: city }));
   } catch {
     return [];
   }
