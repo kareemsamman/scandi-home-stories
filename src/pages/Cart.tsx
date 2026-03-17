@@ -50,7 +50,7 @@ const Cart = () => {
 
   return (
     <Layout>
-      <section className="py-4 md:py-12 mt-14 md:mt-20">
+      <section className="pb-4 md:pb-12">
         <div className="section-container">
           {/* Title */}
           <h1 className="text-2xl md:text-3xl font-bold mb-6">{t("cart.title")}</h1>
