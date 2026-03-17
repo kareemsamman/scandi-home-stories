@@ -45,8 +45,7 @@ interface CityStreetResult {
 
 const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
   try {
-    const q = encodeURIComponent(JSON.stringify({ city_name: query }));
-    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=200&q=${q}`;
+    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=100&q=${encodeURIComponent(query)}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
@@ -63,10 +62,10 @@ const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
     }
 
     // Sort: starts-with query first, then contains, alphabetical within each group
-    const q2 = query.trim();
+    const q = query.trim();
     cities.sort((a, b) => {
-      const aStarts = a.startsWith(q2) ? 0 : 1;
-      const bStarts = b.startsWith(q2) ? 0 : 1;
+      const aStarts = a.startsWith(q) ? 0 : 1;
+      const bStarts = b.startsWith(q) ? 0 : 1;
       if (aStarts !== bStarts) return aStarts - bStarts;
       return a.localeCompare(b, "he");
     });
