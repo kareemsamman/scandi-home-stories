@@ -131,11 +131,14 @@ Deno.serve(async (req) => {
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
         if (error) throw error;
       } else if (action === "update_user") {
-        await supabaseAdmin.from("profiles").update({
-          first_name: firstName || "",
-          last_name: lastName || "",
-          phone: phone || "",
-        }).eq("user_id", userId);
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            first_name: firstName || "",
+            last_name: lastName || "",
+            phone: phone || "",
+          })
+          .eq("user_id", userId);
 
         const authUpdates: Record<string, string> = {};
         if (email) authUpdates.email = email;
