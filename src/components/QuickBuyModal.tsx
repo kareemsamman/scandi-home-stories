@@ -21,7 +21,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const { t, locale } = useLocale();
   const { addItem } = useCart();
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -77,6 +77,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   // Dynamic price
   const currentPrice = useMemo(() => {
     if (!product) return 0;
+    if (isCustomColor && (selectedColor as any)?.price) return (selectedColor as any).price;
     if (contractor && selectedColor) {
       const colorObj = standardColors.find(c => c.id === selectedColor.id);
       const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));

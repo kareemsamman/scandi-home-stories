@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
-import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, TaxColor, TaxLength } from "@/hooks/useProductTaxonomy";
+import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, TaxColor, TaxLength, TaxCustomColorGroup, TaxCustomColor } from "@/hooks/useProductTaxonomy";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -158,10 +158,15 @@ const AdminAttributes = () => {
   const { data: lengths = [], isLoading: lLoading } = useLengthTaxonomy();
   const saveColors = useSaveColorTaxonomy();
   const saveLengths = useSaveLengthTaxonomy();
+  const { data: customGroups = [], isLoading: cgLoading } = useCustomColorGroups();
+  const saveCustomGroups = useSaveCustomColorGroups();
 
   // Local lists for unsaved add/delete (row edits save immediately via onSave)
   const [localColors, setLocalColors] = useState<TaxColor[] | null>(null);
   const [localLengths, setLocalLengths] = useState<TaxLength[] | null>(null);
+  const [localGroups, setLocalGroups] = useState<TaxCustomColorGroup[] | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [groupSearch, setGroupSearch] = useState("");
 
   const activeColors = localColors ?? colors;
   const activeLengths = localLengths ?? lengths;
@@ -263,6 +268,134 @@ const AdminAttributes = () => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Custom Color Groups */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Custom Color Groups</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Color tabs shown in the custom color picker on product pages</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const newGroup: TaxCustomColorGroup = { id: uid(), name_he: "", name_ar: "", sort_order: (localGroups ?? customGroups).length, colors: [] };
+              const updated = [...(localGroups ?? customGroups), newGroup];
+              setLocalGroups(updated);
+              setActiveTab(updated.length - 1);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" /> Add Group
+          </Button>
+        </div>
+
+        {cgLoading ? <p className="text-gray-400 text-sm">Loading...</p> : (() => {
+          const groups = localGroups ?? customGroups;
+          if (groups.length === 0) return <p className="text-gray-400 text-sm text-center py-4">No color groups yet. Click "Add Group" to create one.</p>;
+
+          const safeTab = Math.min(activeTab, groups.length - 1);
+          const activeGroup = groups[safeTab];
+
+          const updateGroup = (idx: number, field: keyof TaxCustomColorGroup, value: any) => {
+            const updated = groups.map((g, i) => i === idx ? { ...g, [field]: value } : g);
+            setLocalGroups(updated);
+          };
+          const deleteGroup = async (idx: number) => {
+            const updated = groups.filter((_, i) => i !== idx);
+            try { await saveCustomGroups.mutateAsync(updated); setLocalGroups(null); setActiveTab(0); }
+            catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+          };
+          const addColor = () => {
+            const newColor: TaxCustomColor = { id: uid(), name_he: "", name_ar: "", hex: "#cccccc" };
+            updateGroup(safeTab, "colors", [...activeGroup.colors, newColor]);
+          };
+          const updateColor = (ci: number, field: keyof TaxCustomColor, value: string) => {
+            const newColors = activeGroup.colors.map((c, i) => i === ci ? { ...c, [field]: value } : c);
+            updateGroup(safeTab, "colors", newColors);
+          };
+          const deleteColor = (ci: number) => {
+            updateGroup(safeTab, "colors", activeGroup.colors.filter((_, i) => i !== ci));
+          };
+          const saveAll = async () => {
+            try { await saveCustomGroups.mutateAsync(groups); setLocalGroups(null); toast({ title: "Saved" }); }
+            catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+          };
+
+          const filteredColors = activeGroup.colors.filter(c =>
+            !groupSearch || c.name_he.toLowerCase().includes(groupSearch.toLowerCase()) || c.name_ar.toLowerCase().includes(groupSearch.toLowerCase()) || c.hex.includes(groupSearch)
+          );
+
+          return (
+            <div className="space-y-4">
+              {/* Tabs */}
+              <div className="flex items-center gap-1 flex-wrap border-b border-gray-200">
+                {groups.map((g, gi) => (
+                  <button
+                    key={gi}
+                    onClick={() => setActiveTab(gi)}
+                    className={`px-4 py-2 text-sm border-b-2 transition-colors -mb-px ${safeTab === gi ? "border-gray-900 text-gray-900 font-medium" : "border-transparent text-gray-400 hover:text-gray-700"}`}
+                  >
+                    {g.name_he || `Group ${gi + 1}`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Group name fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Tab Name (Hebrew)</label>
+                  <Input value={activeGroup.name_he} onChange={e => updateGroup(safeTab, "name_he", e.target.value)} placeholder="e.g. RAL צבע קוד" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Tab Name (Arabic)</label>
+                  <Input value={activeGroup.name_ar} onChange={e => updateGroup(safeTab, "name_ar", e.target.value)} placeholder="e.g. RAL كود اللون" dir="rtl" />
+                </div>
+              </div>
+
+              {/* Search within group */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={groupSearch}
+                  onChange={e => setGroupSearch(e.target.value)}
+                  placeholder="Search colors in this group..."
+                  className="w-full h-9 pl-3 pr-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-300"
+                />
+              </div>
+
+              {/* Colors */}
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {filteredColors.map((color, ci) => {
+                  const realIdx = activeGroup.colors.indexOf(color);
+                  return (
+                    <div key={ci} className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
+                      <div className="relative shrink-0 w-8 h-8 rounded-full border border-gray-200 overflow-hidden cursor-pointer" style={{ background: color.hex }}>
+                        <input type="color" value={color.hex} onChange={e => updateColor(realIdx, "hex", e.target.value)} className="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                      </div>
+                      <span className="text-xs text-gray-400 font-mono w-16 shrink-0">{color.hex}</span>
+                      <Input value={color.name_he} onChange={e => updateColor(realIdx, "name_he", e.target.value)} placeholder="שם HE" className="flex-1 h-8 text-sm" />
+                      <Input value={color.name_ar} onChange={e => updateColor(realIdx, "name_ar", e.target.value)} placeholder="اسم AR" className="flex-1 h-8 text-sm" dir="rtl" />
+                      <button onClick={() => deleteColor(realIdx)} className="text-red-400 hover:text-red-600 p-1 shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  );
+                })}
+                {activeGroup.colors.length === 0 && <p className="text-gray-400 text-sm text-center py-3">No colors in this group yet</p>}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={addColor}><Plus className="w-3.5 h-3.5 mr-1" /> Add Color</Button>
+                  <button onClick={() => deleteGroup(safeTab)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"><Trash2 className="w-3 h-3" /> Remove tab</button>
+                </div>
+                <Button size="sm" onClick={saveAll} disabled={saveCustomGroups.isPending} className="bg-gray-900 hover:bg-gray-800 text-white">
+                  {saveCustomGroups.isPending ? "Saving..." : "Save All Groups"}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

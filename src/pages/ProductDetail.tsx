@@ -314,7 +314,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const { t, locale, localePath } = useLocale();
   const { addItem } = useCart();
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label || null);
   const [quantity, setQuantity] = useState(1);
@@ -357,6 +357,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
 
   // Price: from combo_prices if set, otherwise product base price
   const currentPrice = (() => {
+    // Custom color price (no size needed)
+    if (isCustomColor && (selectedColor as any)?.price) return (selectedColor as any).price;
     if (colorObj && selectedSizeObj && colorObj.combo_prices) {
       const p = colorObj.combo_prices[selectedSizeObj.id];
       if (p && p > 0) return p;
