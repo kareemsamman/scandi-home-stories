@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2 } from "lucide-react";
@@ -170,6 +170,13 @@ interface UploadedFile {
   file: File;
   preview: string;
 }
+
+/* ---------- Payment step loader ---------- */
+const PaymentStepLoader = ({ skeleton, children }: { skeleton: ReactNode; children: ReactNode }) => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 1000); return () => clearTimeout(t); }, []);
+  return <>{ready ? children : skeleton}</>;
+};
 
 /* ---------- component ---------- */
 const Checkout = () => {
@@ -553,6 +560,32 @@ const Checkout = () => {
 
   /* ---------- PAYMENT STEP ---------- */
   if (step === "payment") {
+    const PaymentSkeleton = () => (
+      <div className="w-full max-w-2xl mx-auto px-6 py-10 space-y-4 animate-pulse">
+        {/* header bar */}
+        <div className="h-6 w-40 rounded-full bg-white/80 mx-auto mb-6" />
+        {/* bank card skeleton */}
+        <div className="bg-white rounded-2xl p-6 space-y-4">
+          <div className="h-4 w-24 rounded-full bg-muted mx-auto" />
+          {[90, 70, 80, 60, 50].map((w, i) => (
+            <div key={i} className="flex justify-between items-center border-b border-border pb-3 last:border-0 last:pb-0">
+              <div className="h-3 rounded-full bg-muted" style={{ width: `${w * 0.5}%` }} />
+              <div className="h-3 rounded-full bg-muted" style={{ width: `${w * 0.35}%` }} />
+            </div>
+          ))}
+          <div className="flex justify-between items-center pt-1">
+            <div className="h-4 w-24 rounded-full bg-muted" />
+            <div className="h-4 w-16 rounded-full bg-muted" />
+          </div>
+        </div>
+        {/* upload card skeleton */}
+        <div className="bg-white rounded-2xl p-6 space-y-3">
+          <div className="h-4 w-32 rounded-full bg-muted mx-auto" />
+          <div className="h-28 rounded-xl bg-muted/50" />
+        </div>
+      </div>
+    );
+
     return (
       <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
         <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
@@ -566,6 +599,7 @@ const Checkout = () => {
           </div>
         </header>
 
+        <PaymentStepLoader skeleton={<PaymentSkeleton />}>
         <motion.main
           className="w-full max-w-2xl mx-auto px-6 py-10"
           initial={{ opacity: 0, y: 20 }}
@@ -684,6 +718,7 @@ const Checkout = () => {
             )}
           </button>
         </motion.main>
+        </PaymentStepLoader>
       </div>
     );
   }
