@@ -358,15 +358,17 @@ const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange:
 };
 
 /* ─── Custom Color Price Editor ─── */
+// Price keys: "colorId__sizeId" → price string
 const CustomColorPriceEditor = ({
-  groups, prices, onPriceChange, activeGroupIdx, onGroupChange, locale,
+  groups, prices, onPriceChange, activeGroupIdx, onGroupChange, locale, sizes,
 }: {
   groups: any[];
   prices: Record<string, string>;
-  onPriceChange: (colorId: string, val: string) => void;
+  onPriceChange: (key: string, val: string) => void;
   activeGroupIdx: number;
   onGroupChange: (idx: number) => void;
   locale: "he" | "ar";
+  sizes: TaxLength[];
 }) => {
   const [search, setSearch] = useState("");
 
@@ -374,6 +376,14 @@ const CustomColorPriceEditor = ({
     return (
       <p className="text-sm text-gray-400 text-center py-4">
         No color groups in taxonomy. <Link to="/admin/attributes" className="text-blue-600 hover:underline">Add some →</Link>
+      </p>
+    );
+  }
+
+  if (sizes.length === 0) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-4">
+        Add lengths to standard colors first — custom color prices are per length.
       </p>
     );
   }
@@ -412,27 +422,39 @@ const CustomColorPriceEditor = ({
         />
       </div>
 
-      {/* Colors with price inputs */}
-      <div className="space-y-1.5 max-h-80 overflow-y-auto">
+      {/* Colors with per-length price inputs */}
+      <div className="space-y-2 max-h-[28rem] overflow-y-auto">
         {filteredColors.map((color: any) => (
-          <div key={color.id} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded-lg">
-            <div className="w-6 h-6 rounded-full border border-gray-200 shrink-0" style={{ background: color.hex }} />
-            <span className="flex-1 text-sm text-gray-700">{locale === "he" ? color.name_he : color.name_ar}</span>
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-400">₪</span>
-              <Input
-                type="number"
-                placeholder="Price"
-                value={prices[color.id] || ""}
-                onChange={e => onPriceChange(color.id, e.target.value)}
-                className="h-8 text-sm w-24"
-              />
+          <div key={color.id} className="bg-gray-50 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full border border-gray-200 shrink-0" style={{ background: color.hex }} />
+              <span className="text-sm font-medium text-gray-700">{locale === "he" ? color.name_he : color.name_ar}</span>
+            </div>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(sizes.length, 4)}, minmax(0,1fr))` }}>
+              {sizes.map((size) => {
+                const key = `${color.id}__${size.id}`;
+                return (
+                  <div key={size.id} className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-gray-400 font-medium">{size.label_he || size.id}</span>
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-[10px] text-gray-400">₪</span>
+                      <Input
+                        type="number"
+                        placeholder="—"
+                        value={prices[key] || ""}
+                        onChange={e => onPriceChange(key, e.target.value)}
+                        className="h-7 text-xs px-1.5"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
         {filteredColors.length === 0 && <p className="text-xs text-gray-400 text-center py-4">No colors found</p>}
       </div>
-      <p className="text-xs text-gray-400">Set price ₪ per color. Leave blank = use product base price.</p>
+      <p className="text-xs text-gray-400">Set price ₪ per color per length. Leave blank = length not available for this color.</p>
     </div>
   );
 };
@@ -1075,10 +1097,11 @@ const ProductEdit = () => {
             <CustomColorPriceEditor
               groups={customColorGroupsData}
               prices={customColorPrices}
-              onPriceChange={(colorId, val) => setCustomColorPrices(p => ({ ...p, [colorId]: val }))}
+              onPriceChange={(key, val) => setCustomColorPrices(p => ({ ...p, [key]: val }))}
               activeGroupIdx={activeGroupIdx}
               onGroupChange={setActiveGroupIdx}
               locale={locale}
+              sizes={allLengths.filter(l => [...new Set(Object.values(colorLengths).flat())].includes(l.id))}
             />
           )}
         </Section>

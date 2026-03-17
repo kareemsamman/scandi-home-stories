@@ -101,16 +101,26 @@ export const useShopData = () => {
         colorGroups = sharedColorGroupsList;
       }
 
-      // If custom colors enabled, append taxonomy color groups with per-color prices
+      // If custom colors enabled, append taxonomy color groups with per-color-per-size prices
       if ((p as any).custom_colors_enabled) {
         const customPrices: Record<string, number> = (p as any).custom_color_prices || {};
+        // Build per-color prices map: colorId -> { sizeId: price }
+        const colorPricesMap: Record<string, Record<string, number>> = {};
+        for (const [key, price] of Object.entries(customPrices)) {
+          if (!price) continue;
+          const sepIdx = key.indexOf("__");
+          if (sepIdx === -1) continue; // skip old format keys
+          const colorId = key.slice(0, sepIdx);
+          const sizeId = key.slice(sepIdx + 2);
+          if (!colorPricesMap[colorId]) colorPricesMap[colorId] = {};
+          colorPricesMap[colorId][sizeId] = price;
+        }
         const customGroups = sharedColorGroupsList.map(cg => ({
           ...cg,
-          colors: cg.colors.map(c => ({
-            ...c,
-            price: customPrices[c.id] || undefined,
-          })),
-        }));
+          colors: cg.colors
+            .map(c => ({ ...c, prices: colorPricesMap[c.id] }))
+            .filter(c => c.prices && Object.keys(c.prices).length > 0),
+        })).filter(cg => cg.colors.length > 0);
         if (customGroups.length > 0) {
           colorGroups = [colorGroups[0], ...customGroups];
         }

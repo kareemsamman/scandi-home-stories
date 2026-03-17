@@ -22,6 +22,7 @@ export interface ColorOption {
   name: LocaleString;
   hex: string;
   price?: number;
+  prices?: Record<string, number>; // sizeId -> price for custom colors (per-length pricing)
   lengths?: string[]; // IDs of lengths available for this color (contractor variable products)
   combo_prices?: Record<string, number>; // lengthId -> price for variable products
 }

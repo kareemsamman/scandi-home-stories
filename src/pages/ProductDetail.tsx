@@ -345,7 +345,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const { addItem, items: cartItems } = useCart();
   const qc = useQueryClient();
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; prices?: Record<string, number> } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label || null);
   const [quantity, setQuantity] = useState(1);
@@ -375,9 +375,12 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const getComboStock = (colorId: string, sizeId: string) =>
     invMap.get(`combo:${colorId}|${sizeId}`) ?? 9999;
 
-  // Sizes available for selected color (filtered by per-color length selection)
+  // Sizes available for selected color
   const colorObj = standardColors.find(c => c.id === selectedColor?.id);
   const availableSizes = (() => {
+    if (isCustomColor && selectedColor?.prices) {
+      return product.sizes.filter(s => selectedColor.prices![s.id] != null && selectedColor.prices![s.id] > 0);
+    }
     if (colorObj?.lengths && colorObj.lengths.length > 0) {
       return product.sizes.filter(s => colorObj.lengths!.includes(s.id));
     }
@@ -387,10 +390,11 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   // Current selected size object
   const selectedSizeObj = availableSizes.find(s => s.label === selectedSize);
 
-  // Price: from combo_prices if set, otherwise product base price
+  // Price: custom color uses per-size prices, otherwise combo_prices or base price
   const currentPrice = (() => {
-    // Custom color price (no size needed)
-    if (isCustomColor && (selectedColor as any)?.price) return (selectedColor as any).price;
+    if (isCustomColor && selectedColor?.prices && selectedSizeObj) {
+      return selectedColor.prices[selectedSizeObj.id] || product.price;
+    }
     if (colorObj && selectedSizeObj && colorObj.combo_prices) {
       const p = colorObj.combo_prices[selectedSizeObj.id];
       if (p && p > 0) return p;
@@ -627,7 +631,14 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
         </section>
       )}
 
-      <CustomColorModal open={customColorOpen} onClose={() => setCustomColorOpen(false)} onSelect={(color) => { setSelectedColor(color); setIsCustomColor(true); }} colorGroups={customColorGroups} selectedColorId={selectedColor?.id} />
+      <CustomColorModal open={customColorOpen} onClose={() => setCustomColorOpen(false)} onSelect={(color) => {
+        setSelectedColor(color);
+        setIsCustomColor(true);
+        if (color.prices) {
+          const firstSize = product.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
+          if (firstSize) setSelectedSize(firstSize.label);
+        }
+      }} colorGroups={customColorGroups} selectedColorId={selectedColor?.id} />
       <AnimatePresence>{lightboxOpen && (<ImageLightbox images={product.images} startIndex={lightboxStart} onClose={() => setLightboxOpen(false)} />)}</AnimatePresence>
     </Layout>
   );

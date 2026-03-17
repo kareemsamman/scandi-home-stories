@@ -22,7 +22,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const { addItem, items: cartItems } = useCart();
   const qc = useQueryClient();
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; price?: number } | null>(null);
+  const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; prices?: Record<string, number> } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -56,15 +56,18 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   // Active color object (contractor uses standardColors which are the flat colors)
   const activeColorObj = standardColors.find(c => c.id === (selectedColor?.id || standardColors[0]?.id));
 
-  // Sizes available for selected color (filtered by per-color lengths)
+  // Sizes available for selected color
   const availableSizes = useMemo(() => {
     if (!contractor) return [];
+    if (isCustomColor && selectedColor?.prices) {
+      return contractor.sizes.filter(s => selectedColor.prices![s.id] != null && selectedColor.prices![s.id] > 0);
+    }
     const colorObj = standardColors.find(c => c.id === (selectedColor?.id || standardColors[0]?.id));
     if ((colorObj as any)?.lengths?.length > 0) {
       return contractor.sizes.filter(s => (colorObj as any).lengths.includes(s.id));
     }
     return contractor.sizes;
-  }, [contractor, selectedColor?.id, standardColors]);
+  }, [contractor, isCustomColor, selectedColor?.id, selectedColor?.prices, standardColors]);
 
   // Reset size when color changes
   useEffect(() => {
@@ -79,7 +82,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   // Dynamic price
   const currentPrice = useMemo(() => {
     if (!product) return 0;
-    if (isCustomColor && (selectedColor as any)?.price) return (selectedColor as any).price;
+    if (isCustomColor && selectedColor?.prices) {
+      const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
+      if (sizeObj) return selectedColor.prices[sizeObj.id] || product.price;
+    }
     if (contractor && selectedColor) {
       const colorObj = standardColors.find(c => c.id === selectedColor.id);
       const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
@@ -418,7 +424,14 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       <CustomColorModal
         open={customColorOpen}
         onClose={() => setCustomColorOpen(false)}
-        onSelect={(color) => { setSelectedColor(color); setIsCustomColor(true); }}
+        onSelect={(color) => {
+          setSelectedColor(color);
+          setIsCustomColor(true);
+          if (color.prices && contractor) {
+            const firstSize = contractor.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
+            if (firstSize) setSelectedSize(firstSize.label);
+          }
+        }}
         colorGroups={customColorGroups}
         selectedColorId={selectedColor?.id}
       />

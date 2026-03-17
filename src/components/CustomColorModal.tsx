@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface CustomColorModalProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (color: { id: string; name: string; hex: string; price?: number }) => void;
+  onSelect: (color: { id: string; name: string; hex: string; prices?: Record<string, number> }) => void;
   colorGroups: ColorGroup[];
   selectedColorId?: string;
 }
@@ -36,7 +36,7 @@ export const CustomColorModal = ({ open, onClose, onSelect, colorGroups, selecte
   }, [activeTab, search, tabs, locale]);
 
   const handleSelect = (color: ColorOption) => {
-    onSelect({ id: color.id, name: color.name[locale], hex: color.hex, price: (color as any).price });
+    onSelect({ id: color.id, name: color.name[locale], hex: color.hex, prices: color.prices });
   };
 
   const handleConfirm = () => {
