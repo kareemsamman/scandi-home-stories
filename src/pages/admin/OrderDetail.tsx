@@ -268,7 +268,7 @@ const AdminOrderDetail = () => {
     <p>AMG Pergola · amgpergola.com</p>
   </div>
 
-  <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); }</script>
+  <script>window.onafterprint = function(){ window.close(); }; window.onload = function(){ setTimeout(function(){ window.print(); }, 400); }</script>
 </body>
 </html>`;
 
