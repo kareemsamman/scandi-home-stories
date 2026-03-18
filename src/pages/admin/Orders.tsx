@@ -34,6 +34,21 @@ const parseReceipts = (url: string | null): string[] => {
   return url.split("|").map(u => u.trim()).filter(Boolean);
 };
 
+/* ── Resolve receipt URL: generate signed URL for private bucket, pass through legacy public URLs ── */
+const resolveReceiptUrl = async (raw: string): Promise<string> => {
+  if (raw.startsWith("receipts:")) {
+    const path = raw.slice("receipts:".length);
+    const { data, error } = await supabase.storage.from("receipts").createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      console.error("[receipt] signed URL error:", error?.message);
+      return "";
+    }
+    return data.signedUrl;
+  }
+  // Legacy public URL — pass through
+  return raw;
+};
+
 /* ── Compute shipping cost from order ── */
 const calcShipping = (order: any): number => {
   const itemsTotal = (order.order_items || []).reduce(
