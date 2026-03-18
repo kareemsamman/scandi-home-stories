@@ -520,13 +520,14 @@ const Checkout = () => {
       if (existingOrder?.user_id) resolvedUserId = existingOrder.user_id;
     }
 
-    // Save order to DB
+    // Save order via server-side edge function (validates prices & coupons)
     let savedOrderId: string | undefined;
+    let serverTotal: number | undefined;
+    let serverDiscount: number | undefined;
     try {
-      const result = await addOrderMutation.mutateAsync({
-        order: {
+      const { data: orderResult, error: orderFnErr } = await supabase.functions.invoke("create-order", {
+        body: {
           orderNumber,
-          total: totalAfterDiscount,
           notes: form.note || undefined,
           firstName: form.firstName,
           lastName: form.lastName,
@@ -539,33 +540,31 @@ const Checkout = () => {
           locale,
           marketingOptIn: emailMarketing,
           discountCode: appliedCoupon?.coupon.code,
-          discountAmount: appliedCoupon?.discountAmount,
+          items: items.map((item) => {
+            const colorId = item.options?.color?.id;
+            const sizeLabel = item.options?.size;
+            const sizeId = item.product.type === "contractor"
+              ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
+              : undefined;
+            return {
+              productId: item.product.id,
+              quantity: item.quantity,
+              size: sizeLabel,
+              color: item.options?.color?.name,
+              colorId,
+              sizeId,
+            };
+          }),
         },
-        items: items.map((item) => {
-          const colorId = item.options?.color?.id;
-          const sizeLabel = item.options?.size;
-          const sizeId = item.product.type === "contractor"
-            ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
-            : undefined;
-          return {
-            productId: item.product.id,
-            name: item.product.name,
-            image: item.product.images[0],
-            price: item.product.price,
-            quantity: item.quantity,
-            size: sizeLabel,
-            color: item.options?.color?.name,
-            colorId,
-            sizeId,
-          };
-        }),
       });
-      savedOrderId = result?.id;
-      // Link to existing account if resolved via email lookup
-      if (savedOrderId && resolvedUserId && !user?.id) {
-        await db.from("orders").update({ user_id: resolvedUserId }).eq("id", savedOrderId);
-      }
-    } catch { /* order save failed — still let user continue */ }
+      if (orderFnErr) throw orderFnErr;
+      savedOrderId = orderResult?.orderId;
+      serverTotal = orderResult?.total;
+      serverDiscount = orderResult?.discountAmount;
+    } catch (e) {
+      console.error("[create-order] error:", e);
+      /* order save failed — still let user continue */
+    }
 
     // Save address to profile if checkbox checked
     if (user && saveAddress && form.city && form.address) {
