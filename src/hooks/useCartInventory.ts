@@ -44,12 +44,16 @@ export const useCartInventory = (items: CartItem[]) => {
       if (sizeId) {
         const row = rows.find(r => r.variation_key === `combo:${colorId}|${sizeId}`);
         if (row) return row.stock_quantity;
+        // No inventory row for this combo → custom/made-to-order color → unlimited
+        return 9999;
       }
     }
 
     if (colorId) {
       const row = rows.find(r => r.variation_key === `color:${colorId}`);
       if (row) return row.stock_quantity;
+      // No inventory row for this color → custom/made-to-order → unlimited
+      return 9999;
     }
 
     // Fallback: sum all variations (single-variation products)
