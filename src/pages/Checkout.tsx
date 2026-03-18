@@ -192,7 +192,7 @@ const CheckoutSkeleton = () => (
 const generateOrderNumber = () => `#${Math.floor(10000 + Math.random() * 90000)}`;
 
 /* ---------- Image compression helper ---------- */
-const compressImage = (file: File, maxPx = 1400, quality = 0.85): Promise<File> =>
+const compressImage = (file: File, maxPx = 600, quality = 0.4): Promise<File> =>
   new Promise((resolve) => {
     if (!file.type.startsWith("image/")) { resolve(file); return; }
     const img = new Image();
