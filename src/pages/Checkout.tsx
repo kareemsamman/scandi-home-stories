@@ -912,10 +912,30 @@ const Checkout = () => {
             )}
 
             {/* Receipt detection message */}
-            {receiptDetected && uploadedFiles.length > 0 && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{t("payment.receiptDetected")}</span>
+            {uploadedFiles.length > 0 && receiptValidationState !== "idle" && (
+              <div
+                className={`mt-3 flex items-center gap-2 text-xs ${
+                  receiptValidationState === "valid"
+                    ? "text-green-600"
+                    : receiptValidationState === "invalid"
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {receiptValidationState === "checking" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : receiptValidationState === "valid" ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+                <span>
+                  {receiptValidationState === "checking"
+                    ? t("payment.verifyingReceipt")
+                    : receiptValidationState === "valid"
+                    ? t("payment.receiptDetected")
+                    : t("payment.receiptNotDetected")}
+                </span>
               </div>
             )}
           </div>
@@ -923,7 +943,7 @@ const Checkout = () => {
           {/* Submit receipt button */}
           <button
             onClick={handleSubmitReceipt}
-            disabled={uploadedFiles.length === 0 || isSubmittingReceipt}
+            disabled={uploadedFiles.length === 0 || isSubmittingReceipt || receiptValidationState !== "valid"}
             className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmittingReceipt ? (

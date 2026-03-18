@@ -5,6 +5,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const extractAnswerText = (content: unknown): string => {
+  if (typeof content === "string") return content;
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (part && typeof part === "object" && "text" in part) {
+          const maybeText = (part as { text?: unknown }).text;
+          return typeof maybeText === "string" ? maybeText : "";
+        }
+        return "";
+      })
+      .join(" ");
+  }
+
+  return "";
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -13,9 +32,15 @@ serve(async (req) => {
   try {
     const { imageBase64, mimeType } = await req.json();
 
+    if (!imageBase64 || !mimeType || typeof imageBase64 !== "string" || typeof mimeType !== "string") {
+      return new Response(JSON.stringify({ isReceipt: false, reason: "invalid_payload" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
+      return new Response(JSON.stringify({ isReceipt: false, reason: "verification_unavailable" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -31,14 +56,8 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a strict image classifier. Your ONLY job is to determine if an image is a genuine bank transfer confirmation, payment receipt, or payment proof.
-
-Rules:
-- A valid receipt/payment proof MUST contain monetary amounts, transaction details, bank/payment service branding, dates, or reference numbers.
-- Random photos, screenshots of websites, product images, selfies, documents without payment info, memes, or any non-payment image must be classified as NO.
-- If the image is blurry but appears to show payment details, answer YES.
-- If there is ANY doubt that this is a payment document, answer NO.
-- Answer ONLY with the single word YES or NO. Nothing else.`
+            content:
+              "You are a strict receipt classifier. Return YES only when the image clearly shows a payment receipt/transfer proof with payment evidence such as amount, transaction details, date, reference id, and payment context. If uncertain, return NO. Return exactly one token: YES or NO.",
           },
           {
             role: "user",
@@ -51,12 +70,12 @@ Rules:
               },
               {
                 type: "text",
-                text: "Is this image a bank transfer confirmation, payment receipt, or payment proof? Answer YES or NO only.",
+                text: "Is this a real payment receipt or transfer proof? Answer YES or NO only.",
               },
             ],
           },
         ],
-        max_tokens: 5,
+        max_tokens: 4,
         temperature: 0,
       }),
     });
@@ -64,22 +83,24 @@ Rules:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Lovable AI Gateway error:", response.status, errText);
-      return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
+      return new Response(JSON.stringify({ isReceipt: false, reason: "gateway_error" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-    const answer = (data.choices?.[0]?.message?.content || "").trim().toUpperCase();
-    console.log("AI receipt check answer:", answer);
-    const isReceipt = answer.startsWith("YES");
+    const rawAnswer = extractAnswerText(data.choices?.[0]?.message?.content).trim().toUpperCase();
 
-    return new Response(JSON.stringify({ isReceipt }), {
+    const hasYes = /\bYES\b/.test(rawAnswer);
+    const hasNo = /\bNO\b/.test(rawAnswer);
+    const isReceipt = hasYes && !hasNo;
+
+    return new Response(JSON.stringify({ isReceipt, answer: rawAnswer }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("verify-receipt error:", error);
-    return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
+    return new Response(JSON.stringify({ isReceipt: false, reason: "unexpected_error" }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
