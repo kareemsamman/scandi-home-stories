@@ -375,18 +375,66 @@ const Checkout = () => {
   };
 
   // File upload handlers
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ACCEPTED_TYPES: Record<string, string[]> = {
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/png": [".png"],
+    "application/pdf": [".pdf"],
+  };
+
+  const validateFile = (file: File): string | null => {
+    // Check MIME type
+    if (!Object.keys(ACCEPTED_TYPES).includes(file.type)) {
+      return locale === "ar"
+        ? "نوع الملف غير مدعوم. يُسمح فقط بـ JPG, PNG, PDF"
+        : "סוג קובץ לא נתמך. מותרים רק JPG, PNG, PDF";
+    }
+    // Check extension matches MIME
+    const ext = "." + (file.name.split(".").pop() || "").toLowerCase();
+    const allowedExts = Object.values(ACCEPTED_TYPES).flat();
+    if (!allowedExts.includes(ext)) {
+      return locale === "ar"
+        ? "امتداد الملف غير مطابق. يُسمح فقط بـ JPG, PNG, PDF"
+        : "סיומת קובץ לא תקינה. מותרים רק JPG, PNG, PDF";
+    }
+    // Check size
+    if (file.size > MAX_FILE_SIZE) {
+      return locale === "ar"
+        ? "حجم الملف يتجاوز 10MB"
+        : "גודל הקובץ חורג מ-10MB";
+    }
+    // Check file name for suspicious patterns
+    const nameLC = file.name.toLowerCase();
+    if (/\.(exe|bat|cmd|sh|js|ts|html|htm|php|py|rb|pl|cgi|asp|jsp|svg)/.test(nameLC)) {
+      return locale === "ar"
+        ? "نوع الملف غير مسموح به"
+        : "סוג קובץ לא מורשה";
+    }
+    return null;
+  };
+
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
-    const accepted = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
     const newFiles: UploadedFile[] = [];
+    const errors: string[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!accepted.includes(file.type)) continue;
+      const error = validateFile(file);
+      if (error) {
+        errors.push(`${file.name}: ${error}`);
+        continue;
+      }
       const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
       newFiles.push({ file, preview });
     }
+    if (errors.length > 0) {
+      toast({
+        title: locale === "ar" ? "ملفات مرفوضة" : "קבצים נדחו",
+        description: errors.join("\n"),
+        variant: "destructive",
+      });
+    }
     setUploadedFiles((prev) => [...prev, ...newFiles]);
-    // Simple receipt detection
     if (newFiles.length > 0) setReceiptDetected(true);
   };
 
