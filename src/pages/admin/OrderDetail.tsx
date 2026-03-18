@@ -290,8 +290,8 @@ const AdminOrderDetail = () => {
         <Section title="לקוח" icon={User}>
           <div className="space-y-2">
             <p className="font-semibold text-gray-900">{order.first_name} {order.last_name}</p>
-            <p className="text-gray-500 text-sm flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-gray-400" />{order.email}</p>
-            <p className="text-gray-500 text-sm flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-gray-400" />{order.phone}</p>
+            <a href={`mailto:${order.email}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Mail className="w-3.5 h-3.5 text-gray-400" />{order.email}</a>
+            <a href={`tel:${order.phone}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Phone className="w-3.5 h-3.5 text-gray-400" />{order.phone}</a>
             {order.locale && <p className="text-gray-400 text-xs pt-1">שפה: {order.locale.toUpperCase()}</p>}
           </div>
         </Section>
@@ -442,32 +442,37 @@ const AdminOrderDetail = () => {
         const { idx } = receiptModal;
         const currentUrl = urls[idx];
         return (
-          <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center" onClick={() => setReceiptModal(null)}>
-            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 z-10" onClick={() => setReceiptModal(null)}>
+          <div className="fixed inset-0 z-[300] bg-black flex items-center justify-center" onClick={() => setReceiptModal(null)}>
+            {/* Close */}
+            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10" onClick={() => setReceiptModal(null)}>
               <X className="w-5 h-5" />
             </button>
+            {/* Counter */}
             {urls.length > 1 && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-gray-700 text-sm font-semibold bg-gray-100 px-3 py-1 rounded-full">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-sm font-semibold bg-white/20 px-3 py-1 rounded-full z-10">
                 {idx + 1} / {urls.length}
               </div>
             )}
+            {/* Prev */}
             {idx > 0 && (
-              <button className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
+              <button className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10"
                 onClick={e => { e.stopPropagation(); setReceiptModal({ idx: idx - 1 }); }}>
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
             )}
+            {/* Next */}
             {idx < urls.length - 1 && (
-              <button className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
+              <button className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10"
                 onClick={e => { e.stopPropagation(); setReceiptModal({ idx: idx + 1 }); }}>
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-6 h-6" />
               </button>
             )}
-            <div className="max-w-3xl max-h-[90vh] overflow-auto rounded-2xl shadow-xl" onClick={e => e.stopPropagation()}>
+            {/* Image */}
+            <div className="w-full h-full flex items-center justify-center p-12" onClick={e => e.stopPropagation()}>
               {currentUrl.toLowerCase().includes(".pdf") ? (
-                <iframe src={currentUrl} className="w-[70vw] h-[80vh] rounded-2xl" title="Receipt" />
+                <iframe src={currentUrl} className="w-full h-full" title="Receipt" />
               ) : (
-                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-[88vh] rounded-2xl object-contain" />
+                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-full object-contain" />
               )}
             </div>
           </div>
