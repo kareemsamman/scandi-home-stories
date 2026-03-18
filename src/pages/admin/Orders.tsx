@@ -282,6 +282,11 @@ const AdminOrders = () => {
                                   <ImageIcon className="w-6 h-6 text-red-400" />
                                   <span className="text-[9px] font-bold text-red-500">PDF</span>
                                 </div>
+                              ) : url.startsWith("receipts:") ? (
+                                <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-blue-50">
+                                  <ImageIcon className="w-6 h-6 text-blue-400" />
+                                  <span className="text-[9px] font-bold text-blue-500">🔒</span>
+                                </div>
                               ) : (
                                 <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />
                               )}
