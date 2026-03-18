@@ -484,32 +484,6 @@ const Checkout = () => {
     if (uploadedFiles.length === 0) return;
     setIsSubmittingReceipt(true);
 
-    // Validate image files are actual receipts using Claude Vision
-    for (const { file } of uploadedFiles) {
-      if (!file.type.startsWith("image/")) continue; // PDFs are trusted
-      try {
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve((e.target?.result as string).split(",")[1]);
-          reader.readAsDataURL(file);
-        });
-        const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-receipt", {
-          body: { imageBase64: base64, mimeType: file.type },
-        });
-        if (!verifyErr && verifyData?.isReceipt === false) {
-          toast({
-            title: locale === "ar" ? "الصورة ليست إيصال دفع" : "התמונה אינה קבלת תשלום",
-            description: locale === "ar"
-              ? "يرجى تحميل صورة إيصال التحويل البنكي فقط"
-              : "אנא העלה/י תמונה של אישור העברה בנקאית בלבד",
-            variant: "destructive",
-          });
-          setIsSubmittingReceipt(false);
-          return;
-        }
-      } catch { /* verification error — allow upload to proceed */ }
-    }
-
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
 
