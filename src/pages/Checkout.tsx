@@ -191,6 +191,32 @@ const CheckoutSkeleton = () => (
 /* ---------- generate order number ---------- */
 const generateOrderNumber = () => `#${Math.floor(10000 + Math.random() * 90000)}`;
 
+/* ---------- Image compression helper ---------- */
+const compressImage = (file: File, maxPx = 1400, quality = 0.85): Promise<File> =>
+  new Promise((resolve) => {
+    if (!file.type.startsWith("image/")) { resolve(file); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => resolve(file);
+    img.src = url;
+  });
+
 /* ---------- Upload receipt types ---------- */
 interface UploadedFile {
   file: File;
@@ -493,8 +519,9 @@ const Checkout = () => {
     try {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < uploadedFiles.length; i++) {
-        const file = uploadedFiles[i].file;
-        const ext = file.name.split(".").pop() || "jpg";
+        const compressed = await compressImage(uploadedFiles[i].file);
+        const file = compressed;
+        const ext = file.type === "image/jpeg" ? "jpg" : (uploadedFiles[i].file.name.split(".").pop() || "jpg");
         const path = `receipts/${orderNumber}_${i + 1}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("receipts")

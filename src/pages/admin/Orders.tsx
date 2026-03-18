@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Package, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, X,
   MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt, AlertTriangle,
@@ -63,6 +63,9 @@ const AdminOrders = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
+  const autoExpandId = (location.state as any)?.expandOrderId as string | undefined;
+  const didAutoExpand = useRef(false);
   const { data: orders = [], isLoading } = useOrders();
   const { data: products = [] } = useProducts();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -79,6 +82,19 @@ const AdminOrders = () => {
     products.forEach((p: any) => m.set(p.id, { sku: p.sku, id: p.id }));
     return m;
   }, [products]);
+
+  /* Auto-expand order when navigated from dashboard */
+  useEffect(() => {
+    if (!autoExpandId || didAutoExpand.current || orders.length === 0) return;
+    const order = orders.find(o => o.id === autoExpandId);
+    if (!order) return;
+    didAutoExpand.current = true;
+    handleExpand(order);
+    setTimeout(() => {
+      document.getElementById(`order-${autoExpandId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoExpandId, orders]);
 
   const { data: smsSettings } = useSmsSettings();
   const { data: smsMessages } = useSmsMessages();
@@ -205,17 +221,18 @@ const AdminOrders = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
-              <SelectTrigger className="w-44 border-gray-200 text-sm h-9">
-                <span className="flex items-center gap-1.5"><ArrowUpDown className="w-3.5 h-3.5 text-gray-400" /><SelectValue /></span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">חדש לישן</SelectItem>
-                <SelectItem value="oldest">ישן לחדש</SelectItem>
-                <SelectItem value="total_desc">סכום — גבוה לנמוך</SelectItem>
-                <SelectItem value="total_asc">סכום — נמוך לגבוה</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative flex items-center">
+              <ArrowUpDown className="absolute right-3 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10" />
+              <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-48 border-gray-200 text-sm h-9 pr-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">חדש לישן</SelectItem>
+                  <SelectItem value="oldest">ישן לחדש</SelectItem>
+                  <SelectItem value="total_desc">סכום — גבוה לנמוך</SelectItem>
+                  <SelectItem value="total_asc">סכום — נמוך לגבוה</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         {/* Search */}
@@ -260,7 +277,7 @@ const AdminOrders = () => {
             );
 
             return (
-              <div key={order.id} className={`bg-white rounded-2xl border transition-shadow ${isExpanded ? "border-gray-300 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}>
+              <div id={`order-${order.id}`} key={order.id} className={`bg-white rounded-2xl border transition-shadow ${isExpanded ? "border-gray-300 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}>
 
                 {/* ── Collapsed row ── */}
                 <div
@@ -354,12 +371,12 @@ const AdminOrders = () => {
                               className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-colors"
                             >
                               {url.toLowerCase().includes(".pdf") ? (
-                                <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-red-50">
-                                  <ImageIcon className="w-6 h-6 text-red-400" />
+                                <div className="w-14 h-14 flex flex-col items-center justify-center gap-1 bg-red-50">
+                                  <ImageIcon className="w-5 h-5 text-red-400" />
                                   <span className="text-[9px] font-bold text-red-500">PDF</span>
                                 </div>
                               ) : (
-                                <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />
+                                <img src={url} alt={`קבלה ${idx + 1}`} className="w-14 h-14 object-cover" />
                               )}
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                                 <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow">
@@ -381,14 +398,14 @@ const AdminOrders = () => {
                         {(order.order_items || []).map((item: DbOrderItem, idx: number) => (
                           <div key={item.id} className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? "border-t border-gray-100" : ""} hover:bg-gray-50/50 transition-colors`}>
                             {item.product_image ? (
-                              <img src={item.product_image} alt="" className="w-12 h-12 rounded-xl object-cover border border-gray-100 shrink-0" />
+                              <img src={item.product_image} alt="" className="w-16 h-16 rounded-xl object-cover border border-gray-100 shrink-0" />
                             ) : (
-                              <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
-                                <Package className="w-5 h-5 text-gray-300" />
+                              <div className="w-16 h-16 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
+                                <Package className="w-6 h-6 text-gray-300" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 text-sm leading-snug">{item.product_name}</p>
+                              <p className="font-semibold text-gray-900 text-base leading-snug">{item.product_name}</p>
                               {item.product_id && (() => {
                                 const prod = skuMap.get(item.product_id);
                                 return (
@@ -408,8 +425,8 @@ const AdminOrders = () => {
                                   const isCustom = !item.color_hex;
                                   return (
                                     <div className="flex items-center gap-1.5">
-                                      <span className="text-[10px] text-gray-400">צבע:</span>
-                                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-700 font-medium">
+                                      <span className="text-xs text-gray-400">צבע:</span>
+                                      <span className="inline-flex items-center gap-1 text-xs text-gray-700 font-medium">
                                         {item.color_hex && (
                                           <span className="w-3 h-3 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
                                         )}
@@ -423,16 +440,16 @@ const AdminOrders = () => {
                                 })()}
                                 {item.size && (
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-gray-400">אורך:</span>
-                                    <span className="text-[11px] text-gray-700 font-medium">{item.size}</span>
+                                    <span className="text-xs text-gray-400">אורך:</span>
+                                    <span className="text-xs text-gray-700 font-medium">{item.size}</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                             <div className="text-end shrink-0 space-y-0.5">
-                              <p className="text-xs text-gray-400">×{item.quantity}</p>
-                              <p className="font-bold text-gray-900 text-sm">₪{(item.price * item.quantity).toLocaleString()}</p>
-                              <p className="text-[10px] text-gray-400">₪{item.price.toLocaleString()} ליח'</p>
+                              <p className="text-sm text-gray-400">×{item.quantity}</p>
+                              <p className="font-bold text-gray-900 text-base">₪{(item.price * item.quantity).toLocaleString()}</p>
+                              <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} ליח'</p>
                             </div>
                           </div>
                         ))}
