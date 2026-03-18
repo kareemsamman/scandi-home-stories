@@ -34,6 +34,21 @@ const parseReceipts = (url: string | null): string[] => {
   return url.split("|").map(u => u.trim()).filter(Boolean);
 };
 
+/* ── Resolve receipt URL: generate signed URL for private bucket, pass through legacy public URLs ── */
+const resolveReceiptUrl = async (raw: string): Promise<string> => {
+  if (raw.startsWith("receipts:")) {
+    const path = raw.slice("receipts:".length);
+    const { data, error } = await supabase.storage.from("receipts").createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      console.error("[receipt] signed URL error:", error?.message);
+      return "";
+    }
+    return data.signedUrl;
+  }
+  // Legacy public URL — pass through
+  return raw;
+};
+
 /* ── Compute shipping cost from order ── */
 const calcShipping = (order: any): number => {
   const itemsTotal = (order.order_items || []).reduce(
@@ -256,13 +271,21 @@ const AdminOrders = () => {
                           {receipts.map((url, idx) => (
                             <button
                               key={idx}
-                              onClick={() => setReceiptModal(url)}
+                              onClick={async () => {
+                                const resolved = await resolveReceiptUrl(url);
+                                if (resolved) setReceiptModal(resolved);
+                              }}
                               className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-colors"
                             >
                               {url.toLowerCase().includes(".pdf") ? (
                                 <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-red-50">
                                   <ImageIcon className="w-6 h-6 text-red-400" />
                                   <span className="text-[9px] font-bold text-red-500">PDF</span>
+                                </div>
+                              ) : url.startsWith("receipts:") ? (
+                                <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-blue-50">
+                                  <ImageIcon className="w-6 h-6 text-blue-400" />
+                                  <span className="text-[9px] font-bold text-blue-500">🔒</span>
                                 </div>
                               ) : (
                                 <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />

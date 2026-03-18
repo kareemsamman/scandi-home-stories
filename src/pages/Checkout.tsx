@@ -471,11 +471,11 @@ const Checkout = () => {
         const ext = file.name.split(".").pop() || "jpg";
         const path = `receipts/${orderNumber}_${i + 1}.${ext}`;
         const { error: uploadErr } = await supabase.storage
-          .from("site-media")
+          .from("receipts")
           .upload(path, file, { upsert: true });
         if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
-          uploadedUrls.push(urlData.publicUrl);
+          // Store the storage path (not a public URL) — admins use signed URLs to view
+          uploadedUrls.push(`receipts:${path}`);
         } else {
           console.error("[receipt upload] storage error:", uploadErr.message);
           receiptUploadFailed = true;
