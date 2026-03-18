@@ -250,9 +250,8 @@ const Checkout = () => {
   const [step, setStep] = useState<"form" | "payment">("form");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
-  const [receiptValidationState, setReceiptValidationState] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
+  const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const receiptValidationRunRef = useRef(0);
 
   // Start empty — useEffect fills fields once auth loads
   const [form, setForm] = useState({
@@ -415,74 +414,6 @@ const Checkout = () => {
     return null;
   };
 
-  const verifyReceiptImage = useCallback(async (file: File): Promise<boolean> => {
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result;
-          if (typeof dataUrl !== "string") {
-            reject(new Error("invalid_file_data"));
-            return;
-          }
-          const parts = dataUrl.split(",");
-          if (parts.length < 2) {
-            reject(new Error("invalid_file_data"));
-            return;
-          }
-          resolve(parts[1]);
-        };
-        reader.onerror = () => reject(new Error("file_read_failed"));
-        reader.readAsDataURL(file);
-      });
-
-      const { data, error } = await supabase.functions.invoke("verify-receipt", {
-        body: { imageBase64: base64, mimeType: file.type },
-      });
-
-      if (error) return false;
-      return data?.isReceipt === true;
-    } catch {
-      return false;
-    }
-  }, []);
-
-  useEffect(() => {
-    const runId = ++receiptValidationRunRef.current;
-
-    const validateUploadedReceipts = async () => {
-      if (uploadedFiles.length === 0) {
-        setReceiptValidationState("idle");
-        return;
-      }
-
-      const imageFiles = uploadedFiles
-        .map(({ file }) => file)
-        .filter((file) => file.type.startsWith("image/"));
-
-      if (imageFiles.length === 0) {
-        setReceiptValidationState("valid");
-        return;
-      }
-
-      setReceiptValidationState("checking");
-
-      for (const imageFile of imageFiles) {
-        const isReceipt = await verifyReceiptImage(imageFile);
-        if (runId !== receiptValidationRunRef.current) return;
-
-        if (!isReceipt) {
-          setReceiptValidationState("invalid");
-          return;
-        }
-      }
-
-      setReceiptValidationState("valid");
-    };
-
-    void validateUploadedReceipts();
-  }, [uploadedFiles, verifyReceiptImage]);
-
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
     const newFiles: UploadedFile[] = [];
@@ -504,9 +435,8 @@ const Checkout = () => {
         variant: "destructive",
       });
     }
-    if (newFiles.length > 0) {
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-    }
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    if (newFiles.length > 0) setReceiptDetected(true);
   };
 
   const removeFile = (index: number) => {
@@ -526,26 +456,33 @@ const Checkout = () => {
   // Step 2: submit receipt → upload files → save order → send SMS → navigate
   const handleSubmitReceipt = async () => {
     if (uploadedFiles.length === 0) return;
-
-    if (receiptValidationState === "checking") {
-      toast({
-        title: t("payment.verifyingReceipt"),
-        description: t("payment.verifyingReceiptDescription"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (receiptValidationState !== "valid") {
-      toast({
-        title: t("payment.receiptNotDetected"),
-        description: t("payment.receiptNotDetectedDescription"),
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmittingReceipt(true);
+
+    // Validate image files are actual receipts using Claude Vision
+    for (const { file } of uploadedFiles) {
+      if (!file.type.startsWith("image/")) continue; // PDFs are trusted
+      try {
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve((e.target?.result as string).split(",")[1]);
+          reader.readAsDataURL(file);
+        });
+        const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-receipt", {
+          body: { imageBase64: base64, mimeType: file.type },
+        });
+        if (!verifyErr && verifyData?.isReceipt === false) {
+          toast({
+            title: locale === "ar" ? "الصورة ليست إيصال دفع" : "התמונה אינה קבלת תשלום",
+            description: locale === "ar"
+              ? "يرجى تحميل صورة إيصال التحويل البنكي فقط"
+              : "אנא העלה/י תמונה של אישור העברה בנקאית בלבד",
+            variant: "destructive",
+          });
+          setIsSubmittingReceipt(false);
+          return;
+        }
+      } catch { /* verification error — allow upload to proceed */ }
+    }
 
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
@@ -912,30 +849,10 @@ const Checkout = () => {
             )}
 
             {/* Receipt detection message */}
-            {uploadedFiles.length > 0 && receiptValidationState !== "idle" && (
-              <div
-                className={`mt-3 flex items-center gap-2 text-xs ${
-                  receiptValidationState === "valid"
-                    ? "text-green-600"
-                    : receiptValidationState === "invalid"
-                    ? "text-destructive"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {receiptValidationState === "checking" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : receiptValidationState === "valid" ? (
-                  <CheckCircle2 className="w-4 h-4" />
-                ) : (
-                  <X className="w-4 h-4" />
-                )}
-                <span>
-                  {receiptValidationState === "checking"
-                    ? t("payment.verifyingReceipt")
-                    : receiptValidationState === "valid"
-                    ? t("payment.receiptDetected")
-                    : t("payment.receiptNotDetected")}
-                </span>
+            {receiptDetected && uploadedFiles.length > 0 && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{t("payment.receiptDetected")}</span>
               </div>
             )}
           </div>
@@ -943,7 +860,7 @@ const Checkout = () => {
           {/* Submit receipt button */}
           <button
             onClick={handleSubmitReceipt}
-            disabled={uploadedFiles.length === 0 || isSubmittingReceipt || receiptValidationState !== "valid"}
+            disabled={uploadedFiles.length === 0 || isSubmittingReceipt}
             className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmittingReceipt ? (
