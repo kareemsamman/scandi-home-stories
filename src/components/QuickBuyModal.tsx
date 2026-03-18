@@ -160,7 +160,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
         (i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === key
       );
       if (existing) {
-        cart.updateQuantity(key, Math.min(existing.quantity + qty, freshEffective));
+        cart.updateQuantity(key, Math.min(existing.quantity + qty, freshStock));
       } else {
         useCart.setState((state) => ({
           items: [...state.items, { product, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined } }],
