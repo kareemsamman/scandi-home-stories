@@ -779,7 +779,7 @@ const Checkout = () => {
               <p className="text-sm text-muted-foreground text-center leading-relaxed">
                 {t("payment.dropText")}
               </p>
-              <p className="text-xs text-muted-foreground/60">JPG, PNG, PDF</p>
+              <p className="text-xs text-muted-foreground/60">JPG, PNG, PDF · {locale === "ar" ? "حتى 10MB لكل ملف" : "עד 10MB לכל קובץ"}</p>
             </div>
             <input
               ref={fileInputRef}
