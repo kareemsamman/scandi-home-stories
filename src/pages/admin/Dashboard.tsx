@@ -92,7 +92,7 @@ const AdminDashboard = () => {
           ) : (
             <div className="space-y-3">
               {(stats?.recentOrders || []).map((order: any) => (
-                <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate("/admin/orders", { state: { expandOrderId: order.id } })}>
+                <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
                     <p className="text-xs text-gray-400">{order.first_name} {order.last_name}</p>
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
               <p className="text-gray-400 text-sm">No pending actions</p>
             ) : (
               (stats!.waitingOrders as any[]).map((order: any) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors" onClick={() => navigate("/admin/orders", { state: { expandOrderId: order.id } })}>
+                <div key={order.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
                     <p className="text-sm font-semibold text-amber-900">{order.order_number}</p>
                     <p className="text-xs text-amber-700">{order.first_name} {order.last_name}</p>

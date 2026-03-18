@@ -204,6 +204,21 @@ export const useOrders = () =>
     },
   });
 
+export const useOrderById = (orderId: string) =>
+  useQuery({
+    queryKey: ["order", orderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("id", orderId)
+        .single();
+      if (error) throw error;
+      return data as DbOrder & { order_items: DbOrderItem[] };
+    },
+    enabled: !!orderId,
+  });
+
 // ─── Admin-specific queries ───
 
 export const useAdminTranslations = (table: string, foreignKey: string, locale: string) =>

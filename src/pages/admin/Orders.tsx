@@ -1,17 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Package, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, X,
-  MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt, AlertTriangle,
-  Search, ArrowUpDown, ExternalLink, Hash,
+  Package, Receipt, Search, ArrowUpDown, X, ChevronRight,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useOrders, useProducts, type DbOrderItem } from "@/hooks/useDbData";
+import { useOrders } from "@/hooks/useDbData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
-import { adjustInventory } from "@/hooks/useOrders";
 
 /* ── Status config ── */
 const STATUSES = [
@@ -30,142 +23,19 @@ const getStatus = (s: string) =>
     value: s,
   };
 
-/* ── Receipt URLs helper ── */
-const parseReceipts = (url: string | null): string[] => {
-  if (!url) return [];
-  return url.split("|").map(u => u.trim()).filter(Boolean);
-};
-
-/* ── Resolve receipt URL: generate signed URL for private bucket, pass through legacy public URLs ── */
-const resolveReceiptUrl = async (raw: string): Promise<string> => {
-  if (raw.startsWith("receipts:")) {
-    const path = raw.slice("receipts:".length);
-    const { data, error } = await supabase.storage.from("receipts").createSignedUrl(path, 3600);
-    if (error || !data?.signedUrl) {
-      console.error("[receipt] signed URL error:", error?.message);
-      return "";
-    }
-    return data.signedUrl;
-  }
-  // Legacy public URL — pass through
-  return raw;
-};
-
-/* ── Compute shipping cost from order ── */
-const calcShipping = (order: any): number => {
-  const itemsTotal = (order.order_items || []).reduce(
-    (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
-  );
-  return Math.max(0, Number(order.total) - itemsTotal + Number(order.discount_amount || 0));
-};
+const parseReceipts = (url: string | null): number =>
+  url ? url.split("|").filter(Boolean).length : 0;
 
 const AdminOrders = () => {
-  const { toast } = useToast();
-  const qc = useQueryClient();
   const navigate = useNavigate();
-  const location = useLocation();
-  const autoExpandId = (location.state as any)?.expandOrderId as string | undefined;
-  const didAutoExpand = useRef(false);
   const { data: orders = [], isLoading } = useOrders();
-  const { data: products = [] } = useProducts();
-  const [expanded, setExpanded] = useState<string | null>(null);
+
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "total_desc" | "total_asc">("newest");
-  const [receiptModal, setReceiptModal] = useState<{ urls: string[]; idx: number } | null>(null);
-  const [resolvedReceipts, setResolvedReceipts] = useState<Record<string, string[]>>({});
-  const [sendingSms, setSendingSms] = useState<string | null>(null);
-
-  /* SKU map: productId → { sku, id } */
-  const skuMap = useMemo(() => {
-    const m = new Map<string, { sku: string | null; id: string }>();
-    products.forEach((p: any) => m.set(p.id, { sku: p.sku, id: p.id }));
-    return m;
-  }, [products]);
-
-  /* Auto-expand order when navigated from dashboard */
-  useEffect(() => {
-    if (!autoExpandId || didAutoExpand.current || orders.length === 0) return;
-    const order = orders.find(o => o.id === autoExpandId);
-    if (!order) return;
-    didAutoExpand.current = true;
-    handleExpand(order);
-    setTimeout(() => {
-      document.getElementById(`order-${autoExpandId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoExpandId, orders]);
-
-  const { data: smsSettings } = useSmsSettings();
-  const { data: smsMessages } = useSmsMessages();
-
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
-      toast({ title: "סטטוס עודכן" });
-    },
-  });
-
-  const handleStatusChange = async (order: any, newStatus: string) => {
-    const prevStatus = order.status;
-    await updateStatus.mutateAsync({ id: order.id, status: newStatus });
-
-    const cancelStatuses = ["not_approved", "cancelled"];
-    const orderItems = (order.order_items || []).map((i: any) => ({
-      productId: i.product_id || undefined,
-      quantity: i.quantity,
-      color: i.color_name || undefined,
-      size: i.size || undefined,
-    }));
-    if (cancelStatuses.includes(newStatus) && !cancelStatuses.includes(prevStatus)) {
-      await adjustInventory(orderItems, 1);
-      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
-    } else if (!cancelStatuses.includes(newStatus) && cancelStatuses.includes(prevStatus)) {
-      await adjustInventory(orderItems, -1);
-      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
-    }
-
-    if (!smsSettings?.enabled || !smsMessages) return;
-    const msgTemplate = (smsMessages as any)[newStatus];
-    if (!msgTemplate) return;
-
-    const locale = order.locale || "he";
-    const shippingCost = calcShipping(order);
-    const message = formatSms(
-      typeof msgTemplate === "object" ? (msgTemplate[locale] || msgTemplate.he) : msgTemplate,
-      {
-        name: order.first_name || "",
-        order_number: order.order_number || "",
-        phone: order.phone || "",
-        total: Number(order.total || 0).toLocaleString(),
-        shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם",
-      }
-    );
-
-    setSendingSms(order.id);
-    const ok = await sendSms(order.phone, message);
-    setSendingSms(null);
-    toast({
-      title: ok ? `SMS נשלח ל-${order.phone}` : "SMS נכשל (סטטוס נשמר)",
-      variant: ok ? "default" : "destructive",
-    });
-  };
-
-  const handleExpand = async (order: any) => {
-    const isOpen = expanded === order.id;
-    setExpanded(isOpen ? null : order.id);
-    if (!isOpen && !resolvedReceipts[order.id]) {
-      const rawUrls = parseReceipts(order.receipt_url);
-      const resolved = await Promise.all(rawUrls.map(resolveReceiptUrl));
-      setResolvedReceipts(prev => ({ ...prev, [order.id]: resolved.filter(Boolean) }));
-    }
-  };
 
   const q = searchQuery.trim().toLowerCase();
+
   const filtered = useMemo(() => {
     let list = orders.filter(o => filterStatus === "all" || o.status === filterStatus);
     if (q) {
@@ -179,15 +49,15 @@ const AdminOrders = () => {
         );
       });
     }
-    list = [...list].sort((a, b) => {
+    return [...list].sort((a, b) => {
       if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       if (sortBy === "total_desc") return Number(b.total) - Number(a.total);
       if (sortBy === "total_asc") return Number(a.total) - Number(b.total);
       return 0;
     });
-    return list;
   }, [orders, filterStatus, q, sortBy]);
+
   const waitingCount = orders.filter(o => o.status === "waiting_approval").length;
 
   return (
@@ -235,6 +105,7 @@ const AdminOrders = () => {
             </div>
           </div>
         </div>
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -257,7 +128,7 @@ const AdminOrders = () => {
       {/* List */}
       {isLoading ? (
         <div className="space-y-2">
-          {[1,2,3].map(i => <div key={i} className="h-20 rounded-2xl bg-gray-100 animate-pulse" />)}
+          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 rounded-2xl bg-gray-100 animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
@@ -266,300 +137,55 @@ const AdminOrders = () => {
           {q && <button className="text-sm text-blue-500 hover:underline mt-1" onClick={() => setSearchQuery("")}>נקה חיפוש</button>}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {filtered.map(order => {
-            const isExpanded = expanded === order.id;
             const st = getStatus(order.status);
-            const receipts = parseReceipts(order.receipt_url);
-            const shippingCost = calcShipping(order);
-            const itemsTotal = (order.order_items || []).reduce(
-              (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
-            );
+            const receiptCount = parseReceipts(order.receipt_url);
 
             return (
-              <div id={`order-${order.id}`} key={order.id} className={`bg-white rounded-2xl border transition-shadow ${isExpanded ? "border-gray-300 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}>
-
-                {/* ── Collapsed row ── */}
-                <div
-                  className="flex items-center gap-3 px-5 py-4 cursor-pointer select-none"
-                  onClick={() => handleExpand(order)}
-                >
-                  {/* Chevron */}
-                  <div className="w-5 shrink-0 text-gray-300">
-                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </div>
-
-                  {/* Order number + customer */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-gray-900 text-sm">{order.order_number}</span>
-                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${st.color}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-                        {st.label}
+              <button
+                key={order.id}
+                onClick={() => navigate(`/admin/orders/${order.id}`)}
+                className="w-full text-start bg-white rounded-2xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all px-5 py-4 flex items-center gap-3 group"
+              >
+                {/* Order number + meta */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-gray-900 text-sm">{order.order_number}</span>
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${st.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+                      {st.label}
+                    </span>
+                    {receiptCount > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
+                        <Receipt className="w-3 h-3" />
+                        {receiptCount > 1 ? `${receiptCount} קבלות` : "קבלה"}
                       </span>
-                      {receipts.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
-                          <Receipt className="w-3 h-3" />
-                          {receipts.length > 1 ? `${receipts.length} קבלות` : "קבלה"}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-400 text-xs mt-0.5">
-                      {order.first_name} {order.last_name} · {order.phone} · {new Date(order.created_at).toLocaleDateString("he-IL")}
-                    </p>
+                    )}
+                    {receiptCount === 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 font-semibold">
+                        ללא קבלה
+                      </span>
+                    )}
                   </div>
-
-                  {/* Totals */}
-                  <div className="text-end shrink-0">
-                    <p className="font-bold text-gray-900 text-sm">₪{Number(order.total).toLocaleString()}</p>
-                    <p className="text-gray-400 text-xs">{order.order_items?.length || 0} פריטים</p>
-                  </div>
+                  <p className="text-gray-400 text-xs mt-0.5">
+                    {order.first_name} {order.last_name} · {order.phone} · {new Date(order.created_at).toLocaleDateString("he-IL")}
+                  </p>
                 </div>
 
-                {/* ── Expanded detail ── */}
-                {isExpanded && (
-                  <div className="border-t border-gray-100 px-5 py-5 space-y-5">
+                {/* Total + items count */}
+                <div className="text-end shrink-0">
+                  <p className="font-bold text-gray-900 text-sm">₪{Number(order.total).toLocaleString()}</p>
+                  <p className="text-gray-400 text-xs">{order.order_items?.length || 0} פריטים</p>
+                </div>
 
-                    {/* Customer + Shipping address */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                          <User className="w-3 h-3" /> לקוח
-                        </p>
-                        <p className="font-semibold text-gray-900 text-sm">{order.first_name} {order.last_name}</p>
-                        <p className="text-gray-500 text-xs flex items-center gap-1.5"><Mail className="w-3 h-3" />{order.email}</p>
-                        <p className="text-gray-500 text-xs flex items-center gap-1.5"><Phone className="w-3 h-3" />{order.phone}</p>
-                        {order.locale && <p className="text-gray-400 text-[10px] pt-1">שפה: {order.locale.toUpperCase()}</p>}
-                      </div>
-
-                      <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                          <MapPin className="w-3 h-3" /> כתובת למשלוח
-                        </p>
-                        <p className="font-semibold text-gray-900 text-sm">{order.city}</p>
-                        <p className="text-gray-500 text-xs">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
-                      </div>
-                    </div>
-
-                    {/* Notes */}
-                    {order.notes && (
-                      <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-sm text-amber-800">
-                        <FileText className="w-4 h-4 shrink-0 mt-0.5" />
-                        <p><span className="font-bold">הערה: </span>{order.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Receipts — always shown */}
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                        <Receipt className="w-3 h-3" /> קבלות {receipts.length > 0 && `(${receipts.length})`}
-                      </p>
-                      {receipts.length === 0 ? (
-                        <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                          <div>
-                            <p className="text-sm font-semibold text-amber-800">לא הועלתה קבלה</p>
-                            <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-3">
-                          {(resolvedReceipts[order.id] ?? receipts).map((url, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setReceiptModal({ urls: resolvedReceipts[order.id] ?? receipts, idx })}
-                              className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                            >
-                              {url.toLowerCase().includes(".pdf") ? (
-                                <div className="w-14 h-14 flex flex-col items-center justify-center gap-1 bg-red-50">
-                                  <ImageIcon className="w-5 h-5 text-red-400" />
-                                  <span className="text-[9px] font-bold text-red-500">PDF</span>
-                                </div>
-                              ) : (
-                                <img src={url} alt={`קבלה ${idx + 1}`} className="w-14 h-14 object-cover" />
-                              )}
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow">
-                                  {receipts.length > 1 ? `קבלה ${idx + 1}` : "פתח"}
-                                </span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Items table */}
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                        <Package className="w-3 h-3" /> פריטים
-                      </p>
-                      <div className="rounded-xl border border-gray-100 overflow-hidden">
-                        {(order.order_items || []).map((item: DbOrderItem, idx: number) => (
-                          <div key={item.id} className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? "border-t border-gray-100" : ""} hover:bg-gray-50/50 transition-colors`}>
-                            {item.product_image ? (
-                              <img src={item.product_image} alt="" className="w-16 h-16 rounded-xl object-cover border border-gray-100 shrink-0" />
-                            ) : (
-                              <div className="w-16 h-16 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
-                                <Package className="w-6 h-6 text-gray-300" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 text-base leading-snug">{item.product_name}</p>
-                              {item.product_id && (() => {
-                                const prod = skuMap.get(item.product_id);
-                                return (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); navigate(`/admin/products/edit/${item.product_id}`); }}
-                                    className="inline-flex items-center gap-1 mt-0.5 text-[10px] text-blue-500 hover:text-blue-700 hover:underline font-mono"
-                                    title="פתח עריכת מוצר"
-                                  >
-                                    <Hash className="w-2.5 h-2.5" />
-                                    {prod?.sku || item.product_id.slice(0, 8)}
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                  </button>
-                                );
-                              })()}
-                              <div className="mt-1 space-y-0.5">
-                                {item.color_name && (() => {
-                                  const isCustom = !item.color_hex;
-                                  return (
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-xs text-gray-400">צבע:</span>
-                                      <span className="inline-flex items-center gap-1 text-xs text-gray-700 font-medium">
-                                        {item.color_hex && (
-                                          <span className="w-3 h-3 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
-                                        )}
-                                        {item.color_name}
-                                        {isCustom && (
-                                          <span className="text-[9px] font-semibold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">מותאם</span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  );
-                                })()}
-                                {item.size && (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-gray-400">אורך:</span>
-                                    <span className="text-xs text-gray-700 font-medium">{item.size}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-end shrink-0 space-y-0.5">
-                              <p className="text-sm text-gray-400">×{item.quantity}</p>
-                              <p className="font-bold text-gray-900 text-base">₪{(item.price * item.quantity).toLocaleString()}</p>
-                              <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} ליח'</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Financial summary */}
-                    <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">סכום ביניים</span>
-                        <span className="font-medium text-gray-900">₪{itemsTotal.toLocaleString()}</span>
-                      </div>
-                      {order.discount_code && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-green-700">קוד הנחה ({order.discount_code})</span>
-                          <span className="font-semibold text-green-700">-₪{Number(order.discount_amount || 0).toLocaleString()}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">משלוח</span>
-                        {shippingCost === 0
-                          ? <span className="font-medium text-green-600">חינם</span>
-                          : <span className="font-medium text-gray-900">₪{shippingCost.toLocaleString()}</span>
-                        }
-                      </div>
-                      <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-200">
-                        <span className="text-gray-900">סה"כ</span>
-                        <span className="text-gray-900 text-base">₪{Number(order.total).toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    {/* Status change */}
-                    <div className="flex items-center gap-3 pt-1 flex-wrap">
-                      <span className="text-sm font-semibold text-gray-700">סטטוס:</span>
-                      <Select value={order.status} onValueChange={v => handleStatusChange(order, v)}>
-                        <SelectTrigger className="w-48 h-9 text-xs border-gray-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map(s => (
-                            <SelectItem key={s.value} value={s.value}>
-                              <span className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-                                {s.label}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {sendingSms === order.id && (
-                        <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
-                          <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                {/* Arrow */}
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+              </button>
             );
           })}
         </div>
       )}
-
-      {/* Receipt lightbox */}
-      {receiptModal && (() => {
-        const { urls, idx } = receiptModal;
-        const currentUrl = urls[idx];
-        const hasPrev = idx > 0;
-        const hasNext = idx < urls.length - 1;
-        return (
-          <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center" onClick={() => setReceiptModal(null)}>
-            {/* Close */}
-            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 z-10" onClick={() => setReceiptModal(null)}>
-              <X className="w-5 h-5" />
-            </button>
-            {/* Counter */}
-            {urls.length > 1 && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-gray-700 text-sm font-semibold bg-gray-100 px-3 py-1 rounded-full">
-                {idx + 1} / {urls.length}
-              </div>
-            )}
-            {/* Prev — always left */}
-            {hasPrev && (
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
-                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx - 1 }); }}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            )}
-            {/* Next — always right */}
-            {hasNext && (
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
-                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx + 1 }); }}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            )}
-            {/* Image / PDF */}
-            <div className="max-w-3xl max-h-[90vh] overflow-auto rounded-2xl shadow-xl" onClick={e => e.stopPropagation()}>
-              {currentUrl.toLowerCase().includes(".pdf") ? (
-                <iframe src={currentUrl} className="w-[70vw] h-[80vh] rounded-2xl" title="Receipt" />
-              ) : (
-                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-[88vh] rounded-2xl object-contain" />
-              )}
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };
