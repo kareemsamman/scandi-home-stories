@@ -192,14 +192,12 @@ const AdminOrderDetail = () => {
     body { ${font} background:#fff; color:#1a1a1a; font-size:13px; direction:${dir}; }
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .no-print { display:none; }
     }
     .header { background:#111827; color:#fff; padding:28px 36px; display:flex; align-items:center; justify-content:space-between; }
     .header img { height:40px; object-fit:contain; }
     .header-info { text-align:${isAr ? "left" : "right"}; }
     .header-info h1 { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
     .header-info p { font-size:12px; color:#9ca3af; margin-top:2px; }
-    .status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; background:#fef3c7; color:#92400e; margin-top:6px; }
     .body { padding:28px 36px; }
     .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
     .info-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; }
@@ -216,14 +214,11 @@ const AdminOrderDetail = () => {
     .totals-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
     .totals-row.grand { border-top:2px solid #e5e7eb; margin-top:8px; padding-top:10px; font-weight:800; font-size:15px; }
     .footer { margin-top:32px; padding:20px 36px; border-top:1px solid #e5e7eb; text-align:center; font-size:11px; color:#9ca3af; }
-    .print-btn { position:fixed; bottom:24px; right:24px; background:#111827; color:#fff; border:none; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; }
-    .print-btn:hover { background:#1f2937; }
   </style>
 </head>
 <body>
   <div class="header">
-    <img src="${logoUrl}" alt="AMG Pergola" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-    <span style="display:none; font-size:20px; font-weight:900; color:#fff; letter-spacing:1px;">AMG PERGOLA</span>
+    <img src="${logoUrl}" alt="AMG PERGOLA" style="height:40px; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;\\'>AMG PERGOLA</span>'">
     <div class="header-info">
       <h1>${labels.order} ${order.order_number}</h1>
       <p>${labels.date}: ${new Date(order.created_at).toLocaleDateString(isAr ? "ar-SA" : "he-IL", { year: "numeric", month: "long", day: "numeric" })}</p>
@@ -273,7 +268,6 @@ const AdminOrderDetail = () => {
     <p>AMG Pergola · amgpergola.com</p>
   </div>
 
-  <button class="print-btn no-print" onclick="window.print()">🖨 ${isAr ? "طباعة" : "הדפסה"}</button>
   <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); }</script>
 </body>
 </html>`;
