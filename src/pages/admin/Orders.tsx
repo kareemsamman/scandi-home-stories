@@ -271,7 +271,10 @@ const AdminOrders = () => {
                           {receipts.map((url, idx) => (
                             <button
                               key={idx}
-                              onClick={() => setReceiptModal(url)}
+                              onClick={async () => {
+                                const resolved = await resolveReceiptUrl(url);
+                                if (resolved) setReceiptModal(resolved);
+                              }}
                               className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-colors"
                             >
                               {url.toLowerCase().includes(".pdf") ? (
