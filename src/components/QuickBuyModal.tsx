@@ -152,6 +152,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
 
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
     const qty = Math.min(quantity, freshEffective);
+    const productToAdd = currentPrice !== product.price ? { ...product, price: currentPrice } : product;
 
     if (isContractor) {
       const cart = useCart.getState();
@@ -163,11 +164,11 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
         cart.updateQuantity(key, Math.min(existing.quantity + qty, freshStock));
       } else {
         useCart.setState((state) => ({
-          items: [...state.items, { product, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined } }],
+          items: [...state.items, { product: productToAdd, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined } }],
         }));
       }
     } else {
-      addItem(product, qty, { color: colorOption, size: activeSizeLabel || undefined });
+      addItem(productToAdd, qty, { color: colorOption, size: activeSizeLabel || undefined });
     }
 
     setAddedConfirm(true);

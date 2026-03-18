@@ -460,7 +460,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
       }
     }
     await new Promise((r) => setTimeout(r, 300));
-    addItem(product, Math.min(quantity, isCustomColor ? 9999 : effectiveMax), { color: colorOption, size: selectedSize || undefined });
+    const productToAdd = currentPrice !== product.price ? { ...product, price: currentPrice } : product;
+    addItem(productToAdd, Math.min(quantity, isCustomColor ? 9999 : effectiveMax), { color: colorOption, size: selectedSize || undefined });
     setIsAdding(false);
     setAddedConfirm(true);
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
