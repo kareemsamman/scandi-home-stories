@@ -9,6 +9,7 @@ import { QuantitySelector } from "./QuantitySelector";
 import { QuickBuyModal } from "./QuickBuyModal";
 import { products, Product } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { useCartInventory } from "@/hooks/useCartInventory";
 
 const CartIcon = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5">
@@ -39,6 +40,7 @@ export const MiniCart = () => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const [quickBuyProduct, setQuickBuyProduct] = useState<Product | null>(null);
+  const { getStockMax } = useCartInventory(items);
   
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
@@ -127,8 +129,8 @@ export const MiniCart = () => {
                   <div className="flex items-center justify-between mt-2">
                     <QuantitySelector
                       quantity={item.quantity}
-                      onQuantityChange={(q) => updateQuantity(key, q)}
-                      max={item.product.type === "contractor" ? 9999 : 10}
+                      onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
+                      max={getStockMax(item)}
                       className="h-8 scale-90 origin-start"
                     />
                     <button onClick={() => removeItem(key)} className="text-xs text-muted-foreground underline hover:text-foreground transition-colors">

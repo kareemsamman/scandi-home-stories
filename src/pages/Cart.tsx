@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CouponInput } from "@/components/CouponInput";
 import { useCouponStore } from "@/hooks/useCoupons";
+import { useCartInventory } from "@/hooks/useCartInventory";
 
 /* ── Lock icon for checkout button ── */
 const LockIcon = () => (
@@ -29,6 +30,7 @@ const Cart = () => {
   const getItemKey = useCart((s) => s.getItemKey);
   const { t, locale, localePath } = useLocale();
   const subtotal = getSubtotal();
+  const { getStockMax } = useCartInventory(items);
   const { applied: appliedCoupon } = useCouponStore();
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const total = Math.max(0, subtotal - discountAmount);
@@ -114,8 +116,8 @@ const Cart = () => {
                       <div className="w-28">
                         <QuantitySelector
                           quantity={item.quantity}
-                          onQuantityChange={(q) => updateQuantity(key, q)}
-                          max={item.product.type === "contractor" ? 9999 : 10}
+                          onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
+                          max={getStockMax(item)}
                           className="h-9 scale-[0.85] origin-center"
                         />
                       </div>
@@ -146,8 +148,8 @@ const Cart = () => {
                         <div className="flex items-center justify-between pt-1">
                           <QuantitySelector
                             quantity={item.quantity}
-                            onQuantityChange={(q) => updateQuantity(key, q)}
-                            max={item.product.type === "contractor" ? 9999 : 10}
+                            onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
+                            max={getStockMax(item)}
                             className="h-8 scale-[0.8] origin-start"
                           />
                           <button
