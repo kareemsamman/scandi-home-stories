@@ -421,37 +421,37 @@ const AdminOrders = () => {
         const hasPrev = idx > 0;
         const hasNext = idx < urls.length - 1;
         return (
-          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setReceiptModal(null)}>
+          <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center" onClick={() => setReceiptModal(null)}>
             {/* Close */}
-            <button className="absolute top-4 end-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10" onClick={() => setReceiptModal(null)}>
+            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 z-10" onClick={() => setReceiptModal(null)}>
               <X className="w-5 h-5" />
             </button>
             {/* Counter */}
             {urls.length > 1 && (
-              <div className="absolute top-4 start-1/2 -translate-x-1/2 text-white text-sm font-semibold bg-black/40 px-3 py-1 rounded-full">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-gray-700 text-sm font-semibold bg-gray-100 px-3 py-1 rounded-full">
                 {idx + 1} / {urls.length}
               </div>
             )}
-            {/* Prev */}
+            {/* Prev — always left */}
             {hasPrev && (
               <button
-                className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 transition-colors text-white z-10"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
                 onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx - 1 }); }}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            )}
-            {/* Next */}
-            {hasNext && (
-              <button
-                className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 transition-colors text-white z-10"
-                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx + 1 }); }}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
             )}
+            {/* Next — always right */}
+            {hasNext && (
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors text-gray-700 shadow-sm z-10"
+                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx + 1 }); }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
             {/* Image / PDF */}
-            <div className="max-w-2xl max-h-[90vh] overflow-auto rounded-2xl" onClick={e => e.stopPropagation()}>
+            <div className="max-w-3xl max-h-[90vh] overflow-auto rounded-2xl shadow-xl" onClick={e => e.stopPropagation()}>
               {currentUrl.toLowerCase().includes(".pdf") ? (
                 <iframe src={currentUrl} className="w-[70vw] h-[80vh] rounded-2xl" title="Receipt" />
               ) : (
