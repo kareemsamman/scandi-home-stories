@@ -602,7 +602,7 @@ const Checkout = () => {
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
-      state: { orderNumber, total: totalAfterDiscount, date: orderDate, orderId: savedOrderId },
+      state: { orderNumber, total: serverTotal ?? totalAfterDiscount, date: orderDate, orderId: savedOrderId },
     });
   };
 
