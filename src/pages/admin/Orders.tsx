@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   Package, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, X,
   MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt, AlertTriangle,
+  Search, ArrowUpDown, ExternalLink, Hash,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useOrders, type DbOrderItem } from "@/hooks/useDbData";
+import { useOrders, useProducts, type DbOrderItem } from "@/hooks/useDbData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
@@ -60,12 +62,23 @@ const calcShipping = (order: any): number => {
 const AdminOrders = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data: orders = [], isLoading } = useOrders();
+  const { data: products = [] } = useProducts();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "total_desc" | "total_asc">("newest");
   const [receiptModal, setReceiptModal] = useState<{ urls: string[]; idx: number } | null>(null);
   const [resolvedReceipts, setResolvedReceipts] = useState<Record<string, string[]>>({});
   const [sendingSms, setSendingSms] = useState<string | null>(null);
+
+  /* SKU map: productId → { sku, id } */
+  const skuMap = useMemo(() => {
+    const m = new Map<string, { sku: string | null; id: string }>();
+    products.forEach((p: any) => m.set(p.id, { sku: p.sku, id: p.id }));
+    return m;
+  }, [products]);
 
   const { data: smsSettings } = useSmsSettings();
   const { data: smsMessages } = useSmsMessages();
@@ -136,38 +149,92 @@ const AdminOrders = () => {
     }
   };
 
-  const filtered = orders.filter(o => filterStatus === "all" || o.status === filterStatus);
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    let list = orders.filter(o => filterStatus === "all" || o.status === filterStatus);
+    if (q) {
+      list = list.filter(o => {
+        const fullName = `${o.first_name} ${o.last_name}`.toLowerCase();
+        return (
+          fullName.includes(q) ||
+          (o.phone || "").toLowerCase().includes(q) ||
+          (o.email || "").toLowerCase().includes(q) ||
+          (o.order_number || "").toLowerCase().includes(q)
+        );
+      });
+    }
+    list = [...list].sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sortBy === "total_desc") return Number(b.total) - Number(a.total);
+      if (sortBy === "total_asc") return Number(a.total) - Number(b.total);
+      return 0;
+    });
+    return list;
+  }, [orders, filterStatus, q, sortBy]);
   const waitingCount = orders.filter(o => o.status === "waiting_approval").length;
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">הזמנות</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
-            {orders.length} הזמנות
-            {waitingCount > 0 && (
-              <span className="ms-2 inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                {waitingCount} ממתינות לאישור
-              </span>
-            )}
-          </p>
-        </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48 border-gray-200 text-sm"><SelectValue placeholder="סנן לפי סטטוס" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל ההזמנות</SelectItem>
-            {STATUSES.map(s => (
-              <SelectItem key={s.value} value={s.value}>
-                <span className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-                  {s.label}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">הזמנות</h1>
+            <p className="text-gray-400 text-sm mt-0.5">
+              {filtered.length !== orders.length ? `${filtered.length} מתוך ${orders.length}` : `${orders.length}`} הזמנות
+              {waitingCount > 0 && (
+                <span className="ms-2 inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                  {waitingCount} ממתינות לאישור
                 </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-44 border-gray-200 text-sm h-9"><SelectValue placeholder="סנן לפי סטטוס" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">כל ההזמנות</SelectItem>
+                {STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                      {s.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-44 border-gray-200 text-sm h-9">
+                <span className="flex items-center gap-1.5"><ArrowUpDown className="w-3.5 h-3.5 text-gray-400" /><SelectValue /></span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">חדש לישן</SelectItem>
+                <SelectItem value="oldest">ישן לחדש</SelectItem>
+                <SelectItem value="total_desc">סכום — גבוה לנמוך</SelectItem>
+                <SelectItem value="total_asc">סכום — נמוך לגבוה</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="חיפוש לפי שם, טלפון, אימייל, מספר הזמנה…"
+            className="w-full h-10 pr-9 pl-4 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400"
+            dir="rtl"
+          />
+          {searchQuery && (
+            <button className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setSearchQuery("")}>
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List */}
@@ -178,7 +245,8 @@ const AdminOrders = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <p className="text-gray-400 font-medium">אין הזמנות</p>
+          <p className="text-gray-400 font-medium">{q ? "לא נמצאו הזמנות תואמות" : "אין הזמנות"}</p>
+          {q && <button className="text-sm text-blue-500 hover:underline mt-1" onClick={() => setSearchQuery("")}>נקה חיפוש</button>}
         </div>
       ) : (
         <div className="space-y-2">
@@ -321,6 +389,20 @@ const AdminOrders = () => {
                             )}
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-gray-900 text-sm leading-snug">{item.product_name}</p>
+                              {item.product_id && (() => {
+                                const prod = skuMap.get(item.product_id);
+                                return (
+                                  <button
+                                    onClick={e => { e.stopPropagation(); navigate(`/admin/products/edit/${item.product_id}`); }}
+                                    className="inline-flex items-center gap-1 mt-0.5 text-[10px] text-blue-500 hover:text-blue-700 hover:underline font-mono"
+                                    title="פתח עריכת מוצר"
+                                  >
+                                    <Hash className="w-2.5 h-2.5" />
+                                    {prod?.sku || item.product_id.slice(0, 8)}
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                  </button>
+                                );
+                              })()}
                               <div className="mt-1 space-y-0.5">
                                 {item.color_name && (() => {
                                   const isCustom = !item.color_hex;
