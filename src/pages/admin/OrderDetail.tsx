@@ -4,7 +4,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, Package, MapPin, User, FileText, ImageIcon,
   Phone, Mail, Receipt, AlertTriangle, X, ChevronLeft, ChevronRight,
-  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check,
+  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check, Send,
 } from "lucide-react";
 import logoWhite from "@/assets/logo-white.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -304,6 +304,7 @@ const AdminOrderDetail = () => {
 
     const locale = order.locale || "he";
     const shippingCost = calcShipping(order);
+    const invoiceLink = `${window.location.origin}/${locale}/invoice/${order.id}`;
     const message = formatSms(
       typeof msgTemplate === "object" ? (msgTemplate[locale] || msgTemplate.he) : msgTemplate,
       {
@@ -312,6 +313,7 @@ const AdminOrderDetail = () => {
         phone: order.phone || "",
         total: Number(order.total || 0).toLocaleString(),
         shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם",
+        invoice_link: invoiceLink,
       }
     );
 
@@ -410,6 +412,26 @@ const AdminOrderDetail = () => {
             <Printer className="w-4 h-4" />
             הדפסה
           </button>
+          {smsSettings?.enabled && (
+            <button
+              onClick={async () => {
+                const locale = order.locale || "he";
+                const invoiceLink = `${window.location.origin}/${locale}/invoice/${order.id}`;
+                const msg = locale === "ar"
+                  ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة لطلبك #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`
+                  : `שלום ${order.first_name} 👋\n🧾 החשבונית להזמנה #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`;
+                setSendingSms(true);
+                const ok = await sendSms(order.phone, msg);
+                setSendingSms(false);
+                toast({ title: ok ? `חשבונית נשלחה ל-${order.phone}` : "שליחה נכשלה", variant: ok ? "default" : "destructive" });
+              }}
+              disabled={sendingSms}
+              className="flex items-center gap-1.5 h-9 px-3 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl transition-colors disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+              שלח חשבונית
+            </button>
+          )}
           {isAdmin && (
             <button
               onClick={() => setShowDeleteConfirm(true)}

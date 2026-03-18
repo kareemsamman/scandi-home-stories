@@ -49,8 +49,8 @@ export const DEFAULT_SMS_MESSAGES: SmsMessages = {
     ar: "مرحباً {name} 👋\n⏳ الطلب #{order_number} في انتظار الموافقة\n💰 الإجمالي: ₪{total} | 🚚 الشحن: {shipping}\n\nسنراجع الإيصال ونتواصل معك قريباً ✅\n\n🏗 AMG PERGOLA",
   },
   in_process: {
-    he: "שלום {name} 👋\n🔄 הזמנה #{order_number} בטיפול\n💰 סה\"כ: ₪{total} | 🚚 משלוח: {shipping}\n\nמתכוננים לשלוח את ההזמנה שלך 📦\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 👋\n🔄 الطلب #{order_number} قيد المعالجة\n💰 الإجمالي: ₪{total} | 🚚 الشحن: {shipping}\n\nنجهز طلبك للشحن 📦\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 👋\n🔄 הזמנה #{order_number} בטיפול\n💰 סה\"כ: ₪{total} | 🚚 משלוח: {shipping}\n\nמתכוננים לשלוח את ההזמנה שלך 📦\n\n🧾 חשבונית: {invoice_link}\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n🔄 الطلب #{order_number} قيد المعالجة\n💰 الإجمالي: ₪{total} | 🚚 الشحن: {shipping}\n\nنجهز طلبك للشحن 📦\n\n🧾 الفاتورة: {invoice_link}\n\n🏗 AMG PERGOLA",
   },
   in_delivery: {
     he: "שלום {name} 🎉\n🚚 הזמנה #{order_number} יצאה לדרך!\n💰 סה\"כ: ₪{total} | משלוח: {shipping}\n\nההזמנה שלך בדרך אליך ✨\n\n🏗 AMG PERGOLA",

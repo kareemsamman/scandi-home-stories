@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
 import OrderDetail from "./pages/OrderDetail";
+import InvoicePage from "./pages/Invoice";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -62,6 +63,7 @@ const LocaleRoutes = () => (
       <Route path="/signup" element={<Signup />} />
       <Route path="/account" element={<Account />} />
       <Route path="/account/order/:orderId" element={<OrderDetail />} />
+      <Route path="/invoice/:orderId" element={<InvoicePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </LocaleProvider>

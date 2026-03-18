@@ -260,7 +260,7 @@ const AdminSettings = () => {
               <h2 className="text-base font-semibold">SMS Message Templates</h2>
               <p className="text-xs text-gray-400 mt-1">
                 Variables:{" "}
-                {["{name}", "{order_number}", "{phone}", "{total}", "{items}"].map(v => (
+                {["{name}", "{order_number}", "{phone}", "{total}", "{shipping}", "{order_link}", "{invoice_link}"].map(v => (
                   <code key={v} className="bg-gray-100 px-1 rounded text-[11px] me-1">{v}</code>
                 ))}
               </p>
@@ -292,7 +292,14 @@ const AdminSettings = () => {
                 if (!entry || typeof entry !== "object") return null;
                 return (
                   <div key={key} className="border border-gray-200 rounded-xl p-4 space-y-3">
-                    <p className="text-sm font-semibold text-gray-800">{label}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-gray-800">{label}</p>
+                      {key === "in_process" && (
+                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                          + <code>{"{invoice_link}"}</code> — קישור לחשבונית
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="עברית (HE)">
                         <textarea value={entry.he} onChange={e => setMsg(key, "he", e.target.value)} rows={5} dir="rtl"
