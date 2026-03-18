@@ -496,10 +496,11 @@ const Checkout = () => {
         const compressed = await compressImage(uploadedFiles[i].file);
         const file = compressed;
         const ext = file.type === "image/jpeg" ? "jpg" : (uploadedFiles[i].file.name.split(".").pop() || "jpg");
-        const path = `receipts/${orderNumber}_${i + 1}.${ext}`;
+        const safeOrderNum = orderNumber.replace(/#/g, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const path = `receipts/${safeOrderNum}_${Date.now()}_${i + 1}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("receipts")
-          .upload(path, file, { upsert: true });
+          .upload(path, file, { upsert: false });
         if (!uploadErr) {
           // Store the storage path (not a public URL) — admins use signed URLs to view
           uploadedUrls.push(`receipts:${path}`);
