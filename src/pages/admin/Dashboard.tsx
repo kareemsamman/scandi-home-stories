@@ -82,7 +82,7 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-gray-400" />
             <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
           {(stats?.recentOrders || []).length === 0 ? (
             <p className="text-gray-400 text-sm">No orders yet</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-y-auto max-h-80 pr-1">
               {(stats?.recentOrders || []).map((order: any) => (
                 <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Pending Actions */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <h2 className="text-lg font-semibold text-gray-900">Pending Actions</h2>
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
               <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">{stats!.waitingOrders.length}</span>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto max-h-80 pr-1">
             {(stats?.waitingOrders || []).length === 0 ? (
               <p className="text-gray-400 text-sm">No pending actions</p>
             ) : (

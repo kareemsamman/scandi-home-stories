@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
-  ArrowRight, Package, MapPin, User, FileText, ImageIcon,
+  ArrowLeft, Package, MapPin, User, FileText, ImageIcon,
   Phone, Mail, Receipt, AlertTriangle, X, ChevronLeft, ChevronRight,
-  MessageSquare, Hash, ExternalLink, Calendar, Tag,
+  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrderById, useProducts, type DbOrderItem } from "@/hooks/useDbData";
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
 import { adjustInventory } from "@/hooks/useOrders";
+import { useAuth } from "@/hooks/useAuth";
 
 /* ── Status config ── */
 const STATUSES = [
@@ -69,6 +70,8 @@ const AdminOrderDetail = () => {
 
   const { data: order, isLoading } = useOrderById(orderId!);
   const { data: products = [] } = useProducts();
+  const { isAdmin } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { data: smsSettings } = useSmsSettings();
   const { data: smsMessages } = useSmsMessages();
 
@@ -97,6 +100,19 @@ const AdminOrderDetail = () => {
       qc.invalidateQueries({ queryKey: ["order", orderId] });
       toast({ title: "סטטוס עודכן" });
     },
+  });
+
+  const deleteOrder = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      toast({ title: "ההזמנה נמחקה" });
+      navigate("/admin/orders");
+    },
+    onError: () => toast({ title: "מחיקה נכשלה", variant: "destructive" }),
   });
 
   const handleStatusChange = async (newStatus: string) => {
@@ -184,7 +200,7 @@ const AdminOrderDetail = () => {
             onClick={() => navigate("/admin/orders")}
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 hover:shadow-sm"
           >
-            <ArrowRight className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
             חזרה להזמנות
           </button>
           <div>
@@ -224,8 +240,50 @@ const AdminOrderDetail = () => {
               <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
             </span>
           )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-1.5 h-9 px-3 text-sm text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              מחק הזמנה
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ── Delete confirmation dialog ── */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900">מחיקת הזמנה</p>
+                <p className="text-xs text-gray-500">הזמנה {order.order_number}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">פעולה זו תמחק את ההזמנה לצמיתות ולא ניתן לשחזר אותה. האם אתה בטוח?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => deleteOrder.mutate(order.id)}
+                disabled={deleteOrder.isPending}
+                className="flex-1 h-10 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {deleteOrder.isPending ? "מוחק…" : "כן, מחק"}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Customer + Address ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
