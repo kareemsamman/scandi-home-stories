@@ -1,8 +1,7 @@
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Printer, ArrowRight, Package, Loader2 } from "lucide-react";
-import { useOrderById } from "@/hooks/useDbData";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Printer, Package, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import type { DbOrderItem } from "@/hooks/useDbData";
 import logoWhite from "@/assets/logo-white.png";
 
@@ -15,9 +14,15 @@ const calcShipping = (order: any): number => {
 
 const InvoicePage = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { data: order, isLoading } = useOrderById(orderId!);
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!orderId) return;
+    (supabase as any).rpc("get_invoice_order", { order_id: orderId })
+      .then(({ data }: any) => { setOrder(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [orderId]);
 
   const isAr = order?.locale === "ar";
 
@@ -28,8 +33,7 @@ const InvoicePage = () => {
     qty: "الكمية", unitPrice: "سعر الوحدة", total: "الإجمالي",
     subtotal: "المجموع الفرعي", shippingLabel: "الشحن", free: "مجاني",
     discount: "خصم", grandTotal: "المجموع الكلي", notes: "ملاحظات",
-    custom: "مخصص", print: "طباعة", back: "رجوع", notFound: "الفاتورة غير موجودة",
-    login: "يرجى تسجيل الدخول لعرض الفاتورة",
+    custom: "مخصص", print: "طباعة", notFound: "الفاتورة غير موجودة",
   } : {
     invoice: "חשבונית", order: "הזמנה", date: "תאריך", customer: "לקוח",
     shipping: "כתובת למשלוח", phone: "טלפון", email: "אימייל",
@@ -37,17 +41,10 @@ const InvoicePage = () => {
     qty: "כמות", unitPrice: "מחיר ליחידה", total: "סה\"כ",
     subtotal: "סכום ביניים", shippingLabel: "משלוח", free: "חינם",
     discount: "הנחה", grandTotal: "סה\"כ לתשלום", notes: "הערות",
-    custom: "מותאם", print: "הדפסה", back: "חזרה", notFound: "חשבונית לא נמצאה",
-    login: "יש להתחבר כדי לצפות בחשבונית",
+    custom: "מותאם", print: "הדפסה", notFound: "חשבונית לא נמצאה",
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate(`/${isAr ? "ar" : "he"}/login?redirect=/invoice/${orderId}`);
-    }
-  }, [authLoading, user]);
-
-  if (authLoading || isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -68,19 +65,12 @@ const InvoicePage = () => {
   const itemsTotal = (order.order_items || []).reduce(
     (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
   );
-  const locale = order.locale === "ar" ? "ar-SA" : "he-IL";
+  const dateLocale = order.locale === "ar" ? "ar-SA" : "he-IL";
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
       {/* Toolbar — hidden on print */}
-      <div className="print:hidden bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          <ArrowRight className="w-4 h-4" />
-          {t.back}
-        </button>
+      <div className="print:hidden bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-end sticky top-0 z-10">
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors"
@@ -99,7 +89,7 @@ const InvoicePage = () => {
             <p className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t.invoice}</p>
             <h1 className="text-2xl font-black">{order.order_number}</h1>
             <p className="text-gray-400 text-sm mt-1">
-              {t.date}: {new Date(order.created_at).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}
+              {t.date}: {new Date(order.created_at).toLocaleDateString(dateLocale, { year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
           <img src={logoWhite} alt="AMG Pergola" className="h-12 object-contain opacity-90" />
@@ -145,7 +135,7 @@ const InvoicePage = () => {
                   {(order.order_items || []).map((item: DbOrderItem, idx: number) => {
                     const isCustom = item.color_name && !item.color_hex;
                     return (
-                      <tr key={item.id} className={idx > 0 ? "border-t border-gray-100" : ""}>
+                      <tr key={item.id ?? idx} className={idx > 0 ? "border-t border-gray-100" : ""}>
                         <td className="px-4 py-3">
                           <p className="font-semibold text-gray-900">{item.product_name}</p>
                           {item.color_name && (
@@ -158,8 +148,8 @@ const InvoicePage = () => {
                           {item.size && <p className="text-xs text-gray-500">{t.size}: {item.size}</p>}
                         </td>
                         <td className="px-4 py-3 text-center text-gray-600">×{item.quantity}</td>
-                        <td className="px-4 py-3 text-end text-gray-500">₪{item.price.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-end font-bold text-gray-900">₪{(item.price * item.quantity).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-end text-gray-500">₪{Number(item.price).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-end font-bold text-gray-900">₪{(Number(item.price) * item.quantity).toLocaleString()}</td>
                       </tr>
                     );
                   })}

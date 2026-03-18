@@ -104,6 +104,7 @@ const App = () => (
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="marketing" element={<AdminMarketing />} />
             </Route>
+            <Route path="/invoice/:orderId" element={<InvoicePage />} />
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
         </BrowserRouter>

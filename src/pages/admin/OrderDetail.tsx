@@ -304,7 +304,7 @@ const AdminOrderDetail = () => {
 
     const locale = order.locale || "he";
     const shippingCost = calcShipping(order);
-    const invoiceLink = `${window.location.origin}/${locale}/invoice/${order.id}`;
+    const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
     const message = formatSms(
       typeof msgTemplate === "object" ? (msgTemplate[locale] || msgTemplate.he) : msgTemplate,
       {
@@ -416,7 +416,7 @@ const AdminOrderDetail = () => {
             <button
               onClick={async () => {
                 const locale = order.locale || "he";
-                const invoiceLink = `${window.location.origin}/${locale}/invoice/${order.id}`;
+                const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
                 const msg = locale === "ar"
                   ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة لطلبك #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`
                   : `שלום ${order.first_name} 👋\n🧾 החשבונית להזמנה #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`;
