@@ -131,7 +131,7 @@ export const MiniCart = () => {
                       quantity={item.quantity}
                       onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
                       max={getStockMax(item)}
-                      className="h-8 scale-90 origin-start"
+                      size="sm"
                     />
                     <button onClick={() => removeItem(key)} className="text-xs text-muted-foreground underline hover:text-foreground transition-colors">
                       {t("miniCart.remove")}

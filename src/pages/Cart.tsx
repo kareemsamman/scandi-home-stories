@@ -59,7 +59,7 @@ const Cart = () => {
       <section className="pb-4 md:pb-12">
         <div className="section-container">
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-bold mb-6">{t("cart.title")}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 pt-20 md:pt-24">{t("cart.title")}</h1>
 
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
             {/* ── LEFT: Cart items ── */}
@@ -113,12 +113,12 @@ const Cart = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="w-28">
+                      <div>
                         <QuantitySelector
                           quantity={item.quantity}
                           onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
                           max={getStockMax(item)}
-                          className="h-9 scale-[0.85] origin-center"
+                          size="sm"
                         />
                       </div>
                       <div className="w-24 text-end">
@@ -150,7 +150,7 @@ const Cart = () => {
                             quantity={item.quantity}
                             onQuantityChange={(q) => updateQuantity(key, Math.min(q, getStockMax(item)))}
                             max={getStockMax(item)}
-                            className="h-8 scale-[0.8] origin-start"
+                            size="sm"
                           />
                           <button
                             onClick={() => removeItem(key)}

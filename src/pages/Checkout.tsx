@@ -441,10 +441,12 @@ const Checkout = () => {
       toast({
         title: locale === "ar" ? "تعذّر رفع الإيصال" : "העלאת הקבלה נכשלה",
         description: locale === "ar"
-          ? "سيُحفظ الطلب — يرجى التواصل معنا وإرسال الإيصال مباشرةً"
-          : "ההזמנה תישמר — אנא שלח/י את הקבלה ישירות אלינו",
+          ? "يرجى المحاولة مرة أخرى أو التواصل معنا وإرسال الإيصال مباشرةً"
+          : "אנא נסה/י שוב או שלח/י את הקבלה ישירות אלינו",
         variant: "destructive",
       });
+      setIsSubmittingReceipt(false);
+      return;
     }
 
     // Save marketing opt-in subscriber
