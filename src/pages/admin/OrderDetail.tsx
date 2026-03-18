@@ -72,7 +72,7 @@ const AdminOrderDetail = () => {
 
   const { data: order, isLoading } = useOrderById(orderId!);
   const { data: products = [] } = useProducts();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isWorker } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { data: smsSettings } = useSmsSettings();
   const { data: smsMessages } = useSmsMessages();
@@ -385,21 +385,33 @@ const AdminOrderDetail = () => {
 
         {/* Status change */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
-            <SelectTrigger className="w-48 h-9 text-sm border-gray-200">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUSES.map(s => (
-                <SelectItem key={s.value} value={s.value}>
-                  <span className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-                    {s.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
+              <SelectTrigger className="w-52 h-9 text-sm border-gray-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map(s => {
+                  const workerBlocked = isWorker && !isAdmin && s.value !== "in_delivery";
+                  return (
+                    <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                        {s.label}
+                        {workerBlocked && <span className="text-[10px] text-gray-400">— אדמין בלבד</span>}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {isWorker && !isAdmin && (
+              <p className="text-[10px] text-amber-600 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                ניתן לשנות רק ל"יצא למשלוח"
+              </p>
+            )}
+          </div>
           {sendingSms && (
             <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
               <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
@@ -432,15 +444,27 @@ const AdminOrderDetail = () => {
               שלח חשבונית
             </button>
           )}
-          {isAdmin && (
+          <div className="flex flex-col items-end gap-1">
             <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-1.5 h-9 px-3 text-sm text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-xl transition-colors"
+              onClick={() => isAdmin && setShowDeleteConfirm(true)}
+              disabled={!isAdmin}
+              title={!isAdmin ? "רק אדמין יכול למחוק הזמנות" : undefined}
+              className={`flex items-center gap-1.5 h-9 px-3 text-sm rounded-xl transition-colors border ${
+                isAdmin
+                  ? "text-red-500 hover:text-red-700 border-red-200 hover:border-red-400 hover:bg-red-50"
+                  : "text-gray-300 border-gray-200 cursor-not-allowed"
+              }`}
             >
               <Trash2 className="w-4 h-4" />
               מחק הזמנה
             </button>
-          )}
+            {!isAdmin && (
+              <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                אדמין בלבד
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
