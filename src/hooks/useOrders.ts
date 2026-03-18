@@ -22,6 +22,8 @@ export interface OrderItem {
   quantity: number;
   size?: string;
   color?: string;
+  colorId?: string;
+  sizeId?: string;
   productId?: string;
 }
 
@@ -47,7 +49,7 @@ export interface Order {
 /* ---- Inventory adjustment helper ---- */
 // delta: negative to deduct stock, positive to restore
 export const adjustInventory = async (
-  items: { productId?: string; quantity: number; color?: string; size?: string }[],
+  items: { productId?: string; quantity: number; colorId?: string; sizeId?: string }[],
   delta: -1 | 1
 ) => {
   for (const item of items) {
@@ -61,24 +63,20 @@ export const adjustInventory = async (
 
     if (!rows || rows.length === 0) continue; // product not tracked
 
-    let targetRow = rows[0]; // default: first row
+    // Build the variation key the same way as useCartInventory
+    let targetRow: any = null;
 
-    if (rows.length > 1) {
-      // Try to match variation_key by color/size
-      const candidates = [
-        item.color && item.size ? `${item.color}_${item.size}` : null,
-        item.color && item.size ? `${item.size}_${item.color}` : null,
-        item.color ?? null,
-        item.size ?? null,
-        "",
-      ].filter(Boolean) as string[];
-
-      for (const key of candidates) {
-        const match = rows.find(
-          (r: any) => r.variation_key.toLowerCase() === key.toLowerCase()
-        );
-        if (match) { targetRow = match; break; }
-      }
+    if (item.colorId && item.sizeId) {
+      // Contractor product with color + size
+      targetRow = rows.find((r: any) => r.variation_key === `combo:${item.colorId}|${item.sizeId}`);
+    }
+    if (!targetRow && item.colorId) {
+      // Retail product with color only
+      targetRow = rows.find((r: any) => r.variation_key === `color:${item.colorId}`);
+    }
+    if (!targetRow) {
+      // Single-variation or untracked variation — use first row
+      targetRow = rows[0];
     }
 
     const newQty = Math.max(0, targetRow.stock_quantity + delta * item.quantity);
@@ -209,7 +207,7 @@ export const useAddOrder = () => {
 
       // Deduct stock for each ordered item
       await adjustInventory(
-        items.map(i => ({ productId: i.productId, quantity: i.quantity, color: i.color, size: i.size })),
+        items.map(i => ({ productId: i.productId, quantity: i.quantity, colorId: i.colorId, sizeId: i.sizeId })),
         -1
       );
 

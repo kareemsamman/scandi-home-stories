@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import type { ContractorProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -540,15 +541,24 @@ const Checkout = () => {
           discountCode: appliedCoupon?.coupon.code,
           discountAmount: appliedCoupon?.discountAmount,
         },
-        items: items.map((item) => ({
-          productId: item.product.id,
-          name: item.product.name,
-          image: item.product.images[0],
-          price: item.product.price,
-          quantity: item.quantity,
-          size: item.options?.size,
-          color: item.options?.color?.name,
-        })),
+        items: items.map((item) => {
+          const colorId = item.options?.color?.id;
+          const sizeLabel = item.options?.size;
+          const sizeId = item.product.type === "contractor"
+            ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
+            : undefined;
+          return {
+            productId: item.product.id,
+            name: item.product.name,
+            image: item.product.images[0],
+            price: item.product.price,
+            quantity: item.quantity,
+            size: sizeLabel,
+            color: item.options?.color?.name,
+            colorId,
+            sizeId,
+          };
+        }),
       });
       savedOrderId = result?.id;
       // Link to existing account if resolved via email lookup
