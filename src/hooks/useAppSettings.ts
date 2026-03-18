@@ -40,8 +40,8 @@ const DEFAULT_BANK: BankSettings = {
 
 export const DEFAULT_SMS_MESSAGES: SmsMessages = {
   order_received: {
-    he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n\n💰 סכום ביניים: ₪{total}\n🚚 משלוח: {shipping}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n\n💰 المبلغ: ₪{total}\n🚚 الشحن: {shipping}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n\n💰 סכום ביניים: ₪{total}\n🚚 משלוח: {shipping}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🔗 פרטי ההזמנה: {order_link}\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n\n💰 المبلغ: ₪{total}\n🚚 الشحن: {shipping}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🔗 تفاصيل الطلب: {order_link}\n\n🏗 AMG PERGOLA",
   },
   admin_new_order: "🛎 AMG PERGOLA - הזמנה חדשה!\n\n📋 הזמנה #{order_number}\n👤 {name}\n📞 {phone}\n💰 סה\"כ: ₪{total}\n🚚 משלוח: {shipping}\n\n📦 מוצרים:\n{items}",
   waiting_approval: {

@@ -588,7 +588,8 @@ const Checkout = () => {
     // Send SMS notifications
     if (smsSettings?.enabled && smsMessages) {
       const itemsList = items.map(i => `• ${i.product.name} ×${i.quantity} – ₪${(i.product.price * i.quantity).toLocaleString()}`).join("\n");
-      const smsVars = { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString(), items: itemsList, shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם" };
+      const orderLink = savedOrderId ? `${window.location.origin}${localePath(`/account/order/${savedOrderId}`)}` : "";
+      const smsVars = { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString(), items: itemsList, shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם", order_link: orderLink };
       const customerMsg = smsMessages.order_received?.[locale as "he" | "ar"] || smsMessages.order_received?.he;
       if (customerMsg && form.phone) {
         sendSms(form.phone, formatSms(customerMsg, smsVars));
@@ -959,7 +960,7 @@ const Checkout = () => {
                       <option value="" disabled>{t("account.selectAddress")}</option>
                       {savedAddresses.map((a) => (
                         <option key={a.id} value={a.id}>
-                          {a.firstName} {a.lastName} – {a.city}, {a.street} {a.houseNumber}
+                          {a.city}, {a.street} {a.houseNumber}{a.apartment ? ` ${a.apartment}` : ""}
                         </option>
                       ))}
                       <option value="__new__">+ {t("checkout.newAddress")}</option>
