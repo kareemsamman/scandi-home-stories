@@ -849,13 +849,6 @@ const Checkout = () => {
               </div>
             )}
 
-            {/* Receipt detection message */}
-            {receiptDetected && uploadedFiles.length > 0 && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{t("payment.receiptDetected")}</span>
-              </div>
-            )}
           </div>
 
           {/* Submit receipt button */}
