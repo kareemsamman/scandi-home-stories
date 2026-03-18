@@ -580,9 +580,8 @@ const Checkout = () => {
       });
     }
 
-    // Record coupon use
+    // Coupon use is now recorded server-side in create-order edge function
     if (appliedCoupon) {
-      await recordCouponUse(appliedCoupon.coupon.id, user?.id, orderNumber, appliedCoupon.discountAmount).catch(() => {});
       removeCoupon();
     }
 
