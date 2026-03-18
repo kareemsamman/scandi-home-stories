@@ -4,8 +4,9 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, Package, MapPin, User, FileText, ImageIcon,
   Phone, Mail, Receipt, AlertTriangle, X, ChevronLeft, ChevronRight,
-  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2,
+  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check,
 } from "lucide-react";
+import logoWhite from "@/assets/logo-white.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrderById, useProducts, type DbOrderItem } from "@/hooks/useDbData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,11 +53,12 @@ const calcShipping = (order: any): number => {
 };
 
 /* ── Section card ── */
-const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
+const Section = ({ title, icon: Icon, children, actions }: { title: string; icon: any; children: React.ReactNode; actions?: React.ReactNode }) => (
   <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
     <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
       <Icon className="w-4 h-4 text-gray-400" />
       <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">{title}</h3>
+      {actions && <div className="ms-auto">{actions}</div>}
     </div>
     <div className="px-5 py-4">{children}</div>
   </div>
@@ -78,6 +80,8 @@ const AdminOrderDetail = () => {
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
   const [receiptModal, setReceiptModal] = useState<{ idx: number } | null>(null);
   const [sendingSms, setSendingSms] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState({ city: "", address: "", apartment: "" });
 
   /* Build SKU map */
   const skuMap = new Map<string, string | null>();
@@ -114,6 +118,171 @@ const AdminOrderDetail = () => {
     },
     onError: () => toast({ title: "מחיקה נכשלה", variant: "destructive" }),
   });
+
+  const updateAddress = useMutation({
+    mutationFn: async (data: { city: string; address: string; apartment: string }) => {
+      const { error } = await supabase.from("orders").update(data).eq("id", order!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["order", orderId] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      setEditingAddress(false);
+      toast({ title: "כתובת עודכנה" });
+    },
+    onError: () => toast({ title: "עדכון נכשל", variant: "destructive" }),
+  });
+
+  const handlePrint = () => {
+    if (!order) return;
+    const isAr = order.locale === "ar";
+    const dir = "rtl";
+    const locale = isAr ? "ar" : "he";
+    const shippingCost = calcShipping(order);
+    const itemsTotal = (order.order_items || []).reduce(
+      (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
+    );
+    const logoUrl = window.location.origin + logoWhite;
+
+    const labels = isAr ? {
+      order: "طلب", date: "التاريخ", customer: "العميل", shipping: "عنوان الشحن",
+      phone: "هاتف", email: "بريد إلكتروني", items: "المنتجات", product: "المنتج",
+      color: "اللون", size: "الحجم", qty: "الكمية", price: "السعر", total: "الإجمالي",
+      subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
+      discount: "خصم", grandTotal: "المجموع الكلي", notes: "ملاحظات",
+      custom: "مخصص", thankYou: "شكراً لطلبك",
+    } : {
+      order: "הזמנה", date: "תאריך", customer: "לקוח", shipping: "כתובת למשלוח",
+      phone: "טלפון", email: "אימייל", items: "פריטים", product: "מוצר",
+      color: "צבע", size: "אורך", qty: "כמות", price: "מחיר", total: "סה\"כ",
+      subtotal: "סכום ביניים", shippingCost: "משלוח", free: "חינם",
+      discount: "הנחה", grandTotal: "סה\"כ לתשלום", notes: "הערות",
+      custom: "מותאם", thankYou: "תודה על הזמנתך",
+    };
+
+    const font = isAr
+      ? "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;"
+      : "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;";
+
+    const itemsHtml = (order.order_items || []).map((item: DbOrderItem) => {
+      const sku = item.product_id ? (skuMap.get(item.product_id) || "") : "";
+      const isCustom = item.color_name && !item.color_hex;
+      return `
+        <tr>
+          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
+            <div style="font-weight:600; font-size:13px;">${item.product_name}</div>
+            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${sku}</div>` : ""}
+            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${item.color_name}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
+            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${item.size}</div>` : ""}
+          </td>
+          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:center; font-size:13px;">×${item.quantity}</td>
+          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-size:13px; color:#6b7280;">₪${item.price.toLocaleString()}</td>
+          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-weight:700; font-size:13px;">₪${(item.price * item.quantity).toLocaleString()}</td>
+        </tr>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="${locale}" dir="${dir}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${labels.order} ${order.order_number}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { ${font} background:#fff; color:#1a1a1a; font-size:13px; direction:${dir}; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display:none; }
+    }
+    .header { background:#111827; color:#fff; padding:28px 36px; display:flex; align-items:center; justify-content:space-between; }
+    .header img { height:40px; object-fit:contain; }
+    .header-info { text-align:${isAr ? "left" : "right"}; }
+    .header-info h1 { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+    .header-info p { font-size:12px; color:#9ca3af; margin-top:2px; }
+    .status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; background:#fef3c7; color:#92400e; margin-top:6px; }
+    .body { padding:28px 36px; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+    .info-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; }
+    .info-card h3 { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    .info-card p { font-size:13px; color:#374151; margin-bottom:4px; }
+    .info-card .name { font-weight:700; font-size:14px; color:#111827; }
+    .notes-box { background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:14px 16px; margin-bottom:24px; font-size:13px; color:#92400e; }
+    .section-title { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:24px; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
+    thead { background:#f3f4f6; }
+    th { padding:10px 12px; font-size:11px; font-weight:700; color:#6b7280; text-align:${isAr ? "left" : "right"}; }
+    th:first-child { text-align:${isAr ? "right" : "left"}; }
+    .totals { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; max-width:320px; margin-${isAr ? "right" : "left"}:auto; }
+    .totals-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
+    .totals-row.grand { border-top:2px solid #e5e7eb; margin-top:8px; padding-top:10px; font-weight:800; font-size:15px; }
+    .footer { margin-top:32px; padding:20px 36px; border-top:1px solid #e5e7eb; text-align:center; font-size:11px; color:#9ca3af; }
+    .print-btn { position:fixed; bottom:24px; right:24px; background:#111827; color:#fff; border:none; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; }
+    .print-btn:hover { background:#1f2937; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="${logoUrl}" alt="AMG Pergola" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+    <span style="display:none; font-size:20px; font-weight:900; color:#fff; letter-spacing:1px;">AMG PERGOLA</span>
+    <div class="header-info">
+      <h1>${labels.order} ${order.order_number}</h1>
+      <p>${labels.date}: ${new Date(order.created_at).toLocaleDateString(isAr ? "ar-SA" : "he-IL", { year: "numeric", month: "long", day: "numeric" })}</p>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>${labels.customer}</h3>
+        <p class="name">${order.first_name} ${order.last_name}</p>
+        <p>${labels.phone}: ${order.phone}</p>
+        <p>${labels.email}: ${order.email}</p>
+      </div>
+      <div class="info-card">
+        <h3>${labels.shipping}</h3>
+        <p class="name">${order.city}</p>
+        <p>${order.address}${order.apartment ? `, ${order.apartment}` : ""}</p>
+      </div>
+    </div>
+
+    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${order.notes}</div>` : ""}
+
+    <p class="section-title">${labels.items}</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:${isAr ? "right" : "left"}">${labels.product}</th>
+          <th style="text-align:center">${labels.qty}</th>
+          <th>${labels.price}</th>
+          <th>${labels.total}</th>
+        </tr>
+      </thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
+      ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${order.discount_code})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
+      <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
+      <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p style="font-size:13px; font-weight:600; color:#374151; margin-bottom:4px;">${labels.thankYou}</p>
+    <p>AMG Pergola · amgpergola.com</p>
+  </div>
+
+  <button class="print-btn no-print" onclick="window.print()">🖨 ${isAr ? "طباعة" : "הדפסה"}</button>
+  <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); }</script>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) { toast({ title: "אנא אפשר חלונות קופצים", variant: "destructive" }); return; }
+    win.document.write(html);
+    win.document.close();
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!order) return;
@@ -240,6 +409,13 @@ const AdminOrderDetail = () => {
               <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
             </span>
           )}
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-1.5 h-9 px-3 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+            הדפסה
+          </button>
           {isAdmin && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
@@ -296,11 +472,75 @@ const AdminOrderDetail = () => {
           </div>
         </Section>
 
-        <Section title="כתובת למשלוח" icon={MapPin}>
-          <div className="space-y-1">
-            <p className="font-semibold text-gray-900">{order.city}</p>
-            <p className="text-gray-500 text-sm">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
-          </div>
+        <Section
+          title="כתובת למשלוח"
+          icon={MapPin}
+          actions={
+            editingAddress ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => updateAddress.mutate(addressForm)}
+                  disabled={updateAddress.isPending}
+                  className="flex items-center gap-1 h-7 px-2.5 text-xs bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  <Check className="w-3 h-3" /> שמור
+                </button>
+                <button
+                  onClick={() => setEditingAddress(false)}
+                  className="flex items-center h-7 w-7 justify-center text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setAddressForm({ city: order.city || "", address: order.address || "", apartment: order.apartment || "" });
+                  setEditingAddress(true);
+                }}
+                className="flex items-center gap-1 h-7 px-2.5 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors"
+              >
+                <Pencil className="w-3 h-3" /> ערוך
+              </button>
+            )
+          }
+        >
+          {editingAddress ? (
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">עיר</label>
+                <input
+                  value={addressForm.city}
+                  onChange={e => setAddressForm(f => ({ ...f, city: e.target.value }))}
+                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">רחוב ומספר בית</label>
+                <input
+                  value={addressForm.address}
+                  onChange={e => setAddressForm(f => ({ ...f, address: e.target.value }))}
+                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">דירה (אופציונלי)</label>
+                <input
+                  value={addressForm.apartment}
+                  onChange={e => setAddressForm(f => ({ ...f, apartment: e.target.value }))}
+                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="font-semibold text-gray-900">{order.city}</p>
+              <p className="text-gray-500 text-sm">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
+            </div>
+          )}
         </Section>
       </div>
 
