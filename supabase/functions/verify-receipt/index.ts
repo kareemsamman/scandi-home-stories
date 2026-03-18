@@ -13,7 +13,7 @@ serve(async (req) => {
   try {
     const { imageBase64, mimeType } = await req.json();
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
       // If no API key configured, skip validation and allow the upload
       return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
@@ -21,26 +21,22 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 10,
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "user",
             content: [
               {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: mimeType,
-                  data: imageBase64,
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${imageBase64}`,
                 },
               },
               {
@@ -50,19 +46,20 @@ serve(async (req) => {
             ],
           },
         ],
+        max_tokens: 10,
       }),
     });
 
     if (!response.ok) {
+      console.error("Lovable AI Gateway error:", response.status);
       // On API error, allow upload to not block the customer
-      console.error("Anthropic API error:", response.status);
       return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-    const answer = (data.content?.[0]?.text || "").trim().toUpperCase();
+    const answer = (data.choices?.[0]?.message?.content || "").trim().toUpperCase();
     const isReceipt = answer.startsWith("YES");
 
     return new Response(JSON.stringify({ isReceipt }), {
