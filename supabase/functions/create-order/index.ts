@@ -1,0 +1,279 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    // Optional auth — guests can place orders too
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) userId = user.id;
+    }
+
+    const body = await req.json();
+    const {
+      orderNumber, notes, firstName, lastName, email, phone,
+      city, address, apartment, receiptUrl, locale,
+      marketingOptIn, discountCode,
+      items, // Array of { productId, quantity, size?, color?, colorId?, sizeId? }
+    } = body;
+
+    // --- Input validation ---
+    if (!orderNumber || typeof orderNumber !== "string" || orderNumber.length > 50) {
+      return jsonResponse({ error: "Invalid order number" }, 400);
+    }
+    if (!firstName || typeof firstName !== "string" || firstName.length > 100) {
+      return jsonResponse({ error: "Invalid first name" }, 400);
+    }
+    if (!lastName || typeof lastName !== "string" || lastName.length > 100) {
+      return jsonResponse({ error: "Invalid last name" }, 400);
+    }
+    if (!email || typeof email !== "string" || email.length > 255) {
+      return jsonResponse({ error: "Invalid email" }, 400);
+    }
+    if (!phone || typeof phone !== "string" || phone.length > 20) {
+      return jsonResponse({ error: "Invalid phone" }, 400);
+    }
+    if (!city || typeof city !== "string" || city.length > 200) {
+      return jsonResponse({ error: "Invalid city" }, 400);
+    }
+    if (!address || typeof address !== "string" || address.length > 500) {
+      return jsonResponse({ error: "Invalid address" }, 400);
+    }
+    if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
+      return jsonResponse({ error: "Invalid items" }, 400);
+    }
+
+    // --- Server-side price lookup ---
+    const productIds = [...new Set(items.map((i: any) => i.productId).filter(Boolean))];
+    if (productIds.length === 0) {
+      return jsonResponse({ error: "No valid product IDs" }, 400);
+    }
+
+    const { data: products, error: prodErr } = await supabaseAdmin
+      .from("products")
+      .select("id, price, name, images, status")
+      .in("id", productIds);
+
+    if (prodErr || !products) {
+      return jsonResponse({ error: "Failed to fetch products" }, 500);
+    }
+
+    const priceMap = new Map(products.map((p: any) => [p.id, p]));
+
+    // Validate all items have valid products and compute server-side total
+    let serverTotal = 0;
+    const validatedItems: any[] = [];
+
+    for (const item of items) {
+      if (!item.productId || !item.quantity || item.quantity < 1 || item.quantity > 999) {
+        return jsonResponse({ error: `Invalid item: ${item.productId}` }, 400);
+      }
+      const product = priceMap.get(item.productId);
+      if (!product) {
+        return jsonResponse({ error: `Product not found: ${item.productId}` }, 400);
+      }
+      if (product.status !== "published") {
+        return jsonResponse({ error: `Product unavailable: ${product.name}` }, 400);
+      }
+
+      const lineTotal = Number(product.price) * item.quantity;
+      serverTotal += lineTotal;
+
+      validatedItems.push({
+        product_id: item.productId,
+        product_name: product.name || "",
+        product_image: product.images?.[0] || "",
+        price: Number(product.price),
+        quantity: item.quantity,
+        size: item.size || null,
+        color_name: item.color || null,
+      });
+    }
+
+    // --- Server-side coupon validation ---
+    let discountAmount = 0;
+    let validatedCouponId: string | null = null;
+
+    if (discountCode && typeof discountCode === "string") {
+      const { data: coupon } = await supabaseAdmin
+        .from("coupons")
+        .select("*")
+        .eq("code", discountCode.toUpperCase().trim())
+        .single();
+
+      if (coupon && coupon.is_active) {
+        const now = new Date();
+        const validFrom = coupon.valid_from ? new Date(coupon.valid_from) : null;
+        const validUntil = coupon.valid_until ? new Date(coupon.valid_until) : null;
+        const withinDates = (!validFrom || validFrom <= now) && (!validUntil || validUntil >= now);
+        const withinUses = coupon.max_uses === null || coupon.uses < coupon.max_uses;
+
+        if (withinDates && withinUses) {
+          // Check per-user limit
+          let userOk = true;
+          if (userId && coupon.max_uses_per_user > 0) {
+            const { count } = await supabaseAdmin
+              .from("coupon_uses")
+              .select("*", { count: "exact", head: true })
+              .eq("coupon_id", coupon.id)
+              .eq("user_id", userId);
+            if ((count ?? 0) >= coupon.max_uses_per_user) userOk = false;
+          }
+
+          if (userOk) {
+            // Calculate applicable subtotal
+            let applicableSubtotal = serverTotal;
+            const hasProductRestriction = coupon.product_ids?.length > 0;
+            const hasCategoryRestriction = coupon.category_ids?.length > 0;
+
+            if (hasProductRestriction || hasCategoryRestriction) {
+              applicableSubtotal = 0;
+              for (const item of items) {
+                const matchProd = hasProductRestriction && coupon.product_ids.includes(item.productId);
+                const matchCat = hasCategoryRestriction && item.product?.collection && coupon.category_ids.includes(item.product.collection);
+                if (matchProd || matchCat) {
+                  const p = priceMap.get(item.productId);
+                  if (p) applicableSubtotal += Number(p.price) * item.quantity;
+                }
+              }
+            }
+
+            if (applicableSubtotal > 0 && serverTotal >= coupon.min_order_amount) {
+              discountAmount = coupon.type === "percentage"
+                ? (applicableSubtotal * coupon.value) / 100
+                : Math.min(coupon.value, applicableSubtotal);
+
+              if (coupon.max_discount_amount !== null && coupon.max_discount_amount > 0) {
+                discountAmount = Math.min(discountAmount, coupon.max_discount_amount);
+              }
+              discountAmount = Math.round(discountAmount * 100) / 100;
+              validatedCouponId = coupon.id;
+            }
+          }
+        }
+      }
+    }
+
+    const finalTotal = Math.max(0, serverTotal - discountAmount);
+
+    // --- Insert order ---
+    const { data: newOrder, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id: userId,
+        order_number: orderNumber,
+        status: "waiting_approval",
+        total: finalTotal,
+        notes: (notes && typeof notes === "string") ? notes.slice(0, 1000) : null,
+        first_name: firstName.slice(0, 100),
+        last_name: lastName.slice(0, 100),
+        email: email.slice(0, 255),
+        phone: phone.slice(0, 20),
+        city: city.slice(0, 200),
+        address: address.slice(0, 500),
+        apartment: (apartment && typeof apartment === "string") ? apartment.slice(0, 100) : null,
+        receipt_url: (receiptUrl && typeof receiptUrl === "string") ? receiptUrl.slice(0, 2000) : null,
+        locale: locale === "ar" ? "ar" : "he",
+        marketing_opt_in: !!marketingOptIn,
+        discount_code: discountCode || null,
+        discount_amount: discountAmount,
+      })
+      .select()
+      .single();
+
+    if (orderErr) throw orderErr;
+
+    // --- Insert order items ---
+    if (validatedItems.length > 0) {
+      const { error: itemsErr } = await supabaseAdmin.from("order_items").insert(
+        validatedItems.map((item: any) => ({
+          ...item,
+          order_id: newOrder.id,
+        }))
+      );
+      if (itemsErr) throw itemsErr;
+    }
+
+    // --- Deduct inventory ---
+    for (const item of items) {
+      if (!item.productId) continue;
+      const { data: rows } = await supabaseAdmin
+        .from("inventory")
+        .select("id, variation_key, stock_quantity")
+        .eq("product_id", item.productId);
+
+      if (!rows || rows.length === 0) continue;
+
+      let targetRow: any = null;
+      if (item.colorId && item.sizeId) {
+        targetRow = rows.find((r: any) => r.variation_key === `combo:${item.colorId}|${item.sizeId}`);
+      }
+      if (!targetRow && item.colorId) {
+        targetRow = rows.find((r: any) => r.variation_key === `color:${item.colorId}`);
+      }
+      if (!targetRow) {
+        targetRow = rows[0];
+      }
+
+      const newQty = Math.max(0, (targetRow.stock_quantity || 0) - item.quantity);
+      await supabaseAdmin
+        .from("inventory")
+        .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+        .eq("id", targetRow.id);
+    }
+
+    // --- Record coupon use ---
+    if (validatedCouponId && discountAmount > 0) {
+      await supabaseAdmin.from("coupon_uses").insert({
+        coupon_id: validatedCouponId,
+        user_id: userId,
+        order_number: orderNumber,
+        discount_amount: discountAmount,
+      });
+      const { data: current } = await supabaseAdmin
+        .from("coupons")
+        .select("uses")
+        .eq("id", validatedCouponId)
+        .single();
+      await supabaseAdmin
+        .from("coupons")
+        .update({ uses: (current?.uses ?? 0) + 1 })
+        .eq("id", validatedCouponId);
+    }
+
+    return jsonResponse({
+      success: true,
+      orderId: newOrder.id,
+      orderNumber: newOrder.order_number,
+      total: finalTotal,
+      discountAmount,
+    });
+  } catch (err: any) {
+    console.error("create-order error:", err);
+    return jsonResponse({ error: "Failed to create order" }, 500);
+  }
+});
