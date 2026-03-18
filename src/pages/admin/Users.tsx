@@ -33,6 +33,8 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       return res.data as AdminUser[];
     },
+    staleTime: 1000 * 60 * 5, // cache for 5 minutes — avoids cold-start on every nav
+    gcTime: 1000 * 60 * 10,
   });
 
   const createUser = useMutation({
@@ -114,9 +116,15 @@ const AdminUsers = () => {
     return !q || u.email.toLowerCase().includes(q) || u.first_name.toLowerCase().includes(q) || u.last_name.toLowerCase().includes(q);
   });
 
-  if (isLoading) {
-    return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>;
-  }
+  const SkeletonRow = () => (
+    <tr className="border-b border-gray-100">
+      <td className="px-4 py-3"><div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-1" /><div className="h-3 w-20 bg-gray-100 rounded animate-pulse" /></td>
+      <td className="px-4 py-3"><div className="h-4 w-44 bg-gray-100 rounded animate-pulse" /></td>
+      <td className="px-4 py-3"><div className="h-5 w-24 bg-gray-100 rounded-full animate-pulse" /></td>
+      <td className="px-4 py-3"><div className="h-4 w-20 bg-gray-100 rounded animate-pulse" /></td>
+      <td className="px-4 py-3"><div className="h-6 w-14 bg-gray-100 rounded animate-pulse" /></td>
+    </tr>
+  );
 
   return (
     <div className="space-y-6">
@@ -179,7 +187,8 @@ const AdminUsers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((u) => (
+              {isLoading && [1,2,3,4,5].map(i => <SkeletonRow key={i} />)}
+              {!isLoading && filtered.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{u.first_name} {u.last_name}</div>
@@ -234,7 +243,7 @@ const AdminUsers = () => {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {!isLoading && filtered.length === 0 && (
                 <tr><td colSpan={5} className="text-center py-8 text-gray-400">No users found</td></tr>
               )}
             </tbody>
