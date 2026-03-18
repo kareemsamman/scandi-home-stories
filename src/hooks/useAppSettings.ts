@@ -40,21 +40,21 @@ const DEFAULT_BANK: BankSettings = {
 
 export const DEFAULT_SMS_MESSAGES: SmsMessages = {
   order_received: {
-    he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n💰 סכום: ₪{total}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n💰 المبلغ: ₪{total}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 👋\n✅ הזמנה #{order_number} התקבלה!\n\n📦 המוצרים שלך:\n{items}\n\n💰 סכום ביניים: ₪{total}\n🚚 משלוח: {shipping}\n\nנבדוק את אישור ההעברה ונחזור אליך בקרוב 🔄\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n✅ تم استلام الطلب #{order_number}!\n\n📦 منتجاتك:\n{items}\n\n💰 المبلغ: ₪{total}\n🚚 الشحن: {shipping}\n\nسنراجع إيصال التحويل ونتواصل معك قريباً 🔄\n\n🏗 AMG PERGOLA",
   },
-  admin_new_order: "🛎 AMG PERGOLA - הזמנה חדשה!\n\n📋 הזמנה #{order_number}\n👤 {name}\n📞 {phone}\n💰 ₪{total}\n\n📦 מוצרים:\n{items}",
+  admin_new_order: "🛎 AMG PERGOLA - הזמנה חדשה!\n\n📋 הזמנה #{order_number}\n👤 {name}\n📞 {phone}\n💰 סה\"כ: ₪{total}\n🚚 משלוח: {shipping}\n\n📦 מוצרים:\n{items}",
   waiting_approval: {
-    he: "שלום {name} 👋\n⏳ הזמנה #{order_number} ממתינה לאישור\n\nנבדוק את הקבלה ונחזור אליך בקרוב ✅\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 👋\n⏳ الطلب #{order_number} في انتظار الموافقة\n\nسنراجع الإيصال ونتواصل معك قريباً ✅\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 👋\n⏳ הזמנה #{order_number} ממתינה לאישור\n💰 סה\"כ: ₪{total} | 🚚 משלוח: {shipping}\n\nנבדוק את הקבלה ונחזור אליך בקרוב ✅\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n⏳ الطلب #{order_number} في انتظار الموافقة\n💰 الإجمالي: ₪{total} | 🚚 الشحن: {shipping}\n\nسنراجع الإيصال ونتواصل معك قريباً ✅\n\n🏗 AMG PERGOLA",
   },
   in_process: {
-    he: "שלום {name} 👋\n🔄 הזמנה #{order_number} בטיפול\n\nמתכוננים לשלוח את ההזמנה שלך 📦\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 👋\n🔄 الطلب #{order_number} قيد المعالجة\n\nنجهز طلبك للشحن 📦\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 👋\n🔄 הזמנה #{order_number} בטיפול\n💰 סה\"כ: ₪{total} | 🚚 משלוח: {shipping}\n\nמתכוננים לשלוח את ההזמנה שלך 📦\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n🔄 الطلب #{order_number} قيد المعالجة\n💰 الإجمالي: ₪{total} | 🚚 الشحن: {shipping}\n\nنجهز طلبك للشحن 📦\n\n🏗 AMG PERGOLA",
   },
   in_delivery: {
-    he: "שלום {name} 🎉\n🚚 הזמנה #{order_number} יצאה לדרך!\n\nההזמנה שלך בדרך אליך ✨\n\n🏗 AMG PERGOLA",
-    ar: "مرحباً {name} 🎉\n🚚 الطلب #{order_number} في الطريق إليك!\n\nطلبك على الطريق ✨\n\n🏗 AMG PERGOLA",
+    he: "שלום {name} 🎉\n🚚 הזמנה #{order_number} יצאה לדרך!\n💰 סה\"כ: ₪{total} | משלוח: {shipping}\n\nההזמנה שלך בדרך אליך ✨\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 🎉\n🚚 الطلب #{order_number} في الطريق إليك!\n💰 الإجمالي: ₪{total} | الشحن: {shipping}\n\nطلبك على الطريق ✨\n\n🏗 AMG PERGOLA",
   },
   not_approved: {
     he: "שלום {name}\n❌ הזמנה #{order_number} לא אושרה\n\nאנא צור קשר איתנו לפרטים נוספים 📞\n\n🏗 AMG PERGOLA",
