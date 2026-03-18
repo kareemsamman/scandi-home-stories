@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
-  Package, ChevronDown, ChevronRight, MessageSquare, X,
+  Package, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, X,
   MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +63,8 @@ const AdminOrders = () => {
   const { data: orders = [], isLoading } = useOrders();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [receiptModal, setReceiptModal] = useState<string | null>(null);
+  const [receiptModal, setReceiptModal] = useState<{ urls: string[]; idx: number } | null>(null);
+  const [resolvedReceipts, setResolvedReceipts] = useState<Record<string, string[]>>({});
   const [sendingSms, setSendingSms] = useState<string | null>(null);
 
   const { data: smsSettings } = useSmsSettings();
@@ -123,6 +124,16 @@ const AdminOrders = () => {
       title: ok ? `SMS נשלח ל-${order.phone}` : "SMS נכשל (סטטוס נשמר)",
       variant: ok ? "default" : "destructive",
     });
+  };
+
+  const handleExpand = async (order: any) => {
+    const isOpen = expanded === order.id;
+    setExpanded(isOpen ? null : order.id);
+    if (!isOpen && !resolvedReceipts[order.id]) {
+      const rawUrls = parseReceipts(order.receipt_url);
+      const resolved = await Promise.all(rawUrls.map(resolveReceiptUrl));
+      setResolvedReceipts(prev => ({ ...prev, [order.id]: resolved.filter(Boolean) }));
+    }
   };
 
   const filtered = orders.filter(o => filterStatus === "all" || o.status === filterStatus);
@@ -186,7 +197,7 @@ const AdminOrders = () => {
                 {/* ── Collapsed row ── */}
                 <div
                   className="flex items-center gap-3 px-5 py-4 cursor-pointer select-none"
-                  onClick={() => setExpanded(isExpanded ? null : order.id)}
+                  onClick={() => handleExpand(order)}
                 >
                   {/* Chevron */}
                   <div className="w-5 shrink-0 text-gray-300">
@@ -268,24 +279,16 @@ const AdminOrders = () => {
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-3">
-                          {receipts.map((url, idx) => (
+                          {(resolvedReceipts[order.id] ?? receipts).map((url, idx) => (
                             <button
                               key={idx}
-                              onClick={async () => {
-                                const resolved = await resolveReceiptUrl(url);
-                                if (resolved) setReceiptModal(resolved);
-                              }}
+                              onClick={() => setReceiptModal({ urls: resolvedReceipts[order.id] ?? receipts, idx })}
                               className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-colors"
                             >
                               {url.toLowerCase().includes(".pdf") ? (
                                 <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-red-50">
                                   <ImageIcon className="w-6 h-6 text-red-400" />
                                   <span className="text-[9px] font-bold text-red-500">PDF</span>
-                                </div>
-                              ) : url.startsWith("receipts:") ? (
-                                <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-blue-50">
-                                  <ImageIcon className="w-6 h-6 text-blue-400" />
-                                  <span className="text-[9px] font-bold text-blue-500">🔒</span>
                                 </div>
                               ) : (
                                 <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />
@@ -318,18 +321,29 @@ const AdminOrders = () => {
                             )}
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-gray-900 text-sm leading-snug">{item.product_name}</p>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                {item.color_name && (
-                                  <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-                                    {item.color_hex && (
-                                      <span className="w-3 h-3 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
-                                    )}
-                                    {item.color_name}
-                                  </span>
-                                )}
-                                {item.color_name && item.size && <span className="text-gray-300 text-xs">·</span>}
+                              <div className="mt-1 space-y-0.5">
+                                {item.color_name && (() => {
+                                  const isCustom = !item.color_hex;
+                                  return (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-gray-400">צבע:</span>
+                                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-700 font-medium">
+                                        {item.color_hex && (
+                                          <span className="w-3 h-3 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
+                                        )}
+                                        {item.color_name}
+                                        {isCustom && (
+                                          <span className="text-[9px] font-semibold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">מותאם</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                                 {item.size && (
-                                  <span className="text-[11px] text-gray-500">אורך: {item.size}</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-gray-400">אורך:</span>
+                                    <span className="text-[11px] text-gray-700 font-medium">{item.size}</span>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -401,20 +415,52 @@ const AdminOrders = () => {
       )}
 
       {/* Receipt lightbox */}
-      {receiptModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4" onClick={() => setReceiptModal(null)}>
-          <button className="absolute top-4 end-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white" onClick={() => setReceiptModal(null)}>
-            <X className="w-5 h-5" />
-          </button>
-          <div className="max-w-2xl max-h-[90vh] overflow-auto rounded-2xl" onClick={e => e.stopPropagation()}>
-            {receiptModal.toLowerCase().includes(".pdf") ? (
-              <iframe src={receiptModal} className="w-full h-[80vh] rounded-2xl" title="Receipt" />
-            ) : (
-              <img src={receiptModal} alt="Receipt" className="max-w-full max-h-[88vh] rounded-2xl object-contain" />
+      {receiptModal && (() => {
+        const { urls, idx } = receiptModal;
+        const currentUrl = urls[idx];
+        const hasPrev = idx > 0;
+        const hasNext = idx < urls.length - 1;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setReceiptModal(null)}>
+            {/* Close */}
+            <button className="absolute top-4 end-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10" onClick={() => setReceiptModal(null)}>
+              <X className="w-5 h-5" />
+            </button>
+            {/* Counter */}
+            {urls.length > 1 && (
+              <div className="absolute top-4 start-1/2 -translate-x-1/2 text-white text-sm font-semibold bg-black/40 px-3 py-1 rounded-full">
+                {idx + 1} / {urls.length}
+              </div>
             )}
+            {/* Prev */}
+            {hasPrev && (
+              <button
+                className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 transition-colors text-white z-10"
+                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx - 1 }); }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+            {/* Next */}
+            {hasNext && (
+              <button
+                className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 transition-colors text-white z-10"
+                onClick={e => { e.stopPropagation(); setReceiptModal({ urls, idx: idx + 1 }); }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            )}
+            {/* Image / PDF */}
+            <div className="max-w-2xl max-h-[90vh] overflow-auto rounded-2xl" onClick={e => e.stopPropagation()}>
+              {currentUrl.toLowerCase().includes(".pdf") ? (
+                <iframe src={currentUrl} className="w-[70vw] h-[80vh] rounded-2xl" title="Receipt" />
+              ) : (
+                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-[88vh] rounded-2xl object-contain" />
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
