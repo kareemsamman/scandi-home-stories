@@ -90,7 +90,7 @@ const AdminDashboard = () => {
           {(stats?.recentOrders || []).length === 0 ? (
             <p className="text-gray-400 text-sm">No orders yet</p>
           ) : (
-            <div className="space-y-3 overflow-y-auto max-h-80 pr-1">
+            <div className="space-y-3 overflow-y-auto overflow-x-hidden max-h-80">
               {(stats?.recentOrders || []).map((order: any) => (
                 <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
               <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">{stats!.waitingOrders.length}</span>
             )}
           </div>
-          <div className="space-y-2 overflow-y-auto max-h-80 pr-1">
+          <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-80">
             {(stats?.waitingOrders || []).length === 0 ? (
               <p className="text-gray-400 text-sm">No pending actions</p>
             ) : (
