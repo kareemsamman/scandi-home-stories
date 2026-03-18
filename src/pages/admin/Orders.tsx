@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   Package, ChevronDown, ChevronRight, MessageSquare, X,
-  MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt,
+  MapPin, User, FileText, ImageIcon, Phone, Mail, Receipt, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrders, type DbOrderItem } from "@/hooks/useDbData";
@@ -238,12 +238,20 @@ const AdminOrders = () => {
                       </div>
                     )}
 
-                    {/* Receipts */}
-                    {receipts.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                          <Receipt className="w-3 h-3" /> קבלות ({receipts.length})
-                        </p>
+                    {/* Receipts — always shown */}
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                        <Receipt className="w-3 h-3" /> קבלות {receipts.length > 0 && `(${receipts.length})`}
+                      </p>
+                      {receipts.length === 0 ? (
+                        <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                          <div>
+                            <p className="text-sm font-semibold text-amber-800">לא הועלתה קבלה</p>
+                            <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
+                          </div>
+                        </div>
+                      ) : (
                         <div className="flex flex-wrap gap-3">
                           {receipts.map((url, idx) => (
                             <button
@@ -267,8 +275,8 @@ const AdminOrders = () => {
                             </button>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* Items table */}
                     <div>

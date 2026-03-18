@@ -414,6 +414,7 @@ const Checkout = () => {
 
     // Upload all receipt files to Supabase storage
     let receiptUrl: string | undefined;
+    let receiptUploadFailed = false;
     try {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < uploadedFiles.length; i++) {
@@ -426,10 +427,25 @@ const Checkout = () => {
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
           uploadedUrls.push(urlData.publicUrl);
+        } else {
+          console.error("[receipt upload] storage error:", uploadErr.message);
+          receiptUploadFailed = true;
         }
       }
       if (uploadedUrls.length > 0) receiptUrl = uploadedUrls.join("|");
-    } catch { /* receipt upload failure is non-blocking */ }
+    } catch (e) {
+      console.error("[receipt upload] unexpected error:", e);
+      receiptUploadFailed = true;
+    }
+    if (receiptUploadFailed && !receiptUrl) {
+      toast({
+        title: locale === "ar" ? "تعذّر رفع الإيصال" : "העלאת הקבלה נכשלה",
+        description: locale === "ar"
+          ? "سيُحفظ الطلب — يرجى التواصل معنا وإرسال الإيصال مباشرةً"
+          : "ההזמנה תישמר — אנא שלח/י את הקבלה ישירות אלינו",
+        variant: "destructive",
+      });
+    }
 
     // Save marketing opt-in subscriber
     if (emailMarketing) {
