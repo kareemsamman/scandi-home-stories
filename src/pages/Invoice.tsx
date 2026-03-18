@@ -16,7 +16,7 @@ const calcShipping = (order: any): number => {
 const InvoicePage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: order, isLoading } = useOrderById(orderId!);
 
   const isAr = order?.locale === "ar";
