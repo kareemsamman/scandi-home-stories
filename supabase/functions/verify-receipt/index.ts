@@ -15,7 +15,6 @@ serve(async (req) => {
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
-      // If no API key configured, skip validation and allow the upload
       return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -28,8 +27,19 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
+          {
+            role: "system",
+            content: `You are a strict image classifier. Your ONLY job is to determine if an image is a genuine bank transfer confirmation, payment receipt, or payment proof.
+
+Rules:
+- A valid receipt/payment proof MUST contain monetary amounts, transaction details, bank/payment service branding, dates, or reference numbers.
+- Random photos, screenshots of websites, product images, selfies, documents without payment info, memes, or any non-payment image must be classified as NO.
+- If the image is blurry but appears to show payment details, answer YES.
+- If there is ANY doubt that this is a payment document, answer NO.
+- Answer ONLY with the single word YES or NO. Nothing else.`
+          },
           {
             role: "user",
             content: [
@@ -41,18 +51,19 @@ serve(async (req) => {
               },
               {
                 type: "text",
-                text: "Is this image a bank transfer confirmation, payment receipt, or any kind of payment proof? Answer only YES or NO.",
+                text: "Is this image a bank transfer confirmation, payment receipt, or payment proof? Answer YES or NO only.",
               },
             ],
           },
         ],
-        max_tokens: 10,
+        max_tokens: 5,
+        temperature: 0,
       }),
     });
 
     if (!response.ok) {
-      console.error("Lovable AI Gateway error:", response.status);
-      // On API error, allow upload to not block the customer
+      const errText = await response.text();
+      console.error("Lovable AI Gateway error:", response.status, errText);
       return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -60,6 +71,7 @@ serve(async (req) => {
 
     const data = await response.json();
     const answer = (data.choices?.[0]?.message?.content || "").trim().toUpperCase();
+    console.log("AI receipt check answer:", answer);
     const isReceipt = answer.startsWith("YES");
 
     return new Response(JSON.stringify({ isReceipt }), {
@@ -67,7 +79,6 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("verify-receipt error:", error);
-    // On unexpected error, allow upload to proceed
     return new Response(JSON.stringify({ isReceipt: true, skipped: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
