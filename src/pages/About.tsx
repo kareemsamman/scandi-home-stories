@@ -57,7 +57,7 @@ const About = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
-        const type = s.type || s.id;
+      {order.filter((s) => s.visible).map((s) => {
         const Component = SECTION_COMPONENTS[type];
         if (!Component) return null;
         const props = NON_CONFIGURABLE.has(type) ? {} : { sectionKey: s.id };

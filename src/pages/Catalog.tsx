@@ -28,6 +28,7 @@ const Catalog = () => {
     return (
       <Layout>
         <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
+        <section className="section-container py-8 md:py-12">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
           {t("catalog.title")}
         </h1>
