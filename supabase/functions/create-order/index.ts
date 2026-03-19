@@ -273,6 +273,7 @@ Deno.serve(async (req) => {
       ]);
       const smsSettings = smsRow?.value as any;
       const smsMessages = msgRow?.value as any;
+      console.log("[SMS] enabled:", smsSettings?.enabled, "hasMessages:", !!smsMessages);
 
       if (smsSettings?.enabled && smsMessages) {
         const escapeXml = (s: string) =>
