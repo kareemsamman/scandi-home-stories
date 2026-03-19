@@ -97,6 +97,26 @@ const DEFAULT_CONTENT: Record<string, { he: { title: string; content: string }; 
 • يُحظر نسخ المحتوى دون إذن صريح`,
     },
   },
+  legal_accessibility: {
+    he: {
+      title: "הצהרת נגישות",
+      content: `AMG פרגולה מחויבת להנגשת האתר לכלל המשתמשים.
+
+**מאמצי הנגשה**
+• ניווט מלא באמצעות מקלדת
+• תאימות לקוראי מסך
+• ניגודיות צבעים נאותה`,
+    },
+    ar: {
+      title: "بيان إمكانية الوصول",
+      content: `تلتزم AMG Pergola بإتاحة الموقع لجميع المستخدمين.
+
+**جهود الإتاحة**
+• تنقل كامل عبر لوحة المفاتيح
+• توافق مع قارئات الشاشة
+• تباين ألوان مناسب`,
+    },
+  },
 };
 
 function usePageContent(sectionKey: string, locale: string) {
