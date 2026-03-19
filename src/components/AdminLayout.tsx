@@ -149,7 +149,7 @@ const AdminLayoutInner = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex" dir="ltr" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="h-screen bg-gray-50 flex overflow-hidden" dir="ltr" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
@@ -187,7 +187,7 @@ const AdminLayoutInner = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

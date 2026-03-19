@@ -392,9 +392,7 @@ const AdminOrderDetail = () => {
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map(s => {
-                  const workerBlocked = isWorker && !isAdmin &&
-                    order.status === "confirmed" &&
-                    (s.value === "in_process" || s.value === "cancelled");
+                  const workerBlocked = isWorker && !isAdmin && s.value !== "in_delivery";
                   return (
                     <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
                       <span className="flex items-center gap-2">
@@ -407,10 +405,10 @@ const AdminOrderDetail = () => {
                 })}
               </SelectContent>
             </Select>
-            {isWorker && !isAdmin && order.status === "confirmed" && (
+            {isWorker && !isAdmin && (
               <p className="text-[10px] text-amber-600 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                לא ניתן לשנות מ"אושרה" ל"בתהליך" או "בוטלה"
+                ניתן לשנות רק ל"יצא למשלוח"
               </p>
             )}
           </div>
@@ -595,41 +593,43 @@ const AdminOrderDetail = () => {
       )}
 
       {/* ── Receipts ── */}
-      <Section title={`קבלות${receipts.length > 0 ? ` (${receipts.length})` : ""}`} icon={Receipt}>
-        {receipts.length === 0 ? (
-          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-            <div>
-              <p className="font-semibold text-amber-800 text-sm">לא הועלתה קבלה</p>
-              <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
+      {!isWorker && (
+        <Section title={`קבלות${receipts.length > 0 ? ` (${receipts.length})` : ""}`} icon={Receipt}>
+          {receipts.length === 0 ? (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="font-semibold text-amber-800 text-sm">לא הועלתה קבלה</p>
+                <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            {(resolvedUrls.length > 0 ? resolvedUrls : receipts).map((url, idx) => (
-              <button
-                key={idx}
-                onClick={() => setReceiptModal({ idx })}
-                className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors"
-              >
-                {url.toLowerCase().includes(".pdf") ? (
-                  <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-red-50">
-                    <ImageIcon className="w-6 h-6 text-red-400" />
-                    <span className="text-[9px] font-bold text-red-500">PDF</span>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {(resolvedUrls.length > 0 ? resolvedUrls : receipts).map((url, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setReceiptModal({ idx })}
+                  className="group relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors"
+                >
+                  {url.toLowerCase().includes(".pdf") ? (
+                    <div className="w-20 h-20 flex flex-col items-center justify-center gap-1 bg-red-50">
+                      <ImageIcon className="w-6 h-6 text-red-400" />
+                      <span className="text-[9px] font-bold text-red-500">PDF</span>
+                    </div>
+                  ) : (
+                    <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 drop-shadow">
+                      {receipts.length > 1 ? `קבלה ${idx + 1}` : "הגדל"}
+                    </span>
                   </div>
-                ) : (
-                  <img src={url} alt={`קבלה ${idx + 1}`} className="w-20 h-20 object-cover" />
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 drop-shadow">
-                    {receipts.length > 1 ? `קבלה ${idx + 1}` : "הגדל"}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </Section>
+                </button>
+              ))}
+            </div>
+          )}
+        </Section>
+      )}
 
       {/* ── Items ── */}
       <Section title="פריטים" icon={Package}>
