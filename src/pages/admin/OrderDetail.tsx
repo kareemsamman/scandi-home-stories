@@ -389,8 +389,11 @@ const AdminOrderDetail = () => {
           {/* Status */}
           <div className="flex flex-col gap-1">
             <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
-              <SelectTrigger className="w-48 h-9 text-sm border-gray-200">
-                <SelectValue />
+              <SelectTrigger className={`h-9 px-3 text-sm font-semibold border rounded-xl gap-2 w-auto min-w-[160px] ${st.color}`}>
+                <span className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${st.dot}`} />
+                  <SelectValue />
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map(s => {
@@ -398,9 +401,9 @@ const AdminOrderDetail = () => {
                   return (
                     <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
                       <span className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
                         {s.label}
-                        {workerBlocked && <span className="text-[10px] text-gray-400">— אדמין בלבד</span>}
+                        {workerBlocked && <span className="text-[10px] text-gray-400 ms-1">— אדמין בלבד</span>}
                       </span>
                     </SelectItem>
                   );
