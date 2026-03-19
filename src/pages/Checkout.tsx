@@ -246,7 +246,8 @@ const Checkout = () => {
   const setItems = useCart((s) => s.setItems);
   const { data: savedAddresses = [] } = useAddresses();
   const addAddressMutation = useAddAddress();
-  const { user, profile: authProfile, signOut, isAdmin } = useAuth();
+  const { user, profile: authProfile, signOut, isAdmin, isWorker } = useAuth();
+  const isStaff = isAdmin || isWorker;
   const addOrderMutation = useAddOrder();
 
   const { data: shippingSettings } = useShippingSettings();
@@ -395,12 +396,12 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
-    if (!form.city.trim() || !citySelected) e.city = t("checkout.selectCity");
+    if (!form.city.trim() || (!citySelected && !isStaff)) e.city = t("checkout.selectCity");
     if (!form.address.trim()) e.address = t("checkout.addressRequired");
     return e;
   }, [form, t, citySelected]);
 
-  const isValid = Object.keys(validate()).length === 0 && acceptPrivacy;
+  const isValid = Object.keys(validate()).length === 0 && (acceptPrivacy || isStaff);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
