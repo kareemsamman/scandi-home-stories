@@ -272,7 +272,12 @@ const AdminInventory = () => {
 
   const [search, setSearch] = useState("");
   const [showLowOnly, setShowLowOnly] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>(() => localStorage.getItem("inv_category_filter") || "all");
+
+  const handleCategoryFilter = (val: string) => {
+    setCategoryFilter(val);
+    localStorage.setItem("inv_category_filter", val);
+  };
   const [localQty, setLocalQty] = useState<Record<string, number>>({});
   const [localThreshold, setLocalThreshold] = useState<Record<string, number>>({});
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
@@ -292,8 +297,19 @@ const AdminInventory = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ["admin_categories_filter"],
     queryFn: async () => {
-      const { data } = await db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order");
-      return data || [];
+      const [{ data: cats }, { data: trans }] = await Promise.all([
+        db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order"),
+        db.from("category_translations").select("category_id, locale, name"),
+      ]);
+      const transMap = new Map<string, Record<string, string>>();
+      (trans || []).forEach((t: any) => {
+        if (!transMap.has(t.category_id)) transMap.set(t.category_id, {});
+        transMap.get(t.category_id)![t.locale] = t.name;
+      });
+      return (cats || []).map((c: any) => ({
+        ...c,
+        displayName: transMap.get(c.id)?.he || transMap.get(c.id)?.ar || c.name_he || c.name_ar || c.id,
+      }));
     },
   });
 
@@ -438,18 +454,18 @@ const AdminInventory = () => {
         <div className="relative shrink-0">
           <select
             value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
+            onChange={e => handleCategoryFilter(e.target.value)}
             className="h-10 pl-8 pr-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
           >
             <option value="all">כל הקטגוריות</option>
             {parentCats.map((cat: any) => (
               <>
-                <option key={cat.id} value={cat.id} className="font-bold">
-                  {cat.name_he || cat.name_ar}
+                <option key={cat.id} value={cat.id}>
+                  {cat.displayName}
                 </option>
                 {subCats(cat.id).map((sub: any) => (
-                  <option key={sub.id} value={sub.id} className="pl-4">
-                    &nbsp;&nbsp;↳ {sub.name_he || sub.name_ar}
+                  <option key={sub.id} value={sub.id}>
+                    &nbsp;&nbsp;↳ {sub.displayName}
                   </option>
                 ))}
               </>
