@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2, ArrowRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import type { ContractorProduct } from "@/data/products";
 import { useLocale } from "@/i18n/useLocale";
@@ -736,7 +736,11 @@ const Checkout = () => {
             <Link to={localePath("/")} className="flex items-center">
               <img src={logoWhite} alt="AMG Pergola" className="h-12 md:h-14 invert" />
             </Link>
-            <button onClick={() => setStep("form")} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
+            <button
+              onClick={() => setStep("form")}
+              className="flex items-center gap-1.5 text-sm font-medium text-foreground border border-border rounded-full px-4 py-2 hover:bg-foreground hover:text-background transition-colors"
+            >
+              <ArrowRight className="w-4 h-4" />
               {t("payment.backToForm")}
             </button>
           </div>
@@ -749,6 +753,15 @@ const Checkout = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
+          {/* Back button */}
+          <button
+            onClick={() => setStep("form")}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowRight className="w-4 h-4" />
+            {t("payment.backToForm")}
+          </button>
+
           {/* Payment instructions */}
           <div className="text-center mb-8">
             <h1 className="text-xl font-bold text-foreground mb-3">{t("payment.title")}</h1>
