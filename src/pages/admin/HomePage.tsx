@@ -244,8 +244,19 @@ const FeaturedSliderSection = ({ data, onChange, locale }: { data: any; onChange
   const { data: categories = [] } = useQuery({
     queryKey: ["admin_categories_slider"],
     queryFn: async () => {
-      const { data } = await db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order");
-      return data || [];
+      const [{ data: cats }, { data: trans }] = await Promise.all([
+        db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order"),
+        db.from("category_translations").select("category_id, locale, name"),
+      ]);
+      const tm = new Map<string, Record<string, string>>();
+      (trans || []).forEach((t: any) => {
+        if (!tm.has(t.category_id)) tm.set(t.category_id, {});
+        tm.get(t.category_id)![t.locale] = t.name;
+      });
+      return (cats || []).map((c: any) => ({
+        ...c,
+        displayName: tm.get(c.id)?.he || tm.get(c.id)?.ar || c.name_he || c.name_ar || c.id,
+      }));
     },
   });
 
@@ -318,11 +329,11 @@ const FeaturedSliderSection = ({ data, onChange, locale }: { data: any; onChange
             {parentCats.map((cat: any) => (
               <>
                 <option key={cat.id} value={cat.id} className="font-bold">
-                  ▸ {cat.name_he || cat.name_ar}
+                  ▸ {cat.displayName}
                 </option>
                 {subCats(cat.id).map((sub: any) => (
                   <option key={sub.id} value={sub.id}>
-                    &nbsp;&nbsp;{sub.name_he || sub.name_ar}
+                    &nbsp;&nbsp;{sub.displayName}
                   </option>
                 ))}
               </>

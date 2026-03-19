@@ -13,9 +13,8 @@ export const FeaturedProductSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollPct, setScrollPct] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Derive which products to show
   const products = (() => {
     if (!config || !allProducts.length) return [];
     if (config.mode === "category" && config.category_id) {
@@ -37,111 +36,106 @@ export const FeaturedProductSlider = () => {
     const el = scrollRef.current;
     if (!el) return;
     const maxScroll = el.scrollWidth - el.clientWidth;
-    setScrollPct(maxScroll > 0 ? (el.scrollLeft / maxScroll) * 100 : 0);
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft < maxScroll - 4);
+    const left = Math.abs(el.scrollLeft); // abs handles RTL negative values
+    setScrollPct(maxScroll > 0 ? Math.min((left / maxScroll) * 100, 100) : 0);
+    setCanScrollLeft(left > 4);
+    setCanScrollRight(left < maxScroll - 4);
   };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    updateState();
+    // Small delay so the DOM is ready
+    const t = setTimeout(updateState, 100);
     el.addEventListener("scroll", updateState, { passive: true });
     const ro = new ResizeObserver(updateState);
     ro.observe(el);
-    return () => { el.removeEventListener("scroll", updateState); ro.disconnect(); };
+    return () => { clearTimeout(t); el.removeEventListener("scroll", updateState); ro.disconnect(); };
   }, [products.length]);
 
   const scroll = (dir: "prev" | "next") => {
     const el = scrollRef.current;
     if (!el) return;
     const card = el.querySelector<HTMLElement>("[data-slider-card]");
-    const cardW = card ? card.offsetWidth + 16 : 300;
-    el.scrollBy({ left: dir === "next" ? cardW * 2 : -cardW * 2, behavior: "smooth" });
+    const cardW = (card?.offsetWidth ?? 300) + 16; // +gap-4
+    el.scrollBy({ left: dir === "next" ? cardW : -cardW, behavior: "smooth" });
   };
 
   if (!config || !title || products.length === 0) return null;
 
-  const isRtl = locale === "he" || locale === "ar";
-
   return (
-    <section className="py-10 md:py-16 bg-white overflow-hidden" dir={isRtl ? "rtl" : "ltr"}>
+    <section className="py-10 md:py-16 bg-white overflow-hidden">
 
-      {/* Header row — aligned with page content */}
-      <div className="px-5 md:px-10 lg:px-16 mb-7 flex items-center justify-between gap-4">
+      {/* Header: title left, view-all right */}
+      <div className="flex items-center justify-between px-5 md:px-10 lg:px-16 mb-6">
         <h2 className="text-2xl md:text-[2rem] font-black tracking-tight text-foreground uppercase leading-none">
           {title}
         </h2>
-        <div className="flex items-center gap-3 shrink-0">
-          {buttonText && (
-            <Link
-              to={localePath(buttonLink)}
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors"
-            >
-              {buttonText}
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
-          )}
-          {/* Arrows */}
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => scroll("prev")}
-              disabled={!canScrollLeft}
-              aria-label="Previous"
-              className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => scroll("next")}
-              disabled={!canScrollRight}
-              aria-label="Next"
-              className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {buttonText && (
+          <Link
+            to={localePath(buttonLink)}
+            className="flex items-center gap-1.5 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors shrink-0"
+          >
+            {buttonText}
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        )}
       </div>
 
-      {/* Scrollable cards — bleeds to the right edge */}
+      {/* Cards — always LTR so scrollLeft works consistently */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth px-5 md:px-10 lg:px-16"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        dir="ltr"
+        className="flex gap-4 overflow-x-auto scroll-smooth"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          paddingInlineStart: "clamp(20px, 5vw, 80px)",
+        }}
       >
         {products.map((product, i) => (
           <div
             key={product.id}
             data-slider-card
-            className="shrink-0 w-[82vw] sm:w-[46vw] md:w-[32vw] lg:w-[30vw] xl:w-[28vw]"
+            /* Mobile: 82vw (shows 1.2), tablet 46vw (shows ~2.2), desktop: 30vw (shows 3.2) */
+            className="shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
           >
             <ProductCard product={product} index={i} />
           </div>
         ))}
-        {/* Right edge spacer so last card doesn't touch viewport edge */}
-        <div className="shrink-0 w-5 md:w-10" />
+        {/* Trailing spacer so last card doesn't flush to edge */}
+        <div className="shrink-0 w-10 md:w-16 lg:w-20" aria-hidden />
       </div>
 
-      {/* Scroll progress bar */}
-      <div className="mt-5 px-5 md:px-10 lg:px-16">
-        <div className="h-px w-full bg-gray-200 relative">
+      {/* Bottom: progress bar + arrows */}
+      <div className="mt-5 px-5 md:px-10 lg:px-16 flex items-center gap-4">
+        {/* Progress track */}
+        <div className="flex-1 h-px bg-gray-200 relative overflow-hidden">
           <div
-            className="h-px bg-foreground absolute inset-y-0 start-0 transition-[width] duration-100"
+            className="absolute inset-y-0 left-0 bg-foreground transition-[width] duration-150 ease-out"
             style={{ width: `${scrollPct}%` }}
           />
         </div>
-        {/* Mobile "View all" link below bar */}
-        {buttonText && (
-          <div className="sm:hidden mt-4 flex justify-center">
-            <Link
-              to={localePath(buttonLink)}
-              className="text-sm font-semibold text-foreground underline underline-offset-2"
-            >
-              {buttonText}
-            </Link>
-          </div>
-        )}
+
+        {/* Arrow buttons */}
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => scroll("prev")}
+            disabled={!canScrollLeft}
+            aria-label="Previous"
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll("next")}
+            disabled={!canScrollRight}
+            aria-label="Next"
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </section>
   );
