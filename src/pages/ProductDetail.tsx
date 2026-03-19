@@ -536,13 +536,13 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                         <button key={size.id} onClick={() => !sizeOutOfStock && setSelectedSize(size.label)}
                           className={cn(
                             "relative px-3 py-2.5 rounded-lg border text-sm font-medium transition-all min-w-[56px] text-center",
+                            sizeOutOfStock ? "border-red-200 bg-red-50 text-red-300 cursor-not-allowed" :
                             isActive ? "border-foreground bg-foreground text-background" :
-                            sizeOutOfStock ? "border-border text-muted-foreground cursor-not-allowed" :
                             "border-border hover:border-muted-foreground"
                           )}>
-                          <span className={cn(sizeOutOfStock && "opacity-40")}>{size.label}</span>
+                          <span className={cn(sizeOutOfStock && "opacity-50")}>{size.label}</span>
                           {sizePrice != null && sizePrice > 0 && (
-                            <div className={cn("text-[10px] block", isActive ? "opacity-80" : "text-muted-foreground", sizeOutOfStock && "opacity-30")}>
+                            <div className={cn("text-[10px] block", sizeOutOfStock ? "opacity-30" : isActive ? "opacity-80" : "text-muted-foreground")}>
                               {t("common.currency")}{sizePrice}
                             </div>
                           )}
