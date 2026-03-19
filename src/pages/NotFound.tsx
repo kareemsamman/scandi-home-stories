@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { ArrowLeft, Home, ShoppingBag } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const DEFAULT_IMAGE = "/assets/404-hero.jpg";
 
