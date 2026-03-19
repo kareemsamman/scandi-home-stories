@@ -273,6 +273,7 @@ Deno.serve(async (req) => {
       ]);
       const smsSettings = smsRow?.value as any;
       const smsMessages = msgRow?.value as any;
+      console.log("[SMS] enabled:", smsSettings?.enabled, "hasMessages:", !!smsMessages);
 
       if (smsSettings?.enabled && smsMessages) {
         const escapeXml = (s: string) =>
@@ -293,12 +294,20 @@ Deno.serve(async (req) => {
 
         const sendSmsApi = async (toPhone: string, message: string) => {
           const dlr = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-          const xml = `<?xml version="1.0" encoding="UTF-8"?><sms><user><username>${escapeXml(smsSettings.user)}</username></user><source>${escapeXml(smsSettings.source)}</source><destinations><phone id="${dlr}">${fmtPhone(toPhone)}</phone></destinations><message>${escapeXml(message)}</message></sms>`;
-          await fetch("https://019sms.co.il/api", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${smsSettings.token}`, "Content-Type": "application/xml" },
-            body: xml,
-          });
+          const formatted = fmtPhone(toPhone);
+          const xml = `<?xml version="1.0" encoding="UTF-8"?><sms><user><username>${escapeXml(smsSettings.user)}</username></user><source>${escapeXml(smsSettings.source)}</source><destinations><phone id="${dlr}">${formatted}</phone></destinations><message>${escapeXml(message)}</message></sms>`;
+          console.log("[SMS] sending to:", formatted);
+          try {
+            const resp = await fetch("https://019sms.co.il/api", {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${smsSettings.token}`, "Content-Type": "application/xml" },
+              body: xml,
+            });
+            const body = await resp.text();
+            console.log("[SMS] response:", resp.status, body);
+          } catch (fetchErr) {
+            console.error("[SMS] fetch error:", fetchErr);
+          }
         };
 
         const itemsList = validatedItems
