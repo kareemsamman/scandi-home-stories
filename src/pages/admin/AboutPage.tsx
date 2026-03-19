@@ -238,7 +238,10 @@ const renderAboutEditor = (s: SectionItem, data: any, patch: (p: any) => void, o
     case "about_hero":
       return (
         <div className="space-y-4">
-          <ImageUpload label="Background Image" value={data.image || ""} onChange={(url) => patch({ image: url })} />
+          <div className="grid grid-cols-2 gap-4">
+            <ImageUpload label="Image — Desktop" value={data.image || ""} onChange={(url) => patch({ image: url })} />
+            <ImageUpload label="Image — Mobile" value={data.image_mobile || ""} onChange={(url) => patch({ image_mobile: url })} />
+          </div>
           <Field label="Subtitle (small tag above title)"><Input value={data.subtitle || ""} onChange={e => patch({ subtitle: e.target.value })} placeholder="e.g. About Us" /></Field>
           <Field label="Title"><Input value={data.title || ""} onChange={e => patch({ title: e.target.value })} placeholder="Main heading" /></Field>
           <Field label="Description"><Textarea value={data.description || ""} onChange={e => patch({ description: e.target.value })} placeholder="Hero description text" className="text-sm" rows={3} /></Field>
