@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Package, AlertTriangle, Search, CheckCircle2, Minus, Plus,
-  StickyNote, Send, Trash2, ChevronDown, ChevronUp,
+  StickyNote, Send, Trash2, X,
 } from "lucide-react";
 
 const db = supabase as any;
@@ -153,22 +153,29 @@ const QtyRow = ({
   );
 };
 
-/* ── Notes panel for one product ── */
-const NotesPanel = ({ productId, allNotes, onSave, onDelete }: {
+/* ── Notes modal (chat style) ── */
+const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClose }: {
+  productName: string;
   productId: string;
   allNotes: Record<string, Array<{ id: string; text: string; ts: string }>>;
   onSave: (productId: string, text: string) => Promise<void>;
   onDelete: (productId: string, noteId: string) => Promise<void>;
+  onClose: () => void;
 }) => {
-  const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const notes = allNotes[productId] || [];
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    inputRef.current?.focus();
+  }, [notes.length]);
+
   const handleSave = async () => {
     const t = text.trim();
-    if (!t) return;
+    if (!t || saving) return;
     setSaving(true);
     await onSave(productId, t);
     setText("");
@@ -176,60 +183,74 @@ const NotesPanel = ({ productId, allNotes, onSave, onDelete }: {
   };
 
   return (
-    <div className="border-t border-gray-100">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl"
+        style={{ maxHeight: "85vh" }}
+        onClick={e => e.stopPropagation()}
       >
-        <StickyNote className="w-3.5 h-3.5" />
-        <span className="font-medium">הערות</span>
-        {notes.length > 0 && (
-          <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full px-1.5 py-0.5">{notes.length}</span>
-        )}
-        <span className="mr-auto">{open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}</span>
-      </button>
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
+          <StickyNote className="w-4 h-4 text-amber-500" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-gray-900 truncate">הערות</p>
+            <p className="text-[10px] text-gray-400 truncate">{productName}</p>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+            <X className="w-3.5 h-3.5 text-gray-500" />
+          </button>
+        </div>
 
-      {open && (
-        <div className="px-3 pb-3 space-y-2">
-          {/* Existing notes */}
+        {/* Chat messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 min-h-0">
+          {notes.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-24 text-gray-300 text-xs gap-1">
+              <StickyNote className="w-8 h-8 opacity-30" />
+              <span>אין הערות עדיין</span>
+            </div>
+          )}
           {notes.map(note => (
-            <div key={note.id} className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-2">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">{note.text}</p>
-                <p className="text-[9px] text-gray-400 mt-1">
-                  {new Date(note.ts).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
+            <div key={note.id} className="flex items-end gap-2 justify-end">
               <button
                 onClick={() => onDelete(productId, note.id)}
-                className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 text-gray-300 hover:text-red-500 transition-colors"
+                className="w-5 h-5 flex items-center justify-center rounded-full opacity-0 hover:opacity-100 group-hover:opacity-100 text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all mb-1 shrink-0"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
+              <div className="group max-w-[80%]">
+                <div className="bg-blue-500 text-white rounded-2xl rounded-br-sm px-3 py-2">
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap">{note.text}</p>
+                </div>
+                <p className="text-[9px] text-gray-400 mt-0.5 text-left">
+                  {new Date(note.ts).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
             </div>
           ))}
-
-          {/* New note input */}
-          <div className="flex gap-1.5">
-            <textarea
-              ref={inputRef}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave(); } }}
-              placeholder="הוסף הערה... (Enter לשמור)"
-              rows={2}
-              className="flex-1 text-xs rounded-lg border border-gray-200 px-2.5 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-gray-300"
-            />
-            <button
-              onClick={handleSave}
-              disabled={!text.trim() || saving}
-              className="w-8 h-8 self-end rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-40 flex items-center justify-center transition-colors shrink-0"
-            >
-              <Send className="w-3.5 h-3.5 text-white" />
-            </button>
-          </div>
+          <div ref={bottomRef} />
         </div>
-      )}
+
+        {/* Input */}
+        <div className="border-t border-gray-100 px-3 py-3 flex gap-2 items-end shrink-0">
+          <textarea
+            ref={inputRef}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave(); } }}
+            placeholder="כתוב הערה... (Enter לשליחה)"
+            rows={1}
+            className="flex-1 text-sm rounded-xl border border-gray-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-gray-300 max-h-24"
+            style={{ lineHeight: "1.4" }}
+          />
+          <button
+            onClick={handleSave}
+            disabled={!text.trim() || saving}
+            className="w-9 h-9 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-30 flex items-center justify-center transition-colors shrink-0"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -245,6 +266,7 @@ const AdminInventory = () => {
   const [localQty, setLocalQty] = useState<Record<string, number>>({});
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [notesModal, setNotesModal] = useState<{ productId: string; productName: string } | null>(null);
 
   /* ── Products ── */
   const { data: products = [] } = useQuery({
@@ -340,7 +362,7 @@ const AdminInventory = () => {
   const sharedQtyProps = { saveStock, savingKeys, savedKeys, localQty, setLocalQty };
 
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -462,13 +484,24 @@ const AdminInventory = () => {
                   <QtyRow inv={simpleItem} label={undefined} {...sharedQtyProps} />
                 ) : null}
 
-                {/* Notes */}
-                <NotesPanel
-                  productId={product.id}
-                  allNotes={allNotes}
-                  onSave={saveNote}
-                  onDelete={deleteNote}
-                />
+                {/* Notes footer */}
+                <div className="border-t border-gray-100 flex items-center justify-between px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <StickyNote className="w-3.5 h-3.5" />
+                    <span>הערות</span>
+                    {(allNotes[product.id] || []).length > 0 && (
+                      <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                        {(allNotes[product.id] || []).length}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setNotesModal({ productId: product.id, productName: pName })}
+                    className="text-[11px] font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+                  >
+                    {(allNotes[product.id] || []).length > 0 ? "פתח" : "+ הוסף"}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -480,6 +513,18 @@ const AdminInventory = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Notes modal */}
+      {notesModal && (
+        <NotesModal
+          productId={notesModal.productId}
+          productName={notesModal.productName}
+          allNotes={allNotes}
+          onSave={saveNote}
+          onDelete={deleteNote}
+          onClose={() => setNotesModal(null)}
+        />
       )}
     </div>
   );
