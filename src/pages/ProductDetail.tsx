@@ -184,8 +184,27 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     setTimeout(() => setAddedConfirm(false), 1000);
   };
 
+  const productDesc = getLocaleText(product.description, locale) || product.name;
+  const colName = collection ? collection.name[locale] : "";
+  const seoJsonLd = [
+    getOrganizationSchema(),
+    getProductSchema({ name: product.name, description: productDesc, price: product.price, images: product.images, slug: product.slug, collection: colName }),
+    getBreadcrumbSchema([
+      { name: t("nav.shop"), url: `/${locale}/shop` },
+      ...(collection ? [{ name: colName, url: `/${locale}/shop?collection=${collection.slug}` }] : []),
+      { name: product.name, url: `/${locale}/product/${product.slug}` },
+    ]),
+  ];
+
   return (
     <Layout>
+      <SEOHead
+        title={`${product.name} | A.M.G PERGOLA`}
+        description={productDesc.slice(0, 155)}
+        ogImage={product.images[0]}
+        ogType="product"
+        jsonLd={seoJsonLd}
+      />
       <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
