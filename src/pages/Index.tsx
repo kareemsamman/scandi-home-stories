@@ -72,6 +72,7 @@ const Index = () => {
         jsonLd={[getOrganizationSchema(), getWebSiteSchema(), getLocalBusinessSchema()]}
       />
       {order.filter((s) => s.visible).map((s) => {
+        const type = s.type || s.id;
         const Component = SECTION_COMPONENTS[type];
         if (!Component) return null;
         const props = NON_CONFIGURABLE.has(type) ? {} : { sectionKey: s.id };
