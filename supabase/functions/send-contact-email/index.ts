@@ -47,8 +47,8 @@ serve(async (req) => {
       });
     }
 
-    if (name.trim().length < 2 || message.trim().length < 10) {
-      return new Response(JSON.stringify({ error: "Name or message too short" }), {
+    if (name.trim().length < 2) {
+      return new Response(JSON.stringify({ error: "Name too short" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

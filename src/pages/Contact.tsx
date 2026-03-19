@@ -62,8 +62,8 @@ const Contact = () => {
       if (!phoneRx.test(formData.phone.trim()))
         errs.phone = locale === "ar" ? "رقم هاتف غير صالح" : "מספר טלפון לא תקין";
     }
-    if (!formData.message.trim() || formData.message.trim().length < 10)
-      errs.message = locale === "ar" ? "الرسالة قصيرة جداً (10 أحرف على الأقل)" : "הודעה קצרה מדי (לפחות 10 תווים)";
+    if (!formData.message.trim())
+      errs.message = locale === "ar" ? "الرسالة مطلوبة" : "הודעה נדרשת";
     return errs;
   };
 
