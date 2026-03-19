@@ -18,6 +18,12 @@ const NotFound = () => {
   const btnShop   = db?.btn_shop     || t("notFound.shop");
 
   return (
+    <>
+    <SEOHead
+      title={locale === "ar" ? "الصفحة غير موجودة | A.M.G PERGOLA" : "הדף לא נמצא | A.M.G PERGOLA"}
+      description={locale === "ar" ? "الصفحة المطلوبة غير موجودة" : "הדף המבוקש לא נמצא"}
+      noIndex={true}
+    />
     <div className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
       {/* Background */}
       <img
