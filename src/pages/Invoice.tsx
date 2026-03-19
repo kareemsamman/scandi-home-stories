@@ -107,7 +107,7 @@ const InvoicePage = () => {
             <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t.shipping}</p>
               <p className="font-bold text-gray-900">{order.city}</p>
-              <p className="text-gray-500 text-sm">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
+              <p className="text-gray-500 text-sm">{order.address}{order.house_number ? ` ${order.house_number}` : ""}{order.apartment ? `, ${order.apartment}` : ""}</p>
             </div>
           </div>
 

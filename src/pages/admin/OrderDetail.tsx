@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
 import { adjustInventory } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
+import { AddressFields, AddressState } from "@/components/AddressFields";
 
 /* ── Status config ── */
 const STATUSES = [
@@ -81,7 +82,7 @@ const AdminOrderDetail = () => {
   const [receiptModal, setReceiptModal] = useState<{ idx: number } | null>(null);
   const [sendingSms, setSendingSms] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
-  const [addressForm, setAddressForm] = useState({ city: "", address: "", apartment: "" });
+  const [addressForm, setAddressForm] = useState<AddressState>({ city: "", street: "", houseNumber: "", apartment: "", citySelected: true, streetSelected: true });
 
   /* Build SKU map */
   const skuMap = new Map<string, string | null>();
@@ -120,7 +121,7 @@ const AdminOrderDetail = () => {
   });
 
   const updateAddress = useMutation({
-    mutationFn: async (data: { city: string; address: string; apartment: string }) => {
+    mutationFn: async (data: { city: string; address: string; house_number: string; apartment: string }) => {
       const { error } = await supabase.from("orders").update(data).eq("id", order!.id);
       if (error) throw error;
     },
@@ -236,7 +237,7 @@ const AdminOrderDetail = () => {
       <div class="info-card">
         <h3>${labels.shipping}</h3>
         <p class="name">${order.city}</p>
-        <p>${order.address}${order.apartment ? `, ${order.apartment}` : ""}</p>
+        <p>${order.address}${(order as any).house_number ? ` ${(order as any).house_number}` : ""}${order.apartment ? `, ${order.apartment}` : ""}</p>
       </div>
     </div>
 
@@ -519,7 +520,7 @@ const AdminOrderDetail = () => {
             editingAddress ? (
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => updateAddress.mutate(addressForm)}
+                  onClick={() => updateAddress.mutate({ city: addressForm.city, address: addressForm.street, house_number: addressForm.houseNumber, apartment: addressForm.apartment })}
                   disabled={updateAddress.isPending}
                   className="flex items-center gap-1 h-7 px-2.5 text-xs bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
@@ -535,7 +536,7 @@ const AdminOrderDetail = () => {
             ) : (
               <button
                 onClick={() => {
-                  setAddressForm({ city: order.city || "", address: order.address || "", apartment: order.apartment || "" });
+                  setAddressForm({ city: order.city || "", street: order.address || "", houseNumber: (order as any).house_number || "", apartment: order.apartment || "", citySelected: true, streetSelected: true });
                   setEditingAddress(true);
                 }}
                 className="flex items-center gap-1 h-7 px-2.5 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors"
@@ -546,39 +547,17 @@ const AdminOrderDetail = () => {
           }
         >
           {editingAddress ? (
-            <div className="space-y-2.5">
-              <div>
-                <label className="text-xs text-gray-400 block mb-1">עיר</label>
-                <input
-                  value={addressForm.city}
-                  onChange={e => setAddressForm(f => ({ ...f, city: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  dir="rtl"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 block mb-1">רחוב ומספר בית</label>
-                <input
-                  value={addressForm.address}
-                  onChange={e => setAddressForm(f => ({ ...f, address: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  dir="rtl"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 block mb-1">דירה (אופציונלי)</label>
-                <input
-                  value={addressForm.apartment}
-                  onChange={e => setAddressForm(f => ({ ...f, apartment: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  dir="rtl"
-                />
-              </div>
-            </div>
+            <AddressFields
+              value={addressForm}
+              onChange={setAddressForm}
+              isStaff={true}
+            />
           ) : (
             <div className="space-y-1">
               <p className="font-semibold text-gray-900">{order.city}</p>
-              <p className="text-gray-500 text-sm">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
+              <p className="text-gray-500 text-sm">
+                {order.address}{(order as any).house_number ? ` ${(order as any).house_number}` : ""}{order.apartment ? `, ${order.apartment}` : ""}
+              </p>
             </div>
           )}
         </Section>

@@ -218,7 +218,7 @@ const OrderDetail = () => {
                 )}
                 {order.city && <p className="text-muted-foreground">{order.city}</p>}
                 {order.address && (
-                  <p className="text-muted-foreground">{order.address}{order.apartment ? `, ${order.apartment}` : ""}</p>
+                  <p className="text-muted-foreground">{order.address}{order.houseNumber ? ` ${order.houseNumber}` : ""}{order.apartment ? `, ${order.apartment}` : ""}</p>
                 )}
                 {order.phone && <p className="text-muted-foreground">{order.phone}</p>}
               </div>

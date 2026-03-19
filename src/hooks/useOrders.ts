@@ -40,6 +40,7 @@ export interface Order {
   locale?: string;
   city?: string;
   address?: string;
+  houseNumber?: string;
   apartment?: string;
   firstName?: string;
   lastName?: string;
@@ -115,6 +116,7 @@ export const useOrders = () => {
         locale: o.locale || "he",
         city: o.city || undefined,
         address: o.address || undefined,
+        houseNumber: o.house_number || undefined,
         apartment: o.apartment || undefined,
         firstName: o.first_name || undefined,
         lastName: o.last_name || undefined,
@@ -154,6 +156,7 @@ export const useAddOrder = () => {
         phone: string;
         city: string;
         address: string;
+        houseNumber?: string;
         apartment?: string;
         receiptUrl?: string;
         locale?: string;
@@ -177,6 +180,7 @@ export const useAddOrder = () => {
           phone: order.phone,
           city: order.city,
           address: order.address,
+          house_number: order.houseNumber || null,
           apartment: order.apartment || null,
           receipt_url: order.receiptUrl || null,
           locale: order.locale || "he",

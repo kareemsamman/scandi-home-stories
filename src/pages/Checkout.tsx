@@ -15,6 +15,8 @@ import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import { useCouponStore, recordCouponUse, validateCoupon } from "@/hooks/useCoupons";
 import { CouponInput } from "@/components/CouponInput";
 import { SendCartModal } from "@/components/SendCartModal";
+import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
+import { loadAllRecords } from "@/utils/cityStreetApi";
 import { useBankSettings, useSmsSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
@@ -35,64 +37,7 @@ const LockIcon = () => (
   </svg>
 );
 
-/* ---------- Israeli cities — fetch all once, filter client-side ---------- */
-const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
-const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
-
-interface CityStreetResult {
-  city: string;
-  street: string;
-  display: string;
-}
-
-// Module-level cache so we only fetch once per page load
-let allRecordsCache: CityStreetResult[] | null = null;
-let fetchPromise: Promise<CityStreetResult[]> | null = null;
-
-const loadAllRecords = (): Promise<CityStreetResult[]> => {
-  if (allRecordsCache) return Promise.resolve(allRecordsCache);
-  if (fetchPromise) return fetchPromise;
-  fetchPromise = (async () => {
-    try {
-      const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=32000&fields=city_name,street_name`;
-      const res = await fetch(url);
-      if (!res.ok) return [];
-      const data = await res.json();
-      const records = data?.result?.records ?? [];
-      const seen = new Set<string>();
-      const results: CityStreetResult[] = [];
-      for (const r of records) {
-        const city = ((r["city_name"] as string) || "").trim();
-        const street = ((r["street_name"] as string) || "").trim();
-        if (!city) continue;
-        const display = street ? `${city} – ${street}` : city;
-        if (seen.has(display)) continue;
-        seen.add(display);
-        results.push({ city, street, display });
-      }
-      allRecordsCache = results;
-      return allRecordsCache;
-    } catch {
-      return [];
-    }
-  })();
-  return fetchPromise;
-};
-
-const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
-  const records = await loadAllRecords();
-  const lower = query.trim().toLowerCase();
-
-  const starts: CityStreetResult[] = [];
-  const contains: CityStreetResult[] = [];
-  for (const r of records) {
-    const dl = r.display.toLowerCase();
-    if (dl.startsWith(lower)) starts.push(r);
-    else if (dl.includes(lower)) contains.push(r);
-  }
-
-  return [...starts, ...contains].slice(0, 20);
-};
+/* ---------- City/street API is in src/utils/cityStreetApi.ts ---------- */
 
 /* ---------- validation ---------- */
 interface FormErrors {
@@ -101,7 +46,8 @@ interface FormErrors {
   email?: string;
   phone?: string;
   city?: string;
-  address?: string;
+  street?: string;
+  houseNumber?: string;
 }
 
 const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -267,10 +213,8 @@ const Checkout = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
-  const [cityQuery, setCityQuery] = useState("");
-  const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
-  const [cityLoading, setCityLoading] = useState(false);
-  const [citySelected, setCitySelected] = useState(false);
+  const [addressState, setAddressState] = useState<AddressState>(emptyAddress());
+  const [addrTouched, setAddrTouched] = useState<Partial<Record<"city"|"street"|"houseNumber", boolean>>>({});
   const [emailMarketing, setEmailMarketing] = useState(false);
   const [saveAddress, setSaveAddress] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
@@ -290,15 +234,11 @@ const Checkout = () => {
     lastName: "",
     email: "",
     phone: "",
-    city: "",
-    address: "",
-    apartment: "",
     note: "",
   });
 
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const cityRef = useRef<HTMLDivElement>(null);
 
   const isFreeShipping = subtotal - discountAmount >= shipping.threshold;
   const shippingCost = isFreeShipping || !selectedZone ? 0 : shipping.zones[selectedZone];
@@ -312,10 +252,8 @@ const Checkout = () => {
   // When user logs out → clear all contact + address fields
   useEffect(() => {
     if (!user) {
-      setForm({ firstName: "", lastName: "", email: "", phone: "", city: "", address: "", apartment: "", note: "" });
-      setCityQuery("");
-      setCitySelected(false);
-      setCitySuggestions([]);
+      setForm({ firstName: "", lastName: "", email: "", phone: "", note: "" });
+      setAddressState(emptyAddress());
       setSelectedZone("");
       setSelectedAddressId("");
     }
@@ -374,19 +312,6 @@ const Checkout = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (citySelected) return;
-    if (cityQuery.trim().length < 1) { setCitySuggestions([]); setCityLoading(false); return; }
-    setCityLoading(true);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      const results = await fetchCityStreets(cityQuery.trim());
-      setCitySuggestions(results);
-      setCityLoading(false);
-    }, 150);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [cityQuery, citySelected]);
 
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
@@ -396,10 +321,11 @@ const Checkout = () => {
     else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
     if (!form.phone.trim()) e.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
-    if (!form.city.trim() || (!citySelected && !isStaff)) e.city = t("checkout.selectCity");
-    if (!form.address.trim()) e.address = t("checkout.addressRequired");
+    if (!addressState.city.trim() || (!addressState.citySelected && !isStaff)) e.city = t("checkout.selectCity");
+    if (!addressState.street.trim() || (!addressState.streetSelected && !isStaff)) e.street = "יש לבחור רחוב";
+    if (!addressState.houseNumber.trim()) e.houseNumber = "יש להזין מספר בית";
     return e;
-  }, [form, t, citySelected]);
+  }, [form, t, addressState, isStaff]);
 
   const isValid = Object.keys(validate()).length === 0 && (acceptPrivacy || isStaff);
 
@@ -423,7 +349,8 @@ const Checkout = () => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
-    setTouched({ firstName: true, lastName: true, email: true, phone: true, city: true, address: true });
+    setTouched({ firstName: true, lastName: true, email: true, phone: true });
+    setAddrTouched({ city: true, street: true, houseNumber: true });
     if (Object.keys(errs).length > 0 || !acceptPrivacy) {
       const firstErrorField = Object.keys(errs)[0];
       const el = formRef.current?.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
@@ -598,9 +525,10 @@ const Checkout = () => {
           lastName: form.lastName,
           email: form.email,
           phone: form.phone,
-          city: form.city,
-          address: form.address,
-          apartment: form.apartment || undefined,
+          city: addressState.city,
+          address: addressState.street,
+          house_number: addressState.houseNumber,
+          apartment: addressState.apartment || undefined,
           receiptUrl,
           locale,
           origin: window.location.origin,
@@ -634,15 +562,15 @@ const Checkout = () => {
     }
 
     // Save address to profile if checkbox checked
-    if (user && saveAddress && form.city && form.address) {
+    if (user && saveAddress && addressState.city && addressState.street) {
       addAddressMutation.mutate({
         firstName: form.firstName,
         lastName: form.lastName,
         phone: form.phone,
-        city: form.city,
-        street: form.address,
-        houseNumber: "",
-        apartment: form.apartment || "",
+        city: addressState.city,
+        street: addressState.street,
+        houseNumber: addressState.houseNumber,
+        apartment: addressState.apartment,
         isDefault: savedAddresses.length === 0,
       });
     }
@@ -1008,22 +936,13 @@ const Checkout = () => {
                         const val = e.target.value;
                         if (val === "__new__") {
                           setSelectedAddressId("__new__");
-                          setForm((p) => ({ ...p, city: "", address: "", apartment: "" }));
-                          setCityQuery("");
-                          setCitySelected(false);
+                          setAddressState(emptyAddress());
                           setSelectedZone("");
                         } else {
                           const addr = savedAddresses.find((a) => a.id === val);
                           if (addr) {
                             setSelectedAddressId(addr.id);
-                            setForm((p) => ({
-                              ...p,
-                              city: addr.city,
-                              address: `${addr.street} ${addr.houseNumber}`,
-                              apartment: addr.apartment,
-                            }));
-                            setCityQuery(addr.city);
-                            setCitySelected(true);
+                            setAddressState({ city: addr.city, street: addr.street, houseNumber: addr.houseNumber, apartment: addr.apartment, citySelected: true, streetSelected: true });
                             const z = detectZoneFromCity(addr.city);
                             if (z) setSelectedZone(z);
                           }
@@ -1040,36 +959,20 @@ const Checkout = () => {
                       <option value="__new__">+ {t("checkout.newAddress")}</option>
                     </select>
                   )}
-                  <div className="space-y-3">
-                    <div ref={cityRef} className="relative">
-                      <FloatingInput name="city" label={t("checkout.city")} value={cityQuery || form.city}
-                        onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); }}
-                        onBlur={() => setTimeout(() => handleBlur("city"), 150)} error={fieldError("city")} />
-                      {!citySelected && (cityLoading || citySuggestions.length > 0) && cityQuery.trim().length >= 1 && (
-                        <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
-                          {cityLoading ? (
-                            <div className="p-3 space-y-2">
-                              {[80, 60, 72].map((w, i) => (
-                                <div key={i} className="flex items-center gap-2 px-1 py-1">
-                                  <div className="h-3 rounded-full bg-muted animate-pulse" style={{ width: `${w}%` }} />
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            citySuggestions.map((result, idx) => (
-                              <button key={`${result.display}-${idx}`} type="button"
-                                className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/40 transition-colors border-b border-border/40 last:border-0"
-                                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); const z = detectZoneFromCity(result.city); if (z) setSelectedZone(z); }}>
-                                {result.display}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <FloatingInput name="address" label={t("checkout.address")} value={form.address} onChange={handleChange} onBlur={() => handleBlur("address")} error={fieldError("address")} />
-                    <FloatingInput name="apartment" label={t("checkout.apartment")} value={form.apartment} onChange={handleChange} />
-                  </div>
+                  <AddressFields
+                    value={addressState}
+                    onChange={(s) => {
+                      if (s.citySelected && !addressState.citySelected) {
+                        const z = detectZoneFromCity(s.city);
+                        if (z) setSelectedZone(z);
+                      }
+                      setAddressState(s);
+                    }}
+                    errors={{ city: fieldError("city"), street: errors.street, houseNumber: errors.houseNumber }}
+                    touched={addrTouched}
+                    onBlur={(field) => setAddrTouched(p => ({ ...p, [field]: true }))}
+                    isStaff={isStaff}
+                  />
                   {user && selectedAddressId !== "__new__" && (
                     <label className="flex items-center gap-2.5 mt-2 cursor-pointer select-none">
                       <input type="checkbox" checked={saveAddress} onChange={e => setSaveAddress(e.target.checked)} className="w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
@@ -1092,7 +995,7 @@ const Checkout = () => {
                   ) : (
                     <div className="rounded-lg border border-border bg-white p-4 space-y-3">
                       <p className="text-sm font-semibold">{t("checkout.shippingZone")}</p>
-                      {!citySelected ? (
+                      {!addressState.citySelected ? (
                         <p className="text-xs text-muted-foreground">{t("checkout.shippingZoneNote")}</p>
                       ) : (
                         <div className="space-y-2">

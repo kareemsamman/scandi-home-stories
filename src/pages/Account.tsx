@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, MapPin, LogOut, Plus, Pencil, Trash2, Star, ChevronLeft, ChevronRight, Loader2, Eye, EyeOff } from "lucide-react";
@@ -8,40 +8,10 @@ import { useOrders } from "@/hooks/useOrders";
 import { useAddresses, useAddAddress, useUpdateAddress, useRemoveAddress, useSetDefaultAddress, SavedAddress } from "@/hooks/useAddresses";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
+import { loadAllRecords } from "@/utils/cityStreetApi";
 
-/* ---------- Israeli streets API ---------- */
-const GOV_IL_API_URL = "https://data.gov.il/api/3/action/datastore_search";
-const GOV_IL_STREETS_RESOURCE_ID = "bf185c7f-1a4e-4662-88c5-fa118a244bda";
-
-interface CityStreetResult {
-  city: string;
-  street: string;
-  display: string;
-}
-
-const fetchCityStreets = async (query: string): Promise<CityStreetResult[]> => {
-  try {
-    const url = `${GOV_IL_API_URL}?resource_id=${GOV_IL_STREETS_RESOURCE_ID}&limit=20&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const records = data?.result?.records ?? [];
-    const seen = new Set<string>();
-    return records
-      .map((r: Record<string, unknown>) => {
-        const city = ((r["city_name"] as string) || "").trim();
-        const street = ((r["street_name"] as string) || "").trim();
-        if (!city) return null;
-        const display = street ? `${city} – ${street}` : city;
-        if (seen.has(display)) return null;
-        seen.add(display);
-        return { city, street, display };
-      })
-      .filter(Boolean) as CityStreetResult[];
-  } catch {
-    return [];
-  }
-};
+/* ---------- Address fields: see top-of-file imports ---------- */
 
 /* ---------- validation helpers ---------- */
 const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -451,37 +421,19 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
     firstName: initial?.firstName || "",
     lastName: initial?.lastName || "",
     phone: initial?.phone || "",
+  });
+  const [addressState, setAddressState] = useState<AddressState>({
     city: initial?.city || "",
     street: initial?.street || "",
     houseNumber: initial?.houseNumber || "",
     apartment: initial?.apartment || "",
+    citySelected: !!initial?.city,
+    streetSelected: !!initial?.street,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [cityQuery, setCityQuery] = useState(initial?.city || "");
-  const [citySuggestions, setCitySuggestions] = useState<CityStreetResult[]>([]);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const [citySelected, setCitySelected] = useState(!!initial?.city);
-  const cityRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [addrTouched, setAddrTouched] = useState<Partial<Record<"city"|"street"|"houseNumber", boolean>>>({});
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setShowCitySuggestions(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (citySelected) return;
-    if (cityQuery.trim().length < 2) { setCitySuggestions([]); return; }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      const results = await fetchCityStreets(cityQuery.trim());
-      setCitySuggestions(results);
-    }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [cityQuery, citySelected]);
+  useEffect(() => { loadAllRecords(); }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -499,17 +451,25 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
     if (!form.lastName.trim()) errs.lastName = t("checkout.lastNameRequired");
     if (!form.phone.trim()) errs.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) errs.phone = t("checkout.invalidPhone");
-    if (!form.city.trim()) errs.city = t("account.cityRequired");
-    if (!form.street.trim()) errs.street = t("account.streetRequired");
-    if (!form.houseNumber.trim()) errs.houseNumber = t("account.houseNumberRequired");
+    if (!addressState.city.trim()) errs.city = t("account.cityRequired");
+    if (!addressState.street.trim()) errs.street = t("account.streetRequired");
+    if (!addressState.houseNumber.trim()) errs.houseNumber = t("account.houseNumberRequired");
     setErrors(errs);
+    setAddrTouched({ city: true, street: true, houseNumber: true });
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    onSave({ ...form, isDefault: initial?.isDefault ?? false });
+    onSave({
+      ...form,
+      city: addressState.city,
+      street: addressState.street,
+      houseNumber: addressState.houseNumber,
+      apartment: addressState.apartment,
+      isDefault: initial?.isDefault ?? false,
+    });
   };
 
   return (
@@ -519,31 +479,13 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
         <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
       </div>
       <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
-      <div ref={cityRef} className="relative">
-        <FloatingInput
-          name="city"
-          label={t("checkout.city")}
-          value={cityQuery || form.city}
-          onChange={(e) => { setCityQuery(e.target.value); setForm((p) => ({ ...p, city: e.target.value })); setCitySelected(false); setShowCitySuggestions(true); if (errors.city) setErrors((prev) => ({ ...prev, city: "" })); }}
-          onFocus={() => setShowCitySuggestions(true)}
-          error={errors.city}
-        />
-        {showCitySuggestions && citySuggestions.length > 0 && (
-          <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-            {citySuggestions.map((result, idx) => (
-              <button key={`${result.display}-${idx}`} type="button" className="w-full text-start px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
-                onMouseDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, city: result.city })); setCityQuery(result.display); setCitySelected(true); setShowCitySuggestions(false); setErrors((prev) => ({ ...prev, city: "" })); }}>
-                {result.display}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FloatingInput name="street" label={t("account.street")} value={form.street} onChange={handleChange} error={errors.street} />
-        <FloatingInput name="houseNumber" label={t("account.houseNumber")} value={form.houseNumber} onChange={handleChange} error={errors.houseNumber} />
-      </div>
-      <FloatingInput name="apartment" label={t("checkout.apartment")} value={form.apartment} onChange={handleChange} />
+      <AddressFields
+        value={addressState}
+        onChange={setAddressState}
+        errors={{ city: errors.city, street: errors.street, houseNumber: errors.houseNumber }}
+        touched={addrTouched}
+        onBlur={(field) => setAddrTouched(p => ({ ...p, [field]: true }))}
+      />
       <div className="flex gap-3 pt-2">
         <button type="submit" className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
           {t("account.saveAddress")}
