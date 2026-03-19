@@ -336,10 +336,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                             onClick={() => !sizeOos && setSelectedSize(size.label)}
                             className={cn(
                               "relative px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center min-w-[56px] text-center",
-                              isActive
+                              sizeOos
+                                ? "border-red-200 bg-red-50 text-red-300 cursor-not-allowed"
+                                : isActive
                                 ? "border-foreground bg-foreground text-background"
-                                : sizeOos
-                                ? "border-border text-muted-foreground cursor-not-allowed"
                                 : "border-border hover:border-muted-foreground"
                             )}
                           >

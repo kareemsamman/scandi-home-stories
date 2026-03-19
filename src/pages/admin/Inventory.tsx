@@ -326,7 +326,7 @@ const AdminInventory = () => {
                             <span className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: colorObj.hex }} />
                           )}
                           <span className="text-xs font-bold text-gray-700">
-                            {colorObj?.name || colorId}
+                            {colorObj?.name_he || colorObj?.name_ar || colorObj?.name || colorId}
                           </span>
                         </div>
 
@@ -336,7 +336,7 @@ const AdminInventory = () => {
                             <QtyRow
                               key={inv.id}
                               inv={inv}
-                              label={sizeObj?.label || sizeObj?.name || undefined}
+                              label={sizeObj?.label_he || sizeObj?.label || sizeObj?.name_he || sizeObj?.name || undefined}
                               {...sharedQtyProps}
                             />
                           ))}
