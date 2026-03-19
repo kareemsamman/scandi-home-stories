@@ -11,10 +11,11 @@ import { Save, FileText } from "lucide-react";
 const db = supabase as any;
 
 const PAGES = [
-  { key: "legal_returns",  labelHe: "מדיניות החזרות",  labelAr: "سياسة الإرجاع" },
-  { key: "legal_shipping", labelHe: "מדיניות משלוחים", labelAr: "سياسة الشحن" },
-  { key: "legal_privacy",  labelHe: "מדיניות פרטיות",  labelAr: "سياسة الخصوصية" },
-  { key: "legal_terms",    labelHe: "תנאי שימוש",       labelAr: "شروط الاستخدام" },
+  { key: "legal_returns",       labelHe: "מדיניות החזרות",  labelAr: "سياسة الإرجاع" },
+  { key: "legal_shipping",      labelHe: "מדיניות משלוחים", labelAr: "سياسة الشحن" },
+  { key: "legal_privacy",       labelHe: "מדיניות פרטיות",  labelAr: "سياسة الخصوصية" },
+  { key: "legal_terms",         labelHe: "תנאי שימוש",       labelAr: "شروط الاستخدام" },
+  { key: "legal_accessibility", labelHe: "נגישות",           labelAr: "إمكانية الوصول" },
 ];
 
 const DEFAULT_CONTENT: Record<string, { he: { title: string; content: string }; ar: { title: string; content: string } }> = {
@@ -94,6 +95,26 @@ const DEFAULT_CONTENT: Record<string, { he: { title: string; content: string }; 
 **استخدام الموقع**
 • الموقع مخصص للاستخدام الشخصي وليس التجاري
 • يُحظر نسخ المحتوى دون إذن صريح`,
+    },
+  },
+  legal_accessibility: {
+    he: {
+      title: "הצהרת נגישות",
+      content: `AMG פרגולה מחויבת להנגשת האתר לכלל המשתמשים.
+
+**מאמצי הנגשה**
+• ניווט מלא באמצעות מקלדת
+• תאימות לקוראי מסך
+• ניגודיות צבעים נאותה`,
+    },
+    ar: {
+      title: "بيان إمكانية الوصول",
+      content: `تلتزم AMG Pergola بإتاحة الموقع لجميع المستخدمين.
+
+**جهود الإتاحة**
+• تنقل كامل عبر لوحة المفاتيح
+• توافق مع قارئات الشاشة
+• تباين ألوان مناسب`,
     },
   },
 };

@@ -1114,7 +1114,7 @@ const Checkout = () => {
                   <input type="checkbox" checked={acceptPrivacy} onChange={(e) => setAcceptPrivacy(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground leading-relaxed">
                     {t("checkout.acceptPrivacy")}{" "}
-                    <Link to={localePath("/privacy-policy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
+                    <Link to={localePath("/legal/privacy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
                   </span>
                 </label>
 
@@ -1126,10 +1126,10 @@ const Checkout = () => {
 
                 {/* Bottom links */}
                 <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-8">
-                  <Link to={localePath("/refund-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.refundPolicy")}</Link>
-                  <Link to={localePath("/shipping-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.shippingPolicy")}</Link>
-                  <Link to={localePath("/privacy-policy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.privacyPolicy")}</Link>
-                  <Link to={localePath("/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.termsOfService")}</Link>
+                  <Link to={localePath("/legal/returns")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.refundPolicy")}</Link>
+                  <Link to={localePath("/legal/shipping")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.shippingPolicy")}</Link>
+                  <Link to={localePath("/legal/privacy")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.privacyPolicy")}</Link>
+                  <Link to={localePath("/legal/terms")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("checkout.termsOfService")}</Link>
                   <Link to={localePath("/contact")} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">{t("nav.contact")}</Link>
                 </div>
               </form>
