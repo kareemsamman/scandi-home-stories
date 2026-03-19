@@ -130,6 +130,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          locale: string | null
+          message: string
+          name: string
+          phone: string | null
+          sms_sent: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          locale?: string | null
+          message: string
+          name: string
+          phone?: string | null
+          sms_sent?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          locale?: string | null
+          message?: string
+          name?: string
+          phone?: string | null
+          sms_sent?: boolean | null
+        }
+        Relationships: []
+      }
       coupon_uses: {
         Row: {
           coupon_id: string | null
