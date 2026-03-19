@@ -5,7 +5,7 @@ import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Package, AlertTriangle, Search, CheckCircle2, Minus, Plus,
-  StickyNote, Send, Trash2, X, ChevronDown,
+  StickyNote, Send, Trash2, X, ChevronDown, Check,
 } from "lucide-react";
 
 const db = supabase as any;
@@ -264,6 +264,136 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
   );
 };
 
+/* ── Category multi-select ── */
+const CategoryMultiSelect = ({
+  parentCats, allSubCats, selected, onChange,
+}: {
+  parentCats: any[]; allSubCats: any[];
+  selected: string[]; onChange: (ids: string[]) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const subCats = (pid: string) => allSubCats.filter((s: any) => s.category_id === pid);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (id: string) => {
+    const isParent = parentCats.find((c: any) => c.id === id);
+    if (isParent) {
+      const subIds = subCats(id).map((s: any) => s.id);
+      const allSelected = selected.includes(id) && subIds.every(sid => selected.includes(sid));
+      if (allSelected) {
+        onChange(selected.filter(x => x !== id && !subIds.includes(x)));
+      } else {
+        const next = new Set([...selected, id, ...subIds]);
+        onChange([...next]);
+      }
+    } else {
+      onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]);
+    }
+  };
+
+  const clearAll = () => onChange([]);
+  const isAllSelected = selected.length === 0;
+
+  const label = selected.length === 0
+    ? "כל הקטגוריות"
+    : `${selected.length} נבחרו`;
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-2 h-10 px-3 rounded-xl border text-sm transition-colors ${
+          selected.length > 0
+            ? "border-blue-400 bg-blue-50 text-blue-700"
+            : "border-gray-200 bg-white text-gray-700"
+        }`}
+      >
+        <span className="font-medium">{label}</span>
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-12 right-0 z-50 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+          {/* All categories row */}
+          <button
+            onClick={clearAll}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors ${isAllSelected ? "text-blue-600" : "text-gray-600"}`}
+          >
+            <span className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${isAllSelected ? "bg-blue-500 border-blue-500" : "border-gray-300"}`}>
+              {isAllSelected && <Check className="w-2.5 h-2.5 text-white" />}
+            </span>
+            כל הקטגוריות
+          </button>
+          <div className="border-t border-gray-100" />
+
+          <div className="max-h-72 overflow-y-auto">
+            {parentCats.map((cat: any) => {
+              const subs = subCats(cat.id);
+              const catSelected = selected.includes(cat.id);
+              const subIds = subs.map((s: any) => s.id);
+              const allSubsSel = subIds.length > 0 && subIds.every((sid: string) => selected.includes(sid));
+              const someSubsSel = subIds.some((sid: string) => selected.includes(sid));
+              const isChecked = catSelected || allSubsSel;
+              const isIndeterminate = !isChecked && someSubsSel;
+
+              return (
+                <div key={cat.id}>
+                  <button
+                    onClick={() => toggle(cat.id)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors text-gray-800"
+                  >
+                    <span className={`w-4 h-4 rounded flex items-center justify-center border transition-colors shrink-0 ${
+                      isChecked ? "bg-blue-500 border-blue-500" : isIndeterminate ? "bg-blue-100 border-blue-300" : "border-gray-300"
+                    }`}>
+                      {isChecked && <Check className="w-2.5 h-2.5 text-white" />}
+                      {isIndeterminate && <span className="w-2 h-0.5 bg-blue-500 rounded" />}
+                    </span>
+                    {cat.name_he || cat.name_ar || cat.id}
+                  </button>
+                  {subs.map((sub: any) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => toggle(sub.id)}
+                      className="w-full flex items-center gap-3 pr-9 pl-4 py-2 text-xs hover:bg-gray-50 transition-colors text-gray-600"
+                    >
+                      <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors shrink-0 ${
+                        selected.includes(sub.id) ? "bg-blue-500 border-blue-500" : "border-gray-300"
+                      }`}>
+                        {selected.includes(sub.id) && <Check className="w-2 h-2 text-white" />}
+                      </span>
+                      {sub.name_he || sub.name_ar || sub.id}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          {selected.length > 0 && (
+            <>
+              <div className="border-t border-gray-100" />
+              <button
+                onClick={clearAll}
+                className="w-full px-4 py-2.5 text-xs text-red-500 hover:bg-red-50 transition-colors font-medium"
+              >
+                נקה בחירה ({selected.length})
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ── Main page ── */
 const AdminInventory = () => {
   const { locale } = useAdminLanguage();
@@ -272,11 +402,13 @@ const AdminInventory = () => {
 
   const [search, setSearch] = useState("");
   const [showLowOnly, setShowLowOnly] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>(() => localStorage.getItem("inv_category_filter") || "all");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("inv_category_filters") || "[]"); } catch { return []; }
+  });
 
-  const handleCategoryFilter = (val: string) => {
-    setCategoryFilter(val);
-    localStorage.setItem("inv_category_filter", val);
+  const handleCategoryFilters = (ids: string[]) => {
+    setCategoryFilters(ids);
+    localStorage.setItem("inv_category_filters", JSON.stringify(ids));
   };
   const [localQty, setLocalQty] = useState<Record<string, number>>({});
   const [localThreshold, setLocalThreshold] = useState<Record<string, number>>({});
@@ -390,16 +522,16 @@ const AdminInventory = () => {
     const pName = (transMap as Map<string, string>).get(p.id) || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
     if (showLowOnly && !isProductLow(p)) return false;
-    if (categoryFilter !== "all") {
-      const isParent = parentCats.find((c: any) => c.id === categoryFilter);
-      if (isParent) {
-        // Match parent category OR any of its sub-categories
-        const subIds = subCats(categoryFilter).map((s: any) => s.id);
-        if (p.category_id !== categoryFilter && !subIds.includes(p.sub_category_id)) return false;
-      } else {
-        // Sub-category selected — match sub_category_id
-        if (p.sub_category_id !== categoryFilter) return false;
-      }
+    if (categoryFilters.length > 0) {
+      const matches = categoryFilters.some(filterId => {
+        const isParent = parentCats.find((c: any) => c.id === filterId);
+        if (isParent) {
+          const subIds = subCats(filterId).map((s: any) => s.id);
+          return p.category_id === filterId || subIds.includes(p.sub_category_id);
+        }
+        return p.sub_category_id === filterId;
+      });
+      if (!matches) return false;
     }
     return true;
   });
@@ -440,28 +572,12 @@ const AdminInventory = () => {
         </div>
 
         {/* Category filter */}
-        <div className="relative shrink-0">
-          <select
-            value={categoryFilter}
-            onChange={e => handleCategoryFilter(e.target.value)}
-            className="h-10 pl-8 pr-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
-          >
-            <option value="all">כל הקטגוריות</option>
-            {parentCats.map((cat: any) => (
-              <>
-                <option key={cat.id} value={cat.id}>
-                  {cat.name_he || cat.name_ar || cat.id}
-                </option>
-                {subCats(cat.id).map((sub: any) => (
-                  <option key={sub.id} value={sub.id}>
-                    &nbsp;&nbsp;↳ {sub.name_he || sub.name_ar || sub.id}
-                  </option>
-                ))}
-              </>
-            ))}
-          </select>
-          <ChevronDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
+        <CategoryMultiSelect
+          parentCats={parentCats}
+          allSubCats={allSubCats}
+          selected={categoryFilters}
+          onChange={handleCategoryFilters}
+        />
 
         {/* Low stock only */}
         <button

@@ -4,12 +4,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { useShopData } from "@/hooks/useShopData";
+import { useProducts as useDbProducts } from "@/hooks/useDbData";
 import { ProductCard } from "@/components/ProductCard";
 
 export const FeaturedProductSlider = () => {
   const { locale, localePath } = useLocale();
   const { data: config } = useHomeContent("featured_slider", locale);
   const { products: allProducts } = useShopData();
+  const { data: dbProducts = [] } = useDbProducts();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollPct, setScrollPct] = useState(0);
   // RTL: canScrollLeft = more items to the left (forward), canScrollRight = can go back right
@@ -19,7 +21,16 @@ export const FeaturedProductSlider = () => {
   const products = (() => {
     if (!config || !allProducts.length) return [];
     if (config.mode === "category" && config.category_id) {
-      return allProducts.filter((p) => p.collection === config.category_id).slice(0, 12);
+      // Match by parent category_id OR sub_category_id (for sub-category selections)
+      const matchingIds = new Set(
+        dbProducts
+          .filter((p: any) => p.category_id === config.category_id || p.sub_category_id === config.category_id)
+          .map((p: any) => p.id)
+      );
+      // Also match by collection (= category_id in useShopData) as fallback
+      return allProducts
+        .filter((p) => matchingIds.has(p.id) || p.collection === config.category_id)
+        .slice(0, 12);
     }
     if (Array.isArray(config.product_ids) && config.product_ids.length > 0) {
       return config.product_ids
