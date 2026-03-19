@@ -392,7 +392,7 @@ const AdminOrderDetail = () => {
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map(s => {
-                  const workerBlocked = isWorker && !isAdmin && s.value !== "in_delivery";
+                  const workerBlocked = isWorker && !isAdmin && (order.status !== "in_process" || s.value !== "in_delivery");
                   return (
                     <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
                       <span className="flex items-center gap-2">
@@ -408,7 +408,7 @@ const AdminOrderDetail = () => {
             {isWorker && !isAdmin && (
               <p className="text-[10px] text-amber-600 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                ניתן לשנות רק ל"יצא למשלוח"
+                {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא למשלוח"' : 'שינוי סטטוס זמין רק כשהסטטוס "בתהליך"'}
               </p>
             )}
           </div>
