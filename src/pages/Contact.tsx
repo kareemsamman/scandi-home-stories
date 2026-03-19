@@ -73,15 +73,15 @@ const Contact = () => {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setIsSubmitting(true);
     try {
-      const { error } = await (supabase as any)
-        .from("contact_submissions")
-        .insert({
-          name:    formData.name.trim(),
-          email:   formData.email.trim(),
-          phone:   formData.phone.trim() || null,
+      const { error } = await (supabase as any).functions.invoke("send-contact-email", {
+        body: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
           message: formData.message.trim(),
           locale,
-        });
+        },
+      });
       if (error) throw error;
       setSubmitted(true);
       setFormData({ name: "", email: "", phone: "", message: "" });
