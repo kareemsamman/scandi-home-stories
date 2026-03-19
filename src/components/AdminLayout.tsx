@@ -31,6 +31,7 @@ const navItems: NavItem[] = [
   { label: "About Page",   icon: FileText, path: "/admin/about",   roles: ["admin"] },
   { label: "Contact Page", icon: Mail,     path: "/admin/contact", roles: ["admin"] },
   { label: "Legal Pages", icon: FileText, path: "/admin/legal", roles: ["admin"] },
+  { label: "404 Page", icon: FileText, path: "/admin/404-page", roles: ["admin"] },
   { label: "Users", icon: Users, path: "/admin/users", roles: ["admin"] },
   { label: "Settings", icon: Settings, path: "/admin/settings", roles: ["admin"] },
 ];

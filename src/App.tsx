@@ -44,6 +44,7 @@ import AdminAttributes from "./pages/admin/Attributes";
 import AdminCoupons from "./pages/admin/Coupons";
 import AdminMarketing from "./pages/admin/Marketing";
 import AdminLegalPages from "./pages/admin/LegalPages";
+import AdminNotFoundPage from "./pages/admin/NotFoundPage";
 import LegalPage from "./pages/LegalPage";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="marketing" element={<AdminMarketing />} />
               <Route path="legal" element={<AdminLegalPages />} />
+              <Route path="404-page" element={<AdminNotFoundPage />} />
             </Route>
             <Route path="/invoice/:orderId" element={<InvoicePage />} />
             <Route path="/:locale/*" element={<LocaleRoutes />} />
