@@ -113,7 +113,7 @@ export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sect
             data-slider-card
             className="shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
           >
-            <ProductCard product={product} index={i} />
+            <ProductCard product={product} index={i} animate={false} />
           </div>
         ))}
         {/* Trailing spacer so last card doesn't flush to edge */}

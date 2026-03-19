@@ -722,37 +722,37 @@ const AdminOrderDetail = () => {
         const { idx } = receiptModal;
         const currentUrl = urls[idx];
         return (
-          <div className="fixed inset-0 z-[300] bg-black flex items-center justify-center" onClick={() => setReceiptModal(null)}>
+          <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center" onClick={() => setReceiptModal(null)}>
             {/* Close */}
-            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10" onClick={() => setReceiptModal(null)}>
+            <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors text-gray-700 z-10" onClick={() => setReceiptModal(null)}>
               <X className="w-5 h-5" />
             </button>
             {/* Counter */}
             {urls.length > 1 && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-sm font-semibold bg-white/20 px-3 py-1 rounded-full z-10">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-gray-700 text-sm font-semibold bg-black/10 px-3 py-1 rounded-full z-10">
                 {idx + 1} / {urls.length}
               </div>
             )}
             {/* Prev */}
             {idx > 0 && (
-              <button className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10"
+              <button className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors text-gray-700 z-10"
                 onClick={e => { e.stopPropagation(); setReceiptModal({ idx: idx - 1 }); }}>
                 <ChevronLeft className="w-6 h-6" />
               </button>
             )}
             {/* Next */}
             {idx < urls.length - 1 && (
-              <button className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white z-10"
+              <button className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors text-gray-700 z-10"
                 onClick={e => { e.stopPropagation(); setReceiptModal({ idx: idx + 1 }); }}>
                 <ChevronRight className="w-6 h-6" />
               </button>
             )}
             {/* Image */}
-            <div className="w-full h-full flex items-center justify-center p-12" onClick={e => e.stopPropagation()}>
+            <div className="w-full h-full flex items-center justify-center p-6" onClick={e => e.stopPropagation()}>
               {currentUrl.toLowerCase().includes(".pdf") ? (
-                <iframe src={currentUrl} className="w-full h-full" title="Receipt" />
+                <iframe src={currentUrl} className="w-full h-full border border-gray-200 rounded-lg" title="Receipt" />
               ) : (
-                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-full object-contain" />
+                <img src={currentUrl} alt={`קבלה ${idx + 1}`} className="max-w-full max-h-full object-contain border border-gray-200 rounded-lg shadow-sm" />
               )}
             </div>
           </div>
