@@ -1114,7 +1114,7 @@ const Checkout = () => {
                   <input type="checkbox" checked={acceptPrivacy} onChange={(e) => setAcceptPrivacy(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground leading-relaxed">
                     {t("checkout.acceptPrivacy")}{" "}
-                    <Link to={localePath("/privacy-policy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
+                    <Link to={localePath("/legal/privacy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
                   </span>
                 </label>
 
