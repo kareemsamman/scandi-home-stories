@@ -265,6 +265,75 @@ Deno.serve(async (req) => {
         .eq("id", validatedCouponId);
     }
 
+    // --- Send SMS notifications ---
+    try {
+      const [{ data: smsRow }, { data: msgRow }] = await Promise.all([
+        supabaseAdmin.from("app_settings").select("value").eq("key", "sms").single(),
+        supabaseAdmin.from("app_settings").select("value").eq("key", "sms_messages").single(),
+      ]);
+      const smsSettings = smsRow?.value as any;
+      const smsMessages = msgRow?.value as any;
+
+      if (smsSettings?.enabled && smsMessages) {
+        const escapeXml = (s: string) =>
+          s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+        const fmtPhone = (p: string) => {
+          const c = p.replace(/[\s\-\+]/g, "");
+          if (c.startsWith("972")) return c;
+          if (c.startsWith("0")) return "972" + c.slice(1);
+          return c;
+        };
+
+        const formatSms = (tpl: string, vars: Record<string, string>) =>
+          Object.entries(vars).reduce(
+            (m, [k, v]) => m.replace(new RegExp(`\\{${k}\\}`, "g"), v), tpl
+          );
+
+        const sendSmsApi = async (toPhone: string, message: string) => {
+          const dlr = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+          const xml = `<?xml version="1.0" encoding="UTF-8"?><sms><user><username>${escapeXml(smsSettings.user)}</username></user><source>${escapeXml(smsSettings.source)}</source><destinations><phone id="${dlr}">${fmtPhone(toPhone)}</phone></destinations><message>${escapeXml(message)}</message></sms>`;
+          await fetch("https://019sms.co.il/api", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${smsSettings.token}`, "Content-Type": "application/xml" },
+            body: xml,
+          });
+        };
+
+        const itemsList = validatedItems
+          .map(i => `• ${i.product_name} ×${i.quantity} – ₪${(i.price * i.quantity).toLocaleString()}`)
+          .join("\n");
+
+        const vars: Record<string, string> = {
+          name: firstName,
+          order_number: orderNumber,
+          phone: phone,
+          total: finalTotal.toLocaleString(),
+          items: itemsList,
+          shipping: "0",
+          order_link: "",
+          invoice_link: "",
+        };
+
+        const customerLocale = locale === "ar" ? "ar" : "he";
+        const customerMsg = smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he;
+        if (customerMsg) {
+          await sendSmsApi(phone, formatSms(customerMsg, vars));
+        }
+
+        if (smsMessages.admin_new_order && smsSettings.admin_phone) {
+          await sendSmsApi(
+            smsSettings.admin_phone,
+            formatSms(smsMessages.admin_new_order, { ...vars, name: `${firstName} ${lastName}` })
+          );
+        }
+      }
+    } catch (smsErr) {
+      console.error("SMS send error:", smsErr);
+      // Don't fail the order if SMS errors
+    }
+
     return jsonResponse({
       success: true,
       orderId: newOrder.id,

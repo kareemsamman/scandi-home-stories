@@ -54,13 +54,13 @@ serve(async (req) => {
       });
     }
 
-    // --- Auth: require admin role ---
+    // --- Auth: require admin or worker role ---
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin");
+      .in("role", ["admin", "worker"]);
 
     if (!roleData || roleData.length === 0) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {

@@ -14,7 +14,7 @@ import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hoo
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import { useCouponStore, recordCouponUse } from "@/hooks/useCoupons";
 import { CouponInput } from "@/components/CouponInput";
-import { useBankSettings, useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
+import { useBankSettings, useSmsSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 
@@ -250,7 +250,7 @@ const Checkout = () => {
   const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
   const { data: bankSettings } = useBankSettings();
   const { data: smsSettings } = useSmsSettings();
-  const { data: smsMessages } = useSmsMessages();
+
 
   const subtotal = getSubtotal();
   const { applied: appliedCoupon, remove: removeCoupon } = useCouponStore();
@@ -613,21 +613,7 @@ const Checkout = () => {
       removeCoupon();
     }
 
-    // Send SMS notifications
-    if (smsSettings?.enabled && smsMessages) {
-      const itemsList = items.map(i => `• ${i.product.name} ×${i.quantity} – ₪${(i.product.price * i.quantity).toLocaleString()}`).join("\n");
-      const orderLink = savedOrderId ? `${window.location.origin}${localePath(`/account/order/${savedOrderId}`)}` : "";
-      const smsVars = { name: form.firstName, order_number: orderNumber, phone: form.phone, total: totalAfterDiscount.toLocaleString(), items: itemsList, shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם", order_link: orderLink };
-      const customerMsg = smsMessages.order_received?.[locale as "he" | "ar"] || smsMessages.order_received?.he;
-      if (customerMsg && form.phone) {
-        sendSms(form.phone, formatSms(customerMsg, smsVars));
-      }
-      // Admin notification
-      if (smsMessages.admin_new_order && smsSettings.admin_phone) {
-        sendSms(smsSettings.admin_phone, formatSms(smsMessages.admin_new_order, { ...smsVars, name: `${form.firstName} ${form.lastName}` }));
-      }
-    }
-
+    // SMS for new orders is sent server-side in create-order edge function
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {

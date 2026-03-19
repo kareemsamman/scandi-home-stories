@@ -69,28 +69,19 @@ const CheckoutThankYou = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2">
             <Link
               to={localePath("/")}
-              className="flex-1 h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors"
+              className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors"
             >
               {t("thankYou.backToHome")}
             </Link>
-            {orderId ? (
-              <Link
-                to={localePath(`/account/order/${orderId}`)}
-                className="flex-1 h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
-              >
-                {t("thankYou.viewOrder")}
-              </Link>
-            ) : (
-              <Link
-                to={localePath("/account")}
-                className="flex-1 h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
-              >
-                {t("thankYou.viewOrder")}
-              </Link>
-            )}
+            <Link
+              to={orderId ? localePath(`/account/order/${orderId}`) : localePath("/account")}
+              className="w-full h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+            >
+              {t("thankYou.viewOrder")}
+            </Link>
           </div>
         </div>
       </motion.main>
