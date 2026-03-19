@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2, Upload, X, Building2, CheckCircle2, ArrowRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
@@ -12,8 +12,9 @@ import { useAddOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { useShippingSettings, detectZoneFromCity, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
-import { useCouponStore, recordCouponUse } from "@/hooks/useCoupons";
+import { useCouponStore, recordCouponUse, validateCoupon } from "@/hooks/useCoupons";
 import { CouponInput } from "@/components/CouponInput";
+import { SendCartModal } from "@/components/SendCartModal";
 import { useBankSettings, useSmsSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
@@ -233,6 +234,7 @@ const PaymentStepLoader = ({ skeleton, children }: { skeleton: ReactNode; childr
 /* ---------- component ---------- */
 const Checkout = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { t, locale, localePath } = useLocale();
@@ -241,9 +243,10 @@ const Checkout = () => {
   const getItemCount = useCart((s) => s.getItemCount);
   const getItemKey = useCart((s) => s.getItemKey);
   const clearCart = useCart((s) => s.clearCart);
+  const setItems = useCart((s) => s.setItems);
   const { data: savedAddresses = [] } = useAddresses();
   const addAddressMutation = useAddAddress();
-  const { user, profile: authProfile, signOut } = useAuth();
+  const { user, profile: authProfile, signOut, isAdmin } = useAuth();
   const addOrderMutation = useAddOrder();
 
   const { data: shippingSettings } = useShippingSettings();
@@ -256,6 +259,7 @@ const Checkout = () => {
   const { applied: appliedCoupon, remove: removeCoupon } = useCouponStore();
   const itemCount = getItemCount();
 
+  const [showSendCartModal, setShowSendCartModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(!isMobile);
@@ -336,6 +340,38 @@ const Checkout = () => {
 
   // Preload all cities+streets as soon as the form mounts
   useEffect(() => { loadAllRecords(); }, []);
+
+  // Load shared cart from ?cart=TOKEN (admin sent cart to customer)
+  const { apply: applyCoupon } = useCouponStore();
+  useEffect(() => {
+    const token = searchParams.get("cart");
+    if (!token) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("shared_carts")
+        .select("cart_items, coupon_code")
+        .eq("token", token)
+        .maybeSingle();
+      if (!data) return;
+      if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
+        setItems(data.cart_items);
+      }
+      if (data.coupon_code) {
+        const cartForValidation = (data.cart_items as any[]).map((i: any) => ({
+          product: { id: i.product.id, price: i.product.price, collection: i.product.collection },
+          quantity: i.quantity,
+        }));
+        const subtotalVal = (data.cart_items as any[]).reduce(
+          (t: number, i: any) => t + i.product.price * i.quantity, 0
+        );
+        const result = await validateCoupon(data.coupon_code, cartForValidation, subtotalVal);
+        if (result.coupon && result.discountAmount !== undefined) {
+          applyCoupon(result.coupon, result.discountAmount);
+        }
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -877,17 +913,32 @@ const Checkout = () => {
   /* ---------- FORM STEP ---------- */
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
+      <SendCartModal open={showSendCartModal} onClose={() => setShowSendCartModal(false)} />
+
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
           <Link to={localePath("/")} className="flex items-center">
             <img src={logoWhite} alt="AMG Pergola" className="h-12 md:h-14 invert" />
           </Link>
-          <Link to={localePath("/cart")} className="relative flex items-center justify-center w-10 h-10 text-foreground">
-            <CartBagIcon />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">{itemCount}</span>
+          <div className="flex items-center gap-3">
+            {isAdmin && items.length > 0 && (
+              <button
+                onClick={() => setShowSendCartModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900 text-white text-xs font-bold hover:bg-gray-700 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                שלח ללקוח
+              </button>
             )}
-          </Link>
+            <Link to={localePath("/cart")} className="relative flex items-center justify-center w-10 h-10 text-foreground">
+              <CartBagIcon />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">{itemCount}</span>
+              )}
+            </Link>
+          </div>
         </div>
       </header>
 

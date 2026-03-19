@@ -27,6 +27,7 @@ interface CartState {
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
   clearCart: () => void;
+  setItems: (items: CartItem[]) => void;
   getSubtotal: () => number;
   getItemCount: () => number;
   getItemKey: (item: CartItem) => string;
@@ -81,6 +82,7 @@ export const useCart = create<CartState>()(
           ),
         })),
       clearCart: () => set({ items: [] }),
+      setItems: (items) => set({ items }),
       getSubtotal: () =>
         get().items.reduce((t, i) => t + i.product.price * i.quantity, 0),
       getItemCount: () =>

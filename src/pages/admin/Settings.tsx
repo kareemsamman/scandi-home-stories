@@ -82,6 +82,7 @@ const AdminSettings = () => {
     setMsgs(prev => {
       if (!prev) return prev;
       if (key === "admin_new_order") return { ...prev, admin_new_order: val };
+      if (key === "share_cart") return { ...prev, share_cart: val };
       const cur = (prev as any)[key] || {};
       return { ...prev, [key]: { ...cur, [locale]: val } };
     });
@@ -283,6 +284,21 @@ const AdminSettings = () => {
                 </div>
                 <Field label="Message">
                   <textarea rows={5} value={msgs.admin_new_order} onChange={e => setMsg("admin_new_order", "admin", e.target.value)} placeholder="הזמנה חדשה! ..."
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y font-mono" />
+                </Field>
+              </div>
+
+              {/* Share cart message */}
+              <div className="border border-blue-100 bg-blue-50/40 rounded-xl p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Send Cart to Customer</p>
+                  <p className="text-xs text-gray-400">
+                    Sent to customer phone when admin shares a cart. Variable: <code className="bg-gray-100 px-1 rounded text-[11px]">{"{link}"}</code>
+                  </p>
+                </div>
+                <Field label="Message">
+                  <textarea rows={5} value={msgs.share_cart ?? ""} onChange={e => setMsg("share_cart", "admin", e.target.value)} dir="rtl"
+                    placeholder="שלום! 🛒 AMG פרגולה הכינו עבורך עגלת קנייה: {link}"
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y font-mono" />
                 </Field>
               </div>

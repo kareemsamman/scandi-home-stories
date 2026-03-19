@@ -28,6 +28,7 @@ export interface SmsMessages {
   in_delivery: { he: string; ar: string };
   not_approved: { he: string; ar: string };
   cancelled: { he: string; ar: string };
+  share_cart: string;
 }
 
 const DEFAULT_BANK: BankSettings = {
@@ -64,6 +65,7 @@ export const DEFAULT_SMS_MESSAGES: SmsMessages = {
     he: "שלום {name}\n🚫 הזמנה #{order_number} בוטלה\n\nבכל שאלה אנחנו כאן 😊\n\n🏗 AMG PERGOLA",
     ar: "مرحباً {name}\n🚫 تم إلغاء الطلب #{order_number}\n\nنحن هنا لأي استفسار 😊\n\n🏗 AMG PERGOLA",
   },
+  share_cart: "שלום! 🛒\nAMG פרגולה הכינו עבורך עגלת קנייה מוכנה.\n\nלחץ כאן להשלמת הרכישה:\n{link}\n\n🏗 AMG PERGOLA",
 };
 
 /* ── Fetcher ── */
