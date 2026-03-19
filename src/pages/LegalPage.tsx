@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { ChevronLeft, FileText, Shield, Truck, RotateCcw, Accessibility } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const HERO_IMAGE = "/assets/legal-hero.jpg";
 
