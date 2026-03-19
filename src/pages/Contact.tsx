@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
 
 const DEFAULT_HERO_IMAGE    = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
 const DEFAULT_HERO_IMAGE_MB = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
