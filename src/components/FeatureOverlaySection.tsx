@@ -110,9 +110,14 @@ export const FeatureOverlaySection = ({ sectionKey = "feature_overlay" }: { sect
               boxShadow: "0 4px 32px rgba(0,0,0,0.08)",
             }}
           >
-            {/* Description */}
-            <div className="px-7 md:px-12 pt-7 pb-5">
-              <p className="text-sm md:text-[15px] text-foreground/90 leading-relaxed font-medium max-w-2xl">
+            {/* Title + Description */}
+            <div className="px-7 md:px-12 pt-7 pb-5 text-center">
+              {features.title && (
+                <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight mb-2">
+                  {features.title}
+                </h2>
+              )}
+              <p className="text-sm md:text-[15px] text-foreground/90 leading-relaxed font-medium max-w-2xl mx-auto">
                 {features.description}
               </p>
             </div>
