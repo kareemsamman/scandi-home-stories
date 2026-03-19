@@ -566,6 +566,8 @@ const Checkout = () => {
           apartment: form.apartment || undefined,
           receiptUrl,
           locale,
+          origin: window.location.origin,
+          shippingCost,
           marketingOptIn: emailMarketing,
           discountCode: appliedCoupon?.coupon.code,
           items: items.map((item) => {

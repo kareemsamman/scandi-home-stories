@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
     const {
       orderNumber, notes, firstName, lastName, email, phone,
       city, address, apartment, receiptUrl, locale,
+      origin, shippingCost,
       marketingOptIn, discountCode,
       items, // Array of { productId, quantity, size?, color?, colorId?, sizeId? }
     } = body;
@@ -314,15 +315,21 @@ Deno.serve(async (req) => {
           .map(i => `• ${i.product_name} ×${i.quantity} – ₪${(i.price * i.quantity).toLocaleString()}`)
           .join("\n");
 
+        const siteOrigin = (typeof origin === "string" && origin.startsWith("http")) ? origin : "https://pergolaamg.com";
+        const customerLocalePrefix = locale === "ar" ? "ar" : "he";
+        const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
+        const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}`;
+        const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : "חינם";
+
         const vars: Record<string, string> = {
           name: firstName,
           order_number: orderNumber,
           phone: phone,
           total: finalTotal.toLocaleString(),
           items: itemsList,
-          shipping: "0",
-          order_link: "",
-          invoice_link: "",
+          shipping: shippingLabel,
+          order_link: orderLink,
+          invoice_link: invoiceLink,
         };
 
         const customerLocale = locale === "ar" ? "ar" : "he";
