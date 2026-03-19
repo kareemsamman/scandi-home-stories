@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, Loader2 } from "lucide-react";
 
 const DEFAULT_HERO_IMAGE    = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
 const DEFAULT_HERO_IMAGE_MB = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
@@ -16,7 +17,9 @@ const Contact = () => {
   const { t, locale } = useLocale();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: heroDb }   = useHomeContent("contact_hero",   locale);
   const { data: detailsDb } = useHomeContent("contact_details", locale);
@@ -42,16 +45,46 @@ const Contact = () => {
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => { const next = { ...prev }; delete next[name]; return next; });
+  };
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!formData.name.trim() || formData.name.trim().length < 2)
+      errs.name = locale === "ar" ? "الاسم مطلوب (حرفان على الأقل)" : "שם חובה (לפחות 2 תווים)";
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRx.test(formData.email))
+      errs.email = locale === "ar" ? "بريد إلكتروني غير صالح" : "כתובת אימייל לא תקינה";
+    if (formData.phone.trim()) {
+      const phoneRx = /^[0-9\s\-\+\(\)]{7,15}$/;
+      if (!phoneRx.test(formData.phone.trim()))
+        errs.phone = locale === "ar" ? "رقم هاتف غير صالح" : "מספר טלפון לא תקין";
+    }
+    if (!formData.message.trim() || formData.message.trim().length < 10)
+      errs.message = locale === "ar" ? "الرسالة قصيرة جداً (10 أحرف على الأقل)" : "הודעה קצרה מדי (לפחות 10 תווים)";
+    return errs;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    toast({ title: "✓", description: t("checkout.successText") });
-    setFormData({ name: "", email: "", phone: "", message: "" });
-    setIsSubmitting(false);
+    try {
+      const { error } = await (supabase as any).functions.invoke("send-contact-email", {
+        body: { name: formData.name.trim(), email: formData.email.trim(), phone: formData.phone.trim(), message: formData.message.trim(), locale },
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      setErrors({});
+    } catch {
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "אירעה שגיאה. נסה שוב." : "אירעה שגיאה. נסה שוב.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,29 +125,58 @@ const Contact = () => {
             {/* Form */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="md:col-span-7">
               <h2 className="text-xl md:text-2xl font-black mb-8 text-foreground">{t("contact.infoTitle")}</h2>
-              <form onSubmit={handleSubmit} className="space-y-5">
+
+              {submitted ? (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center text-center gap-4 py-14 px-6 rounded-2xl bg-green-50 border border-green-200">
+                  <CheckCircle2 className="w-12 h-12 text-green-500" />
+                  <div>
+                    <h3 className="text-lg font-bold text-green-800 mb-1">
+                      {locale === "ar" ? "تم الإرسال بنجاح!" : "הפנייה נשלחה בהצלחה!"}
+                    </h3>
+                    <p className="text-sm text-green-700">
+                      {locale === "ar" ? "سنتواصل معك قريباً" : "ניצור איתך קשר בהקדם"}
+                    </p>
+                  </div>
+                  <button onClick={() => setSubmitted(false)}
+                    className="text-xs text-green-600 underline underline-offset-2 hover:text-green-800">
+                    {locale === "ar" ? "إرسال رسالة أخرى" : "שלח פנייה נוספת"}
+                  </button>
+                </motion.div>
+              ) : (
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("contact.name")} *</label>
-                  <Input name="name" value={formData.name} onChange={handleChange} required className="rounded-xl h-12 border-border/60 bg-gray-50/50" />
+                  <Input name="name" value={formData.name} onChange={handleChange}
+                    className={`rounded-xl h-12 bg-gray-50/50 ${errors.name ? "border-red-400 focus-visible:ring-red-300" : "border-border/60"}`} />
+                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("contact.email")} *</label>
-                    <Input name="email" type="email" value={formData.email} onChange={handleChange} required className="rounded-xl h-12 border-border/60 bg-gray-50/50" />
+                    <Input name="email" type="email" value={formData.email} onChange={handleChange}
+                      className={`rounded-xl h-12 bg-gray-50/50 ${errors.email ? "border-red-400 focus-visible:ring-red-300" : "border-border/60"}`} />
+                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("contact.phone")}</label>
-                    <Input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="rounded-xl h-12 border-border/60 bg-gray-50/50" />
+                    <Input name="phone" type="tel" value={formData.phone} onChange={handleChange}
+                      className={`rounded-xl h-12 bg-gray-50/50 ${errors.phone ? "border-red-400 focus-visible:ring-red-300" : "border-border/60"}`} />
+                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("contact.message")} *</label>
-                  <Textarea name="message" value={formData.message} onChange={handleChange} required placeholder={t("contact.messagePlaceholder")} className="rounded-xl border-border/60 min-h-[160px] resize-none bg-gray-50/50" />
+                  <Textarea name="message" value={formData.message} onChange={handleChange}
+                    placeholder={t("contact.messagePlaceholder")}
+                    className={`rounded-xl min-h-[160px] resize-none bg-gray-50/50 ${errors.message ? "border-red-400 focus-visible:ring-red-300" : "border-border/60"}`} />
+                  {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
                 </div>
                 <Button type="submit" size="lg" disabled={isSubmitting} className="rounded-xl px-8 h-12 text-sm font-semibold gap-2 w-full sm:w-auto">
-                  {isSubmitting ? t("contact.sending") : <>{t("contact.send")}<Send className="w-4 h-4" /></>}
+                  {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" />{t("contact.sending")}</> : <>{t("contact.send")}<Send className="w-4 h-4" /></>}
                 </Button>
               </form>
+              )}
             </motion.div>
 
             {/* Contact info */}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, Mail } from "lucide-react";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
@@ -25,7 +27,7 @@ const STATUS_KEYS = [
   { key: "cancelled", label: "בוטלה" },
 ];
 
-type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles";
+type Tab = "shipping" | "bank" | "sms" | "messages" | "email" | "general" | "roles";
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
@@ -78,6 +80,13 @@ const AdminSettings = () => {
   const [msgs, setMsgs] = useState<SmsMessages | null>(null);
   useEffect(() => { if (dbMsgs) setMsgs(dbMsgs); }, [dbMsgs]);
 
+  /* Email */
+  const { data: dbEmail } = useQuery({ queryKey: ["app_settings", "email"], queryFn: async () => { const { data } = await (supabase as any).from("app_settings").select("value").eq("key", "email").maybeSingle(); return data?.value ?? {}; } });
+  const saveEmail = useSaveSetting("email");
+  const [emailSettings, setEmailSettings] = useState({ admin_email: "", from_email: "", resend_api_key: "", enabled: false });
+  useEffect(() => { if (dbEmail) setEmailSettings(prev => ({ ...prev, ...dbEmail })); }, [dbEmail]);
+  const patchEmail = (p: any) => setEmailSettings(prev => ({ ...prev, ...p }));
+
   const setMsg = (key: string, locale: "he" | "ar" | "admin", val: string) => {
     setMsgs(prev => {
       if (!prev) return prev;
@@ -93,19 +102,21 @@ const AdminSettings = () => {
       else if (tab === "bank") await saveBank.mutateAsync(bank);
       else if (tab === "sms") await saveSms.mutateAsync(sms);
       else if (tab === "messages" && msgs) await saveMsgs.mutateAsync(msgs);
+      else if (tab === "email") await saveEmail.mutateAsync(emailSettings);
       toast({ title: "Saved successfully" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   };
 
-  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending;
+  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveEmail.isPending;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
     { id: "bank", label: "Bank Details", icon: <Building2 className="w-4 h-4" /> },
     { id: "sms", label: "SMS", icon: <Smartphone className="w-4 h-4" /> },
     { id: "messages", label: "Messages", icon: <MessageSquare className="w-4 h-4" /> },
+    { id: "email", label: "Email", icon: <Mail className="w-4 h-4" /> },
     { id: "general", label: "General", icon: <Globe className="w-4 h-4" /> },
     { id: "roles", label: "Roles", icon: <Shield className="w-4 h-4" /> },
   ];
@@ -318,6 +329,36 @@ const AdminSettings = () => {
             <div className="flex items-center gap-2 text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">Loading…</span></div>
           )}
           <SaveBtn tab="messages" />
+        </div>
+      )}
+
+      {/* ── Email ── */}
+      {activeTab === "email" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+          <div>
+            <h2 className="text-base font-semibold">Email Settings (Resend)</h2>
+            <p className="text-xs text-gray-400 mt-1">Used to receive contact form submissions. Get a free API key at <a href="https://resend.com" target="_blank" className="underline">resend.com</a></p>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <span className="text-sm font-medium text-gray-700">Email Notifications Enabled</span>
+            <button onClick={() => patchEmail({ enabled: !emailSettings.enabled })}
+              className={`relative w-11 h-6 rounded-full transition-colors ${emailSettings.enabled ? "bg-gray-900" : "bg-gray-300"}`}>
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${emailSettings.enabled ? "translate-x-5" : ""}`} />
+            </button>
+          </div>
+
+          <Field label="Admin Email (where to receive contact submissions)">
+            <TInput value={emailSettings.admin_email} onChange={v => patchEmail({ admin_email: v })} placeholder="admin@yourcompany.com" />
+          </Field>
+          <Field label="From Email (sender — must be verified in Resend)">
+            <TInput value={emailSettings.from_email} onChange={v => patchEmail({ from_email: v })} placeholder="noreply@yourdomain.com" />
+          </Field>
+          <Field label="Resend API Key">
+            <TInput value={emailSettings.resend_api_key} onChange={v => patchEmail({ resend_api_key: v })} placeholder="re_..." />
+          </Field>
+
+          <SaveBtn tab="email" />
         </div>
       )}
 
