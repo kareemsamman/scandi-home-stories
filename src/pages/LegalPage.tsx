@@ -256,6 +256,7 @@ const SECTION_KEY_MAP: Record<string, string> = {
   shipping: "legal_shipping",
   privacy: "legal_privacy",
   terms: "legal_terms",
+  accessibility: "legal_accessibility",
 };
 
 // Render markdown-like bold (**text**)
