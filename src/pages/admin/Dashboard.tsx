@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { ShoppingBag, Package, Users, DollarSign, Clock, AlertTriangle } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -17,35 +18,57 @@ const STATUS_LABELS: Record<string, string> = {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { data: stats } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
+  const { isAdmin } = useAuth();
+
+  // Orders stats — available to both admin and worker
+  const { data: orderStats } = useQuery({
+    queryKey: ["dashboard-order-stats"],
     queryFn: async () => {
       const [
         { count: totalOrders },
-        { data: revData },
-        { count: totalProducts },
-        { count: totalUsers },
         { data: recentOrders },
         { data: waitingOrders },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }),
-        supabase.from("orders").select("total, status"),
-        supabase.from("products").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("orders").select("id, order_number, first_name, last_name, total, status, created_at").order("created_at", { ascending: false }).limit(5),
         supabase.from("orders").select("id, order_number, first_name, last_name, total, created_at").eq("status", "waiting_approval").order("created_at", { ascending: false }),
       ]);
-      const revenue = (revData || []).filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total), 0);
-      return { totalOrders: totalOrders || 0, revenue, totalProducts: totalProducts || 0, totalUsers: totalUsers || 0, recentOrders: recentOrders || [], waitingOrders: waitingOrders || [] };
+      return { totalOrders: totalOrders || 0, recentOrders: recentOrders || [], waitingOrders: waitingOrders || [] };
     },
   });
 
-  const statCards = [
-    { label: "Total Orders", value: stats?.totalOrders || 0, icon: ShoppingBag, color: "text-blue-600 bg-blue-50" },
-    { label: "Products", value: stats?.totalProducts || 0, icon: Package, color: "text-emerald-600 bg-emerald-50" },
-    { label: "Customers", value: stats?.totalUsers || 0, icon: Users, color: "text-purple-600 bg-purple-50" },
-    { label: "Revenue", value: `₪${(stats?.revenue || 0).toLocaleString()}`, icon: DollarSign, color: "text-amber-600 bg-amber-50" },
+  // Admin-only stats
+  const { data: adminStats } = useQuery({
+    queryKey: ["dashboard-admin-stats"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const [
+        { data: revData },
+        { count: totalProducts },
+        { count: totalUsers },
+      ] = await Promise.all([
+        supabase.from("orders").select("total, status"),
+        supabase.from("products").select("*", { count: "exact", head: true }),
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+      ]);
+      const revenue = (revData || []).filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total), 0);
+      return { revenue, totalProducts: totalProducts || 0, totalUsers: totalUsers || 0 };
+    },
+  });
+
+  const workerStatCards = [
+    { label: "Total Orders", value: orderStats?.totalOrders || 0, icon: ShoppingBag, color: "text-blue-600 bg-blue-50" },
+    { label: "Pending Approval", value: orderStats?.waitingOrders?.length || 0, icon: AlertTriangle, color: "text-amber-600 bg-amber-50" },
   ];
+
+  const adminStatCards = [
+    { label: "Total Orders", value: orderStats?.totalOrders || 0, icon: ShoppingBag, color: "text-blue-600 bg-blue-50" },
+    { label: "Products", value: adminStats?.totalProducts || 0, icon: Package, color: "text-emerald-600 bg-emerald-50" },
+    { label: "Customers", value: adminStats?.totalUsers || 0, icon: Users, color: "text-purple-600 bg-purple-50" },
+    { label: "Revenue", value: `₪${(adminStats?.revenue || 0).toLocaleString()}`, icon: DollarSign, color: "text-amber-600 bg-amber-50" },
+  ];
+
+  const statCards = isAdmin ? adminStatCards : workerStatCards;
 
   const statusColors: Record<string, string> = {
     waiting_approval: "bg-amber-100 text-amber-700",
@@ -87,11 +110,11 @@ const AdminDashboard = () => {
             <Clock className="w-5 h-5 text-gray-400" />
             <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
           </div>
-          {(stats?.recentOrders || []).length === 0 ? (
+          {(orderStats?.recentOrders || []).length === 0 ? (
             <p className="text-gray-400 text-sm">No orders yet</p>
           ) : (
             <div className="space-y-3 overflow-y-auto overflow-x-hidden max-h-80">
-              {(stats?.recentOrders || []).map((order: any) => (
+              {(orderStats?.recentOrders || []).map((order: any) => (
                 <div key={order.order_number} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
@@ -114,15 +137,15 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <h2 className="text-lg font-semibold text-gray-900">Pending Actions</h2>
-            {(stats?.waitingOrders || []).length > 0 && (
-              <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">{stats!.waitingOrders.length}</span>
+            {(orderStats?.waitingOrders || []).length > 0 && (
+              <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">{orderStats!.waitingOrders.length}</span>
             )}
           </div>
           <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-80">
-            {(stats?.waitingOrders || []).length === 0 ? (
+            {(orderStats?.waitingOrders || []).length === 0 ? (
               <p className="text-gray-400 text-sm">No pending actions</p>
             ) : (
-              (stats!.waitingOrders as any[]).map((order: any) => (
+              (orderStats!.waitingOrders as any[]).map((order: any) => (
                 <div key={order.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors" onClick={() => navigate(`/admin/orders/${order.id}`)}>
                   <div>
                     <p className="text-sm font-semibold text-amber-900">{order.order_number}</p>

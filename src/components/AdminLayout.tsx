@@ -16,7 +16,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/admin", roles: ["admin"] },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/admin", roles: ["admin", "worker"] },
   { label: "Pages", icon: FileText, path: "/admin/pages", roles: ["admin"] },
   { label: "Categories", icon: Grid3X3, path: "/admin/categories", roles: ["admin"] },
   { label: "Products", icon: Package, path: "/admin/products", roles: ["admin"] },
@@ -73,9 +73,10 @@ const AdminLayoutInner = () => {
   useEffect(() => {
     if (!isWorkerOnly) return;
     const workerPaths = ["/admin/orders", "/admin/inventory"];
-    const isAllowed = workerPaths.some((p) => location.pathname.startsWith(p));
+    const isOnDashboard = location.pathname === "/admin";
+    const isAllowed = isOnDashboard || workerPaths.some((p) => location.pathname.startsWith(p));
     if (!isAllowed) {
-      navigate("/admin/orders", { replace: true });
+      navigate("/admin", { replace: true });
     }
   }, [location.pathname, isWorkerOnly, navigate]);
 
