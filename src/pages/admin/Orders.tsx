@@ -4,6 +4,7 @@ import {
   Package, Receipt, Search, ArrowUpDown, X, ChevronRight,
 } from "lucide-react";
 import { useOrders } from "@/hooks/useDbData";
+import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ── Status config ── */
@@ -29,6 +30,7 @@ const parseReceipts = (url: string | null): number =>
 const AdminOrders = () => {
   const navigate = useNavigate();
   const { data: orders = [], isLoading } = useOrders();
+  const { isAdmin } = useAuth();
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,13 +158,13 @@ const AdminOrders = () => {
                       <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
                       {st.label}
                     </span>
-                    {receiptCount > 0 && (
+                    {isAdmin && receiptCount > 0 && (
                       <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
                         <Receipt className="w-3 h-3" />
                         {receiptCount > 1 ? `${receiptCount} קבלות` : "קבלה"}
                       </span>
                     )}
-                    {receiptCount === 0 && (
+                    {isAdmin && receiptCount === 0 && (
                       <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 font-semibold">
                         ללא קבלה
                       </span>
