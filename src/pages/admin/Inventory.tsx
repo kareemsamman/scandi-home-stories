@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import {
   Package, AlertTriangle, Search, CheckCircle2, Minus, Plus,
   StickyNote, Send, Trash2, X, ChevronDown,
@@ -288,33 +289,15 @@ const AdminInventory = () => {
   const { data: products = [] } = useQuery({
     queryKey: ["admin_inventory_products"],
     queryFn: async () => {
-      const { data } = await db.from("products").select("id, name, sku, images, colors, sizes, type, status, category_id").order("sort_order");
+      const { data } = await db.from("products").select("id, name, sku, images, colors, sizes, type, status, category_id, sub_category_id").order("sort_order");
       return data || [];
     },
   });
 
   /* ── Categories ── */
-  const { data: categories = [] } = useQuery({
-    queryKey: ["admin_categories_filter"],
-    queryFn: async () => {
-      const [{ data: cats }, { data: trans }] = await Promise.all([
-        db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order"),
-        db.from("category_translations").select("category_id, locale, name"),
-      ]);
-      const transMap = new Map<string, Record<string, string>>();
-      (trans || []).forEach((t: any) => {
-        if (!transMap.has(t.category_id)) transMap.set(t.category_id, {});
-        transMap.get(t.category_id)![t.locale] = t.name;
-      });
-      return (cats || []).map((c: any) => ({
-        ...c,
-        displayName: transMap.get(c.id)?.he || transMap.get(c.id)?.ar || c.name_he || c.name_ar || c.id,
-      }));
-    },
-  });
-
-  const parentCats = categories.filter((c: any) => !c.parent_id);
-  const subCats = (parentId: string) => categories.filter((c: any) => c.parent_id === parentId);
+  const { data: parentCats = [] } = useCategories();
+  const { data: allSubCats = [] } = useSubCategories();
+  const subCats = (parentId: string) => allSubCats.filter((s: any) => s.category_id === parentId);
 
   /* ── Translations ── */
   const { data: transMap = new Map() } = useQuery({
@@ -394,23 +377,20 @@ const AdminInventory = () => {
     });
   };
 
-  const getCategoryIds = (catId: string): string[] => {
-    const cat = categories.find((c: any) => c.id === catId);
-    if (!cat) return [catId];
-    if (!cat.parent_id) {
-      // parent — include all subs
-      return [catId, ...subCats(catId).map((c: any) => c.id)];
-    }
-    return [catId];
-  };
-
   const filtered = products.filter((p: any) => {
     const pName = (transMap as Map<string, string>).get(p.id) || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
     if (showLowOnly && !isProductLow(p)) return false;
     if (categoryFilter !== "all") {
-      const allowed = getCategoryIds(categoryFilter);
-      if (!allowed.includes(p.category_id)) return false;
+      const isParent = parentCats.find((c: any) => c.id === categoryFilter);
+      if (isParent) {
+        // Match parent category OR any of its sub-categories
+        const subIds = subCats(categoryFilter).map((s: any) => s.id);
+        if (p.category_id !== categoryFilter && !subIds.includes(p.sub_category_id)) return false;
+      } else {
+        // Sub-category selected — match sub_category_id
+        if (p.sub_category_id !== categoryFilter) return false;
+      }
     }
     return true;
   });
@@ -461,11 +441,11 @@ const AdminInventory = () => {
             {parentCats.map((cat: any) => (
               <>
                 <option key={cat.id} value={cat.id}>
-                  {cat.displayName}
+                  {cat.name_he || cat.name_ar || cat.id}
                 </option>
                 {subCats(cat.id).map((sub: any) => (
                   <option key={sub.id} value={sub.id}>
-                    &nbsp;&nbsp;↳ {sub.displayName}
+                    &nbsp;&nbsp;↳ {sub.name_he || sub.name_ar || sub.id}
                   </option>
                 ))}
               </>
