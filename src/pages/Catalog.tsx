@@ -20,9 +20,14 @@ const Catalog = () => {
     );
   }
 
-  return (
-    <Layout>
-      <section className="section-container py-8 md:py-12">
+    const seoTitle = locale === "ar" ? "كتالوج المنتجات | A.M.G PERGOLA LTD" : "קטלוג מוצרים | A.M.G PERGOLA LTD";
+    const seoDesc = locale === "ar"
+      ? "استعرض كتالوج منتجات A.M.G Pergola الكامل – برجولات، أنظمة تظليل، ملحقات وأكثر."
+      : "עיינו בקטלוג המוצרים המלא של A.M.G Pergola – פרגולות, מערכות הצללה, אביזרים ועוד.";
+
+    return (
+      <Layout>
+        <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
           {t("catalog.title")}
         </h1>

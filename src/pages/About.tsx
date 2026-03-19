@@ -48,9 +48,15 @@ const About = () => {
 
   const order = sectionsConfig ?? DEFAULT_ABOUT_SECTIONS_ORDER;
 
+  const { locale } = useLocale();
+  const seoTitle = locale === "ar" ? "من نحن | A.M.G PERGOLA LTD" : "אודות | A.M.G PERGOLA LTD";
+  const seoDesc = locale === "ar"
+    ? "تعرف على A.M.G Pergola – شركة رائدة في تصميم وتصنيع وتركيب البرجولات وحلول التظليل المتقدمة في إسرائيل."
+    : "הכירו את A.M.G Pergola – חברה מובילה בתכנון, ייצור והתקנת פרגולות ופתרונות הצללה מתקדמים בישראל.";
+
   return (
     <Layout>
-      {order.filter((s) => s.visible).map((s) => {
+      <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
         const type = s.type || s.id;
         const Component = SECTION_COMPONENTS[type];
         if (!Component) return null;

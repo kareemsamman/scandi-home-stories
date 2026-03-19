@@ -55,9 +55,22 @@ const Index = () => {
 
   const order = sectionsConfig ?? DEFAULT_SECTIONS_ORDER;
 
+  const { locale } = useLocale();
+
+  const seoTitle = locale === "ar"
+    ? "A.M.G PERGOLA LTD | برجولات وحلول تظليل متقدمة"
+    : "A.M.G PERGOLA LTD | פרגולות ופתרונות הצללה מתקדמים";
+  const seoDesc = locale === "ar"
+    ? "A.M.G Pergola – خبراء في البرجولات وحلول التظليل المتقدمة. تصميم وتصنيع وتركيب مخصص للحدائق والشرفات والأعمال التجارية."
+    : "A.M.G Pergola – מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית לגינות, מרפסות ועסקים.";
+
   return (
     <Layout>
-      {order.filter((s) => s.visible).map((s) => {
+      <SEOHead
+        title={seoTitle}
+        description={seoDesc}
+        jsonLd={[getOrganizationSchema(), getWebSiteSchema(), getLocalBusinessSchema()]}
+      />
         const type = s.type || s.id;
         const Component = SECTION_COMPONENTS[type];
         if (!Component) return null;
