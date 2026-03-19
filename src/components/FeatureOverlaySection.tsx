@@ -22,53 +22,61 @@ export const FeatureOverlaySection = ({ sectionKey = "feature_overlay" }: { sect
   if (!features?.items) return null;
 
   return (
-    <section className="py-10 md:py-16">
-      <div className="section-container">
-        <div className="relative rounded-lg overflow-hidden min-h-[500px] md:min-h-[600px]">
-          <img
-            src={dbData?.bg_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black/20" />
+    <section className="overflow-hidden">
+      {/* ── Image strip with title ── */}
+      <div className="relative h-[360px] md:h-[460px]">
+        <img
+          src={dbData?.bg_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+        {/* gradient — transparent top, dark bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/75" />
 
-          {/* Glass panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="relative flex items-center justify-center min-h-[500px] md:min-h-[600px] p-6"
-          >
-            <div className="glass-panel max-w-3xl w-full p-8 md:p-12 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                {features.title}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-10 max-w-md mx-auto">
-                {features.description}
-              </p>
+        {/* Title anchored at bottom */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="absolute bottom-0 inset-x-0 px-6 md:px-16 pb-10 text-center"
+        >
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+            {features.title}
+          </h2>
+          {features.description && (
+            <p className="mt-2 text-sm md:text-base text-white/75 max-w-lg mx-auto">
+              {features.description}
+            </p>
+          )}
+        </motion.div>
+      </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                {features.items.map((item: any, index: number) => {
-                  const Icon = ICON_MAP[item.icon] || icons[index % icons.length];
-                  return (
-                    <div key={index} className="text-center">
-                      <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="w-5 h-5 text-accent-strong" />
-                      </div>
-                      <h3 className="text-sm font-semibold text-foreground mb-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {item.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
+      {/* ── Feature cards strip ── */}
+      <div className="bg-white border-t border-border/50">
+        <div className="max-w-5xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-border/50 rtl:divide-x-reverse">
+          {features.items.map((item: any, index: number) => {
+            const Icon = ICON_MAP[item.icon] || icons[index % icons.length];
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="flex flex-col items-center text-center gap-3 px-6 py-2"
+              >
+                <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
