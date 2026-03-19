@@ -358,19 +358,20 @@ const AdminOrderDetail = () => {
   return (
     <div className="space-y-5 pb-10">
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+      {/* ── Header card ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        {/* Top row: back + order info */}
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => navigate("/admin/orders")}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 hover:shadow-sm"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            חזרה להזמנות
+            חזרה
           </button>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-gray-900">{order.order_number}</h1>
+              <h1 className="text-xl font-bold text-gray-900">{order.order_number}</h1>
               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${st.color}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
                 {st.label}
@@ -383,11 +384,12 @@ const AdminOrderDetail = () => {
           </div>
         </div>
 
-        {/* Status change */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Bottom row: status + actions */}
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-gray-100">
+          {/* Status */}
           <div className="flex flex-col gap-1">
             <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
-              <SelectTrigger className="w-52 h-9 text-sm border-gray-200">
+              <SelectTrigger className="w-48 h-9 text-sm border-gray-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -408,23 +410,28 @@ const AdminOrderDetail = () => {
             {isWorker && !isAdmin && (
               <p className="text-[10px] text-amber-600 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא למשלוח"' : 'שינוי סטטוס זמין רק כשהסטטוס "בתהליך"'}
+                {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא למשלוח"' : 'שינוי זמין רק כשהסטטוס "בתהליך"'}
               </p>
             )}
           </div>
-          {sendingSms && (
-            <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
-              <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
-            </span>
-          )}
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 h-9 px-3 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl transition-colors"
-          >
-            <Printer className="w-4 h-4" />
-            הדפסה
-          </button>
-          {smsSettings?.enabled && (
+
+          <div className="flex items-center gap-2 ms-auto flex-wrap">
+            {sendingSms && (
+              <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
+                <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
+              </span>
+            )}
+
+            {/* Print */}
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 h-9 px-3 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              הדפסה
+            </button>
+
+            {/* Send invoice — always visible */}
             <button
               onClick={async () => {
                 const locale = order.locale || "he";
@@ -443,26 +450,16 @@ const AdminOrderDetail = () => {
               <Send className="w-4 h-4" />
               שלח חשבונית
             </button>
-          )}
-          <div className="flex flex-col items-end gap-1">
-            <button
-              onClick={() => isAdmin && setShowDeleteConfirm(true)}
-              disabled={!isAdmin}
-              title={!isAdmin ? "רק אדמין יכול למחוק הזמנות" : undefined}
-              className={`flex items-center gap-1.5 h-9 px-3 text-sm rounded-xl transition-colors border ${
-                isAdmin
-                  ? "text-red-500 hover:text-red-700 border-red-200 hover:border-red-400 hover:bg-red-50"
-                  : "text-gray-300 border-gray-200 cursor-not-allowed"
-              }`}
-            >
-              <Trash2 className="w-4 h-4" />
-              מחק הזמנה
-            </button>
-            {!isAdmin && (
-              <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                אדמין בלבד
-              </p>
+
+            {/* Delete — admin only */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-1.5 h-9 px-3 text-sm text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-xl transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                מחק
+              </button>
             )}
           </div>
         </div>
