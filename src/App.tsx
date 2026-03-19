@@ -2,10 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { LocaleProvider, LocaleRedirect } from "./i18n/LocaleContext";
-import { AuthProvider } from "./hooks/useAuth";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Catalog from "./pages/Catalog";
@@ -49,8 +50,22 @@ import LegalPage from "./pages/LegalPage";
 
 const queryClient = new QueryClient();
 
+// Redirect worker-only users away from the public site to their panel
+const WorkerGuard = () => {
+  const { isWorker, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (loading) return;
+    if (isWorker && !isAdmin) {
+      navigate("/admin/orders", { replace: true });
+    }
+  }, [isWorker, isAdmin, loading, navigate]);
+  return null;
+};
+
 const LocaleRoutes = () => (
   <LocaleProvider>
+    <WorkerGuard />
     <ScrollToTop />
     <Routes>
       <Route path="/" element={<Index />} />
