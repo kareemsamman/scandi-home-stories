@@ -85,23 +85,23 @@ export const SendCartModal = ({ open, onClose }: Props) => {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop + centering wrapper */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={handleClose}
-          />
-
+          >
           {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-50 inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md"
+            className="w-full max-w-md"
             dir={isRtl ? "rtl" : "ltr"}
+            onClick={e => e.stopPropagation()}
           >
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
               {/* Header */}
@@ -221,6 +221,7 @@ export const SendCartModal = ({ open, onClose }: Props) => {
                 )}
               </div>
             </div>
+          </motion.div>
           </motion.div>
         </>
       )}
