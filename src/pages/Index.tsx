@@ -1,6 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { HeroSlider } from "@/components/HeroSlider";
 import { CategoryScroller } from "@/components/CategoryScroller";
+import { FeaturedProductSlider } from "@/components/FeaturedProductSlider";
 import { FeatureOverlaySection } from "@/components/FeatureOverlaySection";
 import { PromoCardGrid } from "@/components/PromoCardGrid";
 import { BrandIntroSection } from "@/components/BrandIntroSection";
@@ -13,6 +14,7 @@ const Index = () => {
     <Layout>
       <HeroSlider />
       <CategoryScroller />
+      <FeaturedProductSlider />
       <FeatureOverlaySection />
       <PromoCardGrid />
       <BrandIntroSection />

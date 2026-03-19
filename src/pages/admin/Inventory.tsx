@@ -5,7 +5,7 @@ import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Package, AlertTriangle, Search, CheckCircle2, Minus, Plus,
-  StickyNote, Send, Trash2, X,
+  StickyNote, Send, Trash2, X, ChevronDown,
 } from "lucide-react";
 
 const db = supabase as any;
@@ -75,32 +75,44 @@ const groupByColor = (invItems: any[], product: any) => {
 
 /* ── QtyRow ── */
 const QtyRow = ({
-  inv, label, saveStock, savingKeys, savedKeys, localQty, setLocalQty,
+  inv, label, saveStock, savingKeys, savedKeys,
+  localQty, setLocalQty, localThreshold, setLocalThreshold,
 }: {
   inv: any; label?: string;
   saveStock: (inv: any, qty: number) => void;
   savingKeys: Set<string>; savedKeys: Set<string>;
   localQty: Record<string, number>;
   setLocalQty: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  localThreshold: Record<string, number>;
+  setLocalThreshold: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) => {
   const key = `${inv.product_id}-${inv.variation_key}`;
   const currentQty = localQty[key] ?? inv.stock_quantity;
-  const isLow = currentQty <= inv.low_stock_threshold;
+  const threshold = localThreshold[key] ?? inv.low_stock_threshold;
+  const isLow = currentQty <= threshold;
   const isSaving = savingKeys.has(key);
   const isSaved = savedKeys.has(key);
 
+  const saveThreshold = async (val: number) => {
+    setLocalThreshold(p => ({ ...p, [key]: val }));
+    await db.from("inventory").upsert(
+      { product_id: inv.product_id, variation_key: inv.variation_key, stock_quantity: inv.stock_quantity, low_stock_threshold: val },
+      { onConflict: "product_id,variation_key" }
+    );
+  };
+
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 ${isLow ? "bg-red-50/60" : "bg-white"}`}>
+    <div className={`flex items-center gap-3 px-4 py-2.5 ${isLow ? "bg-red-50/50" : "bg-white"}`}>
       {/* Size label */}
-      <div className="w-10 shrink-0">
-        {label && <span className="text-xs font-bold text-gray-800">{label}</span>}
+      <div className="w-12 shrink-0">
+        {label && <span className="text-xs font-bold text-gray-700">{label}</span>}
       </div>
 
       {/* − qty + */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => { const n = Math.max(0, currentQty - 1); setLocalQty(p => ({ ...p, [key]: n })); saveStock(inv, n); }}
-          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 flex items-center justify-center transition-all touch-manipulation shrink-0"
+          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 flex items-center justify-center transition-all touch-manipulation"
         >
           <Minus className="w-3.5 h-3.5 text-gray-600" />
         </button>
@@ -109,45 +121,46 @@ const QtyRow = ({
           value={currentQty}
           onChange={e => setLocalQty(p => ({ ...p, [key]: Math.max(0, +e.target.value) }))}
           onBlur={() => { const v = localQty[key]; if (v !== undefined && v !== inv.stock_quantity) saveStock(inv, v); }}
-          className={`w-14 h-8 text-center text-sm font-bold rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors ${
+          className={`w-16 h-8 text-center text-sm font-bold rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors ${
             isLow ? "border-red-300 bg-red-50 text-red-700" : "border-gray-200 bg-gray-50 text-gray-900"
           }`}
         />
         <button
           onClick={() => { const n = currentQty + 1; setLocalQty(p => ({ ...p, [key]: n })); saveStock(inv, n); }}
-          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 flex items-center justify-center transition-all touch-manipulation shrink-0"
+          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 flex items-center justify-center transition-all touch-manipulation"
         >
           <Plus className="w-3.5 h-3.5 text-gray-600" />
         </button>
       </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-2 flex-1 justify-end">
-        {isSaving ? (
-          <span className="text-[10px] text-gray-400 animate-pulse">שומר…</span>
-        ) : isSaved ? (
-          <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-semibold">
-            <CheckCircle2 className="w-3 h-3" /> נשמר
-          </span>
-        ) : isLow ? (
-          <span className="text-[10px] font-semibold text-red-600 flex items-center gap-0.5">
-            <AlertTriangle className="w-3 h-3" /> נמוך
-          </span>
-        ) : (
-          <span className="text-[10px] text-gray-400">✓</span>
-        )}
-        <span className="text-[9px] text-gray-300 whitespace-nowrap">
-          ⚠
+      {/* Status + threshold */}
+      <div className="flex items-center gap-3 flex-1 justify-end">
+        <div className="text-right">
+          {isSaving ? (
+            <span className="text-[10px] text-gray-400 animate-pulse">שומר…</span>
+          ) : isSaved ? (
+            <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-semibold">
+              <CheckCircle2 className="w-3 h-3" /> נשמר
+            </span>
+          ) : isLow ? (
+            <span className="text-[10px] font-semibold text-red-600 flex items-center gap-0.5">
+              <AlertTriangle className="w-3 h-3" /> נמוך
+            </span>
+          ) : (
+            <span className="text-[10px] text-gray-300">✓</span>
+          )}
+        </div>
+        {/* Threshold */}
+        <div className="flex items-center gap-1 text-[10px] text-gray-400 border border-gray-200 rounded-lg px-2 py-1 bg-gray-50">
+          <AlertTriangle className="w-2.5 h-2.5 text-gray-300" />
           <input
             type="number"
-            defaultValue={inv.low_stock_threshold}
-            onBlur={e => db.from("inventory").upsert(
-              { product_id: inv.product_id, variation_key: inv.variation_key, stock_quantity: inv.stock_quantity, low_stock_threshold: +e.target.value },
-              { onConflict: "product_id,variation_key" }
-            )}
-            className="w-6 text-center bg-transparent border-b border-gray-200 focus:outline-none focus:border-blue-400 text-[9px] text-gray-400 mx-0.5"
+            value={localThreshold[key] ?? inv.low_stock_threshold}
+            onChange={e => setLocalThreshold(p => ({ ...p, [key]: Math.max(0, +e.target.value) }))}
+            onBlur={e => saveThreshold(Math.max(0, +e.target.value))}
+            className="w-7 text-center bg-transparent focus:outline-none text-[10px] text-gray-500 font-semibold"
           />
-        </span>
+        </div>
       </div>
     </div>
   );
@@ -189,11 +202,10 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
         style={{ maxHeight: "85vh" }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
           <StickyNote className="w-4 h-4 text-amber-500" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-900 truncate">הערות</p>
+            <p className="text-xs font-bold text-gray-900">הערות</p>
             <p className="text-[10px] text-gray-400 truncate">{productName}</p>
           </div>
           <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
@@ -201,7 +213,6 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
           </button>
         </div>
 
-        {/* Chat messages */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 min-h-0">
           {notes.length === 0 && (
             <div className="flex flex-col items-center justify-center h-24 text-gray-300 text-xs gap-1">
@@ -213,11 +224,11 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
             <div key={note.id} className="flex items-end gap-2 justify-end">
               <button
                 onClick={() => onDelete(productId, note.id)}
-                className="w-5 h-5 flex items-center justify-center rounded-full opacity-0 hover:opacity-100 group-hover:opacity-100 text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all mb-1 shrink-0"
+                className="w-5 h-5 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all mb-1 shrink-0"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
-              <div className="group max-w-[80%]">
+              <div className="max-w-[80%]">
                 <div className="bg-blue-500 text-white rounded-2xl rounded-br-sm px-3 py-2">
                   <p className="text-xs leading-relaxed whitespace-pre-wrap">{note.text}</p>
                 </div>
@@ -230,7 +241,6 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div className="border-t border-gray-100 px-3 py-3 flex gap-2 items-end shrink-0">
           <textarea
             ref={inputRef}
@@ -240,7 +250,6 @@ const NotesModal = ({ productName, productId, allNotes, onSave, onDelete, onClos
             placeholder="כתוב הערה... (Enter לשליחה)"
             rows={1}
             className="flex-1 text-sm rounded-xl border border-gray-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-gray-300 max-h-24"
-            style={{ lineHeight: "1.4" }}
           />
           <button
             onClick={handleSave}
@@ -263,7 +272,9 @@ const AdminInventory = () => {
 
   const [search, setSearch] = useState("");
   const [showLowOnly, setShowLowOnly] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [localQty, setLocalQty] = useState<Record<string, number>>({});
+  const [localThreshold, setLocalThreshold] = useState<Record<string, number>>({});
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [notesModal, setNotesModal] = useState<{ productId: string; productName: string } | null>(null);
@@ -272,10 +283,22 @@ const AdminInventory = () => {
   const { data: products = [] } = useQuery({
     queryKey: ["admin_inventory_products"],
     queryFn: async () => {
-      const { data } = await db.from("products").select("id, name, sku, images, colors, sizes, type, status").order("sort_order");
+      const { data } = await db.from("products").select("id, name, sku, images, colors, sizes, type, status, category_id").order("sort_order");
       return data || [];
     },
   });
+
+  /* ── Categories ── */
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin_categories_filter"],
+    queryFn: async () => {
+      const { data } = await db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order");
+      return data || [];
+    },
+  });
+
+  const parentCats = categories.filter((c: any) => !c.parent_id);
+  const subCats = (parentId: string) => categories.filter((c: any) => c.parent_id === parentId);
 
   /* ── Translations ── */
   const { data: transMap = new Map() } = useQuery({
@@ -313,9 +336,7 @@ const AdminInventory = () => {
 
   const saveNote = async (productId: string, text: string) => {
     const current = { ...allNotes };
-    const existing = current[productId] || [];
-    const newNote = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, ts: new Date().toISOString() };
-    current[productId] = [...existing, newNote];
+    current[productId] = [...(current[productId] || []), { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, ts: new Date().toISOString() }];
     await db.from("home_content").upsert({ locale: "global", section: "inventory_notes", data: current }, { onConflict: "locale,section" });
     refetchNotes();
   };
@@ -333,10 +354,9 @@ const AdminInventory = () => {
     setSavingKeys(prev => new Set([...prev, key]));
     try {
       await db.from("inventory").upsert(
-        { product_id: inv.product_id, variation_key: inv.variation_key, stock_quantity: newQty, low_stock_threshold: inv.low_stock_threshold ?? 5 },
+        { product_id: inv.product_id, variation_key: inv.variation_key, stock_quantity: newQty, low_stock_threshold: localThreshold[key] ?? inv.low_stock_threshold ?? 5 },
         { onConflict: "product_id,variation_key" }
       );
-      // If this was a phantom row, refresh so it gets a real ID
       if (inv._phantom) qc.invalidateQueries({ queryKey: ["admin_inventory"] });
       setSavedKeys(prev => new Set([...prev, key]));
       setTimeout(() => setSavedKeys(prev => { const n = new Set(prev); n.delete(key); return n; }), 1800);
@@ -347,19 +367,41 @@ const AdminInventory = () => {
     }
   };
 
-  const lowStockCount = inventory.filter((inv: any) => inv.stock_quantity <= inv.low_stock_threshold).length;
+  /* ── Filter ── */
+  const isProductLow = (product: any) => {
+    const dbItems = inventoryMap.get(product.id) || [];
+    return dbItems.some((inv: any) => {
+      const k = `${inv.product_id}-${inv.variation_key}`;
+      const qty = localQty[k] ?? inv.stock_quantity;
+      const thr = localThreshold[k] ?? inv.low_stock_threshold;
+      return qty <= thr;
+    });
+  };
+
+  const getCategoryIds = (catId: string): string[] => {
+    const cat = categories.find((c: any) => c.id === catId);
+    if (!cat) return [catId];
+    if (!cat.parent_id) {
+      // parent — include all subs
+      return [catId, ...subCats(catId).map((c: any) => c.id)];
+    }
+    return [catId];
+  };
 
   const filtered = products.filter((p: any) => {
     const pName = (transMap as Map<string, string>).get(p.id) || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
-    if (showLowOnly) {
-      const invItems = inventoryMap.get(p.id) || [];
-      return invItems.some((inv: any) => inv.stock_quantity <= inv.low_stock_threshold);
+    if (showLowOnly && !isProductLow(p)) return false;
+    if (categoryFilter !== "all") {
+      const allowed = getCategoryIds(categoryFilter);
+      if (!allowed.includes(p.category_id)) return false;
     }
     return true;
   });
 
-  const sharedQtyProps = { saveStock, savingKeys, savedKeys, localQty, setLocalQty };
+  const totalLow = products.filter(isProductLow).length;
+
+  const sharedQtyProps = { saveStock, savingKeys, savedKeys, localQty, setLocalQty, localThreshold, setLocalThreshold };
 
   return (
     <div className="space-y-4">
@@ -370,17 +412,18 @@ const AdminInventory = () => {
           <h1 className="text-xl font-bold text-gray-900">מלאי</h1>
           <p className="text-gray-400 text-xs mt-0.5">ניהול כמויות מוצרים</p>
         </div>
-        {lowStockCount > 0 && (
+        {totalLow > 0 && (
           <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-xs font-semibold">
             <AlertTriangle className="w-3.5 h-3.5" />
-            {lowStockCount} {lowStockCount === 1 ? "מוצר במלאי נמוך" : "מוצרים במלאי נמוך"}
+            {totalLow} {totalLow === 1 ? "מוצר במלאי נמוך" : "מוצרים במלאי נמוך"}
           </div>
         )}
       </div>
 
-      {/* Search + filter */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="flex gap-2 flex-wrap">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
           <input
             type="text"
@@ -390,14 +433,40 @@ const AdminInventory = () => {
             className="w-full h-10 pr-9 pl-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors"
           />
         </div>
+
+        {/* Category filter */}
+        <div className="relative shrink-0">
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="h-10 pl-8 pr-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
+          >
+            <option value="all">כל הקטגוריות</option>
+            {parentCats.map((cat: any) => (
+              <>
+                <option key={cat.id} value={cat.id} className="font-bold">
+                  {cat.name_he || cat.name_ar}
+                </option>
+                {subCats(cat.id).map((sub: any) => (
+                  <option key={sub.id} value={sub.id} className="pl-4">
+                    &nbsp;&nbsp;↳ {sub.name_he || sub.name_ar}
+                  </option>
+                ))}
+              </>
+            ))}
+          </select>
+          <ChevronDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+        </div>
+
+        {/* Low stock only */}
         <button
           onClick={() => setShowLowOnly(!showLowOnly)}
           className={`flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold transition-colors border shrink-0 ${
-            showLowOnly ? "bg-amber-500 border-amber-500 text-white" : "bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-700"
+            showLowOnly ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
           }`}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
-          נמוך בלבד
+          נמוך בלבד {showLowOnly && totalLow > 0 && `(${totalLow})`}
         </button>
       </div>
 
@@ -405,12 +474,12 @@ const AdminInventory = () => {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
-              <div className="px-3 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-gray-200" />
-                <div className="space-y-1.5"><div className="h-3.5 w-32 bg-gray-200 rounded" /><div className="h-2.5 w-20 bg-gray-200 rounded" /></div>
+            <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-200" />
+                <div className="space-y-1.5"><div className="h-4 w-36 bg-gray-200 rounded" /><div className="h-2.5 w-24 bg-gray-200 rounded" /></div>
               </div>
-              <div className="px-3 py-3 space-y-2"><div className="h-8 bg-gray-100 rounded-lg" /><div className="h-8 bg-gray-100 rounded-lg" /></div>
+              <div className="px-4 py-3 space-y-2"><div className="h-9 bg-gray-100 rounded-xl" /><div className="h-9 bg-gray-100 rounded-xl" /></div>
             </div>
           ))}
         </div>
@@ -420,49 +489,57 @@ const AdminInventory = () => {
             const dbItems = inventoryMap.get(product.id) || [];
             const invItems = dbItems.length > 0 ? dbItems : deriveRows(product);
             const pName = (transMap as Map<string, string>).get(product.id) || product.name;
-            const hasLow = dbItems.some((inv: any) => inv.stock_quantity <= inv.low_stock_threshold);
+            const hasLow = isProductLow(product);
             const { colorMap, simpleItem } = groupByColor(invItems, product);
             const noteCount = (allNotes[product.id] || []).length;
 
             return (
               <div
                 key={product.id}
-                className={`bg-white rounded-xl border overflow-hidden ${hasLow ? "border-red-200" : "border-gray-200"}`}
+                className={`bg-white rounded-2xl border overflow-hidden shadow-sm ${hasLow ? "border-red-200" : "border-gray-200"}`}
               >
                 {/* Product header */}
-                <div className={`px-3 py-2.5 flex items-center gap-2.5 border-b ${hasLow ? "bg-red-50 border-red-100" : "bg-gray-50 border-gray-100"}`}>
+                <div className={`px-4 py-3 flex items-center gap-3 border-b ${hasLow ? "bg-red-50 border-red-100" : "bg-gray-50/80 border-gray-100"}`}>
                   {product.images?.[0] ? (
-                    <img src={product.images[0]} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                    <img src={product.images[0]} alt="" className="w-11 h-11 rounded-xl object-cover shrink-0 border border-white shadow-sm" />
                   ) : (
-                    <div className="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
-                      <Package className="w-4 h-4 text-gray-400" />
+                    <div className="w-11 h-11 rounded-xl bg-gray-200 flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-gray-400" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-900 text-sm leading-tight truncate">{pName}</p>
-                    {product.sku && <p className="text-[10px] text-gray-400 font-mono">SKU: {product.sku}</p>}
+                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      SKU: {product.sku || <span className="text-gray-300 italic">לא הוגדר</span>}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {hasLow && <AlertTriangle className="w-4 h-4 text-red-500" />}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasLow && (
+                      <span className="flex items-center gap-1 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-lg">
+                        <AlertTriangle className="w-3 h-3" /> נמוך
+                      </span>
+                    )}
                     {noteCount > 0 && (
-                      <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {noteCount}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Body */}
+                {/* Inventory rows */}
                 {colorMap.size > 0 ? (
                   <div>
                     {Array.from(colorMap.entries()).map(([colorId, { colorObj, items }]) => (
                       <div key={colorId}>
-                        {/* Color row */}
-                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/60 border-b border-gray-100">
-                          {colorObj?.hex && (
-                            <span className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: colorObj.hex }} />
+                        {/* Color header */}
+                        <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50 border-b border-gray-100">
+                          {colorObj?.hex ? (
+                            <span className="w-4 h-4 rounded-full border-2 border-white shadow-sm shrink-0" style={{ backgroundColor: colorObj.hex }} />
+                          ) : (
+                            <span className="w-4 h-4 rounded-full bg-gray-300 shrink-0" />
                           )}
-                          <span className="text-xs font-bold text-gray-800">
+                          <span className="text-xs font-bold text-gray-700">
                             {colorObj?.label_he || colorObj?.name_he || colorObj?.name_ar || colorObj?.name || colorId}
                           </span>
                         </div>
@@ -481,25 +558,23 @@ const AdminInventory = () => {
                     ))}
                   </div>
                 ) : simpleItem ? (
-                  <QtyRow inv={simpleItem} label={undefined} {...sharedQtyProps} />
+                  <QtyRow inv={simpleItem} {...sharedQtyProps} />
                 ) : null}
 
                 {/* Notes footer */}
-                <div className="border-t border-gray-100 flex items-center justify-between px-3 py-2">
+                <div className="border-t border-gray-100 flex items-center justify-between px-4 py-2.5 bg-gray-50/50">
                   <div className="flex items-center gap-1.5 text-xs text-gray-400">
                     <StickyNote className="w-3.5 h-3.5" />
                     <span>הערות</span>
-                    {(allNotes[product.id] || []).length > 0 && (
-                      <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full px-1.5 py-0.5">
-                        {(allNotes[product.id] || []).length}
-                      </span>
+                    {noteCount > 0 && (
+                      <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full px-1.5 py-0.5">{noteCount}</span>
                     )}
                   </div>
                   <button
                     onClick={() => setNotesModal({ productId: product.id, productName: pName })}
                     className="text-[11px] font-semibold text-blue-500 hover:text-blue-600 transition-colors"
                   >
-                    {(allNotes[product.id] || []).length > 0 ? "פתח" : "+ הוסף"}
+                    {noteCount > 0 ? "פתח" : "+ הוסף"}
                   </button>
                 </div>
               </div>
