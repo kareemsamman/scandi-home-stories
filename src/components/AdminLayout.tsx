@@ -30,6 +30,7 @@ const navItems: NavItem[] = [
   { label: "Home Page", icon: Home, path: "/admin/home", roles: ["admin"] },
   { label: "About Page",   icon: FileText, path: "/admin/about",   roles: ["admin"] },
   { label: "Contact Page", icon: Mail,     path: "/admin/contact", roles: ["admin"] },
+  { label: "Legal Pages", icon: FileText, path: "/admin/legal", roles: ["admin"] },
   { label: "Users", icon: Users, path: "/admin/users", roles: ["admin"] },
   { label: "Settings", icon: Settings, path: "/admin/settings", roles: ["admin"] },
 ];

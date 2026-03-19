@@ -100,12 +100,12 @@ export const translations: Record<Locale, Record<string, any>> = {
         { title: 'תמיכה', links: [
           { label: 'שאלות נפוצות', href: '/contact' },
           { label: 'אחריות', href: '/contact' },
-          { label: 'משלוחים והחזרות', href: '/contact' },
+          { label: 'משלוחים', href: '/legal/shipping' },
+          { label: 'החזרות', href: '/legal/returns' },
         ]},
         { title: 'מדיניות', links: [
-          { label: 'מדיניות פרטיות', href: '#' },
-          { label: 'תנאי שימוש', href: '#' },
-          { label: 'נגישות', href: '#' },
+          { label: 'מדיניות פרטיות', href: '/legal/privacy' },
+          { label: 'תנאי שימוש', href: '/legal/terms' },
         ]},
         { title: 'AMG Pergola', links: [
           { label: 'אודות', href: '/about' },
@@ -565,12 +565,12 @@ export const translations: Record<Locale, Record<string, any>> = {
         { title: 'الدعم', links: [
           { label: 'الأسئلة الشائعة', href: '/contact' },
           { label: 'الضمان', href: '/contact' },
-          { label: 'الشحن والإرجاع', href: '/contact' },
+          { label: 'الشحن', href: '/legal/shipping' },
+          { label: 'الإرجاع', href: '/legal/returns' },
         ]},
         { title: 'السياسات', links: [
-          { label: 'سياسة الخصوصية', href: '#' },
-          { label: 'شروط الاستخدام', href: '#' },
-          { label: 'إمكانية الوصول', href: '#' },
+          { label: 'سياسة الخصوصية', href: '/legal/privacy' },
+          { label: 'شروط الاستخدام', href: '/legal/terms' },
         ]},
         { title: 'AMG Pergola', links: [
           { label: 'من نحن', href: '/about' },

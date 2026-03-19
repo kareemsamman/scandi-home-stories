@@ -43,6 +43,8 @@ import ProductEdit from "./pages/admin/ProductEdit";
 import AdminAttributes from "./pages/admin/Attributes";
 import AdminCoupons from "./pages/admin/Coupons";
 import AdminMarketing from "./pages/admin/Marketing";
+import AdminLegalPages from "./pages/admin/LegalPages";
+import LegalPage from "./pages/LegalPage";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,7 @@ const LocaleRoutes = () => (
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/legal/:page" element={<LegalPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -107,6 +110,7 @@ const App = () => (
               <Route path="attributes" element={<AdminAttributes />} />
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="marketing" element={<AdminMarketing />} />
+              <Route path="legal" element={<AdminLegalPages />} />
             </Route>
             <Route path="/invoice/:orderId" element={<InvoicePage />} />
             <Route path="/:locale/*" element={<LocaleRoutes />} />
