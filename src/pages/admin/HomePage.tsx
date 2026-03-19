@@ -7,24 +7,140 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Image,
-  LayoutGrid,
-  Type,
-  Play,
-  ArrowLeftRight,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Trash2,
-  X,
-  Save,
-  Loader2,
-  Layers,
-  Check,
+  Image, LayoutGrid, Type, Play, ArrowLeftRight, HelpCircle,
+  ChevronDown, ChevronUp, Plus, Trash2, X, Save, Loader2, Layers,
+  Check, GripVertical, Eye, EyeOff,
 } from "lucide-react";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const db = supabase as any;
+
+// ─── Sections order config ────────────────────────────────────────────────────
+
+export type SectionItem = { id: string; visible: boolean };
+
+export const DEFAULT_SECTIONS_ORDER: SectionItem[] = [
+  { id: "hero_slider", visible: true },
+  { id: "category_scroller", visible: true },
+  { id: "featured_slider", visible: true },
+  { id: "feature_overlay", visible: true },
+  { id: "promo_grid", visible: true },
+  { id: "brand_intro", visible: true },
+  { id: "lifestyle_media", visible: true },
+  { id: "before_after", visible: true },
+  { id: "faq", visible: true },
+];
+
+const SECTION_META: Record<string, { label: string; icon: React.ElementType }> = {
+  hero_slider:        { label: "Hero Slider",              icon: Image },
+  category_scroller:  { label: "Category Scroller",        icon: LayoutGrid },
+  featured_slider:    { label: "Featured Product Slider",  icon: Layers },
+  feature_overlay:    { label: "Feature Overlay",          icon: Image },
+  promo_grid:         { label: "Promo Card Grid",          icon: LayoutGrid },
+  brand_intro:        { label: "Brand Intro",              icon: Type },
+  lifestyle_media:    { label: "Lifestyle Media",          icon: Play },
+  before_after:       { label: "Before / After",           icon: ArrowLeftRight },
+  faq:                { label: "FAQ",                      icon: HelpCircle },
+};
+
+// ─── Sortable section row ─────────────────────────────────────────────────────
+
+const SortableSectionItem = ({
+  item, onToggle,
+}: { item: SectionItem; onToggle: () => void }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+  const meta = SECTION_META[item.id];
+  const Icon = meta?.icon ?? Layers;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center gap-3 px-4 py-3 bg-white rounded-xl border transition-shadow ${
+        isDragging ? "shadow-xl border-blue-300 z-50 opacity-80" : "border-gray-200 shadow-sm"
+      } ${!item.visible ? "opacity-40" : ""}`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 touch-none shrink-0"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+      </div>
+      <span className="flex-1 text-sm font-semibold text-gray-800">
+        {meta?.label ?? item.id}
+      </span>
+      <button
+        onClick={onToggle}
+        title={item.visible ? "Hide section" : "Show section"}
+        className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
+          item.visible
+            ? "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+            : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+};
+
+// ─── Sections order panel ─────────────────────────────────────────────────────
+
+const SectionsOrderPanel = ({
+  order, onChange,
+}: { order: SectionItem[]; onChange: (o: SectionItem[]) => void }) => {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = order.findIndex(s => s.id === active.id);
+    const newIdx = order.findIndex(s => s.id === over.id);
+    onChange(arrayMove(order, oldIdx, newIdx));
+  };
+
+  const toggle = (id: string) =>
+    onChange(order.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <LayoutGrid className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <span className="font-semibold text-gray-800">Sections Order</span>
+            <p className="text-xs text-gray-400 mt-0.5">Drag to reorder · toggle eye to show/hide</p>
+          </div>
+        </div>
+      </div>
+      <div className="px-4 py-4">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={order.map(s => s.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {order.map(item => (
+                <SortableSectionItem key={item.id} item={item} onToggle={() => toggle(item.id)} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+    </div>
+  );
+};
 
 // ─── ImageUpload ──────────────────────────────────────────────────────────────
 
@@ -516,6 +632,7 @@ const AdminHomePage = () => {
   const queryClient = useQueryClient();
   const [initialized, setInitialized] = useState(false);
 
+  const [sectionsOrder, setSectionsOrder] = useState<SectionItem[]>(DEFAULT_SECTIONS_ORDER);
   const [featuredSlider, setFeaturedSlider] = useState<any>({ title: "", button_text: "", button_link: "/shop", mode: "products", product_ids: [], category_id: "" });
   const [featureOverlay, setFeatureOverlay] = useState<any>(getSeed("he", "feature_overlay"));
   const [promoGrid, setPromoGrid] = useState<any>(getSeed("he", "promo_grid"));
@@ -527,21 +644,20 @@ const AdminHomePage = () => {
   const { data: allContent, isLoading } = useQuery({
     queryKey: ["home_content_all", locale],
     queryFn: async () => {
-      const { data } = await db
-        .from("home_content")
-        .select("section, data")
-        .eq("locale", locale)
-        .in("section", SECTIONS);
+      const [{ data: localeRows }, { data: globalRow }] = await Promise.all([
+        db.from("home_content").select("section, data").eq("locale", locale).in("section", SECTIONS),
+        db.from("home_content").select("data").eq("locale", "global").eq("section", "sections_config").maybeSingle(),
+      ]);
       const map: Record<string, any> = {};
-      (data || []).forEach((row: any) => {
-        map[row.section] = row.data;
-      });
+      (localeRows || []).forEach((row: any) => { map[row.section] = row.data; });
+      if (globalRow?.data) map["sections_config"] = globalRow.data;
       return map;
     },
   });
 
   useEffect(() => {
     if (!allContent) return;
+    if (allContent["sections_config"]) setSectionsOrder(allContent["sections_config"]);
     setFeaturedSlider(allContent["featured_slider"] ?? { title: "", button_text: "", button_link: "/shop", mode: "products", product_ids: [], category_id: "" });
     setFeatureOverlay(allContent["feature_overlay"] ?? getSeed(locale, "feature_overlay"));
     setPromoGrid(allContent["promo_grid"] ?? getSeed(locale, "promo_grid"));
@@ -564,15 +680,19 @@ const AdminHomePage = () => {
         { locale, section: "faq", data: faqData },
       ];
       for (const row of rows) {
-        const { error } = await db
-          .from("home_content")
-          .upsert(row, { onConflict: "locale,section" });
+        const { error } = await db.from("home_content").upsert(row, { onConflict: "locale,section" });
         if (error) throw error;
       }
+      // Save sections order globally (not locale-specific)
+      const { error: orderErr } = await db
+        .from("home_content")
+        .upsert({ locale: "global", section: "sections_config", data: sectionsOrder }, { onConflict: "locale,section" });
+      if (orderErr) throw orderErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["home_content_all", locale] });
       queryClient.invalidateQueries({ queryKey: ["home_content"] });
+      queryClient.invalidateQueries({ queryKey: ["home_sections_config"] });
       toast({ title: "Saved", description: "Home page content updated successfully." });
     },
     onError: (err: any) => {
@@ -614,6 +734,9 @@ const AdminHomePage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Sections Order */}
+      <SectionsOrderPanel order={sectionsOrder} onChange={setSectionsOrder} />
 
       {/* Featured Product Slider */}
       <FeaturedSliderSection data={featuredSlider} onChange={setFeaturedSlider} locale={locale} />
