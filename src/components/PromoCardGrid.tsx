@@ -10,9 +10,9 @@ const promoImages = [
   "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
 ];
 
-export const PromoCardGrid = () => {
+export const PromoCardGrid = ({ sectionKey = "promo_grid" }: { sectionKey?: string }) => {
   const { t, localePath, locale } = useLocale();
-  const { data: dbData } = useHomeContent("promo_grid", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
   const promos: any[] = (dbData?.items?.length ? dbData.items : t("promos")) as any[];
   if (!Array.isArray(promos)) return null;
 

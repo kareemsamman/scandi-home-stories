@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/accordion";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
-export const FaqSection = () => {
+export const FaqSection = ({ sectionKey = "faq" }: { sectionKey?: string }) => {
   const { t, localePath, locale } = useLocale();
   const faq = t("faq");
-  const { data: dbData } = useHomeContent("faq", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
 
   const title = dbData?.title || faq.title;
   const subtitle = dbData?.subtitle || faq.subtitle;

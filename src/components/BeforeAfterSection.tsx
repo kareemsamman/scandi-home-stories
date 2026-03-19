@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
-export const BeforeAfterSection = () => {
+export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey?: string }) => {
   const { t, locale } = useLocale();
-  const { data: dbData } = useHomeContent("before_after", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
   const [position, setPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);

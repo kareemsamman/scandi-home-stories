@@ -14,9 +14,9 @@ const ICON_MAP: Record<string, any> = {
   check: Check,
 };
 
-export const FeatureOverlaySection = () => {
+export const FeatureOverlaySection = ({ sectionKey = "feature_overlay" }: { sectionKey?: string }) => {
   const { t, locale } = useLocale();
-  const { data: dbData } = useHomeContent("feature_overlay", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
   const features = dbData && dbData.title ? dbData : t("features");
 
   if (!features?.items) return null;

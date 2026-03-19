@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
-export const BrandIntroSection = () => {
+export const BrandIntroSection = ({ sectionKey = "brand_intro" }: { sectionKey?: string }) => {
   const { t, locale } = useLocale();
-  const { data: dbData } = useHomeContent("brand_intro", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
   const title = dbData?.title || t("brand.title");
   const description = dbData?.description || t("brand.description");
   return (

@@ -5,9 +5,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
-export const LifestyleMediaSection = () => {
+export const LifestyleMediaSection = ({ sectionKey = "lifestyle_media" }: { sectionKey?: string }) => {
   const { t, localePath, locale } = useLocale();
-  const { data: dbData } = useHomeContent("lifestyle_media", locale);
+  const { data: dbData } = useHomeContent(sectionKey, locale);
   return (
     <section className="py-10 md:py-16">
       <div className="section-container">

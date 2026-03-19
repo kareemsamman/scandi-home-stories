@@ -12,7 +12,7 @@ import { BeforeAfterSection } from "@/components/BeforeAfterSection";
 import { FaqSection } from "@/components/FaqSection";
 import { DEFAULT_SECTIONS_ORDER, type SectionItem } from "@/pages/admin/HomePage";
 
-const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
+const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
   hero_slider:       HeroSlider,
   category_scroller: CategoryScroller,
   featured_slider:   FeaturedProductSlider,
@@ -23,6 +23,8 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   before_after:      BeforeAfterSection,
   faq:               FaqSection,
 };
+
+const NON_CONFIGURABLE = new Set(["hero_slider", "category_scroller"]);
 
 const db = supabase as any;
 
@@ -46,8 +48,11 @@ const Index = () => {
   return (
     <Layout>
       {order.filter((s) => s.visible).map((s) => {
-        const Component = SECTION_COMPONENTS[s.id];
-        return Component ? <Component key={s.id} /> : null;
+        const type = s.type || s.id;
+        const Component = SECTION_COMPONENTS[type];
+        if (!Component) return null;
+        const props = NON_CONFIGURABLE.has(type) ? {} : { sectionKey: s.id };
+        return <Component key={s.id} {...props} />;
       })}
     </Layout>
   );

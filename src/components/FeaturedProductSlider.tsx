@@ -7,9 +7,9 @@ import { useShopData } from "@/hooks/useShopData";
 import { useProducts as useDbProducts } from "@/hooks/useDbData";
 import { ProductCard } from "@/components/ProductCard";
 
-export const FeaturedProductSlider = () => {
+export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sectionKey?: string }) => {
   const { locale, localePath } = useLocale();
-  const { data: config } = useHomeContent("featured_slider", locale);
+  const { data: config } = useHomeContent(sectionKey, locale);
   const { products: allProducts } = useShopData();
   const { data: dbProducts = [] } = useDbProducts();
   const scrollRef = useRef<HTMLDivElement>(null);
