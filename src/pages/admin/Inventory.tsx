@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import {
   Package, AlertTriangle, Search, CheckCircle2, Minus, Plus,
   StickyNote, Send, Trash2, X, ChevronDown,
@@ -295,8 +294,18 @@ const AdminInventory = () => {
   });
 
   /* ── Categories ── */
-  const { data: parentCats = [] } = useCategories();
-  const { data: allSubCats = [] } = useSubCategories();
+  const { data: catData = { cats: [], subs: [] } } = useQuery({
+    queryKey: ["inv_cats_filter"],
+    queryFn: async () => {
+      const [{ data: cats }, { data: subs }] = await Promise.all([
+        db.from("categories").select("*").order("sort_order"),
+        db.from("sub_categories").select("*").order("sort_order"),
+      ]);
+      return { cats: cats || [], subs: subs || [] };
+    },
+  });
+  const parentCats = catData.cats;
+  const allSubCats = catData.subs;
   const subCats = (parentId: string) => allSubCats.filter((s: any) => s.category_id === parentId);
 
   /* ── Translations ── */

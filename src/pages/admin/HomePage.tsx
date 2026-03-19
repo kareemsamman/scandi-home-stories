@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -242,8 +241,18 @@ const FeaturedSliderSection = ({ data, onChange, locale }: { data: any; onChange
     },
   });
 
-  const { data: parentCats = [] } = useCategories();
-  const { data: allSubCats = [] } = useSubCategories();
+  const { data: catData = { cats: [], subs: [] } } = useQuery({
+    queryKey: ["home_cats_filter"],
+    queryFn: async () => {
+      const [{ data: cats }, { data: subs }] = await Promise.all([
+        db.from("categories").select("*").order("sort_order"),
+        db.from("sub_categories").select("*").order("sort_order"),
+      ]);
+      return { cats: cats || [], subs: subs || [] };
+    },
+  });
+  const parentCats = catData.cats;
+  const allSubCats = catData.subs;
   const subCats = (pid: string) => allSubCats.filter((s: any) => s.category_id === pid);
 
   const selectedIds: string[] = Array.isArray(data.product_ids) ? data.product_ids : [];
