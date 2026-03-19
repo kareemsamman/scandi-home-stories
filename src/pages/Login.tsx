@@ -63,6 +63,11 @@ const Login = () => {
           navigate("/admin");
           return;
         }
+        if (roles?.some(r => r.role === "worker")) {
+          toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+          navigate("/admin/orders");
+          return;
+        }
       }
       toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
       navigate(redirectTo);
