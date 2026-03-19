@@ -19,7 +19,7 @@ const CheckoutThankYou = () => {
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
           <Link to={localePath("/")} className="flex items-center">
-            <img src={logoWhite} alt="AMG Pergola" className="h-12 md:h-14 invert" />
+            <img src={logoWhite} alt="AMG Pergola" className="h-14 md:h-14 invert" />
           </Link>
         </div>
       </header>
@@ -72,13 +72,13 @@ const CheckoutThankYou = () => {
           <div className="flex flex-col gap-3 pt-2">
             <Link
               to={localePath("/")}
-              className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors"
+              className="w-full h-14 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors"
             >
               {t("thankYou.backToHome")}
             </Link>
             <Link
               to={orderId ? localePath(`/account/order/${orderId}`) : localePath("/account")}
-              className="w-full h-12 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+              className="w-full h-14 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
             >
               {t("thankYou.viewOrder")}
             </Link>
