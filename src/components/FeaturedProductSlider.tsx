@@ -12,8 +12,9 @@ export const FeaturedProductSlider = () => {
   const { products: allProducts } = useShopData();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollPct, setScrollPct] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  // RTL: canScrollLeft = more items to the left (forward), canScrollRight = can go back right
+  const [canScrollLeft, setCanScrollLeft] = useState(true);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const products = (() => {
     if (!config || !allProducts.length) return [];
@@ -36,16 +37,18 @@ export const FeaturedProductSlider = () => {
     const el = scrollRef.current;
     if (!el) return;
     const maxScroll = el.scrollWidth - el.clientWidth;
-    const left = Math.abs(el.scrollLeft); // abs handles RTL negative values
+    // In RTL, scrollLeft is 0 at start (rightmost) and goes negative as we scroll left
+    const left = Math.abs(el.scrollLeft);
     setScrollPct(maxScroll > 0 ? Math.min((left / maxScroll) * 100, 100) : 0);
-    setCanScrollLeft(left > 4);
-    setCanScrollRight(left < maxScroll - 4);
+    // canScrollLeft: haven't reached leftmost end yet → more items to reveal
+    setCanScrollLeft(left < maxScroll - 4);
+    // canScrollRight: have scrolled some → can go back to start
+    setCanScrollRight(left > 4);
   };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // Small delay so the DOM is ready
     const t = setTimeout(updateState, 100);
     el.addEventListener("scroll", updateState, { passive: true });
     const ro = new ResizeObserver(updateState);
@@ -53,12 +56,13 @@ export const FeaturedProductSlider = () => {
     return () => { clearTimeout(t); el.removeEventListener("scroll", updateState); ro.disconnect(); };
   }, [products.length]);
 
-  const scroll = (dir: "prev" | "next") => {
+  // In RTL: scrollBy -cardW goes left (forward/next), +cardW goes right (back/prev)
+  const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
     const card = el.querySelector<HTMLElement>("[data-slider-card]");
-    const cardW = (card?.offsetWidth ?? 300) + 16; // +gap-4
-    el.scrollBy({ left: dir === "next" ? cardW : -cardW, behavior: "smooth" });
+    const cardW = (card?.offsetWidth ?? 300) + 16;
+    el.scrollBy({ left: dir === "left" ? -cardW : cardW, behavior: "smooth" });
   };
 
   if (!config || !title || products.length === 0) return null;
@@ -66,7 +70,7 @@ export const FeaturedProductSlider = () => {
   return (
     <section className="py-10 md:py-16 bg-white overflow-hidden">
 
-      {/* Header: title left, view-all right */}
+      {/* Header: in RTL flex — title on right (first), view-all on left (second) */}
       <div className="flex items-center justify-between px-5 md:px-10 lg:px-16 mb-6">
         <h2 className="text-2xl md:text-[2rem] font-black tracking-tight text-foreground uppercase leading-none">
           {title}
@@ -77,15 +81,14 @@ export const FeaturedProductSlider = () => {
             className="flex items-center gap-1.5 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors shrink-0"
           >
             {buttonText}
-            <ChevronRight className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4" />
           </Link>
         )}
       </div>
 
-      {/* Cards — always LTR so scrollLeft works consistently */}
+      {/* Cards — RTL natural, first card on the right */}
       <div
         ref={scrollRef}
-        dir="ltr"
         className="flex gap-4 overflow-x-auto scroll-smooth"
         style={{
           scrollbarWidth: "none",
@@ -97,7 +100,6 @@ export const FeaturedProductSlider = () => {
           <div
             key={product.id}
             data-slider-card
-            /* Mobile: 82vw (shows 1.2), tablet 46vw (shows ~2.2), desktop: 30vw (shows 3.2) */
             className="shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
           >
             <ProductCard product={product} index={i} />
@@ -107,7 +109,7 @@ export const FeaturedProductSlider = () => {
         <div className="shrink-0 w-10 md:w-16 lg:w-20" aria-hidden />
       </div>
 
-      {/* Bottom: progress bar + arrows */}
+      {/* Bottom: in RTL flex — arrows on left (last), progress bar on right (first) */}
       <div className="mt-5 px-5 md:px-10 lg:px-16 flex items-center gap-4">
         {/* Progress track */}
         <div className="flex-1 h-px bg-gray-200 relative overflow-hidden">
@@ -117,23 +119,25 @@ export const FeaturedProductSlider = () => {
           />
         </div>
 
-        {/* Arrow buttons */}
+        {/* Arrow buttons — in RTL this div is on the left side */}
         <div className="flex gap-2 shrink-0">
+          {/* ChevronRight = go back right (prev) — first in DOM = right of the pair in RTL */}
           <button
-            onClick={() => scroll("prev")}
-            disabled={!canScrollLeft}
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
             aria-label="Previous"
             className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4" />
           </button>
+          {/* ChevronLeft = scroll left / see more (next) — second in DOM = left of the pair in RTL */}
           <button
-            onClick={() => scroll("next")}
-            disabled={!canScrollRight}
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
             aria-label="Next"
             className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background hover:border-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
         </div>
       </div>
