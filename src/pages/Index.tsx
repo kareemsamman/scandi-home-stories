@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
+import { SEOHead, getOrganizationSchema, getWebSiteSchema, getLocalBusinessSchema } from "@/components/SEOHead";
+import { useLocale } from "@/i18n/useLocale";
 import { HeroSlider } from "@/components/HeroSlider";
 import { CategoryScroller } from "@/components/CategoryScroller";
 import { FeaturedProductSlider } from "@/components/FeaturedProductSlider";

@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useShopData } from "@/hooks/useShopData";
 import { Loader2 } from "lucide-react";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
 
 const Catalog = () => {
   const { t, locale, localePath } = useLocale();

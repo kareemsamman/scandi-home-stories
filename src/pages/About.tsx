@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
+import { useLocale } from "@/i18n/useLocale";
 import { AboutHeroSection }    from "@/components/about/AboutHeroSection";
 import { AboutMissionSection } from "@/components/about/AboutMissionSection";
 import { AboutStorySection }   from "@/components/about/AboutStorySection";
