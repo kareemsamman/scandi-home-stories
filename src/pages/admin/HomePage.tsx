@@ -20,6 +20,8 @@ import {
   X,
   Save,
   Loader2,
+  Layers,
+  Check,
 } from "lucide-react";
 
 const db = supabase as any;
@@ -224,9 +226,177 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 );
 
+// ─── FeaturedSliderSection ────────────────────────────────────────────────────
+
+const FeaturedSliderSection = ({ data, onChange, locale }: { data: any; onChange: (v: any) => void; locale: string }) => {
+  const [productSearch, setProductSearch] = useState("");
+
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["admin_all_products_slider"],
+    queryFn: async () => {
+      const { data: prods } = await db.from("products").select("id, name, images, sku, type, status").order("sort_order");
+      const { data: trans } = await db.from("product_translations").select("product_id, name").eq("locale", locale);
+      const transMap = new Map((trans || []).map((t: any) => [t.product_id, t.name]));
+      return (prods || []).map((p: any) => ({ ...p, displayName: transMap.get(p.id) || p.name }));
+    },
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin_categories_slider"],
+    queryFn: async () => {
+      const { data } = await db.from("categories").select("id, name_he, name_ar, parent_id, sort_order").order("sort_order");
+      return data || [];
+    },
+  });
+
+  const parentCats = categories.filter((c: any) => !c.parent_id);
+  const subCats = (pid: string) => categories.filter((c: any) => c.parent_id === pid);
+
+  const selectedIds: string[] = Array.isArray(data.product_ids) ? data.product_ids : [];
+  const toggleProduct = (id: string) => {
+    const next = selectedIds.includes(id) ? selectedIds.filter(x => x !== id) : [...selectedIds, id];
+    onChange({ ...data, product_ids: next });
+  };
+  const moveProduct = (id: string, dir: -1 | 1) => {
+    const arr = [...selectedIds];
+    const idx = arr.indexOf(id);
+    if (idx < 0) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= arr.length) return;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    onChange({ ...data, product_ids: arr });
+  };
+
+  const filteredProducts = allProducts.filter((p: any) =>
+    !productSearch || (p.displayName || "").toLowerCase().includes(productSearch.toLowerCase()) || (p.sku || "").toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  return (
+    <SectionCard icon={Layers} title="Featured Product Slider (After Category Section)">
+      {/* Title + Button */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Field label="Title">
+          <Input value={data.title || ""} onChange={e => onChange({ ...data, title: e.target.value })} placeholder="FEATURED PERGOLAS" />
+        </Field>
+        <Field label="Button Text">
+          <Input value={data.button_text || ""} onChange={e => onChange({ ...data, button_text: e.target.value })} placeholder="View all" />
+        </Field>
+        <Field label="Button Link">
+          <Input value={data.button_link || ""} onChange={e => onChange({ ...data, button_link: e.target.value })} placeholder="/shop" />
+        </Field>
+      </div>
+
+      {/* Mode toggle */}
+      <Field label="Source">
+        <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => onChange({ ...data, mode: "products" })}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${data.mode !== "category" ? "bg-foreground text-background" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+          >
+            מוצרים ספציפיים
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ ...data, mode: "category" })}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${data.mode === "category" ? "bg-foreground text-background" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+          >
+            לפי קטגוריה
+          </button>
+        </div>
+      </Field>
+
+      {/* Category picker */}
+      {data.mode === "category" && (
+        <Field label="Category">
+          <select
+            value={data.category_id || ""}
+            onChange={e => onChange({ ...data, category_id: e.target.value })}
+            className="w-full h-9 px-3 rounded-lg border border-input text-sm bg-white"
+          >
+            <option value="">בחר קטגוריה...</option>
+            {parentCats.map((cat: any) => (
+              <>
+                <option key={cat.id} value={cat.id} className="font-bold">
+                  ▸ {cat.name_he || cat.name_ar}
+                </option>
+                {subCats(cat.id).map((sub: any) => (
+                  <option key={sub.id} value={sub.id}>
+                    &nbsp;&nbsp;{sub.name_he || sub.name_ar}
+                  </option>
+                ))}
+              </>
+            ))}
+          </select>
+        </Field>
+      )}
+
+      {/* Product picker */}
+      {data.mode !== "category" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-gray-600">מוצרים נבחרים ({selectedIds.length})</label>
+          </div>
+
+          {/* Selected products (ordered) */}
+          {selectedIds.length > 0 && (
+            <div className="space-y-1.5 p-3 bg-blue-50 rounded-xl border border-blue-100">
+              {selectedIds.map((id, idx) => {
+                const p = allProducts.find((x: any) => x.id === id);
+                if (!p) return null;
+                return (
+                  <div key={id} className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1.5 border border-blue-100">
+                    {p.images?.[0] && <img src={p.images[0]} className="w-8 h-8 rounded object-cover shrink-0" />}
+                    <span className="text-xs font-medium flex-1 truncate">{p.displayName}</span>
+                    <div className="flex gap-0.5 shrink-0">
+                      <button type="button" onClick={() => moveProduct(id, -1)} disabled={idx === 0} className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">↑</button>
+                      <button type="button" onClick={() => moveProduct(id, 1)} disabled={idx === selectedIds.length - 1} className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">↓</button>
+                      <button type="button" onClick={() => toggleProduct(id)} className="w-5 h-5 flex items-center justify-center text-red-400 hover:text-red-600"><X className="w-3 h-3" /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Search + product list */}
+          <div className="space-y-2">
+            <Input
+              placeholder="חיפוש מוצרים..."
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              className="h-8 text-xs"
+            />
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100">
+              {filteredProducts.map((p: any) => {
+                const selected = selectedIds.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => toggleProduct(p.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 transition-colors text-start ${selected ? "bg-blue-50/60" : ""}`}
+                  >
+                    {p.images?.[0] && <img src={p.images[0]} className="w-8 h-8 rounded object-cover shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{p.displayName}</p>
+                      {p.sku && <p className="text-[10px] text-gray-400 font-mono">{p.sku}</p>}
+                    </div>
+                    {selected && <Check className="w-4 h-4 text-blue-500 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+};
+
 // ─── AdminHomePage ─────────────────────────────────────────────────────────────
 
-const SECTIONS = ["feature_overlay", "promo_grid", "brand_intro", "lifestyle_media", "before_after", "faq"] as const;
+const SECTIONS = ["featured_slider", "feature_overlay", "promo_grid", "brand_intro", "lifestyle_media", "before_after", "faq"] as const;
 
 // Seeded defaults from current static translations — shown when no DB data exists yet
 const SEED_CONTENT: Record<string, Record<string, any>> = {
@@ -343,6 +513,7 @@ const AdminHomePage = () => {
   const queryClient = useQueryClient();
   const [initialized, setInitialized] = useState(false);
 
+  const [featuredSlider, setFeaturedSlider] = useState<any>({ title: "", button_text: "", button_link: "/shop", mode: "products", product_ids: [], category_id: "" });
   const [featureOverlay, setFeatureOverlay] = useState<any>(getSeed("he", "feature_overlay"));
   const [promoGrid, setPromoGrid] = useState<any>(getSeed("he", "promo_grid"));
   const [brandIntro, setBrandIntro] = useState<any>(getSeed("he", "brand_intro"));
@@ -368,6 +539,7 @@ const AdminHomePage = () => {
 
   useEffect(() => {
     if (!allContent) return;
+    setFeaturedSlider(allContent["featured_slider"] ?? { title: "", button_text: "", button_link: "/shop", mode: "products", product_ids: [], category_id: "" });
     setFeatureOverlay(allContent["feature_overlay"] ?? getSeed(locale, "feature_overlay"));
     setPromoGrid(allContent["promo_grid"] ?? getSeed(locale, "promo_grid"));
     setBrandIntro(allContent["brand_intro"] ?? getSeed(locale, "brand_intro"));
@@ -380,6 +552,7 @@ const AdminHomePage = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const rows = [
+        { locale, section: "featured_slider", data: featuredSlider },
         { locale, section: "feature_overlay", data: featureOverlay },
         { locale, section: "promo_grid", data: promoGrid },
         { locale, section: "brand_intro", data: brandIntro },
@@ -438,6 +611,9 @@ const AdminHomePage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Featured Product Slider */}
+      <FeaturedSliderSection data={featuredSlider} onChange={setFeaturedSlider} locale={locale} />
 
       {/* Feature Overlay */}
       <SectionCard icon={Image} title="Feature Overlay" defaultOpen>
