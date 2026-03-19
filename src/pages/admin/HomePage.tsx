@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Image, LayoutGrid, Type, Play, ArrowLeftRight, HelpCircle,
   ChevronDown, ChevronUp, Plus, Trash2, X, Save, Loader2, Layers,
-  Check, GripVertical, Eye, EyeOff,
+  Check, GripVertical, Eye, EyeOff, Users, FileText, Star,
 } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -58,6 +58,11 @@ const ADDABLE_SECTIONS = [
   { type: "lifestyle_media",  label: "Lifestyle Media",         icon: Play },
   { type: "before_after",     label: "Before / After",          icon: ArrowLeftRight },
   { type: "faq",              label: "FAQ",                     icon: HelpCircle },
+  // About page sections
+  { type: "about_mission",    label: "Mission & Stats",         icon: Star },
+  { type: "about_story",      label: "Our Story",               icon: FileText },
+  { type: "about_values",     label: "Values",                  icon: Users },
+  { type: "about_cta",        label: "About CTA",               icon: ArrowLeftRight },
 ];
 
 const NON_REMOVABLE = new Set(["hero_slider", "category_scroller"]);

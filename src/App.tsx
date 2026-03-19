@@ -34,6 +34,7 @@ import AdminOrderDetail from "./pages/admin/OrderDetail";
 import AdminInventory from "./pages/admin/Inventory";
 import AdminHeroSlides from "./pages/admin/HeroSlides";
 import AdminHomePage from "./pages/admin/HomePage";
+import AdminAboutPage from "./pages/admin/AboutPage";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSiteContent from "./pages/admin/SiteContent";
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="hero-slides" element={<AdminHeroSlides />} />
               <Route path="home" element={<AdminHomePage />} />
+              <Route path="about" element={<AdminAboutPage />} />
               <Route path="site-content" element={<AdminSiteContent />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={<AdminSettings />} />

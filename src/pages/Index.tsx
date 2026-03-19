@@ -10,6 +10,10 @@ import { BrandIntroSection } from "@/components/BrandIntroSection";
 import { LifestyleMediaSection } from "@/components/LifestyleMediaSection";
 import { BeforeAfterSection } from "@/components/BeforeAfterSection";
 import { FaqSection } from "@/components/FaqSection";
+import { AboutMissionSection } from "@/components/about/AboutMissionSection";
+import { AboutStorySection }   from "@/components/about/AboutStorySection";
+import { AboutValuesSection }  from "@/components/about/AboutValuesSection";
+import { AboutCtaSection }     from "@/components/about/AboutCtaSection";
 import { DEFAULT_SECTIONS_ORDER, type SectionItem } from "@/pages/admin/HomePage";
 
 const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -22,6 +26,10 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
   lifestyle_media:   LifestyleMediaSection,
   before_after:      BeforeAfterSection,
   faq:               FaqSection,
+  about_mission:     AboutMissionSection,
+  about_story:       AboutStorySection,
+  about_values:      AboutValuesSection,
+  about_cta:         AboutCtaSection,
 };
 
 const NON_CONFIGURABLE = new Set(["hero_slider", "category_scroller"]);

@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { label: "Hero Slides", icon: Image, path: "/admin/hero-slides", roles: ["admin"] },
   { label: "Header & Footer", icon: Layout, path: "/admin/site-content", roles: ["admin"] },
   { label: "Home Page", icon: Home, path: "/admin/home", roles: ["admin"] },
+  { label: "About Page", icon: FileText, path: "/admin/about", roles: ["admin"] },
   { label: "Users", icon: Users, path: "/admin/users", roles: ["admin"] },
   { label: "Settings", icon: Settings, path: "/admin/settings", roles: ["admin"] },
 ];
