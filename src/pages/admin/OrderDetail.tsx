@@ -392,7 +392,9 @@ const AdminOrderDetail = () => {
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map(s => {
-                  const workerBlocked = isWorker && !isAdmin && s.value !== "in_delivery";
+                  const workerBlocked = isWorker && !isAdmin &&
+                    order.status === "confirmed" &&
+                    (s.value === "in_process" || s.value === "cancelled");
                   return (
                     <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
                       <span className="flex items-center gap-2">
@@ -405,10 +407,10 @@ const AdminOrderDetail = () => {
                 })}
               </SelectContent>
             </Select>
-            {isWorker && !isAdmin && (
+            {isWorker && !isAdmin && order.status === "confirmed" && (
               <p className="text-[10px] text-amber-600 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                ניתן לשנות רק ל"יצא למשלוח"
+                לא ניתן לשנות מ"אושרה" ל"בתהליך" או "בוטלה"
               </p>
             )}
           </div>
@@ -644,14 +646,21 @@ const AdminOrderDetail = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 text-base">{item.product_name}</p>
                 {item.product_id && (
-                  <button
-                    onClick={() => navigate(`/admin/products/edit/${item.product_id}`)}
-                    className="inline-flex items-center gap-1 mt-0.5 text-[11px] text-blue-500 hover:text-blue-700 hover:underline font-mono"
-                  >
-                    <Hash className="w-2.5 h-2.5" />
-                    {skuMap.get(item.product_id) || item.product_id.slice(0, 8)}
-                    <ExternalLink className="w-2.5 h-2.5" />
-                  </button>
+                  isAdmin ? (
+                    <button
+                      onClick={() => navigate(`/admin/products/edit/${item.product_id}`)}
+                      className="inline-flex items-center gap-1 mt-0.5 text-[11px] text-blue-500 hover:text-blue-700 hover:underline font-mono"
+                    >
+                      <Hash className="w-2.5 h-2.5" />
+                      {skuMap.get(item.product_id) || item.product_id.slice(0, 8)}
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 mt-0.5 text-[11px] text-gray-400 font-mono">
+                      <Hash className="w-2.5 h-2.5" />
+                      {skuMap.get(item.product_id) || item.product_id.slice(0, 8)}
+                    </span>
+                  )
                 )}
                 <div className="mt-1.5 space-y-0.5">
                   {item.color_name && (() => {

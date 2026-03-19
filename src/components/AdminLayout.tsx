@@ -95,7 +95,9 @@ const AdminLayoutInner = () => {
         {!collapsed && (
           <div>
             <span className="text-lg font-bold text-white">AMG Admin</span>
-            <a href="/he" className="block text-[10px] text-white/40 hover:text-white/70 transition-colors mt-0.5">← Back to Website</a>
+            {!isWorkerOnly && (
+              <a href="/he" className="block text-[10px] text-white/40 hover:text-white/70 transition-colors mt-0.5">← Back to Website</a>
+            )}
           </div>
         )}
         <button
