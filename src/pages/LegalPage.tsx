@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { ChevronLeft, FileText, Shield, Truck, RotateCcw, Accessibility } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const HERO_IMAGE = "/assets/legal-hero.jpg";
 
@@ -634,8 +635,13 @@ const LegalPage = () => {
     { slug: "accessibility", labelHe: "נגישות", labelAr: "إمكانية الوصول" },
   ];
 
+  const seoDesc = locale === "ar"
+    ? `${title} – اقرأ ${title} لشركة A.M.G Pergola`
+    : `${title} – קראו את ה${title} של A.M.G Pergola`;
+
   return (
     <Layout>
+      <SEOHead title={`${title} | A.M.G PERGOLA LTD`} description={seoDesc} noIndex={false} />
       {/* ── Hero with image ─────────────────────────────────────────────── */}
       <section className="relative h-[40vh] md:h-[48vh] overflow-hidden">
         <img

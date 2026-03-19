@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
 
 const DEFAULT_HERO_IMAGE    = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
 const DEFAULT_HERO_IMAGE_MB = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
@@ -93,8 +94,14 @@ const Contact = () => {
     }
   };
 
+  const seoTitle = locale === "ar" ? "تواصل معنا | A.M.G PERGOLA LTD" : "צור קשר | A.M.G PERGOLA LTD";
+  const seoDesc = locale === "ar"
+    ? "تواصلوا مع A.M.G Pergola للاستشارة المجانية وعروض الأسعار. تصميم وتصنيع وتركيب برجولات وحلول تظليل متقدمة."
+    : "צרו קשר עם A.M.G Pergola לייעוץ חינם והצעת מחיר. תכנון, ייצור והתקנת פרגולות ופתרונות הצללה מתקדמים.";
+
   return (
     <Layout>
+      <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative h-[52vh] md:h-[62vh] overflow-hidden">
         <img src={heroImageMb}  alt="" className="absolute inset-0 w-full h-full object-cover md:hidden" />

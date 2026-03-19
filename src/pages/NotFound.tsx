@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 import { ArrowLeft, Home, ShoppingBag } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const DEFAULT_IMAGE = "/assets/404-hero.jpg";
 
@@ -17,6 +18,12 @@ const NotFound = () => {
   const btnShop   = db?.btn_shop     || t("notFound.shop");
 
   return (
+    <>
+    <SEOHead
+      title={locale === "ar" ? "الصفحة غير موجودة | A.M.G PERGOLA" : "הדף לא נמצא | A.M.G PERGOLA"}
+      description={locale === "ar" ? "الصفحة المطلوبة غير موجودة" : "הדף המבוקש לא נמצא"}
+      noIndex={true}
+    />
     <div className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
       {/* Background */}
       <img
@@ -115,6 +122,7 @@ const NotFound = () => {
         </motion.button>
       </div>
     </div>
+    </>
   );
 };
 

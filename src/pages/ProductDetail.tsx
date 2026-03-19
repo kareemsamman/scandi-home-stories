@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil, AlertCircle } from "lucide-react";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead, getProductSchema, getBreadcrumbSchema, getOrganizationSchema } from "@/components/SEOHead";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
@@ -183,8 +184,27 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     setTimeout(() => setAddedConfirm(false), 1000);
   };
 
+  const productDesc = getLocaleText(product.description, locale) || product.name;
+  const colName = collection ? collection.name[locale] : "";
+  const seoJsonLd = [
+    getOrganizationSchema(),
+    getProductSchema({ name: product.name, description: productDesc, price: product.price, images: product.images, slug: product.slug, collection: colName }),
+    getBreadcrumbSchema([
+      { name: t("nav.shop"), url: `/${locale}/shop` },
+      ...(collection ? [{ name: colName, url: `/${locale}/shop?collection=${collection.slug}` }] : []),
+      { name: product.name, url: `/${locale}/product/${product.slug}` },
+    ]),
+  ];
+
   return (
     <Layout>
+      <SEOHead
+        title={`${product.name} | A.M.G PERGOLA`}
+        description={productDesc.slice(0, 155)}
+        ogImage={product.images[0]}
+        ogType="product"
+        jsonLd={seoJsonLd}
+      />
       <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
@@ -467,8 +487,27 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
   };
 
+  const productDesc = getLocaleText(product.description, locale) || product.name;
+  const colName = collection ? collection.name[locale] : "";
+  const seoJsonLd = [
+    getOrganizationSchema(),
+    getProductSchema({ name: product.name, description: productDesc, price: product.price, images: product.images, sku: product.sku, slug: product.slug, collection: colName }),
+    getBreadcrumbSchema([
+      { name: t("nav.shop"), url: `/${locale}/shop` },
+      ...(collection ? [{ name: colName, url: `/${locale}/shop?collection=${collection.slug}` }] : []),
+      { name: product.name, url: `/${locale}/product/${product.slug}` },
+    ]),
+  ];
+
   return (
     <Layout>
+      <SEOHead
+        title={`${product.name} | A.M.G PERGOLA`}
+        description={productDesc.slice(0, 155)}
+        ogImage={product.images[0]}
+        ogType="product"
+        jsonLd={seoJsonLd}
+      />
       <div className="section-container pt-2 pb-1 md:mt-16">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>

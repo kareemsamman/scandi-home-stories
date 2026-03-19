@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
+import { useLocale } from "@/i18n/useLocale";
 import { AboutHeroSection }    from "@/components/about/AboutHeroSection";
 import { AboutMissionSection } from "@/components/about/AboutMissionSection";
 import { AboutStorySection }   from "@/components/about/AboutStorySection";
@@ -46,8 +48,15 @@ const About = () => {
 
   const order = sectionsConfig ?? DEFAULT_ABOUT_SECTIONS_ORDER;
 
+  const { locale } = useLocale();
+  const seoTitle = locale === "ar" ? "من نحن | A.M.G PERGOLA LTD" : "אודות | A.M.G PERGOLA LTD";
+  const seoDesc = locale === "ar"
+    ? "تعرف على A.M.G Pergola – شركة رائدة في تصميم وتصنيع وتركيب البرجولات وحلول التظليل المتقدمة في إسرائيل."
+    : "הכירו את A.M.G Pergola – חברה מובילה בתכנון, ייצור והתקנת פרגולות ופתרונות הצללה מתקדמים בישראל.";
+
   return (
     <Layout>
+      <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
       {order.filter((s) => s.visible).map((s) => {
         const type = s.type || s.id;
         const Component = SECTION_COMPONENTS[type];

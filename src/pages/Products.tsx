@@ -12,6 +12,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
 
 interface FilterState {
   search: string;
@@ -192,8 +193,18 @@ const Products = () => {
     );
   }
 
+  const seoTitle = currentCollection
+    ? `${currentCollection.name[locale]} | A.M.G PERGOLA`
+    : locale === "ar" ? "المتجر | A.M.G PERGOLA LTD" : "חנות | A.M.G PERGOLA LTD";
+  const seoDesc = currentCollection
+    ? currentCollection.description[locale]
+    : locale === "ar"
+      ? "تصفح مجموعتنا الكاملة من البرجولات وأنظمة التظليل والملحقات. منتجات احترافية بجودة عالية."
+      : "עיינו במגוון הפרגולות, מערכות ההצללה והאביזרים שלנו. מוצרים מקצועיים באיכות גבוהה.";
+
   return (
     <Layout>
+      <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
       {/* Hero */}
       <section className="relative h-[28vh] md:h-[40vh] overflow-hidden">
         <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
