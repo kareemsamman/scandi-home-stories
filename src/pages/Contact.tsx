@@ -94,8 +94,14 @@ const Contact = () => {
     }
   };
 
+  const seoTitle = locale === "ar" ? "تواصل معنا | A.M.G PERGOLA LTD" : "צור קשר | A.M.G PERGOLA LTD";
+  const seoDesc = locale === "ar"
+    ? "تواصلوا مع A.M.G Pergola للاستشارة المجانية وعروض الأسعار. تصميم وتصنيع وتركيب برجولات وحلول تظليل متقدمة."
+    : "צרו קשר עם A.M.G Pergola לייעוץ חינם והצעת מחיר. תכנון, ייצור והתקנת פרגולות ופתרונות הצללה מתקדמים.";
+
   return (
     <Layout>
+      <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative h-[52vh] md:h-[62vh] overflow-hidden">
         <img src={heroImageMb}  alt="" className="absolute inset-0 w-full h-full object-cover md:hidden" />

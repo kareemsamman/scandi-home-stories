@@ -635,8 +635,13 @@ const LegalPage = () => {
     { slug: "accessibility", labelHe: "נגישות", labelAr: "إمكانية الوصول" },
   ];
 
+  const seoDesc = locale === "ar"
+    ? `${title} – اقرأ ${title} لشركة A.M.G Pergola`
+    : `${title} – קראו את ה${title} של A.M.G Pergola`;
+
   return (
     <Layout>
+      <SEOHead title={`${title} | A.M.G PERGOLA LTD`} description={seoDesc} noIndex={false} />
       {/* ── Hero with image ─────────────────────────────────────────────── */}
       <section className="relative h-[40vh] md:h-[48vh] overflow-hidden">
         <img
