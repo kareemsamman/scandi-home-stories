@@ -94,7 +94,7 @@ const AdminLayoutInner = () => {
       <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
         {!collapsed && (
           <div>
-            <span className="text-lg font-bold text-white">AMG Admin</span>
+            <span className="text-lg font-bold text-white">{isWorkerOnly ? "Worker Dashboard" : "AMG Admin"}</span>
             <a href="/he" className="block text-[10px] text-white/40 hover:text-white/70 transition-colors mt-0.5">← Back to Website</a>
           </div>
         )}
