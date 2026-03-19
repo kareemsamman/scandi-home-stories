@@ -32,9 +32,9 @@ const groupByColor = (invItems: any[], product: any) => {
       return;
     }
 
-    const colorObj = (product.colors || []).find((c: any) => c.id === colorId) ?? null;
+    const colorObj = (product.colors || []).find((c: any) => (c.tax_id || c.id) === colorId) ?? null;
     const sizeObj = sizeId
-      ? (product.sizes || []).find((s: any) => s.id === sizeId) ?? null
+      ? (product.sizes || []).find((s: any) => (s.tax_id || s.id) === sizeId) ?? null
       : null;
 
     if (!colorMap.has(colorId)) {
@@ -326,7 +326,7 @@ const AdminInventory = () => {
                             <span className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: colorObj.hex }} />
                           )}
                           <span className="text-xs font-bold text-gray-700">
-                            {colorObj?.name_he || colorObj?.name_ar || colorObj?.name || colorId}
+                            {colorObj?.label_he || colorObj?.name_he || colorObj?.name_ar || colorObj?.name || colorId}
                           </span>
                         </div>
 
@@ -336,7 +336,7 @@ const AdminInventory = () => {
                             <QtyRow
                               key={inv.id}
                               inv={inv}
-                              label={sizeObj?.label_he || sizeObj?.label || sizeObj?.name_he || sizeObj?.name || undefined}
+                              label={sizeObj?.label_he || sizeObj?.label_ar || sizeObj?.label || sizeObj?.name || undefined}
                               {...sharedQtyProps}
                             />
                           ))}
