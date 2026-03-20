@@ -1,17 +1,51 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Ban, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Ban, MapPin, ShieldAlert, LogOut } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useOrders } from "@/hooks/useOrders";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const OrderDetail = () => {
   const { t, localePath, locale } = useLocale();
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const { data: orders = [], isLoading } = useOrders();
   const order = orders.find((o) => o.id === orderId);
+
+  const [ownershipStatus, setOwnershipStatus] = useState<"loading" | "owner" | "wrong_user" | "not_found">("loading");
+  const [maskedEmail, setMaskedEmail] = useState<string>("");
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (order) {
+      setOwnershipStatus("owner");
+      return;
+    }
+    // Order not in user's list — check ownership via RPC
+    if (orderId && user) {
+      supabase.rpc("get_order_owner_hint", { p_order_id: orderId }).then(({ data }) => {
+        if (data && typeof data === "object" && "status" in (data as any)) {
+          const result = data as { status: string; masked_email?: string };
+          if (result.status === "wrong_user") {
+            setOwnershipStatus("wrong_user");
+            setMaskedEmail(result.masked_email || "");
+          } else if (result.status === "not_found") {
+            setOwnershipStatus("not_found");
+          } else {
+            setOwnershipStatus("owner");
+          }
+        } else {
+          setOwnershipStatus("not_found");
+        }
+      });
+    }
+  }, [isLoading, order, orderId, user]);
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ArrowRight : ArrowLeft;
 
@@ -21,6 +55,53 @@ const OrderDetail = () => {
         <div className="flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
+      </Layout>
+    );
+  }
+
+  if (ownershipStatus === "loading") {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (ownershipStatus === "wrong_user") {
+    const handleSwitchAccount = async () => {
+      await signOut();
+      navigate(localePath(`/login?redirect=${encodeURIComponent(localePath(`/account/order/${orderId}`))}`));
+    };
+    return (
+      <Layout>
+        <section className="mt-4 py-16">
+          <div className="w-full max-w-[400px] mx-auto px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-5">
+              <ShieldAlert className="w-8 h-8 text-destructive" />
+            </div>
+            <h2 className="text-lg font-bold mb-2">
+              {locale === "ar" ? "هذا الطلب لا يخصك" : "ההזמנה הזו לא שייכת לחשבון שלך"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-1">
+              {locale === "ar" ? "الطلب مرتبط بالحساب:" : "ההזמנה שייכת לחשבון:"}
+            </p>
+            <p className="text-sm font-semibold text-foreground mb-6 direction-ltr" dir="ltr">
+              {maskedEmail}
+            </p>
+            <Button onClick={handleSwitchAccount} variant="default" className="w-full gap-2">
+              <LogOut className="w-4 h-4" />
+              {locale === "ar" ? "تسجيل دخول بحساب آخر" : "התחבר עם חשבון אחר"}
+            </Button>
+            <button
+              onClick={() => navigate(localePath("/"))}
+              className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground underline"
+            >
+              {locale === "ar" ? "العودة للصفحة الرئيسية" : "חזרה לדף הבית"}
+            </button>
+          </div>
+        </section>
       </Layout>
     );
   }
