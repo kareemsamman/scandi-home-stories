@@ -47,6 +47,8 @@ const resolveReceiptUrl = async (raw: string): Promise<string> => {
 };
 
 const calcShipping = (order: any): number => {
+  // Use stored shipping_cost if available, otherwise derive from total
+  if (order.shipping_cost != null) return Number(order.shipping_cost);
   const itemsTotal = (order.order_items || []).reduce(
     (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
   );

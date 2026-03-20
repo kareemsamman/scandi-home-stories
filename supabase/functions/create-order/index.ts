@@ -208,7 +208,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const finalTotal = Math.max(0, serverTotal - discountAmount);
+    const shippingAmount = Number(shippingCost) || 0;
+    const finalTotal = Math.max(0, serverTotal - discountAmount) + shippingAmount;
 
     // --- Insert order ---
     const { data: newOrder, error: orderErr } = await supabaseAdmin
@@ -234,6 +235,7 @@ Deno.serve(async (req) => {
         marketing_opt_in: !!marketingOptIn,
         discount_code: discountCode || null,
         discount_amount: discountAmount,
+        shipping_cost: shippingAmount,
       })
       .select()
       .single();
