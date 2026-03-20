@@ -244,7 +244,8 @@ const Checkout = () => {
   const formRef = useRef<HTMLFormElement>(null);
 
   const isFreeShipping = subtotal - discountAmount >= shipping.threshold;
-  const shippingCost = isFreeShipping || !selectedZone ? 0 : shipping.zones[selectedZone];
+  const hasFreeShippingCoupon = appliedCoupon?.coupon.type === "free_shipping";
+  const shippingCost = isFreeShipping || !selectedZone || hasFreeShippingCoupon ? 0 : shipping.zones[selectedZone];
   const totalAfterDiscount = Math.max(0, subtotal - discountAmount) + shippingCost;
 
   useEffect(() => {

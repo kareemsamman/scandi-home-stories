@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
         notes: (notes && typeof notes === "string") ? notes.slice(0, 1000) : null,
         first_name: (firstName || "").slice(0, 100),
         last_name: (lastName || "").slice(0, 100),
-        email: email ? String(email).slice(0, 255) : null,
+        email: email ? String(email).slice(0, 255) : "",
         phone: (phone || "").slice(0, 20),
         city: (city || "").slice(0, 200),
         address: (address || "").slice(0, 500),

@@ -109,20 +109,22 @@ const CouponModal = ({
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Type</label>
               <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-                {(["percentage", "fixed"] as const).map(t => (
+                {(["percentage", "fixed", "free_shipping"] as const).map(t => (
                   <button key={t} type="button" onClick={() => set("type", t)}
                     className={`flex-1 py-2 text-xs font-medium transition-colors ${form.type === t ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-50"}`}>
-                    {t === "percentage" ? "% Percent" : "₪ Fixed"}
+                    {t === "percentage" ? "% Percent" : t === "fixed" ? "₪ Fixed" : "🚚 Free Ship"}
                   </button>
                 ))}
               </div>
             </div>
+            {form.type !== "free_shipping" && (
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">
                 Discount Value {form.type === "percentage" ? "(%)" : "(₪)"}
               </label>
               <Input type="number" min={0} value={form.value || ""} onChange={e => set("value", +e.target.value)} />
             </div>
+            )}
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Max Discount (₪) <span className="text-gray-400 font-normal">optional cap</span></label>
               <Input type="number" min={0} placeholder="No cap" value={form.max_discount_amount ?? ""} onChange={e => set("max_discount_amount", e.target.value ? +e.target.value : null)} />
@@ -360,8 +362,8 @@ const AdminCoupons = () => {
               <div key={coupon.id} className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-gray-300 transition-colors">
                 <div className="flex items-start gap-4">
                   {/* Code + type icon */}
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${coupon.type === "percentage" ? "bg-purple-100" : "bg-emerald-100"}`}>
-                    {coupon.type === "percentage" ? <Percent className="w-5 h-5 text-purple-600" /> : <DollarSign className="w-5 h-5 text-emerald-600" />}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${coupon.type === "percentage" ? "bg-purple-100" : coupon.type === "free_shipping" ? "bg-blue-100" : "bg-emerald-100"}`}>
+                    {coupon.type === "percentage" ? <Percent className="w-5 h-5 text-purple-600" /> : coupon.type === "free_shipping" ? <span className="text-base">🚚</span> : <DollarSign className="w-5 h-5 text-emerald-600" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -375,7 +377,7 @@ const AdminCoupons = () => {
                     {/* Stats row */}
                     <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
                       <span className="font-semibold text-gray-800">
-                        {coupon.type === "percentage" ? `${coupon.value}% off` : `₪${coupon.value} off`}
+                        {coupon.type === "percentage" ? `${coupon.value}% off` : coupon.type === "free_shipping" ? "Free shipping" : `₪${coupon.value} off`}
                         {coupon.max_discount_amount ? ` (max ₪${coupon.max_discount_amount})` : ""}
                       </span>
                       {coupon.min_order_amount > 0 && <span>Min order: ₪{coupon.min_order_amount}</span>}

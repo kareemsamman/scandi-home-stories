@@ -10,7 +10,7 @@ export interface Coupon {
   id: string;
   code: string;
   description: string;
-  type: "percentage" | "fixed";
+  type: "percentage" | "fixed" | "free_shipping";
   value: number;
   min_order_amount: number;
   max_discount_amount: number | null;
@@ -120,6 +120,10 @@ export const validateCoupon = async (
 
   if (coupon.min_order_amount > 0 && subtotal < coupon.min_order_amount)
     return { error: `מינימום הזמנה ₪${coupon.min_order_amount} לשימוש בקוד` };
+
+  if (coupon.type === "free_shipping") {
+    return { coupon, discountAmount: 0 };
+  }
 
   let discountAmount =
     coupon.type === "percentage"
