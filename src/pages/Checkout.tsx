@@ -418,7 +418,7 @@ const Checkout = () => {
       if (appliedCoupon) removeCoupon();
       clearCart();
       navigate(localePath("/checkout/thank-you"), {
-        state: { orderNumber, total: orderResult?.total ?? totalAfterDiscount, date: orderDate, orderId: orderResult?.orderId, payLater: true },
+        state: { orderNumber, total: orderResult?.total ?? totalAfterDiscount, date: orderDate, orderId: orderResult?.orderId, payLater: true, phone: form.phone, isGuest: !user },
       });
     } catch (e) {
       console.error("[pay-later] error:", e);
@@ -647,7 +647,7 @@ const Checkout = () => {
     clearCart();
     setIsSubmittingReceipt(false);
     navigate(localePath("/checkout/thank-you"), {
-      state: { orderNumber, total: serverTotal ?? totalAfterDiscount, date: orderDate, orderId: savedOrderId },
+      state: { orderNumber, total: serverTotal ?? totalAfterDiscount, date: orderDate, orderId: savedOrderId, phone: form.phone, isGuest: !user },
     });
   };
 

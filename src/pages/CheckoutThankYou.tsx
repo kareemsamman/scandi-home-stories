@@ -7,11 +7,13 @@ import logoWhite from "@/assets/logo-white.png";
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string }) || {};
+  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean }) || {};
   const orderNumber = state.orderNumber || "#00000";
   const orderId = state.orderId;
   const total = state.total ?? 0;
   const date = state.date || new Date().toLocaleDateString();
+  const isGuest = state.isGuest ?? false;
+  const phone = state.phone || "";
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
@@ -76,12 +78,22 @@ const CheckoutThankYou = () => {
             >
               {t("thankYou.backToHome")}
             </Link>
-            <Link
-              to={orderId ? localePath(`/account/order/${orderId}`) : localePath("/account")}
-              className="w-full h-14 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
-            >
-              {t("thankYou.viewOrder")}
-            </Link>
+
+            {isGuest && phone ? (
+              <Link
+                to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(phone)}`}
+                className="w-full h-14 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+              >
+                {t("thankYou.viewOrder")}
+              </Link>
+            ) : (
+              <Link
+                to={orderId ? localePath(`/account/order/${orderId}`) : localePath("/account")}
+                className="w-full h-14 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
+              >
+                {t("thankYou.viewOrder")}
+              </Link>
+            )}
           </div>
         </div>
       </motion.main>

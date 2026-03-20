@@ -116,6 +116,23 @@ Deno.serve(async (req) => {
       return json({ sent: true, via: smsSent ? "sms" : "email" });
     }
 
+    /* ── action: "get_order_data" ── fetch latest order details by phone for pre-filling registration */
+    if (action === "get_order_data") {
+      const { phone } = body;
+      if (!phone) return json({ found: false });
+      const local = normalizePhone(phone);
+      const intl = toIntl(local);
+      const { data: orders } = await supabaseAdmin
+        .from("orders")
+        .select("first_name, last_name, email")
+        .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const order = orders?.[0];
+      if (!order) return json({ found: false });
+      return json({ found: true, firstName: order.first_name, lastName: order.last_name, email: order.email });
+    }
+
     /* ── action: "check_phone" ── is phone already registered? */
     if (action === "check_phone") {
       const { phone } = body;
