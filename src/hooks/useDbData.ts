@@ -48,8 +48,9 @@ export interface DbOrder {
   city: string; address: string; house_number: string | null; apartment: string; notes: string;
   created_at: string; updated_at: string;
   receipt_url: string | null; locale: string | null;
-  payment_status: string;
-  payment_token: string | null;
+  payment_status?: string;
+  payment_token?: string | null;
+  marketing_opt_in?: boolean | null;
 }
 export interface DbOrderItem {
   id: string; order_id: string; product_id: string | null;
