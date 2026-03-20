@@ -73,7 +73,7 @@ const CouponModal = ({
 
   const handleSave = async () => {
     if (!form.code?.trim()) return toast({ title: "Code is required", variant: "destructive" });
-    if (!form.value || Number(form.value) <= 0) return toast({ title: "Value must be > 0", variant: "destructive" });
+    if (form.type !== "free_shipping" && (!form.value || Number(form.value) <= 0)) return toast({ title: "Value must be > 0", variant: "destructive" });
     await save.mutateAsync(form as Coupon);
     toast({ title: (coupon as any).id ? "Coupon updated" : "Coupon created" });
     onClose();
