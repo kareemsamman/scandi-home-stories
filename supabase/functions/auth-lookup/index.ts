@@ -73,9 +73,9 @@ Deno.serve(async (req) => {
       const local = normalizePhone(phone);
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ email: null, found: false });
-      const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-      if (!user?.email) return json({ email: null, found: false });
-      return json({ email: user.email, found: true });
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+      if (!userData?.user?.email) return json({ email: null, found: false });
+      return json({ email: userData.user.email, found: true });
     }
 
     /* ── action: "forgot_password" ── phone reset via SMS */
@@ -85,21 +85,29 @@ Deno.serve(async (req) => {
       const local = normalizePhone(phone);
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ sent: false, reason: "not_found" });
-      const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-      if (!user?.email) return json({ sent: false, reason: "not_found" });
-      // Generate recovery link (also sends email)
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+      if (!userData?.user?.email) return json({ sent: false, reason: "not_found" });
+      const userEmail = userData.user.email;
+      // Generate recovery link (also sends email to user)
       const redirectTo = `${origin || "https://amgpergola.com"}/${locale || "he"}/reset-password`;
-      const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
-        email: user.email,
+        email: userEmail,
         options: { redirectTo },
       });
-      const resetLink = (linkData as any)?.properties?.action_link;
-      if (resetLink) {
-        const msg = `שלום 👋\nלאיפוס הסיסמה שלך לחץ על הקישור:\n${resetLink}\n\n🏗 AMG PERGOLA`;
-        await sendSmsViaApi(supabaseAdmin, local, msg);
+      if (linkError) {
+        console.error("generateLink error:", linkError);
+        return json({ sent: false, reason: "link_failed" });
       }
-      return json({ sent: true });
+      const resetLink = (linkData as any)?.properties?.action_link;
+      if (!resetLink) {
+        // Email was sent by Supabase but no link returned — still counts as sent via email
+        return json({ sent: true, via: "email" });
+      }
+      const msg = `שלום 👋\nלאיפוס הסיסמה שלך לחץ על הקישור:\n${resetLink}\n\n🏗 AMG PERGOLA`;
+      const smsSent = await sendSmsViaApi(supabaseAdmin, local, msg);
+      // If SMS not configured/failed, email was still sent — return success
+      return json({ sent: true, via: smsSent ? "sms" : "email" });
     }
 
     /* ── action: "check_phone" ── is phone already registered? */

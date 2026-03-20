@@ -12,7 +12,7 @@ const ForgotPassword = () => {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [sentVia, setSentVia] = useState<"email" | "sms">("email");
+  const [sentVia, setSentVia] = useState<"email" | "sms" | "phone_email">("email");
 
   const isPhone = (v: string) => /^[\d\s\-\+]{7,15}$/.test(v.trim()) && !v.includes("@");
 
@@ -44,7 +44,7 @@ const ForgotPassword = () => {
         return;
       }
 
-      setSentVia("sms");
+      setSentVia(data?.via === "sms" ? "sms" : "phone_email");
       setSent(true);
     } else {
       // Email flow: standard Supabase reset email
@@ -82,6 +82,8 @@ const ForgotPassword = () => {
               <p className="text-sm text-muted-foreground">
                 {sentVia === "sms"
                   ? "שלחנו לך SMS עם קישור לאיפוס הסיסמה"
+                  : sentVia === "phone_email"
+                  ? "שלחנו קישור לאיפוס הסיסמה לכתובת האימייל המשויכת למספר זה"
                   : t("auth.forgotPwSent")}
               </p>
               <Link

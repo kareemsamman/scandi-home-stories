@@ -110,7 +110,12 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "User deleted" }); },
+    onSuccess: (_data, userId) => {
+      qc.setQueryData(["admin-users"], (old: AdminUser[] | undefined) =>
+        old ? old.filter((u) => u.id !== userId) : old
+      );
+      toast({ title: "User deleted" });
+    },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
