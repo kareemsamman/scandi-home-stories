@@ -18,6 +18,7 @@ const EMPTY_COUPON: Partial<Coupon> = {
   min_order_amount: 0, max_discount_amount: null, max_uses: null,
   max_uses_per_user: 1, valid_from: null, valid_until: null,
   product_ids: [], category_ids: [], is_active: true,
+  admin_only: false, allowed_phones: [],
 };
 
 const statusBadge = (c: Coupon) => {
@@ -57,6 +58,7 @@ const CouponModal = ({
 }) => {
   const [form, setForm] = useState<Partial<Coupon>>({ ...EMPTY_COUPON, ...coupon });
   const [productSearch, setProductSearch] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
   const save = useSaveCoupon();
   const { toast } = useToast();
 
@@ -164,6 +166,59 @@ const CouponModal = ({
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Uses Per User</label>
               <Input type="number" min={1} value={form.max_uses_per_user || 1} onChange={e => set("max_uses_per_user", +e.target.value)} />
+            </div>
+          </div>
+
+          {/* Admin-only toggle */}
+          <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <button type="button" onClick={() => set("admin_only", !form.admin_only)}
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${form.admin_only ? "text-purple-700" : "text-gray-500"}`}>
+              {form.admin_only ? <ToggleRight className="w-5 h-5 text-purple-600" /> : <ToggleLeft className="w-5 h-5" />}
+              Admin Only
+            </button>
+            <span className="text-xs text-gray-400">Only admin accounts can apply this coupon (e.g. free shipping for in-store orders)</span>
+          </div>
+
+          {/* Phone restriction */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">
+              Phone Restriction <span className="text-gray-400 font-normal">(leave empty = all customers)</span>
+            </label>
+            <div className="flex gap-2 mb-2">
+              <Input
+                value={phoneInput}
+                onChange={e => setPhoneInput(e.target.value)}
+                placeholder="05X-XXXXXXX"
+                className="h-8 text-sm flex-1"
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    const p = phoneInput.trim();
+                    if (p && !(form.allowed_phones || []).includes(p)) {
+                      setForm(prev => ({ ...prev, allowed_phones: [...(prev.allowed_phones || []), p] }));
+                    }
+                    setPhoneInput("");
+                  }
+                }}
+              />
+              <button type="button" className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-medium hover:bg-gray-700"
+                onClick={() => {
+                  const p = phoneInput.trim();
+                  if (p && !(form.allowed_phones || []).includes(p)) {
+                    setForm(prev => ({ ...prev, allowed_phones: [...(prev.allowed_phones || []), p] }));
+                  }
+                  setPhoneInput("");
+                }}>Add</button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(form.allowed_phones || []).map(phone => (
+                <span key={phone} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs text-blue-700 font-medium">
+                  {phone}
+                  <button type="button" onClick={() => setForm(prev => ({ ...prev, allowed_phones: (prev.allowed_phones || []).filter(p => p !== phone) }))}>
+                    <X className="w-3 h-3 text-blue-400 hover:text-blue-700" />
+                  </button>
+                </span>
+              ))}
             </div>
           </div>
 

@@ -195,6 +195,7 @@ const Account = () => {
 const OrdersTab = () => {
   const { t, localePath, locale } = useLocale();
   const { data: orders = [], isLoading } = useOrders();
+  const { isAdmin } = useAuth();
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ChevronLeft : ChevronRight;
 
@@ -264,6 +265,9 @@ const OrdersTab = () => {
           <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/60">
             <div>
               <p className="text-sm font-bold text-foreground">{t("account.orderNumber")} {order.orderNumber}</p>
+              {isAdmin && order.firstName && (
+                <p className="text-sm font-semibold text-blue-600 mt-0.5">{order.firstName} {order.lastName || ""}</p>
+              )}
               <p className="text-xs text-muted-foreground mt-0.5">{order.date}</p>
             </div>
             <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${statusColor(order.status)}`}>

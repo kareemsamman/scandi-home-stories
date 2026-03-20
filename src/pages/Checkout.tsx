@@ -263,8 +263,9 @@ const Checkout = () => {
   }, [user]);
 
   // When auth profile loads → fill contact fields only (address left empty for user to pick)
+  // Skip prefill when admin order creation is enabled so fields start empty for customer data
   useEffect(() => {
-    if (user && authProfile) {
+    if (user && authProfile && !adminOrderEnabled) {
       setForm((prev) => ({
         ...prev,
         firstName: authProfile.first_name || prev.firstName,
@@ -273,7 +274,7 @@ const Checkout = () => {
         phone: authProfile.phone || prev.phone,
       }));
     }
-  }, [user, authProfile]);
+  }, [user, authProfile, adminOrderEnabled]);
 
   useEffect(() => {
     if (!showSkeleton && step === "form") firstInputRef.current?.focus();

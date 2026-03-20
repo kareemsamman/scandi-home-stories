@@ -144,13 +144,25 @@ Deno.serve(async (req) => {
         .single();
 
       if (coupon && coupon.is_active) {
+        // Admin-only coupon — skip if caller is not admin
+        const couponAdminOk = !coupon.admin_only || isAdminCaller;
+
+        // Phone-restricted coupon — skip if order phone not in allowed list
+        let couponPhoneOk = true;
+        if (coupon.allowed_phones?.length > 0) {
+          const normalizePhone = (p: string) => p.replace(/[\s\-\+]/g, "").replace(/^972/, "0");
+          const normalizedOrderPhone = normalizePhone(phone || "");
+          const allowed = coupon.allowed_phones.map(normalizePhone);
+          couponPhoneOk = !!normalizedOrderPhone && allowed.includes(normalizedOrderPhone);
+        }
+
         const now = new Date();
         const validFrom = coupon.valid_from ? new Date(coupon.valid_from) : null;
         const validUntil = coupon.valid_until ? new Date(coupon.valid_until) : null;
         const withinDates = (!validFrom || validFrom <= now) && (!validUntil || validUntil >= now);
         const withinUses = coupon.max_uses === null || coupon.uses < coupon.max_uses;
 
-        if (withinDates && withinUses) {
+        if (withinDates && withinUses && couponAdminOk && couponPhoneOk) {
           // Check per-user limit
           let userOk = true;
           if (userId && coupon.max_uses_per_user > 0) {

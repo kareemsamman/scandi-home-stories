@@ -9,7 +9,7 @@ export const CouponInput = () => {
   const { t } = useLocale();
   const { items } = useCart();
   const getSubtotal = useCart((s) => s.getSubtotal);
-  const { user } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   const { applied, apply, remove } = useCouponStore();
 
   const [code, setCode] = useState("");
@@ -22,7 +22,7 @@ export const CouponInput = () => {
     setError("");
     const subtotal = getSubtotal();
     const cartItems = items.map(i => ({ product: { id: i.product.id, price: i.product.price, collection: (i.product as any).collection }, quantity: i.quantity }));
-    const result = await validateCoupon(code, cartItems, subtotal, user?.id);
+    const result = await validateCoupon(code, cartItems, subtotal, user?.id, isAdmin, profile?.phone);
     setLoading(false);
     if (result.error) { setError(result.error); return; }
     apply(result.coupon!, result.discountAmount!);

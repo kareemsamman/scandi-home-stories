@@ -88,19 +88,24 @@ export const adjustInventory = async (
   }
 };
 
-/* ---- fetch orders for current user ---- */
+/* ---- fetch orders for current user (all orders if admin) ---- */
 export const useOrders = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   return useQuery({
-    queryKey: ["user-orders", user?.id],
+    queryKey: ["user-orders", user?.id, isAdmin],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await db
+      let query = db
         .from("orders")
         .select("*, order_items(*)")
-        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
+
+      if (!isAdmin) {
+        query = query.eq("user_id", user!.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

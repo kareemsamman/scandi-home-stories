@@ -22,6 +22,8 @@ export interface Coupon {
   product_ids: string[];
   category_ids: string[];
   is_active: boolean;
+  admin_only: boolean;
+  allowed_phones: string[];
   created_at: string;
 }
 
@@ -58,7 +60,9 @@ export const validateCoupon = async (
   code: string,
   cartItems: CartItemForValidation[],
   subtotal: number,
-  userId?: string
+  userId?: string,
+  isAdmin?: boolean,
+  userPhone?: string
 ): Promise<{ coupon?: Coupon; discountAmount?: number; error?: string }> => {
   const { data: coupon, error: fetchErr } = await db
     .from("coupons")
@@ -68,6 +72,17 @@ export const validateCoupon = async (
 
   if (fetchErr || !coupon) return { error: "קוד הנחה לא תקין" };
   if (!coupon.is_active) return { error: "קוד הנחה אינו פעיל" };
+
+  // Admin-only coupon
+  if (coupon.admin_only && !isAdmin) return { error: "קוד הנחה זה מיועד לשימוש פנימי בלבד" };
+
+  // Phone-restricted coupon
+  if (coupon.allowed_phones?.length > 0) {
+    const normalizePhone = (p: string) => p.replace(/[\s\-\+]/g, "").replace(/^972/, "0");
+    const normalizedUser = userPhone ? normalizePhone(userPhone) : "";
+    const allowed = coupon.allowed_phones.map(normalizePhone);
+    if (!normalizedUser || !allowed.includes(normalizedUser)) return { error: "קוד הנחה זה אינו מיועד למספר הטלפון שלך" };
+  }
 
   const now = new Date();
   if (coupon.valid_from && new Date(coupon.valid_from) > now)
@@ -157,6 +172,8 @@ export const useSaveCoupon = () => {
         code: (fields.code || "").toUpperCase().trim(),
         product_ids: fields.product_ids || [],
         category_ids: fields.category_ids || [],
+        admin_only: fields.admin_only ?? false,
+        allowed_phones: fields.allowed_phones || [],
       };
       if (id) {
         const { error } = await db.from("coupons").update(payload).eq("id", id);
