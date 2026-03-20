@@ -50,7 +50,7 @@ const findProfileByPhone = async (supabaseAdmin: any, normalizedLocal: string) =
   const intl = toIntl(normalizedLocal);
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("user_id, phone")
+    .select("user_id, phone, needs_password")
     .or(`phone.eq.${normalizedLocal},phone.eq.${intl},phone.eq.+${intl}`);
   return data?.[0] ?? null;
 };
@@ -85,6 +85,11 @@ Deno.serve(async (req) => {
       const local = normalizePhone(phone);
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ sent: false, reason: "not_found" });
+
+      // User exists but never set a password — prompt them to create one
+      if (profile.needs_password) {
+        return json({ sent: false, reason: "needs_password" });
+      }
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
       if (!userData?.user?.email) return json({ sent: false, reason: "not_found" });
       const userEmail = userData.user.email;

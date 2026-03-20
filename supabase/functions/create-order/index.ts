@@ -278,6 +278,58 @@ Deno.serve(async (req) => {
         .eq("id", targetRow.id);
     }
 
+    // --- Auto-create customer account if no user yet ---
+    try {
+      if (!userId && phone) {
+        const normalizePhone = (raw: string) => {
+          const digits = raw.replace(/[\s\-\+\(\)]/g, "");
+          if (digits.startsWith("972")) return "0" + digits.slice(3);
+          if (digits.startsWith("00972")) return "0" + digits.slice(5);
+          return digits;
+        };
+        const local = normalizePhone(phone);
+        const intl = local.startsWith("0") ? "972" + local.slice(1) : local;
+
+        // Check if profile with this phone already exists
+        const { data: existingProfiles } = await supabaseAdmin
+          .from("profiles")
+          .select("user_id")
+          .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`);
+
+        if (!existingProfiles || existingProfiles.length === 0) {
+          // Create a new auth user
+          const userEmail = email || `${local.replace(/\D/g, "")}@no-email.amg-pergola.com`;
+          const tempPassword = crypto.randomUUID();
+          const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+            email: userEmail,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { first_name: firstName, last_name: lastName, phone: local },
+          });
+
+          if (!createErr && newUser?.user) {
+            const newUserId = newUser.user.id;
+            // Create profile
+            await supabaseAdmin.from("profiles").upsert({
+              user_id: newUserId,
+              first_name: firstName,
+              last_name: lastName,
+              phone: local,
+              needs_password: true,
+            }, { onConflict: "user_id" });
+            // Link order to new user
+            await supabaseAdmin.from("orders").update({ user_id: newUserId }).eq("id", newOrder.id);
+            console.log("[auto-user] created user for phone:", local);
+          } else {
+            console.error("[auto-user] failed:", createErr?.message);
+          }
+        }
+      }
+    } catch (autoUserErr) {
+      console.error("[auto-user] error:", autoUserErr);
+      // Don't fail the order if auto-user creation fails
+    }
+
     // --- Record coupon use ---
     if (validatedCouponId && discountAmount > 0) {
       await supabaseAdmin.from("coupon_uses").insert({
