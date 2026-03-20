@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart } from "lucide-react";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
   useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
+  useAdminOrderSettings,
   DEFAULT_SMS_MESSAGES,
-  type BankSettings, type SmsSettings, type SmsMessages,
+  type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings,
 } from "@/hooks/useAppSettings";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,7 +26,7 @@ const STATUS_KEYS = [
   { key: "cancelled", label: "בוטלה" },
 ];
 
-type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles";
+type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders";
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
@@ -61,6 +62,12 @@ const AdminSettings = () => {
   const [sms, setSms] = useState<SmsSettings>({ user: "", token: "", source: "", admin_phone: "", enabled: true });
   useEffect(() => { if (dbSms) setSms(dbSms); }, [dbSms]);
 
+  /* Admin Orders */
+  const { data: dbAdminOrders } = useAdminOrderSettings();
+  const saveAdminOrders = useSaveSetting("admin_orders");
+  const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
+  useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
+
   const [testPhone, setTestPhone] = useState("");
   const [testStatus, setTestStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
 
@@ -94,13 +101,14 @@ const AdminSettings = () => {
       else if (tab === "bank") await saveBank.mutateAsync(bank);
       else if (tab === "sms") await saveSms.mutateAsync(sms);
       else if (tab === "messages" && msgs) await saveMsgs.mutateAsync(msgs);
+      else if (tab === "orders") await saveAdminOrders.mutateAsync(adminOrders);
       toast({ title: "Saved successfully" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   };
 
-  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending;
+  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
@@ -109,6 +117,7 @@ const AdminSettings = () => {
     { id: "messages", label: "Messages", icon: <MessageSquare className="w-4 h-4" /> },
     { id: "general", label: "General", icon: <Globe className="w-4 h-4" /> },
     { id: "roles", label: "Roles", icon: <Shield className="w-4 h-4" /> },
+    { id: "orders", label: "Orders", icon: <ShoppingCart className="w-4 h-4" /> },
   ];
 
   const SaveBtn = ({ tab }: { tab: Tab }) => (
@@ -369,6 +378,29 @@ const AdminSettings = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Orders ── */}
+      {activeTab === "orders" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+          <div>
+            <h2 className="text-base font-semibold">Admin Order Creation</h2>
+            <p className="text-xs text-gray-400 mt-1">When enabled, admins can create orders on behalf of customers directly from the checkout — with optional email and a "Pay Later" option.</p>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Enable Admin Order Creation</p>
+              <p className="text-xs text-gray-400 mt-0.5">Admins can place orders for customers with "Pay Later" (unpaid)</p>
+            </div>
+            <button
+              onClick={() => setAdminOrders(p => ({ ...p, enabled: !p.enabled }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${adminOrders.enabled ? "bg-gray-900" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${adminOrders.enabled ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+          <SaveBtn tab="orders" />
         </div>
       )}
     </div>

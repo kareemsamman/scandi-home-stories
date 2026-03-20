@@ -4,7 +4,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, Package, MapPin, User, FileText, ImageIcon,
   Phone, Mail, Receipt, AlertTriangle, X, ChevronLeft, ChevronRight,
-  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check, Send,
+  MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check, Send, Loader2,
 } from "lucide-react";
 import logoWhite from "@/assets/logo-white.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +83,7 @@ const AdminOrderDetail = () => {
   const [sendingSms, setSendingSms] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<AddressState>({ city: "", street: "", houseNumber: "", apartment: "", citySelected: true, streetSelected: true });
+  const [paymentLinkCopied, setPaymentLinkCopied] = useState(false);
 
   /* Build SKU map */
   const skuMap = new Map<string, string | null>();
@@ -119,6 +120,50 @@ const AdminOrderDetail = () => {
     },
     onError: () => toast({ title: "מחיקה נכשלה", variant: "destructive" }),
   });
+
+  const markAsPaid = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("orders").update({ payment_status: "paid" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["order", orderId] });
+      toast({ title: "✅ ההזמנה סומנה כשולמה" });
+    },
+    onError: () => toast({ title: "עדכון נכשל", variant: "destructive" }),
+  });
+
+  const sendPaymentLink = useMutation({
+    mutationFn: async ({ id, phone }: { id: string; phone: string }) => {
+      // Generate or reuse token
+      const token = crypto.randomUUID().replace(/-/g, "");
+      const { error } = await (supabase as any).from("orders").update({ payment_token: token }).eq("id", id);
+      if (error) throw error;
+      const link = `${window.location.origin}/he/pay/${id}?token=${token}`;
+      // Send SMS
+      const msg = `שלום 👋\nלהשלמת תשלום עבור הזמנתך לחץ על הקישור:\n${link}\n\n🏗 AMG PERGOLA`;
+      await (await import("@/hooks/useAppSettings")).sendSms(phone, msg);
+      return { link, token };
+    },
+    onSuccess: ({ link }) => {
+      qc.invalidateQueries({ queryKey: ["order", orderId] });
+      navigator.clipboard.writeText(link).catch(() => {});
+      setPaymentLinkCopied(true);
+      setTimeout(() => setPaymentLinkCopied(false), 3000);
+      toast({ title: "קישור נשלח ב-SMS ✅", description: "הקישור הועתק ללוח" });
+    },
+    onError: () => toast({ title: "שליחה נכשלה", variant: "destructive" }),
+  });
+
+  const copyPaymentLink = () => {
+    if (!order?.payment_token) return;
+    const link = `${window.location.origin}/he/pay/${order.id}?token=${order.payment_token}`;
+    navigator.clipboard.writeText(link);
+    setPaymentLinkCopied(true);
+    setTimeout(() => setPaymentLinkCopied(false), 3000);
+    toast({ title: "הקישור הועתק ✅" });
+  };
 
   const updateAddress = useMutation({
     mutationFn: async (data: { city: string; address: string; house_number: string; apartment: string }) => {
@@ -424,6 +469,45 @@ const AdminOrderDetail = () => {
               <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
                 <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
               </span>
+            )}
+
+            {/* Payment status + actions */}
+            {(order.payment_status || "paid") === "unpaid" && isAdmin && (
+              <>
+                <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+                  💳 טרם שולם
+                </span>
+                <button
+                  onClick={() => markAsPaid.mutate(order.id)}
+                  disabled={markAsPaid.isPending}
+                  className="flex items-center gap-1.5 h-9 px-3 text-sm text-green-700 hover:text-green-900 border border-green-300 hover:bg-green-50 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {markAsPaid.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  סמן כשולם
+                </button>
+                <button
+                  onClick={() => sendPaymentLink.mutate({ id: order.id, phone: order.phone })}
+                  disabled={sendPaymentLink.isPending}
+                  className="flex items-center gap-1.5 h-9 px-3 text-sm text-amber-700 hover:text-amber-900 border border-amber-300 hover:bg-amber-50 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {sendPaymentLink.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  שלח קישור תשלום
+                </button>
+              </>
+            )}
+            {(order.payment_status || "paid") === "paid" && isAdmin && (
+              <span className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                ✅ שולם
+              </span>
+            )}
+            {(order.payment_status || "paid") === "unpaid" && order.payment_token && (
+              <button
+                onClick={copyPaymentLink}
+                className="flex items-center gap-1.5 h-9 px-3 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                {paymentLinkCopied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                {paymentLinkCopied ? "הועתק!" : "העתק קישור"}
+              </button>
             )}
 
             {/* Print */}

@@ -95,6 +95,17 @@ export const useSmsMessages = () =>
     staleTime: 1000 * 60 * 5,
   });
 
+export interface AdminOrderSettings {
+  enabled: boolean;
+}
+
+export const useAdminOrderSettings = () =>
+  useQuery<AdminOrderSettings>({
+    queryKey: ["app_settings", "admin_orders"],
+    queryFn: async () => (await fetchSetting("admin_orders")) ?? { enabled: false },
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useSaveSetting = (key: string) => {
   const qc = useQueryClient();
   return useMutation({

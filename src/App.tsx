@@ -46,6 +46,7 @@ import AdminMarketing from "./pages/admin/Marketing";
 import AdminLegalPages from "./pages/admin/LegalPages";
 import AdminNotFoundPage from "./pages/admin/NotFoundPage";
 import LegalPage from "./pages/LegalPage";
+import PaymentLink from "./pages/PaymentLink";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => (
               <Route path="404-page" element={<AdminNotFoundPage />} />
             </Route>
             <Route path="/invoice/:orderId" element={<InvoicePage />} />
+            <Route path="/:locale/pay/:orderId" element={<PaymentLink />} />
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
         </BrowserRouter>

@@ -36,11 +36,24 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const {
       orderNumber, notes, firstName, lastName, email, phone,
-      city, address, apartment, receiptUrl, locale,
+      city, address, house_number, apartment, receiptUrl, locale,
       origin, shippingCost,
       marketingOptIn, discountCode,
+      payment_status: rawPaymentStatus,
       items, // Array of { productId, quantity, size?, color?, colorId?, sizeId? }
     } = body;
+
+    // --- Check if caller is admin (allows optional email + pay_later) ---
+    let isAdminCaller = false;
+    if (userId) {
+      const { data: roleData } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin");
+      isAdminCaller = !!(roleData && roleData.length > 0);
+    }
+    const paymentStatus = isAdminCaller && rawPaymentStatus === "unpaid" ? "unpaid" : "paid";
 
     // --- Input validation ---
     if (!orderNumber || typeof orderNumber !== "string" || orderNumber.length > 50) {
@@ -52,7 +65,11 @@ Deno.serve(async (req) => {
     if (!lastName || typeof lastName !== "string" || lastName.length > 100) {
       return jsonResponse({ error: "Invalid last name" }, 400);
     }
-    if (!email || typeof email !== "string" || email.length > 255) {
+    // Email optional for admin pay-later orders
+    if (!isAdminCaller && (!email || typeof email !== "string" || email.length > 255)) {
+      return jsonResponse({ error: "Invalid email" }, 400);
+    }
+    if (email && (typeof email !== "string" || email.length > 255)) {
       return jsonResponse({ error: "Invalid email" }, 400);
     }
     if (!phone || typeof phone !== "string" || phone.length > 20) {
@@ -196,8 +213,10 @@ Deno.serve(async (req) => {
         phone: phone.slice(0, 20),
         city: city.slice(0, 200),
         address: address.slice(0, 500),
+        house_number: (house_number && typeof house_number === "string") ? house_number.slice(0, 50) : null,
         apartment: (apartment && typeof apartment === "string") ? apartment.slice(0, 100) : null,
         receipt_url: (receiptUrl && typeof receiptUrl === "string") ? receiptUrl.slice(0, 2000) : null,
+        payment_status: paymentStatus,
         locale: locale === "ar" ? "ar" : "he",
         marketing_opt_in: !!marketingOptIn,
         discount_code: discountCode || null,

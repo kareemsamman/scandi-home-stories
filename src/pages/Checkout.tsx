@@ -17,7 +17,7 @@ import { CouponInput } from "@/components/CouponInput";
 import { SendCartModal } from "@/components/SendCartModal";
 import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
 import { loadAllRecords } from "@/utils/cityStreetApi";
-import { useBankSettings, useSmsSettings } from "@/hooks/useAppSettings";
+import { useBankSettings, useSmsSettings, useAdminOrderSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 
@@ -200,6 +200,8 @@ const Checkout = () => {
   const shipping: ShippingSettings = shippingSettings ?? DEFAULT_SHIPPING;
   const { data: bankSettings } = useBankSettings();
   const { data: smsSettings } = useSmsSettings();
+  const { data: adminOrderSettings } = useAdminOrderSettings();
+  const adminOrderEnabled = isAdmin && adminOrderSettings?.enabled === true;
 
 
   const subtotal = getSubtotal();
@@ -225,6 +227,7 @@ const Checkout = () => {
   const [step, setStep] = useState<"form" | "payment">("form");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
+  const [isPayLater, setIsPayLater] = useState(false);
   const [receiptDetected, setReceiptDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -277,6 +280,9 @@ const Checkout = () => {
   }, [showSkeleton, step]);
 
 
+  // Auto-accept privacy for admin order creation
+  useEffect(() => { if (adminOrderEnabled) setAcceptPrivacy(true); }, [adminOrderEnabled]);
+
   // Preload all cities+streets as soon as the form mounts
   useEffect(() => { loadAllRecords(); }, []);
 
@@ -317,15 +323,19 @@ const Checkout = () => {
     const e: FormErrors = {};
     if (!form.firstName.trim()) e.firstName = t("checkout.firstNameRequired");
     if (!form.lastName.trim()) e.lastName = t("checkout.lastNameRequired");
-    if (!form.email.trim()) e.email = t("checkout.emailRequired");
-    else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
+    if (!adminOrderEnabled) {
+      if (!form.email.trim()) e.email = t("checkout.emailRequired");
+      else if (!validateEmail(form.email)) e.email = t("checkout.invalidEmail");
+    } else if (form.email.trim() && !validateEmail(form.email)) {
+      e.email = t("checkout.invalidEmail");
+    }
     if (!form.phone.trim()) e.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
     if (!addressState.city.trim() || (!addressState.citySelected && !isStaff)) e.city = t("checkout.selectCity");
     if (!addressState.street.trim() || (!addressState.streetSelected && !isStaff)) e.street = "יש לבחור רחוב";
     if (!addressState.houseNumber.trim()) e.houseNumber = "יש להזין מספר בית";
     return e;
-  }, [form, t, addressState, isStaff]);
+  }, [form, t, addressState, isStaff, adminOrderEnabled]);
 
   const isValid = Object.keys(validate()).length === 0 && (acceptPrivacy || isStaff);
 
@@ -363,6 +373,58 @@ const Checkout = () => {
     setIsSubmitting(false);
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Pay Later: admin creates order with payment_status='unpaid', skips receipt step
+  const handlePayLater = async () => {
+    const errs = validate();
+    setErrors(errs);
+    setTouched({ firstName: true, lastName: true, email: true, phone: true });
+    setAddrTouched({ city: true, street: true, houseNumber: true });
+    if (Object.keys(errs).length > 0) return;
+    setIsPayLater(true);
+    const orderNumber = generateOrderNumber();
+    const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
+    try {
+      const { data: orderResult, error: orderFnErr } = await supabase.functions.invoke("create-order", {
+        body: {
+          orderNumber,
+          notes: form.note || undefined,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email || undefined,
+          phone: form.phone,
+          city: addressState.city,
+          address: addressState.street,
+          house_number: addressState.houseNumber,
+          apartment: addressState.apartment || undefined,
+          locale,
+          origin: window.location.origin,
+          shippingCost,
+          discountCode: appliedCoupon?.coupon.code,
+          payment_status: "unpaid",
+          items: items.map((item) => {
+            const colorId = item.options?.color?.id;
+            const sizeLabel = item.options?.size;
+            const sizeId = item.product.type === "contractor"
+              ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
+              : undefined;
+            return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorId, sizeId };
+          }),
+        },
+      });
+      if (orderFnErr) throw orderFnErr;
+      if (appliedCoupon) removeCoupon();
+      clearCart();
+      navigate(localePath("/checkout/thank-you"), {
+        state: { orderNumber, total: orderResult?.total ?? totalAfterDiscount, date: orderDate, orderId: orderResult?.orderId, payLater: true },
+      });
+    } catch (e) {
+      console.error("[pay-later] error:", e);
+      toast({ title: "שגיאה", description: "לא הצלחנו ליצור את ההזמנה, נסה שוב", variant: "destructive" });
+    } finally {
+      setIsPayLater(false);
+    }
   };
 
   // File upload handlers
@@ -1073,19 +1135,33 @@ const Checkout = () => {
                 </div>
 
                 {/* Privacy */}
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input type="checkbox" checked={acceptPrivacy} onChange={(e) => setAcceptPrivacy(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground leading-relaxed">
-                    {t("checkout.acceptPrivacy")}{" "}
-                    <Link to={localePath("/legal/privacy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
-                  </span>
-                </label>
+                {!adminOrderEnabled && (
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" checked={acceptPrivacy} onChange={(e) => setAcceptPrivacy(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground leading-relaxed">
+                      {t("checkout.acceptPrivacy")}{" "}
+                      <Link to={localePath("/legal/privacy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">{t("checkout.privacyPolicy")}</Link>
+                    </span>
+                  </label>
+                )}
 
                 {/* Place Order */}
-                <button type="submit" disabled={!isValid || isSubmitting}
+                <button type="submit" disabled={!isValid || isSubmitting || isPayLater}
                   className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><LockIcon />{t("checkout.placeOrder")}</>}
                 </button>
+
+                {/* Pay Later — admin only */}
+                {adminOrderEnabled && (
+                  <button
+                    type="button"
+                    onClick={handlePayLater}
+                    disabled={isPayLater || isSubmitting}
+                    className="w-full h-12 flex items-center justify-center gap-2 text-sm font-semibold border-2 border-amber-400 text-amber-700 bg-amber-50 rounded-[1.875rem] hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPayLater ? <Loader2 className="w-4 h-4 animate-spin" /> : "💳 שמור הזמנה — ישלם מאוחר יותר"}
+                  </button>
+                )}
 
                 {/* Bottom links */}
                 <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 pb-8">

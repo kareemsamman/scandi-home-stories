@@ -33,6 +33,7 @@ const AdminOrders = () => {
   const { isAdmin } = useAuth();
 
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPayment, setFilterPayment] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "total_desc" | "total_asc">("newest");
 
@@ -40,6 +41,9 @@ const AdminOrders = () => {
 
   const filtered = useMemo(() => {
     let list = orders.filter(o => filterStatus === "all" || o.status === filterStatus);
+    if (filterPayment !== "all") {
+      list = list.filter(o => (o.payment_status || "paid") === filterPayment);
+    }
     if (q) {
       list = list.filter(o => {
         const fullName = `${o.first_name} ${o.last_name}`.toLowerCase();
@@ -61,6 +65,7 @@ const AdminOrders = () => {
   }, [orders, filterStatus, q, sortBy]);
 
   const waitingCount = orders.filter(o => o.status === "waiting_approval").length;
+  const unpaidCount = orders.filter(o => (o.payment_status || "paid") === "unpaid").length;
 
   return (
     <div className="space-y-5">
@@ -74,6 +79,11 @@ const AdminOrders = () => {
               {waitingCount > 0 && (
                 <span className="ms-2 inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
                   {waitingCount} ממתינות לאישור
+                </span>
+              )}
+              {unpaidCount > 0 && (
+                <span className="ms-2 inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                  {unpaidCount} לא שולמו
                 </span>
               )}
             </p>
@@ -91,6 +101,14 @@ const AdminOrders = () => {
                     </span>
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterPayment} onValueChange={setFilterPayment}>
+              <SelectTrigger className="w-full sm:w-36 border-gray-200 text-sm h-9"><SelectValue placeholder="תשלום" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">כל התשלומים</SelectItem>
+                <SelectItem value="paid">שולם</SelectItem>
+                <SelectItem value="unpaid">טרם שולם</SelectItem>
               </SelectContent>
             </Select>
             <div className="relative flex items-center">
@@ -158,13 +176,18 @@ const AdminOrders = () => {
                       <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
                       {st.label}
                     </span>
-                    {isAdmin && receiptCount > 0 && (
+                    {isAdmin && (order.payment_status || "paid") === "unpaid" && (
+                      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-bold">
+                        💳 טרם שולם
+                      </span>
+                    )}
+                    {isAdmin && (order.payment_status || "paid") === "paid" && receiptCount > 0 && (
                       <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
                         <Receipt className="w-3 h-3" />
                         {receiptCount > 1 ? `${receiptCount} קבלות` : "קבלה"}
                       </span>
                     )}
-                    {isAdmin && receiptCount === 0 && (
+                    {isAdmin && (order.payment_status || "paid") === "paid" && receiptCount === 0 && (
                       <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 font-semibold">
                         ללא קבלה
                       </span>
