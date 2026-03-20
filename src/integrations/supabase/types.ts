@@ -498,6 +498,8 @@ export type Database = {
           marketing_opt_in: boolean | null
           notes: string | null
           order_number: string
+          payment_status: string
+          payment_token: string | null
           phone: string
           receipt_url: string | null
           status: string
@@ -521,6 +523,8 @@ export type Database = {
           marketing_opt_in?: boolean | null
           notes?: string | null
           order_number: string
+          payment_status?: string
+          payment_token?: string | null
           phone?: string
           receipt_url?: string | null
           status?: string
@@ -544,6 +548,8 @@ export type Database = {
           marketing_opt_in?: boolean | null
           notes?: string | null
           order_number?: string
+          payment_status?: string
+          payment_token?: string | null
           phone?: string
           receipt_url?: string | null
           status?: string
