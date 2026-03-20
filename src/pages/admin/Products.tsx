@@ -135,30 +135,30 @@ const AdminProducts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start sm:items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-500 text-sm mt-1">{products.length} products total</p>
         </div>
-        <Button onClick={() => navigate("/admin/products/edit/new")} className="bg-gray-900 hover:bg-gray-800 text-white">
+        <Button onClick={() => navigate("/admin/products/edit/new")} className="bg-gray-900 hover:bg-gray-800 text-white shrink-0">
           <Plus className="w-4 h-4 mr-2" /> Add Product
         </Button>
       </div>
 
-      <div className="flex gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-2">
+        <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input placeholder="Search by name or SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((c) => <SelectItem key={c.id} value={c.id}>{locale === "ar" ? c.name_ar : c.name_he}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="published">Published</SelectItem>
@@ -208,10 +208,10 @@ const AdminProducts = () => {
                         {sizesCount > 0 && ` · ${sizesCount} lengths`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
                       {isDraft && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Draft</span>}
-                      {product.is_featured && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
-                      {product.is_new && <span className="text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}
+                      {product.is_featured && <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
+                      {product.is_new && <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}
                       {product.slug && (
                         <Button variant="ghost" size="icon" title="Preview" onClick={() => window.open(`/he/product/${product.slug}`, "_blank")}>
                           <Eye className="w-4 h-4 text-gray-400" />

@@ -386,7 +386,7 @@ const AdminOrderDetail = () => {
         </div>
 
         {/* Bottom row: status + actions */}
-        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-gray-100">
+        <div className="flex items-start sm:items-center gap-2 flex-wrap pt-1 border-t border-gray-100">
           {/* Status */}
           <div className="flex flex-col gap-1">
             <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
@@ -419,7 +419,7 @@ const AdminOrderDetail = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2 ms-auto flex-wrap">
+          <div className="flex items-center gap-2 ms-auto flex-wrap justify-end">
             {sendingSms && (
               <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
                 <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
@@ -614,12 +614,12 @@ const AdminOrderDetail = () => {
       <Section title="פריטים" icon={Package}>
         <div className="rounded-xl border border-gray-100 overflow-hidden">
           {(order.order_items || []).map((item: DbOrderItem, idx: number) => (
-            <div key={item.id} className={`flex items-center gap-4 px-4 py-4 ${idx > 0 ? "border-t border-gray-100" : ""}`}>
+            <div key={item.id} className={`flex items-center gap-3 px-3 sm:px-4 py-3 sm:py-4 ${idx > 0 ? "border-t border-gray-100" : ""}`}>
               {item.product_image ? (
-                <img src={item.product_image} alt="" className="w-16 h-16 rounded-xl object-cover border border-gray-100 shrink-0" />
+                <img src={item.product_image} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border border-gray-100 shrink-0" />
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
-                  <Package className="w-6 h-6 text-gray-300" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
+                  <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300" />
                 </div>
               )}
               <div className="flex-1 min-w-0">

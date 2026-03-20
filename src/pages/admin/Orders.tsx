@@ -78,9 +78,9 @@ const AdminOrders = () => {
               )}
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-44 border-gray-200 text-sm h-9"><SelectValue placeholder="סנן לפי סטטוס" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-44 border-gray-200 text-sm h-9"><SelectValue placeholder="סנן לפי סטטוס" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">כל ההזמנות</SelectItem>
                 {STATUSES.map(s => (
@@ -96,7 +96,7 @@ const AdminOrders = () => {
             <div className="relative flex items-center">
               <ArrowUpDown className="absolute right-3 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10" />
               <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="w-48 border-gray-200 text-sm h-9 pr-8"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-48 border-gray-200 text-sm h-9 pr-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="newest">חדש לישן</SelectItem>
                   <SelectItem value="oldest">ישן לחדש</SelectItem>

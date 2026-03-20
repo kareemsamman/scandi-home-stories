@@ -91,7 +91,7 @@ const CouponModal = ({
 
         <div className="p-6 space-y-5">
           {/* Code + Description */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Code *</label>
               <Input value={form.code || ""} onChange={e => set("code", e.target.value.toUpperCase())} placeholder="SUMMER20" className="font-mono" />
@@ -103,7 +103,7 @@ const CouponModal = ({
           </div>
 
           {/* Type + Value */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Type</label>
               <div className="flex rounded-lg border border-gray-200 overflow-hidden">
@@ -128,7 +128,7 @@ const CouponModal = ({
           </div>
 
           {/* Min order */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Minimum Order Amount (₪)</label>
               <Input type="number" min={0} value={form.min_order_amount || ""} onChange={e => set("min_order_amount", +e.target.value)} placeholder="0 = no minimum" />
@@ -144,7 +144,7 @@ const CouponModal = ({
           </div>
 
           {/* Date range */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Valid From</label>
               <Input type="datetime-local" value={form.valid_from ? form.valid_from.slice(0, 16) : ""} onChange={e => set("valid_from", e.target.value ? new Date(e.target.value).toISOString() : null)} />
@@ -156,7 +156,7 @@ const CouponModal = ({
           </div>
 
           {/* Usage limits */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Total Usage Limit <span className="text-gray-400 font-normal">leave blank = unlimited</span></label>
               <Input type="number" min={1} placeholder="Unlimited" value={form.max_uses ?? ""} onChange={e => set("max_uses", e.target.value ? +e.target.value : null)} />

@@ -164,11 +164,11 @@ const AdminUsers = () => {
             <h3 className="text-lg font-semibold text-gray-900">Create New User</h3>
             <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}><X className="w-4 h-4" /></Button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input placeholder="First Name" value={newUser.firstName} onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })} />
             <Input placeholder="Last Name" value={newUser.lastName} onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => { setNewUser({ ...newUser, email: e.target.value }); setCreateErrors(p => ({ ...p, email: undefined })); }} autoComplete="off" className={createErrors.email ? "border-red-400 focus-visible:ring-red-400" : ""} />
               {createErrors.email && <p className="text-xs text-red-500 mt-1 px-1">{createErrors.email}</p>}
@@ -178,7 +178,7 @@ const AdminUsers = () => {
               {createErrors.phone && <p className="text-xs text-red-500 mt-1 px-1">{createErrors.phone}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input placeholder="Password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} autoComplete="new-password" />
             <Select value={newUser.role} onValueChange={(v) => setNewUser({ ...newUser, role: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -198,12 +198,69 @@ const AdminUsers = () => {
         </div>
       )}
 
-      <div className="relative max-w-sm">
+      <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="ps-10" autoComplete="off" />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* ── Mobile card view (hidden on md+) ── */}
+      <div className="md:hidden space-y-3">
+        {isLoading && [1,2,3].map(i => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+              <div className="flex-1 space-y-1.5"><div className="h-4 w-32 bg-gray-100 rounded" /><div className="h-3 w-24 bg-gray-100 rounded" /></div>
+            </div>
+            <div className="h-3 w-40 bg-gray-100 rounded" />
+            <div className="flex gap-1"><div className="h-5 w-14 bg-gray-100 rounded-full" /><div className="h-5 w-16 bg-gray-100 rounded-full" /></div>
+          </div>
+        ))}
+        {!isLoading && filtered.map((u) => (
+          <div key={u.id} className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0">
+                  {(u.first_name?.[0] || u.email?.[0] || "?").toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm truncate">{u.first_name} {u.last_name}</p>
+                  <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                  {u.phone && <p className="text-xs text-gray-400">{u.phone}</p>}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => openEdit(u)} className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                  <Pencil className="w-4 h-4" />
+                </button>
+                {u.id !== currentUser?.id && (
+                  <button onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteMutation.mutate(u.id); }} disabled={deleteMutation.isPending} className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {ROLES.map((role) => {
+                const hasRole = u.roles.includes(role);
+                return (
+                  <button key={role} onClick={() => roleMutation.mutate({ userId: u.id, action: hasRole ? "remove_role" : "add_role", role })} disabled={roleMutation.isPending}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${hasRole ? role === "admin" ? "bg-red-100 text-red-700" : role === "worker" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+                    {hasRole ? <ShieldCheck className="w-3 h-3" /> : <ShieldX className="w-3 h-3" />}
+                    {role}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-gray-400">Last sign in: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}</p>
+          </div>
+        ))}
+        {!isLoading && filtered.length === 0 && (
+          <p className="text-center py-8 text-gray-400 text-sm">No users found</p>
+        )}
+      </div>
+
+      {/* ── Desktop table (hidden on mobile) ── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -286,7 +343,7 @@ const AdminUsers = () => {
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input placeholder="First Name" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} autoComplete="off" />
               <Input placeholder="Last Name" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} autoComplete="off" />
             </div>

@@ -102,9 +102,9 @@ const QtyRow = ({
   };
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-2.5 ${isLow ? "bg-red-50/50" : "bg-white"}`}>
+    <div className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 ${isLow ? "bg-red-50/50" : "bg-white"}`}>
       {/* Size label */}
-      <div className="w-12 shrink-0">
+      <div className="w-10 sm:w-12 shrink-0">
         {label && <span className="text-xs font-bold text-gray-700">{label}</span>}
       </div>
 
