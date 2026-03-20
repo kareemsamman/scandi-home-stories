@@ -798,6 +798,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          needs_password: boolean | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -808,6 +809,7 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          needs_password?: boolean | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -818,6 +820,7 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          needs_password?: boolean | null
           phone?: string | null
           updated_at?: string
           user_id?: string
