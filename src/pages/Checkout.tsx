@@ -981,7 +981,7 @@ const Checkout = () => {
                     onBlur={(field) => setAddrTouched(p => ({ ...p, [field]: true }))}
                     isStaff={isStaff}
                   />
-                  {user && selectedAddressId !== "__new__" && (
+                  {user && (selectedAddressId === "__new__" || savedAddresses.length === 0) && (
                     <label className="flex items-center gap-2.5 mt-2 cursor-pointer select-none">
                       <input type="checkbox" checked={saveAddress} onChange={e => setSaveAddress(e.target.checked)} className="w-4 h-4 rounded border-border accent-foreground flex-shrink-0" />
                       <span className="text-xs text-muted-foreground">שמור כתובת זו לפרופיל שלי</span>

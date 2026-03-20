@@ -23,8 +23,29 @@ const AdminUsers = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newUser, setNewUser] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
+  const [createErrors, setCreateErrors] = useState<{ email?: string; phone?: string }>({});
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", phone: "", newPassword: "" });
+  const [editErrors, setEditErrors] = useState<{ email?: string; phone?: string }>({});
+
+  const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const isValidPhone = (v: string) => /^0\d{9}$/.test(v);
+
+  const validateCreate = () => {
+    const errs: { email?: string; phone?: string } = {};
+    if (!isValidEmail(newUser.email)) errs.email = "Invalid email address";
+    if (!isValidPhone(newUser.phone)) errs.phone = "Phone must be 10 digits starting with 0";
+    setCreateErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateEdit = () => {
+    const errs: { email?: string; phone?: string } = {};
+    if (!isValidEmail(editForm.email)) errs.email = "Invalid email address";
+    if (editForm.phone && !isValidPhone(editForm.phone)) errs.phone = "Phone must be 10 digits starting with 0";
+    setEditErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -50,6 +71,7 @@ const AdminUsers = () => {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setShowCreate(false);
       setNewUser({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
+      setCreateErrors({});
       toast({ title: "User created" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -109,6 +131,7 @@ const AdminUsers = () => {
   const openEdit = (u: AdminUser) => {
     setEditingUser(u);
     setEditForm({ firstName: u.first_name, lastName: u.last_name, email: u.email, phone: u.phone, newPassword: "" });
+    setEditErrors({});
   };
 
   const filtered = users.filter((u) => {
@@ -146,8 +169,14 @@ const AdminUsers = () => {
             <Input placeholder="Last Name" value={newUser.lastName} onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} autoComplete="off" />
-            <Input placeholder="Phone" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} />
+            <div>
+              <Input placeholder="Email" type="email" value={newUser.email} onChange={(e) => { setNewUser({ ...newUser, email: e.target.value }); setCreateErrors(p => ({ ...p, email: undefined })); }} autoComplete="off" className={createErrors.email ? "border-red-400 focus-visible:ring-red-400" : ""} />
+              {createErrors.email && <p className="text-xs text-red-500 mt-1 px-1">{createErrors.email}</p>}
+            </div>
+            <div>
+              <Input placeholder="Phone (e.g. 0521234567)" value={newUser.phone} inputMode="numeric" onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 10); setNewUser({ ...newUser, phone: v }); setCreateErrors(p => ({ ...p, phone: undefined })); }} className={createErrors.phone ? "border-red-400 focus-visible:ring-red-400" : ""} />
+              {createErrors.phone && <p className="text-xs text-red-500 mt-1 px-1">{createErrors.phone}</p>}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input placeholder="Password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} autoComplete="new-password" />
@@ -161,7 +190,7 @@ const AdminUsers = () => {
             </Select>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => createUser.mutate()} disabled={createUser.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={() => { if (validateCreate()) createUser.mutate(); }} disabled={createUser.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
               {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
               Create
             </Button>
@@ -261,12 +290,18 @@ const AdminUsers = () => {
               <Input placeholder="First Name" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} autoComplete="off" />
               <Input placeholder="Last Name" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} autoComplete="off" />
             </div>
-            <Input placeholder="Email" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} autoComplete="off" />
-            <Input placeholder="Phone" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} autoComplete="off" />
+            <div>
+              <Input placeholder="Email" type="email" value={editForm.email} onChange={(e) => { setEditForm({ ...editForm, email: e.target.value }); setEditErrors(p => ({ ...p, email: undefined })); }} autoComplete="off" className={editErrors.email ? "border-red-400 focus-visible:ring-red-400" : ""} />
+              {editErrors.email && <p className="text-xs text-red-500 mt-1 px-1">{editErrors.email}</p>}
+            </div>
+            <div>
+              <Input placeholder="Phone (e.g. 0521234567)" value={editForm.phone} inputMode="numeric" onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 10); setEditForm({ ...editForm, phone: v }); setEditErrors(p => ({ ...p, phone: undefined })); }} autoComplete="off" className={editErrors.phone ? "border-red-400 focus-visible:ring-red-400" : ""} />
+              {editErrors.phone && <p className="text-xs text-red-500 mt-1 px-1">{editErrors.phone}</p>}
+            </div>
             <Input placeholder="New Password (leave blank to keep current)" type="password" value={editForm.newPassword} onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })} autoComplete="new-password" />
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-              <Button onClick={() => editMutation.mutate()} disabled={editMutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={() => { if (validateEdit()) editMutation.mutate(); }} disabled={editMutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
                 {editMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Save Changes
               </Button>
