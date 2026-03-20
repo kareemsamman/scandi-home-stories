@@ -539,8 +539,6 @@ const ProfileTab = ({ profile }: { profile: { firstName: string; lastName: strin
     const errs: Record<string, string> = {};
     if (!form.firstName.trim()) errs.firstName = t("checkout.firstNameRequired");
     if (!form.lastName.trim()) errs.lastName = t("checkout.lastNameRequired");
-    if (!form.phone.trim()) errs.phone = t("checkout.phoneRequired");
-    else if (!validatePhone(form.phone)) errs.phone = t("checkout.invalidPhone");
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -554,7 +552,6 @@ const ProfileTab = ({ profile }: { profile: { firstName: string; lastName: strin
       const { error } = await supabase.from("profiles").update({
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),
-        phone: form.phone.trim(),
       }).eq("user_id", user.id);
       if (error) throw error;
       await refreshProfile();
@@ -604,7 +601,7 @@ const ProfileTab = ({ profile }: { profile: { firstName: string; lastName: strin
           <FloatingInput name="firstName" label={t("checkout.firstName")} value={form.firstName} onChange={handleChange} error={errors.firstName} />
           <FloatingInput name="lastName" label={t("checkout.lastName")} value={form.lastName} onChange={handleChange} error={errors.lastName} />
         </div>
-        <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={handleChange} type="tel" inputMode="numeric" error={errors.phone} />
+        <FloatingInput name="phone" label={t("checkout.phone")} value={form.phone} onChange={() => {}} type="tel" inputMode="numeric" disabled />
         {saveError && <p className="text-xs text-red-500">{saveError}</p>}
         <div className="flex items-center gap-3 pt-1">
           <button type="submit" disabled={saving} className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-60">

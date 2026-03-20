@@ -73,6 +73,12 @@ Deno.serve(async (req) => {
       .update(profileUpdate)
       .eq("user_id", profile.user_id);
 
+    // Link all orders with this phone to this user (covers placeholder accounts and guest orders)
+    await supabaseAdmin
+      .from("orders")
+      .update({ user_id: profile.user_id })
+      .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`);
+
     // Get email to sign in
     const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
     const email = userData?.user?.email;
