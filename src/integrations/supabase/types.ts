@@ -1005,6 +1005,7 @@ export type Database = {
     }
     Functions: {
       get_invoice_order: { Args: { order_id: string }; Returns: Json }
+      get_order_owner_hint: { Args: { p_order_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
