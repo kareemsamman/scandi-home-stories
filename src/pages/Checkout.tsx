@@ -967,6 +967,14 @@ const Checkout = () => {
                         if (z) setSelectedZone(z);
                       }
                       setAddressState(s);
+                      // Re-validate immediately so stale errors are cleared
+                      setTimeout(() => setErrors(prev => {
+                        const updated = { ...prev };
+                        if (s.street.trim() && s.streetSelected) delete updated.street;
+                        if (s.houseNumber.trim()) delete updated.houseNumber;
+                        if (s.city.trim() && s.citySelected) delete updated.city;
+                        return updated;
+                      }), 0);
                     }}
                     errors={{ city: fieldError("city"), street: errors.street, houseNumber: errors.houseNumber }}
                     touched={addrTouched}
