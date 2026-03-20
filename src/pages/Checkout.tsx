@@ -322,7 +322,7 @@ const Checkout = () => {
     if (!form.phone.trim()) e.phone = t("checkout.phoneRequired");
     else if (!validatePhone(form.phone)) e.phone = t("checkout.invalidPhone");
     if (!addressState.city.trim() || (!addressState.citySelected && !isStaff)) e.city = t("checkout.selectCity");
-    if (!addressState.street.trim() || (!addressState.streetSelected && !isStaff)) e.street = "יש לבחור רחוב";
+    if (!addressState.street.trim()) e.street = "יש לבחור רחוב";
     if (!addressState.houseNumber.trim()) e.houseNumber = "יש להזין מספר בית";
     return e;
   }, [form, t, addressState, isStaff]);
