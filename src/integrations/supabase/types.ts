@@ -200,6 +200,8 @@ export type Database = {
       }
       coupons: {
         Row: {
+          admin_only: boolean | null
+          allowed_phones: string[] | null
           category_ids: string[] | null
           code: string
           created_at: string | null
@@ -219,6 +221,8 @@ export type Database = {
           value: number
         }
         Insert: {
+          admin_only?: boolean | null
+          allowed_phones?: string[] | null
           category_ids?: string[] | null
           code: string
           created_at?: string | null
@@ -238,6 +242,8 @@ export type Database = {
           value?: number
         }
         Update: {
+          admin_only?: boolean | null
+          allowed_phones?: string[] | null
           category_ids?: string[] | null
           code?: string
           created_at?: string | null
