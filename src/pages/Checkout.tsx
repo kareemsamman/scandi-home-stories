@@ -428,9 +428,10 @@ const Checkout = () => {
       navigate(localePath("/checkout/thank-you"), {
         state: { orderNumber, total: orderResult?.total ?? totalAfterDiscount, date: orderDate, orderId: orderResult?.orderId, payLater: true, phone: form.phone, isGuest: !user, firstName: form.firstName, lastName: form.lastName, email: form.email },
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error("[pay-later] error:", e);
-      toast({ title: "שגיאה", description: "לא הצלחנו ליצור את ההזמנה, נסה שוב", variant: "destructive" });
+      const msg = e?.message || e?.error_description || JSON.stringify(e) || "נסה שוב";
+      toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } finally {
       setIsPayLater(false);
     }
@@ -627,9 +628,12 @@ const Checkout = () => {
       savedOrderId = orderResult?.orderId;
       serverTotal = orderResult?.total;
       serverDiscount = orderResult?.discountAmount;
-    } catch (e) {
+    } catch (e: any) {
       console.error("[create-order] error:", e);
-      /* order save failed — still let user continue */
+      const msg = e?.message || e?.error_description || JSON.stringify(e) || "";
+      toast({ title: "שגיאה ביצירת הזמנה", description: msg, variant: "destructive" });
+      setIsSubmittingReceipt(false);
+      return;
     }
 
     // Save address to profile if checkbox checked
