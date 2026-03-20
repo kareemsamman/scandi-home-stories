@@ -181,7 +181,17 @@ export const AddressFields = ({ value, onChange, errors, touched, onBlur, isStaf
               onChange({ ...value, city: e.target.value, citySelected: false, street: "", streetSelected: false });
               setStreetQuery("");
             }}
-            onBlur={() => { setTimeout(() => setShowCityDrop(false), 150); onBlur?.("city"); }}
+            onBlur={() => {
+              setTimeout(async () => {
+                setShowCityDrop(false);
+                if (!value.citySelected && cityQuery.trim().length > 0) {
+                  const results = citySuggestions.length > 0 ? citySuggestions : await searchCities(cityQuery.trim());
+                  const exact = results.find(c => c.toLowerCase() === cityQuery.trim().toLowerCase());
+                  if (exact) { selectCity(exact); return; }
+                }
+                onBlur?.("city");
+              }, 200);
+            }}
             onFocus={() => { if (!value.citySelected && cityQuery.trim().length >= 1) setShowCityDrop(true); }}
             className={`peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors ${
               fieldError("city") ? "border-red-400" : "border-border"
@@ -229,7 +239,17 @@ export const AddressFields = ({ value, onChange, errors, touched, onBlur, isStaf
                 setShowStreetDrop(true); // will show "בחר עיר" prompt
               }
             }}
-            onBlur={() => { setTimeout(() => setShowStreetDrop(false), 150); onBlur?.("street"); }}
+            onBlur={() => {
+              setTimeout(async () => {
+                setShowStreetDrop(false);
+                if ((value.citySelected || isStaff) && !value.streetSelected && streetQuery.trim().length > 0) {
+                  const results = streetSuggestions.length > 0 ? streetSuggestions : await searchStreets(value.city, streetQuery.trim());
+                  const exact = results.find(s => s.toLowerCase() === streetQuery.trim().toLowerCase());
+                  if (exact) { selectStreet(exact); return; }
+                }
+                onBlur?.("street");
+              }, 200);
+            }}
             onFocus={() => {
               if (!value.citySelected && !isStaff) { setShowStreetDrop(true); return; }
               if (!value.streetSelected && streetQuery.trim().length >= 1) setShowStreetDrop(true);
