@@ -110,12 +110,24 @@ const AdminOrderDetail = () => {
 
   const deleteOrder = useMutation({
     mutationFn: async (id: string) => {
+      // Restore stock unless order was already cancelled/not_approved
+      if (order) {
+        const cancelStatuses = ["not_approved", "cancelled"];
+        if (!cancelStatuses.includes(order.status)) {
+          const orderItems = (order.order_items || []).map((i: any) => ({
+            productId: i.product_id || undefined,
+            quantity: i.quantity,
+          }));
+          await adjustInventory(orderItems, 1);
+        }
+      }
       const { error } = await supabase.from("orders").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
-      toast({ title: "ההזמנה נמחקה" });
+      qc.invalidateQueries({ queryKey: ["admin_inventory"] });
+      toast({ title: "ההזמנה נמחקה והמלאי שוחזר" });
       navigate("/admin/orders");
     },
     onError: () => toast({ title: "מחיקה נכשלה", variant: "destructive" }),
