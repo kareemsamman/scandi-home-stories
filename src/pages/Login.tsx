@@ -25,17 +25,39 @@ const Login = () => {
     return (data?.length ?? 0) > 0;
   };
 
+  /** Detect if input looks like an Israeli phone number */
+  const isPhoneInput = (v: string) => /^[\d\s\-\+]{7,15}$/.test(v.trim()) && !v.includes("@");
+
+  /** Resolve identifier to email (look up by phone if needed) */
+  const resolveEmail = async (raw: string): Promise<string | null> => {
+    if (!isPhoneInput(raw)) return raw.trim();
+    const res = await supabase.functions.invoke("auth-lookup", {
+      body: { action: "login", phone: raw.trim() },
+    });
+    if (res.data?.found) return res.data.email as string;
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) return;
     setLoading(true);
     setGuestHint(false);
-    const { error } = await signIn({ email: identifier.trim(), password });
+
+    // Resolve phone → email if needed
+    const resolvedEmail = await resolveEmail(identifier.trim());
+    if (!resolvedEmail) {
+      setLoading(false);
+      toast({ title: "שגיאה", description: isPhoneInput(identifier.trim()) ? "מספר הטלפון לא נמצא במערכת" : "שם משתמש או סיסמה שגויים", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await signIn({ email: resolvedEmail, password });
     setLoading(false);
     if (error) {
       const isCredentialsError = error.message === "Invalid login credentials" || error.message === "Invalid email or password";
-      if (isCredentialsError) {
-        const hasGuestOrders = await checkEmailHasGuestOrders(identifier.trim());
+      if (isCredentialsError && !isPhoneInput(identifier.trim())) {
+        const hasGuestOrders = await checkEmailHasGuestOrders(resolvedEmail);
         if (hasGuestOrders) {
           setGuestHint(true);
           return;
@@ -48,7 +70,7 @@ const Login = () => {
         "User not found": "משתמש לא נמצא",
         "Signups not allowed for this instance": "הרשמה אינה זמינה כרגע",
       };
-      const msg = hebrewErrors[error.message] || "שגיאה בהתחברות, נסו שוב";
+      const msg = hebrewErrors[error.message] || "שם משתמש או סיסמה שגויים";
       toast({ title: "שגיאה", description: msg, variant: "destructive" });
     } else {
       // Check if user is admin — redirect to /admin
@@ -90,7 +112,7 @@ const Login = () => {
                 placeholder=" "
               />
               <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                {t("auth.identifier")}
+                אימייל או מספר טלפון
               </label>
             </div>
 

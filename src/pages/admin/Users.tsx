@@ -65,7 +65,11 @@ const AdminUsers = () => {
         body: newUser,
       });
       if (res.error) throw res.error;
-      if (res.data?.error) throw new Error(res.data.error);
+      if (res.data?.error) {
+        const err = new Error(res.data.error) as any;
+        err.code = res.data.error;
+        throw err;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
@@ -74,7 +78,15 @@ const AdminUsers = () => {
       setCreateErrors({});
       toast({ title: "User created" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: any) => {
+      if (e.message === "EMAIL_EXISTS") {
+        setCreateErrors(p => ({ ...p, email: "Email already exists" }));
+      } else if (e.message === "PHONE_EXISTS") {
+        setCreateErrors(p => ({ ...p, phone: "Phone number already exists" }));
+      } else {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      }
+    },
   });
 
   const roleMutation = useMutation({

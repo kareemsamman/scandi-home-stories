@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 /* Defined outside component so it is never recreated on re-render */
 const FloatingField = ({
@@ -45,10 +46,26 @@ const Signup = () => {
 
   const isValid = firstName.trim() && lastName.trim() && email.trim() && phone.trim() && password.trim() && acceptPrivacy;
 
+  const [phoneError, setPhoneError] = useState("");
+  const [emailError, setEmailError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
+    setPhoneError("");
+    setEmailError("");
     setLoading(true);
+
+    // Check phone duplicate before attempting signup
+    const { data: phoneCheck } = await supabase.functions.invoke("auth-lookup", {
+      body: { action: "check_phone", phone: phone.trim() },
+    });
+    if (phoneCheck?.exists) {
+      setLoading(false);
+      setPhoneError("מספר הטלפון כבר קיים במערכת");
+      return;
+    }
+
     const { error } = await signUp({
       email: email.trim(),
       password,
@@ -58,8 +75,17 @@ const Signup = () => {
     });
     setLoading(false);
     if (error) {
+      const isEmailTaken =
+        error.message === "User already registered" ||
+        error.message?.includes("already registered") ||
+        error.message?.includes("already been registered");
+
+      if (isEmailTaken) {
+        setEmailError("כתובת האימייל כבר קיימת במערכת");
+        return;
+      }
+
       const hebrewErrors: Record<string, string> = {
-        "User already registered": "משתמש כבר רשום עם כתובת אימייל זו",
         "Password should be at least 6 characters": "הסיסמה צריכה להיות לפחות 6 תווים",
         "Unable to validate email address: invalid format": "כתובת אימייל לא תקינה",
         "Signup requires a valid password": "נדרשת סיסמה תקינה",
@@ -84,8 +110,21 @@ const Signup = () => {
               <FloatingField name="firstName" label={t("checkout.firstName")} value={firstName} onChange={setFirstName} />
               <FloatingField name="lastName" label={t("checkout.lastName")} value={lastName} onChange={setLastName} />
             </div>
-            <FloatingField name="email" label={t("checkout.email")} value={email} onChange={setEmail} type="email" />
-            <FloatingField name="phone" label={t("checkout.phone")} value={phone} onChange={setPhone} type="tel" />
+            <div>
+              <FloatingField name="email" label={t("checkout.email")} value={email} onChange={(v) => { setEmail(v); setEmailError(""); }} type="email" />
+              {emailError && (
+                <p className="text-xs text-red-500 mt-1 px-1 flex items-center gap-1">
+                  {emailError} —{" "}
+                  <Link to={localePath("/login")} className="underline font-semibold">
+                    לכניסה לחשבון
+                  </Link>
+                </p>
+              )}
+            </div>
+            <div>
+              <FloatingField name="phone" label={t("checkout.phone")} value={phone} onChange={(v) => { setPhone(v.replace(/\D/g, "").slice(0, 10)); setPhoneError(""); }} type="tel" />
+              {phoneError && <p className="text-xs text-red-500 mt-1 px-1">{phoneError}</p>}
+            </div>
             <FloatingField name="password" label={t("auth.password")} value={password} onChange={setPassword} type="password" />
 
             <label className="flex items-start gap-2.5 cursor-pointer select-none">

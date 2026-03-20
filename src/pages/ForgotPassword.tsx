@@ -9,25 +9,61 @@ import { supabase } from "@/integrations/supabase/client";
 const ForgotPassword = () => {
   const { t, localePath, locale } = useLocale();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sentVia, setSentVia] = useState<"email" | "sms">("email");
+
+  const isPhone = (v: string) => /^[\d\s\-\+]{7,15}$/.test(v.trim()) && !v.includes("@");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const val = identifier.trim();
+    if (!val) return;
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/${locale}/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      toast({
-        title: t("auth.forgotPwError"),
-        description: t("auth.forgotPwErrorText"),
-        variant: "destructive",
+
+    if (isPhone(val)) {
+      // Phone flow: call auth-lookup to send SMS with reset link
+      const { data, error } = await supabase.functions.invoke("auth-lookup", {
+        body: {
+          action: "forgot_password",
+          phone: val,
+          origin: window.location.origin,
+          locale,
+        },
       });
+
+      setLoading(false);
+
+      if (error || !data?.sent) {
+        if (data?.reason === "not_found") {
+          toast({ title: "שגיאה", description: "מספר הטלפון לא נמצא במערכת", variant: "destructive" });
+        } else {
+          toast({ title: "שגיאה", description: "לא הצלחנו לשלוח הודעה, נסה שוב", variant: "destructive" });
+        }
+        return;
+      }
+
+      setSentVia("sms");
+      setSent(true);
     } else {
+      // Email flow: standard Supabase reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(val, {
+        redirectTo: `${window.location.origin}/${locale}/reset-password`,
+      });
+
+      setLoading(false);
+
+      if (error) {
+        toast({
+          title: t("auth.forgotPwError"),
+          description: t("auth.forgotPwErrorText"),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSentVia("email");
       setSent(true);
     }
   };
@@ -40,7 +76,14 @@ const ForgotPassword = () => {
 
           {sent ? (
             <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">{t("auth.forgotPwSent")}</p>
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <span className="text-2xl">{sentVia === "sms" ? "📱" : "✉️"}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {sentVia === "sms"
+                  ? "שלחנו לך SMS עם קישור לאיפוס הסיסמה"
+                  : t("auth.forgotPwSent")}
+              </p>
               <Link
                 to={localePath("/login")}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors"
@@ -51,27 +94,30 @@ const ForgotPassword = () => {
             </div>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground text-center">{t("auth.forgotPwDesc")}</p>
+              <p className="text-sm text-muted-foreground text-center">
+                הזן את כתובת האימייל או מספר הטלפון שלך ונשלח לך קישור לאיפוס הסיסמה
+              </p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     className="peer w-full h-[48px] px-4 pt-4 pb-1 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/30 focus:border-[hsl(var(--primary))] transition-colors"
                     placeholder=" "
+                    dir="ltr"
                   />
                   <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                    {t("auth.emailLabel")}
+                    אימייל או מספר טלפון
                   </label>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !email.trim()}
+                  disabled={loading || !identifier.trim()}
                   className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("auth.sendResetLink")}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "שלח קישור לאיפוס"}
                 </button>
               </form>
 

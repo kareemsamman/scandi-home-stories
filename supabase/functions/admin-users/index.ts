@@ -133,7 +133,26 @@ Deno.serve(async (req) => {
 
       const first = firstName || "";
       const last = lastName || "";
-      const phoneValue = phone || "";
+      const phoneValue = (phone || "").replace(/\D/g, "");
+
+      // Check email duplicate
+      const { data: { users: existingUsers } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const emailTaken = (existingUsers || []).some((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+      if (emailTaken) {
+        return jsonResponse({ error: "EMAIL_EXISTS", message: "A user with this email already exists" }, 409);
+      }
+
+      // Check phone duplicate (if phone provided)
+      if (phoneValue) {
+        const intlPhone = phoneValue.startsWith("972") ? phoneValue : phoneValue.startsWith("0") ? "972" + phoneValue.slice(1) : phoneValue;
+        const { data: existingProfiles } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .or(`phone.eq.${phoneValue},phone.eq.${intlPhone},phone.eq.+${intlPhone}`);
+        if (existingProfiles && existingProfiles.length > 0) {
+          return jsonResponse({ error: "PHONE_EXISTS", message: "A user with this phone number already exists" }, 409);
+        }
+      }
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
