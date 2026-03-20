@@ -491,6 +491,7 @@ export type Database = {
           discount_code: string | null
           email: string
           first_name: string
+          house_number: string | null
           id: string
           last_name: string
           locale: string | null
@@ -513,6 +514,7 @@ export type Database = {
           discount_code?: string | null
           email?: string
           first_name?: string
+          house_number?: string | null
           id?: string
           last_name?: string
           locale?: string | null
@@ -535,6 +537,7 @@ export type Database = {
           discount_code?: string | null
           email?: string
           first_name?: string
+          house_number?: string | null
           id?: string
           last_name?: string
           locale?: string | null
@@ -806,6 +809,33 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      shared_carts: {
+        Row: {
+          cart_items: Json
+          coupon_code: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          token: string
+        }
+        Insert: {
+          cart_items: Json
+          coupon_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          token?: string
+        }
+        Update: {
+          cart_items?: Json
+          coupon_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          token?: string
         }
         Relationships: []
       }
