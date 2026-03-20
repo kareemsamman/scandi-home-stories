@@ -783,7 +783,9 @@ const AdminOrderDetail = () => {
           {order.discount_code && (
             <div className="flex justify-between text-sm">
               <span className="text-green-700">קוד הנחה ({order.discount_code})</span>
-              <span className="font-semibold text-green-700">-₪{Number(order.discount_amount || 0).toLocaleString()}</span>
+              <span className="font-semibold text-green-700">
+                {Number(order.discount_amount || 0) === 0 ? "שילוח חינם" : `-₪${Number(order.discount_amount || 0).toLocaleString()}`}
+              </span>
             </div>
           )}
           <div className="flex justify-between text-sm">

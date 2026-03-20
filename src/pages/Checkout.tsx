@@ -243,7 +243,8 @@ const Checkout = () => {
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const isFreeShipping = subtotal - discountAmount >= shipping.threshold;
+  // Admin order creation ignores the auto-free threshold — only explicit free shipping coupon applies
+  const isFreeShipping = !adminOrderEnabled && (subtotal - discountAmount >= shipping.threshold);
   const hasFreeShippingCoupon = appliedCoupon?.coupon.type === "free_shipping";
   const shippingCost = isFreeShipping || !selectedZone || hasFreeShippingCoupon ? 0 : shipping.zones[selectedZone];
   const totalAfterDiscount = Math.max(0, subtotal - discountAmount) + shippingCost;
