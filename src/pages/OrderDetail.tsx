@@ -59,6 +59,53 @@ const OrderDetail = () => {
     );
   }
 
+  if (ownershipStatus === "loading") {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (ownershipStatus === "wrong_user") {
+    const handleSwitchAccount = async () => {
+      await signOut();
+      navigate(localePath(`/login?redirect=${encodeURIComponent(localePath(`/account/order/${orderId}`))}`));
+    };
+    return (
+      <Layout>
+        <section className="mt-4 py-16">
+          <div className="w-full max-w-[400px] mx-auto px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-5">
+              <ShieldAlert className="w-8 h-8 text-destructive" />
+            </div>
+            <h2 className="text-lg font-bold mb-2">
+              {locale === "ar" ? "هذا الطلب لا يخصك" : "ההזמנה הזו לא שייכת לחשבון שלך"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-1">
+              {locale === "ar" ? "الطلب مرتبط بالحساب:" : "ההזמנה שייכת לחשבון:"}
+            </p>
+            <p className="text-sm font-semibold text-foreground mb-6 direction-ltr" dir="ltr">
+              {maskedEmail}
+            </p>
+            <Button onClick={handleSwitchAccount} variant="default" className="w-full gap-2">
+              <LogOut className="w-4 h-4" />
+              {locale === "ar" ? "تسجيل دخول بحساب آخر" : "התחבר עם חשבון אחר"}
+            </Button>
+            <button
+              onClick={() => navigate(localePath("/"))}
+              className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground underline"
+            >
+              {locale === "ar" ? "العودة للصفحة الرئيسية" : "חזרה לדף הבית"}
+            </button>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
+
   if (!order) {
     return (
       <Layout>
