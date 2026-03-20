@@ -171,7 +171,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const hasQuery = query.trim().length > 0;
   const hasSearched = debouncedQuery.trim().length > 0;
 
-  const featuredCollections = collections.slice(0, 5);
+  const featuredCollections = collections;
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "products", label: t("search.tabs.products") },
