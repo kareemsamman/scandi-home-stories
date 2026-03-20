@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLocale } from "@/i18n/useLocale";
-import { products, collections, getLocaleName, getLocaleText } from "@/data/products";
+import { products, getLocaleName, getLocaleText } from "@/data/products";
 import type { Product, Collection } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useCategories } from "@/hooks/useDbData";
+import { useShopData } from "@/hooks/useShopData";
 
 interface SearchModalProps {
   open: boolean;
@@ -67,7 +67,7 @@ function SkeletonResults() {
 export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const { t, locale, localePath } = useLocale();
   const isMobile = useIsMobile();
-  const { data: dbCategories = [] } = useCategories();
+  const { collections } = useShopData();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -171,7 +171,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const hasQuery = query.trim().length > 0;
   const hasSearched = debouncedQuery.trim().length > 0;
 
-  const featuredCollections = dbCategories.length > 0 ? dbCategories.slice(0, 5) : collections.slice(0, 4);
+  const featuredCollections = collections.slice(0, 5);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "products", label: t("search.tabs.products") },
@@ -227,22 +227,17 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             {t("search.featuredCollections")}
           </h3>
           <div className="flex flex-col" style={{ gap: 10 }}>
-            {featuredCollections.map((col: any) => {
-              const name = dbCategories.length > 0
-                ? (locale === "he" ? col.name_he : col.name_ar) || col.name_he
-                : getLocaleName(col, locale);
-              return (
-                <Link
-                  key={col.id}
-                  to={localePath(`/shop?category=${col.slug}`)}
-                  onClick={onClose}
-                  className="text-foreground hover:text-foreground/70 transition-colors"
-                  style={{ fontSize: 18, fontWeight: 600 }}
-                >
-                  {name}
-                </Link>
-              );
-            })}
+            {featuredCollections.map((col) => (
+              <Link
+                key={col.id}
+                to={localePath(`/shop?collection=${col.slug}`)}
+                onClick={onClose}
+                className="text-foreground hover:text-foreground/70 transition-colors"
+                style={{ fontSize: 18, fontWeight: 600 }}
+              >
+                {getLocaleName(col, locale)}
+              </Link>
+            ))}
           </div>
         </div>
       )}
