@@ -67,12 +67,6 @@ const Login = () => {
     if (error) {
       const isCredentialsError = error.message === "Invalid login credentials" || error.message === "Invalid email or password";
 
-      // Phone found but wrong password → likely an auto-created account needing registration
-      if (isCredentialsError && isPhoneInput(identifier.trim())) {
-        setNeedsRegistration(true);
-        return;
-      }
-
       if (isCredentialsError && !isPhoneInput(identifier.trim())) {
         const hasGuestOrders = await checkEmailHasGuestOrders(resolvedEmail);
         if (hasGuestOrders) {
