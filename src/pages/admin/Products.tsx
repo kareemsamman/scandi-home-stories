@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts, useCategories } from "@/hooks/useDbData";
+import { useProducts, useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,9 @@ const AdminProducts = () => {
   const { data: categories = [] } = useCategories();
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("all");
+  const [filterSubCat, setFilterSubCat] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const { data: subCategories = [] } = useSubCategories(filterCat !== "all" ? filterCat : undefined);
   // Local order for drag (all products, unfiltered)
   const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
 
@@ -124,6 +126,7 @@ const AdminProducts = () => {
 
   const filtered = allProducts.filter((p: any) => {
     if (filterCat !== "all" && p.category_id !== filterCat) return false;
+    if (filterSubCat !== "all" && p.sub_category_id !== filterSubCat) return false;
     if (filterStatus !== "all" && (p.status || "published") !== filterStatus) return false;
     const pName = transMap.get(p.id)?.name || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
@@ -131,7 +134,7 @@ const AdminProducts = () => {
   });
 
   // Only allow drag when no filters are active (so order is clear)
-  const isDragEnabled = !search && filterCat === "all" && filterStatus === "all";
+  const isDragEnabled = !search && filterCat === "all" && filterSubCat === "all" && filterStatus === "all";
 
   return (
     <div className="space-y-6">
@@ -150,13 +153,22 @@ const AdminProducts = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input placeholder="Search by name or SKU..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
+        <Select value={filterCat} onValueChange={v => { setFilterCat(v); setFilterSubCat("all"); }}>
+          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Categories" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((c) => <SelectItem key={c.id} value={c.id}>{locale === "ar" ? c.name_ar : c.name_he}</SelectItem>)}
           </SelectContent>
         </Select>
+        {filterCat !== "all" && subCategories.length > 0 && (
+          <Select value={filterSubCat} onValueChange={setFilterSubCat}>
+            <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Subcategories" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Subcategories</SelectItem>
+              {subCategories.map((s) => <SelectItem key={s.id} value={s.id}>{locale === "ar" ? s.name_ar : s.name_he}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
