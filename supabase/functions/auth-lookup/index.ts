@@ -63,8 +63,13 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const body = await req.json();
-    const { action } = body;
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const { action } = body || {};
 
     /* ── action: "login" ── resolve phone → email */
     if (action === "login") {
