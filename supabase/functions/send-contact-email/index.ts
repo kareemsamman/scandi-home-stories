@@ -54,13 +54,15 @@ serve(async (req) => {
     }
 
     // ── Save submission to DB ────────────────────────────────────────────
-    await supabaseAdmin.from("contact_submissions").insert({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone?.trim() || null,
-      message: message.trim(),
-      locale: locale || "he",
-    }).then(() => {}).catch(() => {}); // graceful if table missing
+    try {
+      await supabaseAdmin.from("contact_submissions").insert({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone?.trim() || null,
+        message: message.trim(),
+        locale: locale || "he",
+      });
+    } catch { /* graceful if table missing */ }
 
     // ── Read SMS settings from DB ────────────────────────────────────────
     const { data: settingsRow } = await supabaseAdmin
