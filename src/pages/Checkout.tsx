@@ -276,6 +276,13 @@ const Checkout = () => {
     }
   }, [user, authProfile, adminOrderEnabled]);
 
+  // When adminOrderEnabled turns on (settings loaded after profile fill), wipe contact fields
+  useEffect(() => {
+    if (adminOrderEnabled) {
+      setForm({ firstName: "", lastName: "", email: "", phone: "", note: "" });
+    }
+  }, [adminOrderEnabled]);
+
   useEffect(() => {
     if (!showSkeleton && step === "form") firstInputRef.current?.focus();
   }, [showSkeleton, step]);
