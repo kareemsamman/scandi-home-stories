@@ -68,7 +68,7 @@ const LocaleRoutes = () => (
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/account" element={<Account />} />
-      <Route path="/account/order/:orderId" element={<OrderDetail />} />
+      <Route path="/account/order/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
       <Route path="/invoice/:orderId" element={<InvoicePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

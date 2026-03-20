@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, requiredRole, redirectTo = "/login" }: ProtectedRouteProps) => {
   const { user, loading, roles } = useAuth();
+  const location = useLocation();
 
   // Still loading auth session
   if (loading) {
@@ -21,7 +22,10 @@ export const ProtectedRoute = ({ children, requiredRole, redirectTo = "/login" }
   }
 
   if (!user) {
-    return <Navigate to={redirectTo} replace />;
+    // Preserve the current path so login can redirect back
+    const currentPath = location.pathname + location.search;
+    const loginUrl = `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
+    return <Navigate to={loginUrl} replace />;
   }
 
   // User is authenticated but roles haven't loaded yet from DB — wait
