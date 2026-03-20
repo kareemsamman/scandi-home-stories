@@ -7,13 +7,16 @@ import logoWhite from "@/assets/logo-white.png";
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean }) || {};
+  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string }) || {};
   const orderNumber = state.orderNumber || "#00000";
   const orderId = state.orderId;
   const total = state.total ?? 0;
   const date = state.date || new Date().toLocaleDateString();
   const isGuest = state.isGuest ?? false;
   const phone = state.phone || "";
+  const firstName = state.firstName || "";
+  const lastName = state.lastName || "";
+  const email = state.email || "";
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
@@ -81,7 +84,7 @@ const CheckoutThankYou = () => {
 
             {isGuest && phone ? (
               <Link
-                to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(phone)}`}
+                to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(phone)}${firstName ? `&firstName=${encodeURIComponent(firstName)}` : ""}${lastName ? `&lastName=${encodeURIComponent(lastName)}` : ""}${email && !email.includes("@no-email.amg-pergola.com") ? `&email=${encodeURIComponent(email)}` : ""}`}
                 className="w-full h-14 flex items-center justify-center text-sm font-semibold border border-foreground text-foreground rounded-[1.875rem] hover:bg-foreground hover:text-background transition-colors"
               >
                 {t("thankYou.viewOrder")}

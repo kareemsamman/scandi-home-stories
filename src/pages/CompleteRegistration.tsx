@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
@@ -12,33 +12,19 @@ const CompleteRegistration = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const phoneFromUrl = searchParams.get("phone") || "";
+  const firstNameFromUrl = searchParams.get("firstName") || "";
+  const lastNameFromUrl = searchParams.get("lastName") || "";
+  const emailFromUrl = searchParams.get("email") || "";
 
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    firstName: firstNameFromUrl,
+    lastName: lastNameFromUrl,
     phone: phoneFromUrl,
-    email: "",
+    email: emailFromUrl,
     password: "",
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-
-  // Pre-fill name/email from existing order
-  useEffect(() => {
-    if (!phoneFromUrl) return;
-    supabase.functions.invoke("auth-lookup", {
-      body: { action: "get_order_data", phone: phoneFromUrl },
-    }).then(({ data }) => {
-      if (data?.found) {
-        setForm(prev => ({
-          ...prev,
-          firstName: data.firstName || prev.firstName,
-          lastName: data.lastName || prev.lastName,
-          email: data.email && !data.email.includes("@no-email.amg-pergola.com") ? data.email : prev.email,
-        }));
-      }
-    });
-  }, [phoneFromUrl]);
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
