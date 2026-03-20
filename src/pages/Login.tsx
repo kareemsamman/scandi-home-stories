@@ -18,6 +18,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [guestHint, setGuestHint] = useState(false);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
 
   const checkEmailHasGuestOrders = async (email: string) => {
     const db = supabase as any;
@@ -29,13 +30,14 @@ const Login = () => {
   const isPhoneInput = (v: string) => /^[\d\s\-\+]{7,15}$/.test(v.trim()) && !v.includes("@");
 
   /** Resolve identifier to email (look up by phone if needed) */
-  const resolveEmail = async (raw: string): Promise<string | null> => {
-    if (!isPhoneInput(raw)) return raw.trim();
+  const resolveEmail = async (raw: string): Promise<{ email: string | null; needs_password?: boolean }> => {
+    if (!isPhoneInput(raw)) return { email: raw.trim() };
     const res = await supabase.functions.invoke("auth-lookup", {
       body: { action: "login", phone: raw.trim() },
     });
-    if (res.data?.found) return res.data.email as string;
-    return null;
+    if (res.data?.needs_password) return { email: null, needs_password: true };
+    if (res.data?.found) return { email: res.data.email as string };
+    return { email: null };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,9 +45,17 @@ const Login = () => {
     if (!identifier.trim() || !password.trim()) return;
     setLoading(true);
     setGuestHint(false);
+    setNeedsRegistration(false);
 
     // Resolve phone → email if needed
-    const resolvedEmail = await resolveEmail(identifier.trim());
+    const { email: resolvedEmail, needs_password } = await resolveEmail(identifier.trim());
+
+    if (needs_password) {
+      setLoading(false);
+      setNeedsRegistration(true);
+      return;
+    }
+
     if (!resolvedEmail) {
       setLoading(false);
       toast({ title: "שגיאה", description: isPhoneInput(identifier.trim()) ? "מספר הטלפון לא נמצא במערכת" : "שם משתמש או סיסמה שגויים", variant: "destructive" });
@@ -143,6 +153,24 @@ const Login = () => {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("auth.login")}
             </button>
           </form>
+
+          {needsRegistration && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-3">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">📦</span>
+                <div>
+                  <p className="font-bold">יש לך הזמנה אצלנו!</p>
+                  <p className="text-xs text-blue-700 mt-0.5">מצאנו חשבון עם מספר הטלפון שהזנת, אבל עדיין לא הגדרת סיסמה. השלם את ההרשמה כדי לצפות בהזמנות שלך.</p>
+                </div>
+              </div>
+              <Link
+                to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(identifier.trim())}`}
+                className="block w-full text-center text-sm font-bold py-2.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 transition-colors"
+              >
+                השלם הרשמה וצפה בהזמנות שלך →
+              </Link>
+            </div>
+          )}
 
           {guestHint && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 space-y-2">

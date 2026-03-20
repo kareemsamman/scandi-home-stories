@@ -18,6 +18,7 @@ import CheckoutThankYou from "./pages/CheckoutThankYou";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
+import CompleteRegistration from "./pages/CompleteRegistration";
 import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
@@ -67,6 +68,7 @@ const LocaleRoutes = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/complete-registration" element={<CompleteRegistration />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/account" element={<Account />} />
       <Route path="/account/order/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
@@ -117,6 +119,7 @@ const App = () => (
             </Route>
             <Route path="/invoice/:orderId" element={<InvoicePage />} />
             <Route path="/:locale/pay/:orderId" element={<PaymentLink />} />
+            <Route path="/:locale/complete-registration" element={<CompleteRegistration />} />
             <Route path="/:locale/*" element={<LocaleRoutes />} />
           </Routes>
         </BrowserRouter>

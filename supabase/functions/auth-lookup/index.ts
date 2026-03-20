@@ -73,9 +73,10 @@ Deno.serve(async (req) => {
       const local = normalizePhone(phone);
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ email: null, found: false });
+      if (profile.needs_password) return json({ email: null, found: true, needs_password: true });
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
       if (!userData?.user?.email) return json({ email: null, found: false });
-      return json({ email: userData.user.email, found: true });
+      return json({ email: userData.user.email, found: true, needs_password: false });
     }
 
     /* ── action: "forgot_password" ── phone reset via SMS */

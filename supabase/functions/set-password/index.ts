@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { phone, password } = await req.json();
+    const { phone, password, firstName, lastName, email: newEmail } = await req.json();
 
     if (!phone || !password || password.length < 6) {
       return json({ error: "Phone and password (min 6 chars) required" }, 400);
@@ -52,17 +52,25 @@ Deno.serve(async (req) => {
     if (!profile) return json({ error: "not_found" }, 404);
     if (!profile.needs_password) return json({ error: "already_has_password" }, 400);
 
-    // Update password using service role
+    // Update password (and optionally email) using service role
+    const authUpdate: any = { password };
+    if (newEmail && !newEmail.includes("@no-email.amg-pergola.com")) {
+      authUpdate.email = newEmail;
+      authUpdate.email_confirm = true;
+    }
     const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(
       profile.user_id,
-      { password }
+      authUpdate
     );
     if (updateErr) return json({ error: updateErr.message }, 500);
 
-    // Mark needs_password = false
+    // Update profile: mark password set + save name if provided
+    const profileUpdate: any = { needs_password: false };
+    if (firstName) profileUpdate.first_name = firstName;
+    if (lastName) profileUpdate.last_name = lastName;
     await supabaseAdmin
       .from("profiles")
-      .update({ needs_password: false })
+      .update(profileUpdate)
       .eq("user_id", profile.user_id);
 
     // Get email to sign in
