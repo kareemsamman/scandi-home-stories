@@ -174,7 +174,7 @@ const Login = () => {
                 to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(identifier.trim())}`}
                 className="block w-full text-center text-sm font-bold py-2.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 transition-colors"
               >
-                השלם הרשמה וצפה בהזמנות שלך →
+                ← השלם הרשמה וצפה בהזמנות שלך
               </Link>
             </div>
           )}
