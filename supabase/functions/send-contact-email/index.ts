@@ -60,7 +60,7 @@ serve(async (req) => {
       phone: phone?.trim() || null,
       message: message.trim(),
       locale: locale || "he",
-    }).then(() => {}).catch(() => {}); // graceful if table missing
+    }).then(() => {}).catch?.(() => {});
 
     // ── Read SMS settings from DB ────────────────────────────────────────
     const { data: settingsRow } = await supabaseAdmin
