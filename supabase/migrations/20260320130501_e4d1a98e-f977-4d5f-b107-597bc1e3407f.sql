@@ -1,0 +1,1 @@
+UPDATE products SET images = ARRAY['https://qehygczsuthucpvtqndy.supabase.co/storage/v1/object/public/site-media/products%2Fprofile-placeholder.jpg'] WHERE category_id = '8807c168-cfd0-47a1-9b00-42f16b2fc9f5' AND (images IS NULL OR images = '{}');
