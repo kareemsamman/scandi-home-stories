@@ -55,6 +55,27 @@ Deno.serve(async (req) => {
     }
     const paymentStatus = isAdminCaller && rawPaymentStatus === "unpaid" ? "unpaid" : "paid";
 
+    // --- When admin creates order, resolve order's user_id to the CUSTOMER (not admin) ---
+    let orderUserId: string | null = isAdminCaller ? null : userId;
+    if (isAdminCaller && phone) {
+      const normPhone = (raw: string) => {
+        const d = raw.replace(/[\s\-\+\(\)]/g, "");
+        if (d.startsWith("972")) return "0" + d.slice(3);
+        if (d.startsWith("00972")) return "0" + d.slice(5);
+        return d;
+      };
+      const localPhone = normPhone(phone);
+      const intlPhone = localPhone.startsWith("0") ? "972" + localPhone.slice(1) : localPhone;
+      const { data: customerProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id")
+        .or(`phone.eq.${localPhone},phone.eq.${intlPhone},phone.eq.+${intlPhone}`)
+        .maybeSingle();
+      if (customerProfile?.user_id) {
+        orderUserId = customerProfile.user_id;
+      }
+    }
+
     // --- Input validation ---
     if (!orderNumber || typeof orderNumber !== "string" || orderNumber.length > 50) {
       return jsonResponse({ error: "Invalid order number" }, 400);
@@ -215,7 +236,7 @@ Deno.serve(async (req) => {
     const { data: newOrder, error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id: userId,
+        user_id: orderUserId,
         order_number: orderNumber,
         status: "waiting_approval",
         total: finalTotal,
@@ -283,7 +304,7 @@ Deno.serve(async (req) => {
 
     // --- Auto-create customer account if no user yet ---
     try {
-      if (!userId && phone) {
+      if (!orderUserId && phone) {
         const normalizePhone = (raw: string) => {
           const digits = raw.replace(/[\s\-\+\(\)]/g, "");
           if (digits.startsWith("972")) return "0" + digits.slice(3);

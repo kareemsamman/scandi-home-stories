@@ -604,7 +604,18 @@ const AdminOrderDetail = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Section title="לקוח" icon={User}>
           <div className="space-y-2">
-            <p className="font-semibold text-gray-900">{order.first_name} {order.last_name}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-gray-900">{order.first_name} {order.last_name}</p>
+              {order.user_id ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
+                  ✓ משויך לחשבון
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
+                  אורח
+                </span>
+              )}
+            </div>
             <a href={`mailto:${order.email}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Mail className="w-3.5 h-3.5 text-gray-400" />{order.email}</a>
             <a href={`tel:${order.phone}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Phone className="w-3.5 h-3.5 text-gray-400" />{order.phone}</a>
             {order.locale && <p className="text-gray-400 text-xs pt-1">שפה: {order.locale.toUpperCase()}</p>}
