@@ -64,11 +64,8 @@ export const validateCoupon = async (
   isAdmin?: boolean,
   userPhone?: string
 ): Promise<{ coupon?: Coupon; discountAmount?: number; error?: string }> => {
-  const { data: coupon, error: fetchErr } = await db
-    .from("coupons")
-    .select("*")
-    .eq("code", code.toUpperCase().trim())
-    .single();
+  // Use secure RPC that excludes sensitive fields like allowed_phones
+  const { data: coupon, error: fetchErr } = await db.rpc("lookup_coupon_by_code", { p_code: code.trim() });
 
   if (fetchErr || !coupon) return { error: "קוד הנחה לא תקין" };
   if (!coupon.is_active) return { error: "קוד הנחה אינו פעיל" };
