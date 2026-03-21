@@ -508,6 +508,7 @@ export type Database = {
           payment_token: string | null
           phone: string
           receipt_url: string | null
+          shipping_cost: number | null
           status: string
           total: number
           updated_at: string | null
@@ -533,6 +534,7 @@ export type Database = {
           payment_token?: string | null
           phone?: string
           receipt_url?: string | null
+          shipping_cost?: number | null
           status?: string
           total?: number
           updated_at?: string | null
@@ -558,6 +560,7 @@ export type Database = {
           payment_token?: string | null
           phone?: string
           receipt_url?: string | null
+          shipping_cost?: number | null
           status?: string
           total?: number
           updated_at?: string | null
