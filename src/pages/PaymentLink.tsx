@@ -53,6 +53,7 @@ const PaymentLink = () => {
   const [files, setFiles] = useState<{ file: File; preview: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,24 +87,28 @@ const PaymentLink = () => {
   const handleSubmit = async () => {
     if (!order || files.length === 0) return;
     setUploading(true);
+    setUploadError("");
     try {
-      const urls: string[] = [];
+      const paths: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const compressed = await compressImage(files[i].file);
         const ext = compressed.type === "image/jpeg" ? "jpg" : (files[i].file.name.split(".").pop() || "jpg");
         const path = `receipts/${order.order_number}_pay_${Date.now()}_${i + 1}.${ext}`;
         const { error } = await supabase.storage.from("receipts").upload(path, compressed, { upsert: false });
-        if (!error) urls.push(`receipts:${path}`);
+        if (error) throw new Error(`שגיאה בהעלאת קובץ: ${error.message}`);
+        paths.push(`receipts:${path}`);
       }
-      const receiptUrl = urls.join("|");
-      const { error: updateErr } = await db.from("orders").update({
-        payment_status: "paid",
-        receipt_url: receiptUrl || null,
-      }).eq("id", order.id);
-      if (updateErr) throw updateErr;
+
+      // Use edge function to update order (bypasses RLS for anonymous users)
+      const { data, error: fnErr } = await supabase.functions.invoke("submit-payment", {
+        body: { orderId: order.id, token, receiptPaths: paths },
+      });
+      if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message || "שגיאה בשמירת הנתונים");
+
       setDone(true);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setUploadError(e?.message || "אירעה שגיאה, נסה שוב");
     } finally {
       setUploading(false);
     }
@@ -226,6 +231,9 @@ const PaymentLink = () => {
             </div>
           )}
 
+          {uploadError && (
+            <p className="text-sm text-red-600 text-center font-medium">{uploadError}</p>
+          )}
           <button
             onClick={handleSubmit}
             disabled={files.length === 0 || uploading}
