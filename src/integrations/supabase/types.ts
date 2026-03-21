@@ -1034,6 +1034,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_coupon_by_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "worker" | "customer"

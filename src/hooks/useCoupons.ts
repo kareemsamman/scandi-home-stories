@@ -64,11 +64,8 @@ export const validateCoupon = async (
   isAdmin?: boolean,
   userPhone?: string
 ): Promise<{ coupon?: Coupon; discountAmount?: number; error?: string }> => {
-  const { data: coupon, error: fetchErr } = await db
-    .from("coupons")
-    .select("*")
-    .eq("code", code.toUpperCase().trim())
-    .single();
+  // Use secure RPC that excludes sensitive fields like allowed_phones
+  const { data: coupon, error: fetchErr } = await db.rpc("lookup_coupon_by_code", { p_code: code.trim() });
 
   if (fetchErr || !coupon) return { error: "קוד הנחה לא תקין" };
   if (!coupon.is_active) return { error: "קוד הנחה אינו פעיל" };
@@ -76,13 +73,7 @@ export const validateCoupon = async (
   // Admin-only coupon
   if (coupon.admin_only && !isAdmin) return { error: "קוד הנחה זה מיועד לשימוש פנימי בלבד" };
 
-  // Phone-restricted coupon
-  if (coupon.allowed_phones?.length > 0) {
-    const normalizePhone = (p: string) => p.replace(/[\s\-\+]/g, "").replace(/^972/, "0");
-    const normalizedUser = userPhone ? normalizePhone(userPhone) : "";
-    const allowed = coupon.allowed_phones.map(normalizePhone);
-    if (!normalizedUser || !allowed.includes(normalizedUser)) return { error: "קוד הנחה זה אינו מיועד למספר הטלפון שלך" };
-  }
+  // Phone restriction is validated server-side in create-order edge function
 
   const now = new Date();
   if (coupon.valid_from && new Date(coupon.valid_from) > now)

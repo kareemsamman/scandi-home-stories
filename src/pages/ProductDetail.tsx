@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -345,7 +346,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
             </div>
           </div>
           {(product as any).contentHtml?.[locale] ? (
-            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: (product as any).contentHtml[locale] }} />
+            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((product as any).contentHtml[locale], { ADD_TAGS: ['iframe'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'] }) }} />
           ) : (
             <div className="mt-12"><ProductImagesSection images={product.images} /></div>
           )}
@@ -674,7 +675,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
             </div>
           </div>
           {(product as any).contentHtml?.[locale] ? (
-            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: (product as any).contentHtml[locale] }} />
+            <div className="mt-12 prose prose-sm md:prose-base max-w-none [&_img]:rounded-xl [&_video]:rounded-xl [&_img]:w-full [&_video]:w-full" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((product as any).contentHtml[locale], { ADD_TAGS: ['iframe'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'] }) }} />
           ) : (
             <div className="mt-12"><ProductImagesSection images={product.images} /></div>
           )}

@@ -163,7 +163,13 @@ Deno.serve(async (req) => {
         .limit(1);
       const order = orders?.[0];
       if (!order) return json({ found: false });
-      return json({ found: true, firstName: order.first_name, lastName: order.last_name, email: order.email });
+      // Only return name, mask email to prevent PII leakage
+      const email = order.email || "";
+      const atIdx = email.indexOf("@");
+      const maskedEmail = atIdx > 0
+        ? email[0] + "***" + email.slice(atIdx)
+        : "";
+      return json({ found: true, firstName: order.first_name, lastName: order.last_name, email: maskedEmail });
     }
 
     /* ── action: "check_phone" ── is phone already registered? */

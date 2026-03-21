@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -366,7 +367,7 @@ const HtmlEditor = ({ value, onChange, placeholder }: { value: string; onChange:
         </button>
       </div>
       {isPreview ? (
-        <div className="p-4 min-h-[180px] prose prose-sm max-w-none [&_img]:rounded-lg [&_video]:rounded-lg [&_iframe]:rounded-lg" dangerouslySetInnerHTML={{ __html: value }} />
+        <div className="p-4 min-h-[180px] prose prose-sm max-w-none [&_img]:rounded-lg [&_video]:rounded-lg [&_iframe]:rounded-lg" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value, { ADD_TAGS: ['iframe'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'] }) }} />
       ) : (
         <div
           ref={editorRef}
