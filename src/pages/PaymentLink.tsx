@@ -59,13 +59,11 @@ const PaymentLink = () => {
   useEffect(() => {
     if (!orderId || !token) { setInvalid(true); setLoading(false); return; }
     (async () => {
-      const { data, error } = await db
-        .from("orders")
-        .select("id, order_number, first_name, last_name, phone, total, payment_status, payment_token, order_items(*)")
-        .eq("id", orderId)
-        .maybeSingle();
+      const { data, error } = await db.rpc("get_order_by_token", {
+        p_order_id: orderId,
+        p_token: token,
+      });
       if (error || !data) { setInvalid(true); setLoading(false); return; }
-      if (data.payment_token !== token) { setInvalid(true); setLoading(false); return; }
       if (data.payment_status === "paid") { setAlreadyPaid(true); setOrder(data); setLoading(false); return; }
       setOrder(data);
       setLoading(false);
