@@ -73,13 +73,7 @@ export const validateCoupon = async (
   // Admin-only coupon
   if (coupon.admin_only && !isAdmin) return { error: "קוד הנחה זה מיועד לשימוש פנימי בלבד" };
 
-  // Phone-restricted coupon
-  if (coupon.allowed_phones?.length > 0) {
-    const normalizePhone = (p: string) => p.replace(/[\s\-\+]/g, "").replace(/^972/, "0");
-    const normalizedUser = userPhone ? normalizePhone(userPhone) : "";
-    const allowed = coupon.allowed_phones.map(normalizePhone);
-    if (!normalizedUser || !allowed.includes(normalizedUser)) return { error: "קוד הנחה זה אינו מיועד למספר הטלפון שלך" };
-  }
+  // Phone restriction is validated server-side in create-order edge function
 
   const now = new Date();
   if (coupon.valid_from && new Date(coupon.valid_from) > now)
