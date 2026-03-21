@@ -508,6 +508,7 @@ export type Database = {
           payment_token: string | null
           phone: string
           receipt_url: string | null
+          shipping_cost: number | null
           status: string
           total: number
           updated_at: string | null
@@ -533,6 +534,7 @@ export type Database = {
           payment_token?: string | null
           phone?: string
           receipt_url?: string | null
+          shipping_cost?: number | null
           status?: string
           total?: number
           updated_at?: string | null
@@ -558,6 +560,7 @@ export type Database = {
           payment_token?: string | null
           phone?: string
           receipt_url?: string | null
+          shipping_cost?: number | null
           status?: string
           total?: number
           updated_at?: string | null
@@ -795,6 +798,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           first_name: string
           id: string
           last_name: string
@@ -806,6 +810,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string
           id?: string
           last_name?: string
@@ -817,6 +822,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string
           id?: string
           last_name?: string
