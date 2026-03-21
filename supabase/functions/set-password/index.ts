@@ -64,10 +64,15 @@ Deno.serve(async (req) => {
     );
     if (updateErr) return json({ error: updateErr.message }, 500);
 
-    // Update profile: mark password set + save name if provided
+    // Determine the final email on this auth account (after possible update)
+    const { data: updatedUser } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+    const finalEmail = updatedUser?.user?.email ?? "";
+
+    // Update profile: mark password set + save name + store email for phone-login resolution
     const profileUpdate: any = { needs_password: false };
     if (firstName) profileUpdate.first_name = firstName;
     if (lastName) profileUpdate.last_name = lastName;
+    if (finalEmail) profileUpdate.email = finalEmail;
     await supabaseAdmin
       .from("profiles")
       .update(profileUpdate)

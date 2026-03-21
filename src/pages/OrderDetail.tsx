@@ -16,40 +16,85 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: orders = [], isLoading } = useOrders();
-  const order = orders.find((o) => o.id === orderId);
+  const orderFromList = orders.find((o) => o.id === orderId);
+  const [directOrder, setDirectOrder] = useState<any>(null);
+  const [directLoading, setDirectLoading] = useState(false);
+  const order = orderFromList || directOrder;
 
   const [ownershipStatus, setOwnershipStatus] = useState<"loading" | "owner" | "wrong_user" | "not_found">("loading");
   const [maskedEmail, setMaskedEmail] = useState<string>("");
 
   useEffect(() => {
     if (isLoading) return;
-    if (order) {
+    if (orderFromList) {
       setOwnershipStatus("owner");
       return;
     }
-    // Order not in user's list — check ownership via RPC
-    if (orderId && user) {
-      supabase.rpc("get_order_owner_hint", { p_order_id: orderId }).then(({ data }) => {
-        if (data && typeof data === "object" && "status" in (data as any)) {
-          const result = data as { status: string; masked_email?: string };
-          if (result.status === "wrong_user") {
-            setOwnershipStatus("wrong_user");
-            setMaskedEmail(result.masked_email || "");
-          } else if (result.status === "not_found") {
-            setOwnershipStatus("not_found");
-          } else {
-            setOwnershipStatus("owner");
-          }
+    if (!orderId) { setOwnershipStatus("not_found"); return; }
+
+    // Try fetching the order directly by ID (covers stale cache after fresh order)
+    setDirectLoading(true);
+    (supabase as any)
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("id", orderId)
+      .maybeSingle()
+      .then(({ data: o }: { data: any }) => {
+        setDirectLoading(false);
+        if (o && (o.user_id === user?.id || !o.user_id)) {
+          const mapped = {
+            id: o.id,
+            orderNumber: o.order_number,
+            date: new Date(o.created_at).toLocaleDateString("he-IL"),
+            total: Number(o.total),
+            discountAmount: Number(o.discount_amount || 0),
+            shippingCost: Number(o.shipping_cost || 0),
+            status: o.status,
+            notes: o.notes || undefined,
+            receiptUrl: o.receipt_url || undefined,
+            locale: o.locale || "he",
+            city: o.city || undefined,
+            address: o.address || undefined,
+            houseNumber: o.house_number || undefined,
+            apartment: o.apartment || undefined,
+            firstName: o.first_name || undefined,
+            lastName: o.last_name || undefined,
+            phone: o.phone || undefined,
+            items: (o.order_items || []).map((item: any) => ({
+              name: item.product_name,
+              image: item.product_image,
+              price: Number(item.price),
+              quantity: item.quantity,
+              size: item.size || undefined,
+              color: item.color_name || undefined,
+            })),
+          };
+          setDirectOrder(mapped);
+          setOwnershipStatus("owner");
+        } else if (o && o.user_id && o.user_id !== user?.id && user) {
+          // Belongs to someone else
+          supabase.rpc("get_order_owner_hint", { p_order_id: orderId }).then(({ data }) => {
+            if (data && typeof data === "object" && "status" in (data as any)) {
+              const result = data as { status: string; masked_email?: string };
+              if (result.status === "wrong_user") {
+                setOwnershipStatus("wrong_user");
+                setMaskedEmail(result.masked_email || "");
+              } else {
+                setOwnershipStatus("not_found");
+              }
+            } else {
+              setOwnershipStatus("not_found");
+            }
+          });
         } else {
           setOwnershipStatus("not_found");
         }
       });
-    }
-  }, [isLoading, order, orderId, user]);
+  }, [isLoading, orderFromList, orderId, user]);
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ArrowRight : ArrowLeft;
 
-  if (isLoading) {
+  if (isLoading || directLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[50vh]">

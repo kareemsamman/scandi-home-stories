@@ -136,7 +136,7 @@ const Signup = () => {
               />
               <span className="text-xs text-muted-foreground leading-relaxed">
                 {t("checkout.acceptPrivacy")}{" "}
-                <Link to={localePath("/privacy-policy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">
+                <Link to={localePath("/legal/privacy")} className="underline underline-offset-2 text-foreground hover:text-foreground/80 transition-colors">
                   {t("checkout.privacyPolicy")}
                 </Link>
               </span>

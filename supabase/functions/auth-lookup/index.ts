@@ -45,14 +45,40 @@ const sendSmsViaApi = async (supabaseAdmin: any, phone: string, message: string)
   return res.ok;
 };
 
-/** Find profile by phone (tries local, international, +international variants) */
+/** Find profile by phone (tries local, international, +international variants).
+ *  Falls back to searching auth user_metadata if not found in profiles table. */
 const findProfileByPhone = async (supabaseAdmin: any, normalizedLocal: string) => {
   const intl = toIntl(normalizedLocal);
-  const { data } = await supabaseAdmin
+
+  // Primary: search profiles table (only columns guaranteed to exist)
+  const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("user_id, phone, needs_password")
     .or(`phone.eq.${normalizedLocal},phone.eq.${intl},phone.eq.+${intl}`);
-  return data?.[0] ?? null;
+
+  if (data?.[0]) return data[0];
+
+  // Fallback: search auth users by user_metadata.phone
+  const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+  const match = (allUsers || []).find((u: any) => {
+    const meta = (u.raw_user_meta_data?.phone || u.user_metadata?.phone || "").replace(/[\s\-\+\(\)]/g, "");
+    return meta === normalizedLocal || meta === intl || meta === `+${intl}`;
+  });
+  if (!match) return null;
+
+  // Copy phone into profile so future lookups hit the primary path
+  await supabaseAdmin
+    .from("profiles")
+    .update({ phone: normalizedLocal })
+    .eq("user_id", match.id);
+
+  const { data: profileData } = await supabaseAdmin
+    .from("profiles")
+    .select("user_id, phone, needs_password")
+    .eq("user_id", match.id)
+    .maybeSingle();
+
+  return profileData ?? null;
 };
 
 Deno.serve(async (req) => {
@@ -79,9 +105,11 @@ Deno.serve(async (req) => {
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ email: null, found: false });
       if (profile.needs_password) return json({ email: null, found: true, needs_password: true });
+      // Get email from auth admin API
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-      if (!userData?.user?.email) return json({ email: null, found: false });
-      return json({ email: userData.user.email, found: true, needs_password: false });
+      const authEmail = userData?.user?.email;
+      if (!authEmail) return json({ email: null, found: false });
+      return json({ email: authEmail, found: true, needs_password: false });
     }
 
     /* ── action: "forgot_password" ── phone reset via SMS */

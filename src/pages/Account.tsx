@@ -121,7 +121,7 @@ const Account = () => {
     firstName: authProfile?.first_name || "",
     lastName: authProfile?.last_name || "",
     email: user?.email || "",
-    phone: authProfile?.phone || "",
+    phone: authProfile?.phone || (user as any)?.user_metadata?.phone || "",
   };
 
   if (loading) {
@@ -255,7 +255,12 @@ const OrdersTab = () => {
 
   return (
     <div className="space-y-4">
-      {orders.map((order) => (
+      {orders.map((order) => {
+        const itemsSum = (order.items || []).reduce((s, i) => s + i.price * i.quantity, 0);
+        const shippingDisplay = order.shippingCost > 0
+          ? order.shippingCost
+          : Math.max(0, order.total - itemsSum - (order.discountAmount || 0));
+        return (
         <Link
           key={order.id}
           to={localePath(`/account/order/${order.id}`)}
@@ -307,6 +312,14 @@ const OrdersTab = () => {
             </div>
           )}
 
+          {/* Delivery row */}
+          <div className="flex items-center justify-between px-5 py-2.5 border-t border-border/60">
+            <span className="text-xs text-muted-foreground">{locale === "ar" ? "توصيل" : "משלוח"}</span>
+            <span className="text-xs font-medium text-foreground">
+              {shippingDisplay > 0 ? `${t("common.currency")}${shippingDisplay.toLocaleString()}` : "חינם"}
+            </span>
+          </div>
+
           {/* Footer */}
           <div className="flex items-center justify-between px-5 py-3 bg-muted/20 border-t border-border/60">
             <span className="text-xs text-muted-foreground">{t("cart.total")}</span>
@@ -316,7 +329,8 @@ const OrdersTab = () => {
             </div>
           </div>
         </Link>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -96,7 +96,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: { data: { first_name: firstName, last_name: lastName, phone } },
     });
-    if (!error && data.user) await claimGuestOrders(data.user.id, email);
+    if (!error && data.user) {
+      await claimGuestOrders(data.user.id, email);
+      // Ensure phone is saved to profiles (trigger may not include it on older DB versions)
+      if (phone) {
+        await (supabase as any)
+          .from("profiles")
+          .update({ phone })
+          .eq("user_id", data.user.id);
+      }
+    }
     return { error: error as Error | null };
   };
 
