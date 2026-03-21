@@ -127,13 +127,24 @@ const PaymentLink = () => {
     </div>
   );
 
-  if (done || alreadyPaid) return (
+  if (done) return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ backgroundColor: "rgb(242,242,242)" }}>
       <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
         <CheckCircle2 className="w-8 h-8 text-green-600" />
       </div>
-      <p className="text-2xl font-bold text-gray-900 mb-2">{done ? "תודה! הקבלה התקבלה" : "ההזמנה כבר שולמה"}</p>
+      <p className="text-2xl font-bold text-gray-900 mb-2">תודה! הקבלה התקבלה</p>
       <p className="text-gray-400 text-sm">הזמנה #{order?.order_number}</p>
+    </div>
+  );
+
+  if (alreadyPaid) return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ backgroundColor: "rgb(242,242,242)" }}>
+      <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+        <CheckCircle2 className="w-8 h-8 text-amber-500" />
+      </div>
+      <p className="text-2xl font-bold text-gray-900 mb-2">אישור התשלום כבר הועלה</p>
+      <p className="text-gray-500 text-sm mb-1">הזמנה #{order?.order_number}</p>
+      <p className="text-gray-400 text-xs">אם יש בעיה, פנה לבית העסק.</p>
     </div>
   );
 
