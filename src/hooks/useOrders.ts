@@ -116,6 +116,7 @@ export const useOrders = () => {
         date: new Date(o.created_at).toLocaleDateString("he-IL"),
         total: Number(o.total),
         discountAmount: Number(o.discount_amount || 0),
+        shippingCost: Number(o.shipping_cost || 0),
         status: o.status as OrderStatus,
         notes: o.notes || undefined,
         receiptUrl: o.receipt_url || undefined,

@@ -175,7 +175,7 @@ const OrderDetail = () => {
 
   // Compute financials
   const itemsSubtotal = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shippingCost = Math.max(0, order.total - itemsSubtotal + order.discountAmount);
+  const shippingCost = order.shippingCost ?? Math.max(0, order.total - itemsSubtotal + order.discountAmount);
   const st = statusStyle(order.status);
 
   return (
