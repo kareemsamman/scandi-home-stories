@@ -133,7 +133,9 @@ export const SiteFooter = () => {
         }}
       >
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-          © {new Date().getFullYear()}, AMG Pergola | Developed by{" "}
+          {locale === "ar"
+            ? `© ${new Date().getFullYear()}, AMG Pergola | تم التطوير بواسطة `
+            : `© ${new Date().getFullYear()}, AMG Pergola | פותח על ידי `}
           <a
             href="https://kareemsamman.com/"
             target="_blank"
@@ -141,7 +143,7 @@ export const SiteFooter = () => {
             className="underline underline-offset-2 hover:text-white transition-colors"
             style={{ color: "rgba(255,255,255,0.65)" }}
           >
-            Kareem Samman
+            {locale === "ar" ? "كريم سمّان" : "כרים סמאן"}
           </a>
         </p>
       </div>
