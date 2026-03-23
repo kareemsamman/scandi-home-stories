@@ -15,6 +15,12 @@ const json = (body: unknown, status = 200) =>
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+const getClientIp = (req: Request): string => {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")
+    || "unknown";
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
@@ -43,6 +49,28 @@ Deno.serve(async (req) => {
 
       if (fetchErr || !order) return json({ error: "Order not found" }, 404);
       if (order.payment_token !== token) return json({ error: "Invalid token" }, 403);
+    } else {
+      // "pending" path — apply IP-based rate limiting (10 uploads per 15 min)
+      const clientIp = getClientIp(req);
+      const rateLimitKey = `upload:${clientIp}`;
+      const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+      // Cleanup old entries occasionally
+      if (Math.random() < 0.05) {
+        try { await supabaseAdmin.rpc("cleanup_rate_limits"); } catch {}
+      }
+
+      const { count } = await supabaseAdmin
+        .from("rate_limits")
+        .select("id", { count: "exact", head: true })
+        .eq("key", rateLimitKey)
+        .gte("created_at", since);
+
+      if ((count ?? 0) >= 10) {
+        return json({ error: "Too many uploads. Please try again later." }, 429);
+      }
+
+      await supabaseAdmin.from("rate_limits").insert({ key: rateLimitKey });
     }
 
     // Collect files from form data

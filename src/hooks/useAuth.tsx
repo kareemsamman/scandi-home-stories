@@ -83,11 +83,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchRoles]);
 
-  const claimGuestOrders = async (userId: string, email: string) => {
-    const db = supabase as any;
-    await db.from("orders").update({ user_id: userId }).eq("email", email).is("user_id", null);
-  };
-
   const signUp = async ({ email, password, firstName, lastName, phone }: {
     email: string; password: string; firstName: string; lastName: string; phone: string;
   }) => {
@@ -97,7 +92,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: { data: { first_name: firstName, last_name: lastName, phone } },
     });
     if (!error && data.user) {
-      await claimGuestOrders(data.user.id, email);
       // Ensure phone is saved to profiles (trigger may not include it on older DB versions)
       if (phone) {
         await (supabase as any)
@@ -110,8 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async ({ email, password }: { email: string; password: string }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user) await claimGuestOrders(data.user.id, email);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
