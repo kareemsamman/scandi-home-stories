@@ -15,6 +15,7 @@ const CompleteRegistration = () => {
   const firstNameFromUrl = searchParams.get("firstName") || "";
   const lastNameFromUrl = searchParams.get("lastName") || "";
   const emailFromUrl = searchParams.get("email") || "";
+  const tokenFromUrl = searchParams.get("token") || "";
 
   const [form, setForm] = useState({
     firstName: firstNameFromUrl,
