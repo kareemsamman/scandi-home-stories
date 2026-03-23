@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 // ── Distinct SVG icons ────────────────────────────────────────────────────────
 
