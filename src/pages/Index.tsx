@@ -16,7 +16,7 @@ import { AboutMissionSection } from "@/components/about/AboutMissionSection";
 import { AboutStorySection }   from "@/components/about/AboutStorySection";
 import { AboutValuesSection }  from "@/components/about/AboutValuesSection";
 import { AboutCtaSection }     from "@/components/about/AboutCtaSection";
-import { DEFAULT_SECTIONS_ORDER, type SectionItem } from "@/pages/admin/HomePage";
+import { DEFAULT_SECTIONS_ORDER, type SectionItem } from "@/data/homeSections";
 
 const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
   hero_slider:       HeroSlider,
