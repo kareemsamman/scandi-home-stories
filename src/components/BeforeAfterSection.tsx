@@ -70,9 +70,10 @@ export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey
             style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           >
             <img
-              src={dbData?.before_image || "/assets/before-no-pergola.webp"}
+              src={optimizeImageUrl(dbData?.before_image || "/assets/before-no-pergola.webp", 1280)}
               alt={dbData?.before_label || t("beforeAfter.before")}
               className="absolute inset-0 w-full h-full object-cover"
+            />
             />
           </div>
 
