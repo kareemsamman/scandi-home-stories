@@ -804,6 +804,7 @@ export type Database = {
           last_name: string
           needs_password: boolean | null
           phone: string | null
+          registration_token: string | null
           updated_at: string
           user_id: string
         }
@@ -816,6 +817,7 @@ export type Database = {
           last_name?: string
           needs_password?: boolean | null
           phone?: string | null
+          registration_token?: string | null
           updated_at?: string
           user_id: string
         }
@@ -828,6 +830,7 @@ export type Database = {
           last_name?: string
           needs_password?: boolean | null
           phone?: string | null
+          registration_token?: string | null
           updated_at?: string
           user_id?: string
         }
