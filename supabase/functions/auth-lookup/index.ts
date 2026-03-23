@@ -53,7 +53,7 @@ const findProfileByPhone = async (supabaseAdmin: any, normalizedLocal: string) =
   // Primary: search profiles table (only columns guaranteed to exist)
   const { data, error } = await supabaseAdmin
     .from("profiles")
-    .select("user_id, phone, needs_password")
+    .select("user_id, phone, needs_password, registration_token")
     .or(`phone.eq.${normalizedLocal},phone.eq.${intl},phone.eq.+${intl}`);
 
   if (data?.[0]) return data[0];
