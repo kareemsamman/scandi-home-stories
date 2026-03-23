@@ -52,7 +52,7 @@ const Catalog = () => {
                   className="block relative rounded-xl overflow-hidden group aspect-[4/3]"
                 >
                   <img
-                    src={col.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"}
+                    src={col.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=75&fm=webp&fit=crop"}
                     alt={col.name[locale]}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"

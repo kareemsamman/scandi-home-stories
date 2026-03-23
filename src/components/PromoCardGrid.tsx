@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { ArrowLeft } from "lucide-react";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 const promoImages = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=75&fm=webp&fit=crop",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=75&fm=webp&fit=crop",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=75&fm=webp&fit=crop",
 ];
 
 export const PromoCardGrid = ({ sectionKey = "promo_grid" }: { sectionKey?: string }) => {
@@ -33,7 +34,7 @@ export const PromoCardGrid = ({ sectionKey = "promo_grid" }: { sectionKey?: stri
                 className="block relative h-[320px] md:h-[400px] rounded-lg overflow-hidden group"
               >
                 <img
-                  src={promo.image || promoImages[index % promoImages.length]}
+                  src={optimizeImageUrl(promo.image || promoImages[index % promoImages.length], 600)}
                   alt={promo.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                   loading="lazy"

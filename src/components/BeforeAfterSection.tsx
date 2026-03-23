@@ -58,7 +58,7 @@ export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey
         >
           {/* After (full) */}
           <img
-            src={dbData?.after_image || "/assets/after-with-pergola.jpg"}
+            src={dbData?.after_image || "/assets/after-with-pergola.webp"}
             alt={dbData?.after_label || t("beforeAfter.after")}
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -69,7 +69,7 @@ export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey
             style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           >
             <img
-              src={dbData?.before_image || "/assets/before-no-pergola.jpg"}
+              src={dbData?.before_image || "/assets/before-no-pergola.webp"}
               alt={dbData?.before_label || t("beforeAfter.before")}
               className="absolute inset-0 w-full h-full object-cover"
             />

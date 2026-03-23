@@ -6,19 +6,7 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHeroSlides, getLocaleField } from "@/hooks/useDbData";
-
-/**
- * Convert a Supabase Storage public URL to a resized/compressed version via
- * the Supabase Image Transformation API.
- * Falls back to the original URL if it isn't a storage URL.
- */
-function optimizeSupabaseImage(url: string, width = 1920, quality = 75): string {
-  if (!url) return url;
-  // Match: https://<ref>.supabase.co/storage/v1/object/public/<bucket>/<path>
-  const match = url.match(/^(https:\/\/[^/]+\.supabase\.co)\/storage\/v1\/object\/public\/(.+)$/);
-  if (!match) return url;
-  return `${match[1]}/storage/v1/render/image/public/${match[2]}?width=${width}&quality=${quality}&format=webp`;
-}
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 export const HeroSlider = () => {
   const { locale, localePath } = useLocale();
@@ -64,7 +52,7 @@ export const HeroSlider = () => {
           {slides.map((slide, index) => (
             <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative h-full bg-gray-200">
               <img
-                src={optimizeSupabaseImage(slide.image)}
+                src={optimizeImageUrl(slide.image, 1400)}
                 alt=""
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "low"}

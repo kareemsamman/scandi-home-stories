@@ -6,7 +6,8 @@ import { useCart } from "@/hooks/useCart";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { cn } from "@/lib/utils";
-import logoWhite from "@/assets/logo-white.png";
+import logoWhite from "@/assets/logo-white.webp";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 import { SearchModal } from "./SearchModal";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
@@ -137,8 +138,10 @@ export const SiteHeader = () => {
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
                 <img
-                  src={dbHeader?.logo || logoWhite}
+                  src={dbHeader?.logo ? optimizeImageUrl(dbHeader.logo, 200) : logoWhite}
                   alt="AMG Pergola"
+                  width={82}
+                  height={64}
                   className={cn(
                     "h-16 w-auto transition-all duration-[240ms]",
                     showInvert && "invert"
@@ -225,8 +228,10 @@ export const SiteHeader = () => {
 
             <Link to={localePath("/")} className="absolute start-1/2 -translate-x-1/2 rtl:translate-x-1/2">
               <img
-                src={dbHeader?.logo || logoWhite}
+                src={dbHeader?.logo ? optimizeImageUrl(dbHeader.logo, 200) : logoWhite}
                 alt="AMG Pergola"
+                width={46}
+                height={36}
                 className={cn(
                   "h-9 w-auto transition-all duration-[240ms]",
                   showInvert && "invert"

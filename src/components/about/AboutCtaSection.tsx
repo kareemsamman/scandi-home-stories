@@ -13,7 +13,7 @@ export const AboutCtaSection = ({ sectionKey = "about_cta" }: { sectionKey?: str
   const text   = db?.text   || t("about.ctaText");
   const button = db?.button || t("about.ctaButton");
   const link   = db?.link   || "/contact";
-  const image  = db?.image  || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
+  const image  = db?.image  || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&q=75&fm=webp&fit=crop";
 
   return (
     <section className="relative py-24 md:py-36 overflow-hidden">

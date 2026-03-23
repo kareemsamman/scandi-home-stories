@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80";
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=75&fm=webp&fit=crop";
 
 export const AboutHeroSection = ({ sectionKey = "about_hero" }: { sectionKey?: string }) => {
   const { t, locale } = useLocale();

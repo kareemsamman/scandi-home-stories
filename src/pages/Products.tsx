@@ -80,7 +80,7 @@ const Products = () => {
   const activeSubCategory = filters.subCategory !== "all"
     ? profileSubCategories.find((s) => s.id === filters.subCategory)
     : null;
-  const heroImage = (activeSubCategory?.image) || currentCollection?.heroImage || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80";
+  const heroImage = (activeSubCategory?.image) || currentCollection?.heroImage || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=75&fm=webp&fit=crop";
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];

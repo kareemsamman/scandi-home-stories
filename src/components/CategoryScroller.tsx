@@ -82,7 +82,7 @@ export const CategoryScroller = () => {
                   className="block relative h-[260px] md:h-[300px] rounded-lg overflow-hidden group"
                 >
                   <img
-                    src={cat.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"}
+                    src={cat.image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=75&fm=webp&fit=crop"}
                     alt={getLocaleName(cat, locale)}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
