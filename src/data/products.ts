@@ -123,8 +123,8 @@ export const collections: Collection[] = [
     name: { he: "גגות נפתחים", ar: "أسقف قابلة للطي" },
     slug: "retractable",
     description: { he: "גגות מתקפלים ונפתחים בלחיצת כפתור", ar: "أسقف قابلة للطي بضغطة زر" },
-    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
-    heroImage: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1920&q=80",
+    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&q=75&fm=webp&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1400&q=75&fm=webp&fit=crop",
   },
   {
     id: "accessories",
