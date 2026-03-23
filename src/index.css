@@ -232,6 +232,15 @@
   display: none;
 }
 
+/* ── Image loading placeholder — prevents white flash ── */
+img {
+  background-color: #f3f4f6;
+  color: transparent; /* hide broken-image alt text */
+}
+img[src=""], img:not([src]) {
+  visibility: hidden;
+}
+
 /* ── Custom Accessibility Widget effects ── */
 :root { --a11y-font-scale: 100%; }
 html { font-size: var(--a11y-font-scale) !important; }
