@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const shippingAmount = Number(shippingCost) || 0;
+    const shippingAmount = Math.max(0, Number(shippingCost) || 0);
     const finalTotal = Math.max(0, serverTotal - discountAmount) + shippingAmount;
 
     // --- Insert order ---

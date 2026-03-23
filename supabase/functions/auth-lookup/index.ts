@@ -217,6 +217,14 @@ Deno.serve(async (req) => {
       const { phone } = body;
       if (!phone) return json({ exists: false });
       const local = normalizePhone(phone);
+
+      // Per-identifier rate limit: 5 checks per phone per 10 minutes
+      const cpKey = `check-phone:${local}`;
+      const cpAllowed = await checkRateLimit(supabaseAdmin, cpKey, 5, 10);
+      if (!cpAllowed) {
+        return json({ error: "Too many attempts. Please try again later." }, 429);
+      }
+
       const profile = await findProfileByPhone(supabaseAdmin, local);
       return json({ exists: !!profile });
     }
@@ -225,6 +233,14 @@ Deno.serve(async (req) => {
     if (action === "check_email") {
       const { email } = body;
       if (!email) return json({ exists: false });
+
+      // Per-identifier rate limit: 5 checks per email per 10 minutes
+      const ceKey = `check-email:${email.toLowerCase().trim()}`;
+      const ceAllowed = await checkRateLimit(supabaseAdmin, ceKey, 5, 10);
+      if (!ceAllowed) {
+        return json({ error: "Too many attempts. Please try again later." }, 429);
+      }
+
       const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       const exists = (allUsers || []).some((u: any) => u.email?.toLowerCase() === email.toLowerCase());
       return json({ exists });
