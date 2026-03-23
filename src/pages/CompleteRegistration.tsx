@@ -70,6 +70,7 @@ const CompleteRegistration = () => {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim() || undefined,
+        token: registrationToken,
       },
     });
     setLoading(false);
