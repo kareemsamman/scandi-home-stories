@@ -93,8 +93,7 @@ export const AccessibilityWidget = () => {
 
           <div
             className="fixed bottom-20 z-50 w-72 rounded-2xl shadow-2xl overflow-hidden"
-            style={{ left: "16px" }}
-            style={{ background: "#111", border: "1px solid #333" }}
+            style={{ left: "16px", background: "#111", border: "1px solid #333" }}
             dir="rtl"
           >
             {/* Header */}

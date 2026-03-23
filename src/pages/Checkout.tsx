@@ -830,9 +830,9 @@ const Checkout = () => {
             <div className="space-y-3">
               {[
                 { label: t("payment.bankName"), value: bankSettings?.bank_name || "בנק הפועלים" },
-                { label: t("payment.accountName"), value: bankSettings?.account_name || "AMG Pergola LTD" },
-                { label: t("payment.accountNumber"), value: bankSettings?.account_number || "12345678" },
-                { label: t("payment.branchNumber"), value: bankSettings?.branch_number || "123" },
+                { label: t("payment.accountName"), value: bankSettings?.account_name || 'א.מ.ג. פרגולה בע"מ' },
+                { label: t("payment.accountNumber"), value: bankSettings?.account_number || "696962" },
+                { label: t("payment.branchNumber"), value: bankSettings?.branch_number || "696" },
                 { label: t("payment.bankCode"), value: bankSettings?.bank_code || "12" },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">

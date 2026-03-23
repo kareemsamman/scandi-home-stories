@@ -842,7 +842,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailLabel: 'البريد الإلكتروني',
       phoneLabel: 'الهاتف',
       addressLabel: 'العنوان',
-      addressText: 'المنطقة الصناعية، إسرائيل',
+      addressText: 'عتسمونا 1، معاليه أدوميم',
       hoursLabel: 'ساعات العمل',
       hoursText: 'أحد-خميس 08:00-17:00',
     },
