@@ -107,8 +107,8 @@ export const collections: Collection[] = [
     name: { he: "מערכות למלות מוטוריות", ar: "أنظمة شرائح آلية" },
     slug: "motorized",
     description: { he: "שליטה חשמלית מלאה עם שלט רחוק וחיישנים", ar: "تحكم كهربائي كامل مع ريموت وأجهزة استشعار" },
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
-    heroImage: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80",
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=75&fm=webp&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=75&fm=webp&fit=crop",
   },
   {
     id: "fixed",
