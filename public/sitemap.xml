@@ -3,152 +3,152 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <!-- Homepage -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar"/>
+    <loc>https://pergolaamg.com/he</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar"/>
+    <loc>https://pergolaamg.com/ar</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Shop -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/shop</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/shop"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/shop"/>
+    <loc>https://pergolaamg.com/he/shop</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop"/>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/shop</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/shop"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/shop"/>
+    <loc>https://pergolaamg.com/ar/shop</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop"/>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Catalog -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/catalog</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/catalog"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/catalog"/>
+    <loc>https://pergolaamg.com/he/catalog</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/catalog"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/catalog"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/catalog</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/catalog"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/catalog"/>
+    <loc>https://pergolaamg.com/ar/catalog</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/catalog"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/catalog"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- About -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/about</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/about"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/about"/>
+    <loc>https://pergolaamg.com/he/about</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/about"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/about"/>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/about</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/about"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/about"/>
+    <loc>https://pergolaamg.com/ar/about</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/about"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/about"/>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Contact -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/contact</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/contact"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/contact"/>
+    <loc>https://pergolaamg.com/he/contact</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/contact"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/contact"/>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/contact</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/contact"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/contact"/>
+    <loc>https://pergolaamg.com/ar/contact</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/contact"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/contact"/>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Legal Pages -->
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/legal/privacy</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/privacy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/privacy"/>
+    <loc>https://pergolaamg.com/he/legal/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/privacy"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/privacy"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/legal/privacy</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/privacy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/privacy"/>
+    <loc>https://pergolaamg.com/ar/legal/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/privacy"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/privacy"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/legal/terms</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/terms"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/terms"/>
+    <loc>https://pergolaamg.com/he/legal/terms</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/terms"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/terms"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/legal/terms</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/terms"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/terms"/>
+    <loc>https://pergolaamg.com/ar/legal/terms</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/terms"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/terms"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/legal/accessibility</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/accessibility"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/accessibility"/>
+    <loc>https://pergolaamg.com/he/legal/accessibility</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/accessibility"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/accessibility"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/legal/accessibility</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/accessibility"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/accessibility"/>
+    <loc>https://pergolaamg.com/ar/legal/accessibility</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/accessibility"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/accessibility"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/legal/returns</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/returns"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/returns"/>
+    <loc>https://pergolaamg.com/he/legal/returns</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/returns"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/returns"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/legal/returns</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/returns"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/returns"/>
+    <loc>https://pergolaamg.com/ar/legal/returns</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/returns"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/returns"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/he/legal/shipping</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/shipping"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/shipping"/>
+    <loc>https://pergolaamg.com/he/legal/shipping</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/shipping"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/shipping"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://amg-pergola-ltd.lovable.app/ar/legal/shipping</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://amg-pergola-ltd.lovable.app/he/legal/shipping"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://amg-pergola-ltd.lovable.app/ar/legal/shipping"/>
+    <loc>https://pergolaamg.com/ar/legal/shipping</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/shipping"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/legal/shipping"/>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

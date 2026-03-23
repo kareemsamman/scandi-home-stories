@@ -7,15 +7,15 @@
     <meta name="description" content="A.M.G Pergola – מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית לגינות, מרפסות ועסקים.">
     <meta name="author" content="A.M.G PERGOLA LTD" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://amg-pergola-ltd.lovable.app" />
+    <link rel="canonical" href="https://pergolaamg.com" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="A.M.G PERGOLA LTD | פרגולות ופתרונות הצללה מתקדמים">
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://amg-pergola-ltd.lovable.app" />
+    <meta property="og:url" content="https://pergolaamg.com" />
     <meta property="og:description" content="A.M.G Pergola – מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית לגינות, מרפסות ועסקים.">
-    <meta property="og:image" content="https://amg-pergola-ltd.lovable.app/assets/og-image.jpg" />
+    <meta property="og:image" content="https://pergolaamg.com/assets/og-image.jpg" />
     <meta property="og:site_name" content="A.M.G PERGOLA LTD" />
     <meta property="og:locale" content="he_IL" />
     <meta property="og:locale:alternate" content="ar" />
@@ -24,22 +24,34 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="A.M.G PERGOLA LTD | פרגולות ופתרונות הצללה מתקדמים">
     <meta name="twitter:description" content="A.M.G Pergola – מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית לגינות, מרפסות ועסקים.">
-    <meta name="twitter:image" content="https://amg-pergola-ltd.lovable.app/assets/og-image.jpg" />
+    <meta name="twitter:image" content="https://pergolaamg.com/assets/og-image.jpg" />
 
-    <!-- Structured Data: Organization + WebSite (for logo + sitelinks in search) -->
+    <!-- Structured Data: LocalBusiness + WebSite + SiteNavigationElement -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
+      "@type": "LocalBusiness",
       "name": "A.M.G PERGOLA LTD",
-      "url": "https://amg-pergola-ltd.lovable.app",
-      "logo": "https://amg-pergola-ltd.lovable.app/assets/logo-white.png",
-      "description": "מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית.",
+      "url": "https://pergolaamg.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://pergolaamg.com/assets/og-image.jpg",
+        "width": 1200,
+        "height": 630
+      },
+      "image": "https://pergolaamg.com/assets/og-image.jpg",
+      "description": "מומחים בפרגולות ופתרונות הצללה מתקדמים. תכנון, ייצור והתקנה בהתאמה אישית לגינות, מרפסות ועסקים.",
+      "priceRange": "₪₪₪",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "IL"
+      },
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer service",
         "availableLanguage": ["Hebrew", "Arabic"]
-      }
+      },
+      "sameAs": []
     }
     </script>
     <script type="application/ld+json">
@@ -47,13 +59,66 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "A.M.G PERGOLA LTD",
-      "url": "https://amg-pergola-ltd.lovable.app",
+      "url": "https://pergolaamg.com",
       "inLanguage": ["he", "ar"],
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://amg-pergola-ltd.lovable.app/he/shop?search={search_term_string}",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://pergolaamg.com/he/shop?search={search_term_string}"
+        },
         "query-input": "required name=search_term_string"
       }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "ניווט ראשי",
+      "itemListElement": [
+        {
+          "@type": "SiteLinksSearchBox",
+          "url": "https://pergolaamg.com",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://pergolaamg.com/he/shop?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "חנות",
+          "item": "https://pergolaamg.com/he/shop"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "קטלוג",
+          "item": "https://pergolaamg.com/he/catalog"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "אודות",
+          "item": "https://pergolaamg.com/he/about"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "צור קשר",
+          "item": "https://pergolaamg.com/he/contact"
+        }
+      ]
     }
     </script>
   </head>

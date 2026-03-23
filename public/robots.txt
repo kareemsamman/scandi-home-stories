@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://amg-pergola-ltd.lovable.app/sitemap.xml
+Sitemap: https://pergolaamg.com/sitemap.xml
