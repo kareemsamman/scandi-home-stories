@@ -62,7 +62,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
     if (!contractor || contractor.sizes.length === 0) return null;
     const labels = contractor.sizes.map(s => s.label);
     if (labels.length === 1) return labels[0];
-    return `${labels[labels.length - 1]}–${labels[0]}`;
+    return `${labels[0]}–${labels[labels.length - 1]}`;
   };
 
   const lengthRange = getLengthRange();
@@ -89,7 +89,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
           <div className="p-3 space-y-1.5">
             <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name}</h3>
             <p className="text-[11px] text-muted-foreground">{t("contractor.sku")}: {contractor.sku}</p>
-            {lengthRange && (<p className="text-[11px] text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{lengthRange} {t("contractor.meter")}</p>)}
+            {lengthRange && (<p className="text-[11px] text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{lengthRange}</p>)}
             <p className="text-sm font-bold text-foreground">{t("common.currency")}{displayPrice.toLocaleString()}</p>
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
