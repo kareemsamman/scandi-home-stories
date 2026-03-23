@@ -81,6 +81,7 @@ const AdminOrderDetail = () => {
   const { data: smsMessages } = useSmsMessages();
 
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
+  const [resolvingUrls, setResolvingUrls] = useState(false);
   const [receiptModal, setReceiptModal] = useState<{ idx: number } | null>(null);
   const [sendingSms, setSendingSms] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
@@ -95,7 +96,11 @@ const AdminOrderDetail = () => {
   useEffect(() => {
     if (!order?.receipt_url) return;
     const raw = parseReceipts(order.receipt_url);
-    Promise.all(raw.map(resolveReceiptUrl)).then(urls => setResolvedUrls(urls.filter(Boolean)));
+    setResolvingUrls(true);
+    Promise.all(raw.map(resolveReceiptUrl)).then(urls => {
+      setResolvedUrls(urls.filter(Boolean));
+      setResolvingUrls(false);
+    });
   }, [order?.receipt_url]);
 
   const updateStatus = useMutation({
@@ -693,9 +698,15 @@ const AdminOrderDetail = () => {
                 <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
               </div>
             </div>
+          ) : resolvingUrls ? (
+            <div className="flex flex-wrap gap-3">
+              {receipts.map((_, idx) => (
+                <div key={idx} className="w-20 h-20 rounded-xl bg-gray-100 animate-pulse" />
+              ))}
+            </div>
           ) : (
             <div className="flex flex-wrap gap-3">
-              {(resolvedUrls.length > 0 ? resolvedUrls : receipts).map((url, idx) => (
+              {resolvedUrls.map((url, idx) => (
                 <button
                   key={idx}
                   onClick={() => setReceiptModal({ idx })}
