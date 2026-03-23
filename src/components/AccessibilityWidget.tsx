@@ -81,7 +81,7 @@ export const AccessibilityWidget = () => {
         onClick={() => setOpen(o => !o)}
         aria-label="פתח תפריט נגישות"
         className="fixed bottom-6 z-50 w-10 h-10 rounded-full bg-black hover:bg-gray-800 text-white shadow-lg hover:scale-110 transition-all duration-200 flex items-center justify-center"
-        style={{ left: "22px" }}
+        style={{ left: "32px" }}
       >
         <WheelchairIcon className="w-5 h-5 text-white" />
       </button>
