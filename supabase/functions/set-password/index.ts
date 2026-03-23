@@ -32,10 +32,21 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { phone, password, firstName, lastName, email: newEmail } = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const { phone, password, firstName, lastName, email: newEmail, token } = body;
 
     if (!phone || !password || password.length < 6) {
       return json({ error: "Phone and password (min 6 chars) required" }, 400);
+    }
+
+    if (!token || typeof token !== "string" || token.length < 10) {
+      return json({ error: "Registration token required" }, 403);
     }
 
     const local = normalizePhone(phone);
@@ -44,12 +55,17 @@ Deno.serve(async (req) => {
     // Find profile by phone
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("user_id, needs_password")
+      .select("user_id, needs_password, registration_token")
       .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`);
 
     const profile = profiles?.[0];
     if (!profile) return json({ error: "not_found" }, 404);
     if (!profile.needs_password) return json({ error: "already_has_password" }, 400);
+
+    // Verify registration token
+    if (!profile.registration_token || profile.registration_token !== token) {
+      return json({ error: "invalid_token" }, 403);
+    }
 
     // Update password (and optionally email) using service role
     const authUpdate: any = { password };
@@ -67,8 +83,8 @@ Deno.serve(async (req) => {
     const { data: updatedUser } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
     const finalEmail = updatedUser?.user?.email ?? "";
 
-    // Update profile: mark password set + save name + store email for phone-login resolution
-    const profileUpdate: any = { needs_password: false };
+    // Update profile: mark password set + save name + clear registration token
+    const profileUpdate: any = { needs_password: false, registration_token: null };
     if (firstName) profileUpdate.first_name = firstName;
     if (lastName) profileUpdate.last_name = lastName;
     if (finalEmail) profileUpdate.email = finalEmail;
@@ -77,7 +93,7 @@ Deno.serve(async (req) => {
       .update(profileUpdate)
       .eq("user_id", profile.user_id);
 
-    // Link all orders with this phone to this user (covers placeholder accounts and guest orders)
+    // Link all orders with this phone to this user
     await supabaseAdmin
       .from("orders")
       .update({ user_id: profile.user_id })

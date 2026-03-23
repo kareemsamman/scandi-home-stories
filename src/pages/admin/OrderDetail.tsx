@@ -229,16 +229,20 @@ const AdminOrderDetail = () => {
       ? "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;"
       : "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;";
 
+    // HTML-escape helper to prevent XSS in print template
+    const esc = (s: string | null | undefined) =>
+      (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
     const itemsHtml = (order.order_items || []).map((item: DbOrderItem) => {
       const sku = item.product_id ? (skuMap.get(item.product_id) || "") : "";
       const isCustom = item.color_name && !item.color_hex;
       return `
         <tr>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
-            <div style="font-weight:600; font-size:13px;">${item.product_name}</div>
-            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${sku}</div>` : ""}
-            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${item.color_name}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
-            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${item.size}</div>` : ""}
+            <div style="font-weight:600; font-size:13px;">${esc(item.product_name)}</div>
+            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${esc(sku)}</div>` : ""}
+            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${esc(item.color_name)}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
+            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${esc(item.size)}</div>` : ""}
           </td>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:center; font-size:13px;">×${item.quantity}</td>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-size:13px; color:#6b7280;">₪${item.price.toLocaleString()}</td>
@@ -285,7 +289,7 @@ const AdminOrderDetail = () => {
   <div class="header">
     <img src="${logoUrl}" alt="AMG PERGOLA" style="height:40px; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;\\'>AMG PERGOLA</span>'">
     <div class="header-info">
-      <h1>${labels.order} ${order.order_number}</h1>
+      <h1>${labels.order} ${esc(order.order_number)}</h1>
       <p>${labels.date}: ${new Date(order.created_at).toLocaleDateString(isAr ? "ar-SA" : "he-IL", { year: "numeric", month: "long", day: "numeric" })}</p>
     </div>
   </div>
@@ -294,18 +298,18 @@ const AdminOrderDetail = () => {
     <div class="info-grid">
       <div class="info-card">
         <h3>${labels.customer}</h3>
-        <p class="name">${order.first_name} ${order.last_name}</p>
-        <p>${labels.phone}: ${order.phone}</p>
-        <p>${labels.email}: ${order.email}</p>
+        <p class="name">${esc(order.first_name)} ${esc(order.last_name)}</p>
+        <p>${labels.phone}: ${esc(order.phone)}</p>
+        <p>${labels.email}: ${esc(order.email)}</p>
       </div>
       <div class="info-card">
         <h3>${labels.shipping}</h3>
-        <p class="name">${order.city}</p>
-        <p>${order.address}${(order as any).house_number ? ` ${(order as any).house_number}` : ""}${order.apartment ? `, ${order.apartment}` : ""}</p>
+        <p class="name">${esc(order.city)}</p>
+        <p>${esc(order.address)}${(order as any).house_number ? ` ${esc((order as any).house_number)}` : ""}${order.apartment ? `, ${esc(order.apartment)}` : ""}</p>
       </div>
     </div>
 
-    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${order.notes}</div>` : ""}
+    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${esc(order.notes)}</div>` : ""}
 
     <p class="section-title">${labels.items}</p>
     <table>
@@ -322,7 +326,7 @@ const AdminOrderDetail = () => {
 
     <div class="totals">
       <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
-      ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${order.discount_code})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
+      ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
       <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
       <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
     </div>
