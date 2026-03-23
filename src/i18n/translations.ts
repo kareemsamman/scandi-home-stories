@@ -28,7 +28,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       messages: [
         'משלוח חינם לכל הזמנה',
         'התקנה מקצועית בכל הארץ',
-        'ייעוץ חינם: 03-1234567',
+        'ייעוץ חינם: 052-812-2846',
       ],
     },
     hero: {
