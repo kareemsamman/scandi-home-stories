@@ -72,11 +72,11 @@ const findProfileByPhone = async (supabaseAdmin: any, normalizedLocal: string) =
     .update({ phone: normalizedLocal })
     .eq("user_id", match.id);
 
-  const { data: profileData } = await supabaseAdmin
-    .from("profiles")
-    .select("user_id, phone, needs_password")
-    .eq("user_id", match.id)
-    .maybeSingle();
+   const { data: profileData } = await supabaseAdmin
+     .from("profiles")
+     .select("user_id, phone, needs_password, registration_token")
+     .eq("user_id", match.id)
+     .maybeSingle();
 
   return profileData ?? null;
 };
