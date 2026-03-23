@@ -30,7 +30,7 @@ const FloatingField = ({
 );
 
 const Signup = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -62,7 +62,7 @@ const Signup = () => {
     });
     if (phoneCheck?.exists) {
       setLoading(false);
-      setPhoneError("מספר הטלפון כבר קיים במערכת");
+      setPhoneError(locale === "ar" ? "رقم الهاتف موجود بالفعل في النظام" : "מספר הטלפון כבר קיים במערכת");
       return;
     }
 
@@ -81,18 +81,19 @@ const Signup = () => {
         error.message?.includes("already been registered");
 
       if (isEmailTaken) {
-        setEmailError("כתובת האימייל כבר קיימת במערכת");
+        setEmailError(locale === "ar" ? "البريد الإلكتروني موجود بالفعل في النظام" : "כתובת האימייל כבר קיימת במערכת");
         return;
       }
 
-      const hebrewErrors: Record<string, string> = {
-        "Password should be at least 6 characters": "הסיסמה צריכה להיות לפחות 6 תווים",
-        "Unable to validate email address: invalid format": "כתובת אימייל לא תקינה",
-        "Signup requires a valid password": "נדרשת סיסמה תקינה",
-        "To signup, please provide your email": "יש להזין כתובת אימייל",
+      const signupErrors: Record<string, { he: string; ar: string }> = {
+        "Password should be at least 6 characters": { he: "הסיסמה צריכה להיות לפחות 6 תווים", ar: "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل" },
+        "Unable to validate email address: invalid format": { he: "כתובת אימייל לא תקינה", ar: "بريد إلكتروني غير صالح" },
+        "Signup requires a valid password": { he: "נדרשת סיסמה תקינה", ar: "كلمة مرور صالحة مطلوبة" },
+        "To signup, please provide your email": { he: "יש להזין כתובת אימייל", ar: "يرجى إدخال البريد الإلكتروني" },
       };
-      const msg = hebrewErrors[error.message] || "שגיאה ביצירת החשבון, נסו שוב";
-      toast({ title: "שגיאה", description: msg, variant: "destructive" });
+      const errEntry = signupErrors[error.message] || { he: "שגיאה ביצירת החשבון, נסו שוב", ar: "خطأ في إنشاء الحساب، حاول مرة أخرى" };
+      const msg = locale === "ar" ? errEntry.ar : errEntry.he;
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: msg, variant: "destructive" });
     } else {
       toast({ title: t("auth.signupSuccess"), description: t("auth.signupSuccessText") });
       navigate(redirectTo || localePath("/login"));
@@ -116,7 +117,7 @@ const Signup = () => {
                 <p className="text-xs text-red-500 mt-1 px-1 flex items-center gap-1">
                   {emailError} —{" "}
                   <Link to={localePath("/login")} className="underline font-semibold">
-                    לכניסה לחשבון
+                    {locale === "ar" ? "تسجيل الدخول" : "לכניסה לחשבון"}
                   </Link>
                 </p>
               )}

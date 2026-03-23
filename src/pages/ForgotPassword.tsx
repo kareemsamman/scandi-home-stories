@@ -26,11 +26,11 @@ const ForgotPassword = () => {
   const handleCreatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      toast({ title: "שגיאה", description: "הסיסמה חייבת להכיל לפחות 6 תווים", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل" : "הסיסמה חייבת להכיל לפחות 6 תווים", variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "שגיאה", description: "הסיסמאות אינן תואמות", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "كلمات المرور غير متطابقة" : "הסיסמאות אינן תואמות", variant: "destructive" });
       return;
     }
     setCreatingPassword(true);
@@ -39,10 +39,10 @@ const ForgotPassword = () => {
     });
     setCreatingPassword(false);
     if (error || data?.error) {
-      toast({ title: "שגיאה", description: "לא הצלחנו לשמור את הסיסמה, נסה שוב", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "تعذر حفظ كلمة المرور، حاول مرة أخرى" : "לא הצלחנו לשמור את הסיסמה, נסה שוב", variant: "destructive" });
       return;
     }
-    toast({ title: "הסיסמה נוצרה בהצלחה!", description: "אנא התחבר עם האימייל והסיסמה שלך" });
+    toast({ title: locale === "ar" ? "تم إنشاء كلمة المرور بنجاح!" : "הסיסמה נוצרה בהצלחה!", description: locale === "ar" ? "يرجى تسجيل الدخول بالبريد الإلكتروني وكلمة المرور" : "אנא התחבר עם האימייל והסיסמה שלך" });
     navigate(localePath("/login"));
   };
 
@@ -73,9 +73,9 @@ const ForgotPassword = () => {
           return;
         }
         if (data?.reason === "not_found") {
-          toast({ title: "שגיאה", description: "מספר הטלפון לא נמצא במערכת", variant: "destructive" });
+          toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "رقم الهاتف غير موجود في النظام" : "מספר הטלפון לא נמצא במערכת", variant: "destructive" });
         } else {
-          toast({ title: "שגיאה", description: "לא הצלחנו לשלוח הודעה, נסה שוב", variant: "destructive" });
+          toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "تعذر إرسال الرسالة، حاول مرة أخرى" : "לא הצלחנו לשלוח הודעה, נסה שוב", variant: "destructive" });
         }
         return;
       }
@@ -116,8 +116,8 @@ const ForgotPassword = () => {
                 <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🔐</span>
                 </div>
-                <h1 className="text-xl font-bold text-foreground">צור סיסמה</h1>
-                <p className="text-sm text-muted-foreground">מצאנו את החשבון שלך. צור סיסמה כדי להתחבר ולראות את ההזמנות שלך.</p>
+                <h1 className="text-xl font-bold text-foreground">{locale === "ar" ? "إنشاء كلمة مرور" : "צור סיסמה"}</h1>
+                <p className="text-sm text-muted-foreground">{locale === "ar" ? "وجدنا حسابك. أنشئ كلمة مرور لتسجيل الدخول وعرض طلباتك." : "מצאנו את החשבון שלך. צור סיסמה כדי להתחבר ולראות את ההזמנות שלך."}</p>
               </div>
               <form onSubmit={handleCreatePassword} className="space-y-4">
                 <div className="relative">
@@ -130,7 +130,7 @@ const ForgotPassword = () => {
                     dir="ltr"
                   />
                   <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                    סיסמה חדשה (לפחות 6 תווים)
+                    {locale === "ar" ? "كلمة مرور جديدة (6 أحرف على الأقل)" : "סיסמה חדשה (לפחות 6 תווים)"}
                   </label>
                 </div>
                 <div className="relative">
@@ -143,7 +143,7 @@ const ForgotPassword = () => {
                     dir="ltr"
                   />
                   <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                    אמת סיסמה
+                    {locale === "ar" ? "تأكيد كلمة المرور" : "אמת סיסמה"}
                   </label>
                 </div>
                 <button
@@ -151,12 +151,12 @@ const ForgotPassword = () => {
                   disabled={creatingPassword || !newPassword || !confirmPassword}
                   className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {creatingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : "צור סיסמה והתחבר"}
+                  {creatingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : (locale === "ar" ? "إنشاء كلمة المرور وتسجيل الدخول" : "צור סיסמה והתחבר")}
                 </button>
               </form>
               <p className="text-center text-sm text-muted-foreground">
                 <button onClick={() => setNeedsPassword(false)} className="text-foreground font-semibold underline underline-offset-2 hover:text-foreground/80 transition-colors">
-                  חזור
+                  {locale === "ar" ? "رجوع" : "חזור"}
                 </button>
               </p>
             </>
@@ -171,9 +171,9 @@ const ForgotPassword = () => {
               </div>
               <p className="text-sm text-muted-foreground">
                 {sentVia === "sms"
-                  ? "שלחנו לך SMS עם קישור לאיפוס הסיסמה"
+                  ? (locale === "ar" ? "أرسلنا لك رسالة SMS برابط إعادة تعيين كلمة المرور" : "שלחנו לך SMS עם קישור לאיפוס הסיסמה")
                   : sentVia === "phone_email"
-                  ? "שלחנו קישור לאיפוס הסיסמה לכתובת האימייל המשויכת למספר זה"
+                  ? (locale === "ar" ? "أرسلنا رابط إعادة التعيين إلى البريد الإلكتروني المرتبط بهذا الرقم" : "שלחנו קישור לאיפוס הסיסמה לכתובת האימייל המשויכת למספר זה")
                   : t("auth.forgotPwSent")}
               </p>
               <Link
@@ -187,7 +187,7 @@ const ForgotPassword = () => {
           ) : (
             <>
               <p className="text-sm text-muted-foreground text-center">
-                הזן את כתובת האימייל או מספר הטלפון שלך ונשלח לך קישור לאיפוס הסיסמה
+                {locale === "ar" ? "أدخل بريدك الإلكتروني أو رقم هاتفك وسنرسل لك رابط إعادة تعيين كلمة المرور" : "הזן את כתובת האימייל או מספר הטלפון שלך ונשלח לך קישור לאיפוס הסיסמה"}
               </p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
@@ -200,7 +200,7 @@ const ForgotPassword = () => {
                     dir="ltr"
                   />
                   <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                    אימייל או מספר טלפון
+                    {locale === "ar" ? "البريد الإلكتروني أو رقم الهاتف" : "אימייל או מספר טלפון"}
                   </label>
                 </div>
 
@@ -209,7 +209,7 @@ const ForgotPassword = () => {
                   disabled={loading || !identifier.trim()}
                   className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "שלח קישור לאיפוס"}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (locale === "ar" ? "إرسال رابط إعادة التعيين" : "שלח קישור לאיפוס")}
                 </button>
               </form>
 

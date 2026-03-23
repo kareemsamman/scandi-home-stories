@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const CompleteRegistration = () => {
-  const { localePath } = useLocale();
+  const { localePath, locale } = useLocale();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -34,19 +34,19 @@ const CompleteRegistration = () => {
     e.preventDefault();
 
     if (!form.firstName.trim() || !form.lastName.trim()) {
-      toast({ title: "שגיאה", description: "נא למלא שם פרטי ושם משפחה", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "يرجى ملء الاسم الأول واسم العائلة" : "נא למלא שם פרטי ושם משפחה", variant: "destructive" });
       return;
     }
     if (!form.phone.trim()) {
-      toast({ title: "שגיאה", description: "נא למלא מספר טלפון", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "يرجى ملء رقم الهاتف" : "נא למלא מספר טלפון", variant: "destructive" });
       return;
     }
     if (form.password.length < 6) {
-      toast({ title: "שגיאה", description: "הסיסמה חייבת להכיל לפחות 6 תווים", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل" : "הסיסמה חייבת להכיל לפחות 6 תווים", variant: "destructive" });
       return;
     }
     if (form.password !== form.confirmPassword) {
-      toast({ title: "שגיאה", description: "הסיסמאות אינן תואמות", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "كلمات المرور غير متطابقة" : "הסיסמאות אינן תואמות", variant: "destructive" });
       return;
     }
 
@@ -64,21 +64,21 @@ const CompleteRegistration = () => {
     setLoading(false);
 
     if (error || data?.error) {
-      toast({ title: "שגיאה", description: "לא הצלחנו להשלים את ההרשמה. בדוק את הפרטים ונסה שוב.", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: locale === "ar" ? "تعذر إتمام التسجيل. تحقق من البيانات وحاول مرة أخرى." : "לא הצלחנו להשלים את ההרשמה. בדוק את הפרטים ונסה שוב.", variant: "destructive" });
       return;
     }
 
-    toast({ title: "ההרשמה הושלמה! 🎉", description: "הסיסמה נוצרה בהצלחה. אנא התחבר עם האימייל והסיסמה שלך." });
+    toast({ title: locale === "ar" ? "اكتمل التسجيل! 🎉" : "ההרשמה הושלמה! 🎉", description: locale === "ar" ? "تم إنشاء كلمة المرور بنجاح. يرجى تسجيل الدخول." : "הסיסמה נוצרה בהצלחה. אנא התחבר עם האימייל והסיסמה שלך." });
     navigate(localePath("/login"));
   };
 
   const fields = [
-    { key: "firstName", label: "שם פרטי", type: "text" },
-    { key: "lastName",  label: "שם משפחה", type: "text" },
-    { key: "phone",     label: "מספר טלפון", type: "tel" },
-    { key: "email",     label: "אימייל (אופציונלי)", type: "email" },
-    { key: "password",  label: "סיסמה (לפחות 6 תווים)", type: "password" },
-    { key: "confirmPassword", label: "אימות סיסמה", type: "password" },
+    { key: "firstName", label: locale === "ar" ? "الاسم الأول" : "שם פרטי", type: "text" },
+    { key: "lastName",  label: locale === "ar" ? "اسم العائلة" : "שם משפחה", type: "text" },
+    { key: "phone",     label: locale === "ar" ? "رقم الهاتف" : "מספר טלפון", type: "tel" },
+    { key: "email",     label: locale === "ar" ? "البريد الإلكتروني (اختياري)" : "אימייל (אופציונלי)", type: "email" },
+    { key: "password",  label: locale === "ar" ? "كلمة المرور (6 أحرف على الأقل)" : "סיסמה (לפחות 6 תווים)", type: "password" },
+    { key: "confirmPassword", label: locale === "ar" ? "تأكيد كلمة المرور" : "אימות סיסמה", type: "password" },
   ] as const;
 
   return (
@@ -89,8 +89,8 @@ const CompleteRegistration = () => {
             <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">📦</span>
             </div>
-            <h1 className="text-xl font-bold text-foreground">השלמת הרשמה</h1>
-            <p className="text-sm text-muted-foreground">מלא את הפרטים שלך כדי לגשת להזמנות שלך</p>
+            <h1 className="text-xl font-bold text-foreground">{locale === "ar" ? "إكمال التسجيل" : "השלמת הרשמה"}</h1>
+            <p className="text-sm text-muted-foreground">{locale === "ar" ? "أدخل بياناتك للوصول إلى طلباتك" : "מלא את הפרטים שלך כדי לגשת להזמנות שלך"}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,7 +116,7 @@ const CompleteRegistration = () => {
               disabled={loading}
               className="w-full h-12 flex items-center justify-center text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "השלם הרשמה והתחבר"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (locale === "ar" ? "إكمال التسجيل وتسجيل الدخول" : "השלם הרשמה והתחבר")}
             </button>
           </form>
         </div>

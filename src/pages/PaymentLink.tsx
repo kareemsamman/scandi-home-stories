@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { Loader2, Building2, Upload, X, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBankSettings } from "@/hooks/useAppSettings";
+import { useLocale } from "@/i18n/useLocale";
 import logoWhite from "@/assets/logo-white.png";
 
 const db = supabase as any;
@@ -40,6 +41,8 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 const PaymentLink = () => {
+  const { locale } = useLocale();
+  const ar = locale === "ar";
   const { orderId } = useParams<{ orderId: string }>();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -106,19 +109,19 @@ const PaymentLink = () => {
       );
       const uploadResult = await uploadRes.json();
       if (!uploadRes.ok || !uploadResult.paths) {
-        throw new Error(uploadResult?.error || "שגיאה בהעלאת קובץ");
+        throw new Error(uploadResult?.error || (ar ? "خطأ في رفع الملف" : "שגיאה בהעלאת קובץ"));
       }
 
       // Use edge function to update order (bypasses RLS for anonymous users)
       const { data, error: fnErr } = await supabase.functions.invoke("submit-payment", {
         body: { orderId: order.id, token, receiptPaths: uploadResult.paths },
       });
-      if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message || "שגיאה בשמירת הנתונים");
+      if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message || (ar ? "خطأ في حفظ البيانات" : "שגיאה בשמירת הנתונים"));
 
       setDone(true);
     } catch (e: any) {
       console.error(e);
-      setUploadError(e?.message || "אירעה שגיאה, נסה שוב");
+      setUploadError(e?.message || (ar ? "حدث خطأ، حاول مرة أخرى" : "אירעה שגיאה, נסה שוב"));
     } finally {
       setUploading(false);
     }
@@ -132,8 +135,8 @@ const PaymentLink = () => {
 
   if (invalid) return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ backgroundColor: "rgb(242,242,242)" }}>
-      <p className="text-2xl font-bold text-gray-900 mb-2">קישור לא תקין</p>
-      <p className="text-gray-400 text-sm">הקישור פג תוקף או שגוי. פנה לבית העסק לקבלת קישור חדש.</p>
+      <p className="text-2xl font-bold text-gray-900 mb-2">{ar ? "رابط غير صالح" : "קישור לא תקין"}</p>
+      <p className="text-gray-400 text-sm">{ar ? "انتهت صلاحية الرابط أو أنه غير صحيح. تواصل مع المتجر للحصول على رابط جديد." : "הקישור פג תוקף או שגוי. פנה לבית העסק לקבלת קישור חדש."}</p>
     </div>
   );
 
@@ -142,8 +145,8 @@ const PaymentLink = () => {
       <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
         <CheckCircle2 className="w-8 h-8 text-green-600" />
       </div>
-      <p className="text-2xl font-bold text-gray-900 mb-2">תודה! הקבלה התקבלה</p>
-      <p className="text-gray-400 text-sm">הזמנה #{order?.order_number}</p>
+      <p className="text-2xl font-bold text-gray-900 mb-2">{ar ? "شكراً! تم استلام الإيصال" : "תודה! הקבלה התקבלה"}</p>
+      <p className="text-gray-400 text-sm">{ar ? "طلب رقم" : "הזמנה"} #{order?.order_number}</p>
     </div>
   );
 
@@ -152,18 +155,18 @@ const PaymentLink = () => {
       <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
         <CheckCircle2 className="w-8 h-8 text-amber-500" />
       </div>
-      <p className="text-2xl font-bold text-gray-900 mb-2">אישור התשלום כבר הועלה</p>
-      <p className="text-gray-500 text-sm mb-1">הזמנה #{order?.order_number}</p>
-      <p className="text-gray-400 text-xs">אם יש בעיה, פנה לבית העסק.</p>
+      <p className="text-2xl font-bold text-gray-900 mb-2">{ar ? "تم رفع إيصال الدفع بالفعل" : "אישור התשלום כבר הועלה"}</p>
+      <p className="text-gray-500 text-sm mb-1">{ar ? "طلب رقم" : "הזמנה"} #{order?.order_number}</p>
+      <p className="text-gray-400 text-xs">{ar ? "إذا كانت هناك مشكلة، تواصل مع المتجر." : "אם יש בעיה, פנה לבית העסק."}</p>
     </div>
   );
 
   const bankFields = bankSettings ? [
-    { label: "בנק", value: bankSettings.bank_name },
-    { label: "שם חשבון", value: bankSettings.account_name },
-    { label: "מספר חשבון", value: bankSettings.account_number },
-    { label: "סניף", value: bankSettings.branch_number },
-    { label: "קוד בנק", value: bankSettings.bank_code },
+    { label: ar ? "البنك" : "בנק", value: bankSettings.bank_name },
+    { label: ar ? "اسم الحساب" : "שם חשבון", value: bankSettings.account_name },
+    { label: ar ? "رقم الحساب" : "מספר חשבון", value: bankSettings.account_number },
+    { label: ar ? "رقم الفرع" : "סניף", value: bankSettings.branch_number },
+    { label: ar ? "رمز البنك" : "קוד בנק", value: bankSettings.bank_code },
   ] : [];
 
   return (
@@ -177,7 +180,7 @@ const PaymentLink = () => {
       <main className="max-w-lg mx-auto px-6 py-8 space-y-6">
         {/* Order summary */}
         <div className="bg-white rounded-xl border border-border p-5 space-y-3">
-          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide">פרטי הזמנה</p>
+          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide">{ar ? "تفاصيل الطلب" : "פרטי הזמנה"}</p>
           <p className="text-base font-bold text-gray-900">#{order!.order_number}</p>
           <p className="text-sm text-gray-500">{order!.first_name} {order!.last_name}</p>
           <div className="divide-y divide-gray-100">
@@ -189,7 +192,7 @@ const PaymentLink = () => {
             ))}
           </div>
           <div className="flex justify-between pt-2 border-t border-gray-100 text-base font-bold">
-            <span>סה"כ לתשלום</span>
+            <span>{ar ? "الإجمالي المطلوب" : "סה\"כ לתשלום"}</span>
             <span>₪{Number(order!.total).toLocaleString()}</span>
           </div>
         </div>
@@ -202,8 +205,8 @@ const PaymentLink = () => {
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-900">העבר לחשבון הבנק</p>
-                <p className="text-xs text-gray-400">יש לציין מספר הזמנה בהעברה</p>
+                <p className="text-sm font-bold text-gray-900">{ar ? "حوّل إلى الحساب البنكي" : "העבר לחשבון הבנק"}</p>
+                <p className="text-xs text-gray-400">{ar ? "يرجى ذكر رقم الطلب في التحويل" : "יש לציין מספר הזמנה בהעברה"}</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -214,7 +217,7 @@ const PaymentLink = () => {
                 </div>
               ))}
               <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-400">מספר הזמנה</span>
+                <span className="text-gray-400">{ar ? "رقم الطلب" : "מספר הזמנה"}</span>
                 <span className="font-bold text-gray-900">#{order!.order_number}</span>
               </div>
             </div>
@@ -223,8 +226,8 @@ const PaymentLink = () => {
 
         {/* Receipt upload */}
         <div className="bg-white rounded-xl border border-border p-5 space-y-4">
-          <p className="text-sm font-bold text-gray-900">העלה אישור העברה</p>
-          <p className="text-xs text-gray-400">לאחר ביצוע ההעברה, העלה צילום מסך או קובץ PDF של האישור</p>
+          <p className="text-sm font-bold text-gray-900">{ar ? "ارفع إيصال التحويل" : "העלה אישור העברה"}</p>
+          <p className="text-xs text-gray-400">{ar ? "بعد إجراء التحويل، ارفع لقطة شاشة أو ملف PDF للإيصال" : "לאחר ביצוע ההעברה, העלה צילום מסך או קובץ PDF של האישור"}</p>
 
           <div
             onDragOver={e => e.preventDefault()}
@@ -233,8 +236,8 @@ const PaymentLink = () => {
             className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
           >
             <Upload className="w-7 h-7 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">לחץ להעלאת קובץ או גרור לכאן</p>
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF · עד 10MB</p>
+            <p className="text-sm text-gray-500">{ar ? "اضغط لرفع ملف أو اسحبه هنا" : "לחץ להעלאת קובץ או גרור לכאן"}</p>
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF · {ar ? "حتى 10MB" : "עד 10MB"}</p>
             <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
           </div>
 
@@ -260,7 +263,7 @@ const PaymentLink = () => {
             disabled={files.length === 0 || uploading}
             className="w-full h-12 flex items-center justify-center gap-2 text-sm font-bold bg-gray-900 text-white rounded-[1.875rem] hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : "✅ שלח אישור תשלום"}
+            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : (ar ? "✅ إرسال إيصال الدفع" : "✅ שלח אישור תשלום")}
           </button>
         </div>
       </main>

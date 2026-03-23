@@ -659,7 +659,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       paymentMethod: 'طريقة الدفع',
       bankTransfer: 'تحويل بنكي',
       bankTransferNote: 'بعد تقديم الطلب ستتلقى تعليمات التحويل البنكي عبر البريد الإلكتروني. سيتم معالجة طلبك بعد تأكيد الدفع.',
-      selected: 'נבחר',
+      selected: 'محدد',
       orderNote: 'ملاحظة للطلب',
       orderNotePlaceholder: 'أضف ملاحظة خاصة للطلب (اختياري)',
       placeOrder: 'تأكيد الطلب',

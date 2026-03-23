@@ -58,7 +58,7 @@ const Login = () => {
 
     if (!resolvedEmail) {
       setLoading(false);
-      toast({ title: "שגיאה", description: isPhoneInput(identifier.trim()) ? "מספר הטלפון לא נמצא במערכת" : "שם משתמש או סיסמה שגויים", variant: "destructive" });
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: isPhoneInput(identifier.trim()) ? (locale === "ar" ? "رقم الهاتف غير موجود في النظام" : "מספר הטלפון לא נמצא במערכת") : (locale === "ar" ? "اسم المستخدم أو كلمة المرور غير صحيحة" : "שם משתמש או סיסמה שגויים"), variant: "destructive" });
       return;
     }
 
@@ -74,15 +74,16 @@ const Login = () => {
           return;
         }
       }
-      const hebrewErrors: Record<string, string> = {
-        "Invalid login credentials": "שם משתמש או סיסמה שגויים",
-        "Email not confirmed": "כתובת האימייל לא אומתה, בדקו את תיבת הדואר",
-        "Too many requests": "יותר מדי ניסיונות, נסו שוב מאוחר יותר",
-        "User not found": "משתמש לא נמצא",
-        "Signups not allowed for this instance": "הרשמה אינה זמינה כרגע",
+      const errorMessages: Record<string, { he: string; ar: string }> = {
+        "Invalid login credentials": { he: "שם משתמש או סיסמה שגויים", ar: "اسم المستخدم أو كلمة المرور غير صحيحة" },
+        "Email not confirmed": { he: "כתובת האימייל לא אומתה, בדקו את תיבת הדואר", ar: "البريد الإلكتروني لم يتم تأكيده، تحقق من صندوق الوارد" },
+        "Too many requests": { he: "יותר מדי ניסיונות, נסו שוב מאוחר יותר", ar: "محاولات كثيرة جداً، حاول مرة أخرى لاحقاً" },
+        "User not found": { he: "משתמש לא נמצא", ar: "المستخدم غير موجود" },
+        "Signups not allowed for this instance": { he: "הרשמה אינה זמינה כרגע", ar: "التسجيل غير متاح حالياً" },
       };
-      const msg = hebrewErrors[error.message] || "שם משתמש או סיסמה שגויים";
-      toast({ title: "שגיאה", description: msg, variant: "destructive" });
+      const errEntry = errorMessages[error.message] || { he: "שם משתמש או סיסמה שגויים", ar: "اسم المستخدم أو كلمة المرور غير صحيحة" };
+      const msg = locale === "ar" ? errEntry.ar : errEntry.he;
+      toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: msg, variant: "destructive" });
     } else {
       // Check if user is admin — redirect to /admin
       const { data: { session } } = await supabase.auth.getSession();
@@ -123,7 +124,7 @@ const Login = () => {
                 placeholder=" "
               />
               <label className="absolute start-4 transition-all duration-200 pointer-events-none top-1/2 -translate-y-1/2 text-sm text-muted-foreground peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]">
-                אימייל או מספר טלפון
+                {locale === "ar" ? "البريد الإلكتروني أو رقم الهاتف" : "אימייל או מספר טלפון"}
               </label>
             </div>
 
@@ -160,35 +161,35 @@ const Login = () => {
               <div className="flex items-start gap-2">
                 <span className="text-lg">📦</span>
                 <div>
-                  <p className="font-bold">יש לך הזמנה אצלנו!</p>
-                  <p className="text-xs text-blue-700 mt-0.5">מצאנו חשבון עם מספר הטלפון שהזנת, אבל עדיין לא הגדרת סיסמה. השלם את ההרשמה כדי לצפות בהזמנות שלך.</p>
+                  <p className="font-bold">{locale === "ar" ? "لديك طلب عندنا!" : "יש לך הזמנה אצלנו!"}</p>
+                  <p className="text-xs text-blue-700 mt-0.5">{locale === "ar" ? "وجدنا حساباً برقم الهاتف الذي أدخلته، لكن لم تحدد كلمة مرور بعد. أكمل التسجيل لعرض طلباتك." : "מצאנו חשבון עם מספר הטלפון שהזנת, אבל עדיין לא הגדרת סיסמה. השלם את ההרשמה כדי לצפות בהזמנות שלך."}</p>
                 </div>
               </div>
               <Link
                 to={`${localePath("/complete-registration")}?phone=${encodeURIComponent(identifier.trim())}`}
                 className="block w-full text-center text-sm font-bold py-2.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 transition-colors"
               >
-                ← השלם הרשמה וצפה בהזמנות שלך
+                {locale === "ar" ? "← أكمل التسجيل وعرض طلباتك" : "← השלם הרשמה וצפה בהזמנות שלך"}
               </Link>
             </div>
           )}
 
           {guestHint && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 space-y-2">
-              <p className="font-semibold">נראה שביצעת הזמנה בעבר עם כתובת מייל זו ללא סיסמה.</p>
-              <p className="text-xs text-amber-700">כדי לצפות בהזמנות שלך, הירשם עם אותו מייל — ההזמנות יתחברו לחשבון שלך אוטומטית.</p>
+              <p className="font-semibold">{locale === "ar" ? "يبدو أنك قدّمت طلباً سابقاً بهذا البريد الإلكتروني بدون كلمة مرور." : "נראה שביצעת הזמנה בעבר עם כתובת מייל זו ללא סיסמה."}</p>
+              <p className="text-xs text-amber-700">{locale === "ar" ? "لعرض طلباتك، سجّل بنفس البريد الإلكتروني — سيتم ربط الطلبات بحسابك تلقائياً." : "כדי לצפות בהזמנות שלך, הירשם עם אותו מייל — ההזמנות יתחברו לחשבון שלך אוטומטית."}</p>
               <div className="flex gap-2 pt-1">
                 <Link
                   to={`${localePath("/signup")}?redirect=${encodeURIComponent(redirectTo)}&email=${encodeURIComponent(identifier.trim())}`}
                   className="flex-1 text-center text-xs font-bold py-2 rounded-lg bg-amber-900 text-white hover:bg-amber-800 transition-colors"
                 >
-                  יצירת חשבון
+                  {locale === "ar" ? "إنشاء حساب" : "יצירת חשבון"}
                 </Link>
                 <Link
                   to={localePath("/forgot-password")}
                   className="flex-1 text-center text-xs font-medium py-2 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
                 >
-                  שכחתי סיסמה
+                  {locale === "ar" ? "نسيت كلمة المرور" : "שכחתי סיסמה"}
                 </Link>
               </div>
             </div>
