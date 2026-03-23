@@ -26,6 +26,7 @@ const CompleteRegistration = () => {
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [registrationToken, setRegistrationToken] = useState(tokenFromUrl);
 
   // If arriving from Login (no name/email in URL), fetch from latest order by phone
   useEffect(() => {
