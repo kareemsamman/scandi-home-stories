@@ -289,7 +289,7 @@ const AdminOrderDetail = () => {
   <div class="header">
     <img src="${logoUrl}" alt="AMG PERGOLA" style="height:40px; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;\\'>AMG PERGOLA</span>'">
     <div class="header-info">
-      <h1>${labels.order} ${order.order_number}</h1>
+      <h1>${labels.order} ${esc(order.order_number)}</h1>
       <p>${labels.date}: ${new Date(order.created_at).toLocaleDateString(isAr ? "ar-SA" : "he-IL", { year: "numeric", month: "long", day: "numeric" })}</p>
     </div>
   </div>
@@ -298,18 +298,18 @@ const AdminOrderDetail = () => {
     <div class="info-grid">
       <div class="info-card">
         <h3>${labels.customer}</h3>
-        <p class="name">${order.first_name} ${order.last_name}</p>
-        <p>${labels.phone}: ${order.phone}</p>
-        <p>${labels.email}: ${order.email}</p>
+        <p class="name">${esc(order.first_name)} ${esc(order.last_name)}</p>
+        <p>${labels.phone}: ${esc(order.phone)}</p>
+        <p>${labels.email}: ${esc(order.email)}</p>
       </div>
       <div class="info-card">
         <h3>${labels.shipping}</h3>
-        <p class="name">${order.city}</p>
-        <p>${order.address}${(order as any).house_number ? ` ${(order as any).house_number}` : ""}${order.apartment ? `, ${order.apartment}` : ""}</p>
+        <p class="name">${esc(order.city)}</p>
+        <p>${esc(order.address)}${(order as any).house_number ? ` ${esc((order as any).house_number)}` : ""}${order.apartment ? `, ${esc(order.apartment)}` : ""}</p>
       </div>
     </div>
 
-    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${order.notes}</div>` : ""}
+    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${esc(order.notes)}</div>` : ""}
 
     <p class="section-title">${labels.items}</p>
     <table>
