@@ -232,6 +232,32 @@
   display: none;
 }
 
+/* ── Custom Accessibility Widget effects ── */
+:root { --a11y-font-scale: 100%; }
+body { font-size: var(--a11y-font-scale); }
+
+html.a11y-high-contrast,
+html.a11y-high-contrast body {
+  filter: contrast(160%) !important;
+}
+html.a11y-grayscale,
+html.a11y-grayscale body {
+  filter: grayscale(100%) !important;
+}
+html.a11y-high-contrast.a11y-grayscale body {
+  filter: contrast(160%) grayscale(100%) !important;
+}
+html.a11y-highlight-links a {
+  outline: 2px solid #2563eb !important;
+  background: #dbeafe !important;
+  color: #1e3a8a !important;
+  border-radius: 2px;
+}
+html.a11y-big-cursor,
+html.a11y-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M5 2l20 12-9 2-5 9z' fill='black' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 0 0, auto !important;
+}
+
 /* Pin enable.co.il accessibility widget bottom-left below WhatsApp button */
 #INDmenu-btn {
   bottom: 16px !important;
