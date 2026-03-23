@@ -577,8 +577,8 @@ export const translations: Record<Locale, Record<string, any>> = {
           { label: 'قصتنا', href: '/about' },
         ]},
         { title: 'التواصل', links: [
-          { label: 'support@pergolaamg.com', href: 'mailto:support@pergolaamg.com' },
-          { label: '+972528122846', href: 'tel:+972528122846' },
+          { label: 'mail@amgpergola.co.il', href: 'mailto:mail@amgpergola.co.il' },
+          { label: '052-812-2846', href: 'tel:+972528122846' },
         ]},
       ],
       copyright: '© {year}, AMG Pergola',
