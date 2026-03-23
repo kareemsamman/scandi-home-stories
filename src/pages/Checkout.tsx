@@ -305,10 +305,7 @@ const Checkout = () => {
     (async () => {
       try {
         const { data } = await (supabase as any)
-          .from("shared_carts")
-          .select("cart_items, coupon_code")
-          .eq("token", token)
-          .maybeSingle();
+          .rpc("get_shared_cart_by_token", { p_token: token });
         if (!data) return;
         if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
           setItems(data.cart_items);

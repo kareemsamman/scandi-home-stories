@@ -93,7 +93,7 @@ const PaymentLink = () => {
         const ext = compressed.type === "image/jpeg" ? "jpg" : (files[i].file.name.split(".").pop() || "jpg");
         const safeName = order.order_number.replace(/[^a-zA-Z0-9]/g, "");
         const path = `receipts/${safeName}_pay_${Date.now()}_${i + 1}.${ext}`;
-        const { error } = await supabase.storage.from("receipts").upload(path, compressed, { upsert: true });
+        const { error } = await supabase.storage.from("receipts").upload(path, compressed, { upsert: false });
         if (error) throw new Error(`שגיאה בהעלאת קובץ: ${error.message}`);
         paths.push(`receipts:${path}`);
       }
