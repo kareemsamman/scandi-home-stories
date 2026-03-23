@@ -59,7 +59,7 @@ export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey
         >
           {/* After (full) */}
           <img
-            src={dbData?.after_image || "/assets/after-with-pergola.webp"}
+            src={optimizeImageUrl(dbData?.after_image || "/assets/after-with-pergola.webp", 1280)}
             alt={dbData?.after_label || t("beforeAfter.after")}
             className="absolute inset-0 w-full h-full object-cover"
           />
