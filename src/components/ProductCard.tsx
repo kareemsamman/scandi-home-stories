@@ -122,8 +122,8 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
       <motion.article initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
         <Link to={localePath(`/product/${product.slug}`)} className="block">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
-            {hasSecondImage && !isOutOfStock && (<img src={product.images[1]} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
+            <img src={optimizeImageUrl(product.images[0], 500)} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+            {hasSecondImage && !isOutOfStock && (<img src={optimizeImageUrl(product.images[1], 500)} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
             {isOutOfStock && (
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                 <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
