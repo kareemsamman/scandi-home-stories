@@ -89,12 +89,8 @@ const CompleteRegistration = () => {
       return;
     }
 
-    if (data?.session) {
-      await supabase.auth.setSession(data.session);
-    }
-
-    toast({ title: "ההרשמה הושלמה! 🎉", description: "אתה מחובר כעת ויכול לצפות בהזמנות שלך" });
-    navigate(localePath("/account"));
+    toast({ title: "ההרשמה הושלמה! 🎉", description: "הסיסמה נוצרה בהצלחה. אנא התחבר עם האימייל והסיסמה שלך." });
+    navigate(localePath("/login"));
   };
 
   const fields = [
