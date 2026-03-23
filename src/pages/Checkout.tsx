@@ -210,6 +210,7 @@ const Checkout = () => {
 
   const [showSendCartModal, setShowSendCartModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(true);
+  const [loadingSharedCart, setLoadingSharedCart] = useState(() => !!new URLSearchParams(window.location.search).get("cart"));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(!isMobile);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -302,27 +303,31 @@ const Checkout = () => {
     const token = searchParams.get("cart");
     if (!token) return;
     (async () => {
-      const { data } = await (supabase as any)
-        .from("shared_carts")
-        .select("cart_items, coupon_code")
-        .eq("token", token)
-        .maybeSingle();
-      if (!data) return;
-      if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
-        setItems(data.cart_items);
-      }
-      if (data.coupon_code) {
-        const cartForValidation = (data.cart_items as any[]).map((i: any) => ({
-          product: { id: i.product.id, price: i.product.price, collection: i.product.collection },
-          quantity: i.quantity,
-        }));
-        const subtotalVal = (data.cart_items as any[]).reduce(
-          (t: number, i: any) => t + i.product.price * i.quantity, 0
-        );
-        const result = await validateCoupon(data.coupon_code, cartForValidation, subtotalVal);
-        if (result.coupon && result.discountAmount !== undefined) {
-          applyCoupon(result.coupon, result.discountAmount);
+      try {
+        const { data } = await (supabase as any)
+          .from("shared_carts")
+          .select("cart_items, coupon_code")
+          .eq("token", token)
+          .maybeSingle();
+        if (!data) return;
+        if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
+          setItems(data.cart_items);
         }
+        if (data.coupon_code) {
+          const cartForValidation = (data.cart_items as any[]).map((i: any) => ({
+            product: { id: i.product.id, price: i.product.price, collection: i.product.collection },
+            quantity: i.quantity,
+          }));
+          const subtotalVal = (data.cart_items as any[]).reduce(
+            (t: number, i: any) => t + i.product.price * i.quantity, 0
+          );
+          const result = await validateCoupon(data.coupon_code, cartForValidation, subtotalVal);
+          if (result.coupon && result.discountAmount !== undefined) {
+            applyCoupon(result.coupon, result.discountAmount);
+          }
+        }
+      } finally {
+        setLoadingSharedCart(false);
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -665,7 +670,7 @@ const Checkout = () => {
   };
 
   /* empty cart */
-  if (items.length === 0 && !showSkeleton && step === "form") {
+  if (items.length === 0 && !showSkeleton && !loadingSharedCart && step === "form") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6" style={{ backgroundColor: "rgb(242,242,242)" }}>
         <h1 className="text-2xl font-bold text-foreground">{t("checkout.emptyTitle")}</h1>
