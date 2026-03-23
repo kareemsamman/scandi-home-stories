@@ -234,36 +234,39 @@
 
 /* ── Custom Accessibility Widget effects ── */
 :root { --a11y-font-scale: 100%; }
-body { font-size: var(--a11y-font-scale); }
+html { font-size: var(--a11y-font-scale) !important; }
 
-html.a11y-high-contrast,
-html.a11y-high-contrast body {
-  filter: contrast(160%) !important;
+/* High contrast: true black/white, not just a filter */
+html.a11y-high-contrast * {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
 }
-html.a11y-grayscale,
-html.a11y-grayscale body {
+html.a11y-high-contrast img,
+html.a11y-high-contrast video {
+  filter: brightness(0.85) contrast(1.2) !important;
+}
+html.a11y-high-contrast a,
+html.a11y-high-contrast button {
+  color: #ffff00 !important;
+}
+
+html.a11y-grayscale * {
   filter: grayscale(100%) !important;
 }
-html.a11y-high-contrast.a11y-grayscale body {
-  filter: contrast(160%) grayscale(100%) !important;
-}
 html.a11y-highlight-links a {
-  outline: 2px solid #2563eb !important;
+  outline: 3px solid #2563eb !important;
   background: #dbeafe !important;
   color: #1e3a8a !important;
-  border-radius: 2px;
+  border-radius: 3px;
+  padding: 0 2px;
 }
 html.a11y-big-cursor,
 html.a11y-big-cursor * {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M5 2l20 12-9 2-5 9z' fill='black' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 0 0, auto !important;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6 2l26 15-11 2.5-6 11z' fill='black' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 0 0, auto !important;
 }
 
-/* Pin enable.co.il accessibility widget bottom-left below WhatsApp button */
-#INDmenu-btn {
-  bottom: 16px !important;
-  left: 16px !important;
-  right: auto !important;
-}
 
 /* Prevent iOS Safari from zooming on input focus (requires font-size >= 16px) */
 @media (max-width: 768px) {
