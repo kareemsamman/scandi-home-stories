@@ -42,12 +42,8 @@ const ForgotPassword = () => {
       toast({ title: "שגיאה", description: "לא הצלחנו לשמור את הסיסמה, נסה שוב", variant: "destructive" });
       return;
     }
-    // Set session from returned data
-    if (data?.session) {
-      await supabase.auth.setSession(data.session);
-    }
-    toast({ title: "הסיסמה נוצרה בהצלחה!", description: "אתה מחובר כעת" });
-    navigate(localePath("/account"));
+    toast({ title: "הסיסמה נוצרה בהצלחה!", description: "אנא התחבר עם האימייל והסיסמה שלך" });
+    navigate(localePath("/login"));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

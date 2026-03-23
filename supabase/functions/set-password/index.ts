@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const { phone, password, firstName, lastName, email: newEmail } = await req.json();
@@ -84,17 +83,7 @@ Deno.serve(async (req) => {
       .update({ user_id: profile.user_id })
       .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`);
 
-    // Get email to sign in
-    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-    const email = userData?.user?.email;
-    if (!email) return json({ error: "no_email" }, 500);
-
-    // Sign in the user and return session
-    const anonClient = createClient(supabaseUrl, anonKey);
-    const { data: session, error: signInErr } = await anonClient.auth.signInWithPassword({ email, password });
-    if (signInErr) return json({ error: signInErr.message }, 500);
-
-    return json({ success: true, session: session.session });
+    return json({ success: true });
   } catch (err: any) {
     console.error("set-password error:", err);
     return json({ error: err?.message || "Internal error" }, 500);
