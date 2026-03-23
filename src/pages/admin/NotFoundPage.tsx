@@ -10,8 +10,8 @@ import { Save, Monitor, Smartphone, ImageIcon } from "lucide-react";
 
 const db = supabase as any;
 
-const DEFAULT_IMAGE_DT = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80";
-const DEFAULT_IMAGE_MB = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80";
+const DEFAULT_IMAGE_DT = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=75&fm=webp&fit=crop";
+const DEFAULT_IMAGE_MB = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=75&fm=webp&fit=crop";
 
 const DEFAULTS: Record<string, { title: string; subtitle: string; btn_home: string; btn_shop: string }> = {
   he: { title: "הדף לא נמצא", subtitle: "הדף שחיפשתם לא קיים. ייתכן שהוסר או שהכתובת שגויה.", btn_home: "חזרה לדף הבית", btn_shop: "לחנות" },
