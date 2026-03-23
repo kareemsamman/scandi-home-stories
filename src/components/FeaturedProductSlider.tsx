@@ -101,7 +101,7 @@ export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sect
       {/* Cards — RTL natural, first card on the right */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth"
+        className="flex gap-4 overflow-x-auto overflow-y-hidden scroll-smooth"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
