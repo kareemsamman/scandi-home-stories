@@ -15,7 +15,7 @@ export const WhatsAppButton = () => {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp"
-      className="fixed bottom-6 left-6 z-50 group"
+      className="fixed bottom-24 left-6 z-50 group"
     >
       {/* Pulse ring */}
       <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 animate-ping" />
