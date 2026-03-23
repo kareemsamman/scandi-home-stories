@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey?: string }) => {
   const { t, locale } = useLocale();
