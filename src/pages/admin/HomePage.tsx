@@ -24,8 +24,9 @@ const db = supabase as any;
 
 // ─── Section types ────────────────────────────────────────────────────────────
 
-export { DEFAULT_SECTIONS_ORDER } from "@/data/homeSections";
-export type { SectionItem } from "@/data/homeSections";
+import { DEFAULT_SECTIONS_ORDER, type SectionItem } from "@/data/homeSections";
+export { DEFAULT_SECTIONS_ORDER };
+export type { SectionItem };
 
 const SECTION_META: Record<string, { label: string; icon: React.ElementType }> = {
   hero_slider:        { label: "Hero Slider",              icon: Image },
