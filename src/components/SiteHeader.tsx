@@ -6,7 +6,8 @@ import { useCart } from "@/hooks/useCart";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { cn } from "@/lib/utils";
-import logoWhite from "@/assets/logo-white.png";
+import logoWhite from "@/assets/logo-white.webp";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 import { SearchModal } from "./SearchModal";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
