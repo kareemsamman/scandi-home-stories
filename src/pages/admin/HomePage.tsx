@@ -328,6 +328,19 @@ const FeaturedSliderContent = ({ data, onChange, locale }: { data: any; onChange
         </div>
       </Field>
 
+      <Field label="Compact Images (תמונות קטנות יותר)">
+        <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+          <button type="button" onClick={() => onChange({ ...data, compact_images: false })}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${!data.compact_images ? "bg-foreground text-background" : "bg-white text-gray-500 hover:bg-gray-50"}`}>
+            רגיל
+          </button>
+          <button type="button" onClick={() => onChange({ ...data, compact_images: true })}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${data.compact_images ? "bg-foreground text-background" : "bg-white text-gray-500 hover:bg-gray-50"}`}>
+            קטן
+          </button>
+        </div>
+      </Field>
+
       {data.mode === "category" && (
         <Field label="Category">
           <select value={data.category_id || ""} onChange={e => onChange({ ...data, category_id: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-input text-sm bg-white">

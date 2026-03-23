@@ -43,6 +43,7 @@ export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sect
   const title = config?.title || "";
   const buttonText = config?.button_text || "";
   const buttonLink = config?.button_link || "/shop";
+  const compact = !!config?.compact_images;
 
   const updateState = () => {
     const el = scrollRef.current;
@@ -111,7 +112,10 @@ export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sect
           <div
             key={product.id}
             data-slider-card
-            className="shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
+            className={compact
+              ? "shrink-0 w-[55vw] sm:w-[32vw] md:w-[21vw] lg:w-[19vw]"
+              : "shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
+            }
           >
             <ProductCard product={product} index={i} animate={false} />
           </div>
