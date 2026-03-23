@@ -377,7 +377,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailLabel: 'דוא"ל',
       phoneLabel: 'טלפון',
       addressLabel: 'כתובת',
-      addressText: 'אזור התעשייה, ישראל',
+      addressText: 'עצמונה 1, מעלה אדומים',
       hoursLabel: 'שעות פעילות',
       hoursText: 'א׳-ה׳ 08:00-17:00',
     },
