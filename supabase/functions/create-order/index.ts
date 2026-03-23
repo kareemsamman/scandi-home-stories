@@ -333,6 +333,8 @@ Deno.serve(async (req) => {
 
           if (!createErr && newUser?.user) {
             const newUserId = newUser.user.id;
+            // Generate a secure registration token
+            const registrationToken = crypto.randomUUID() + "-" + crypto.randomUUID();
             // Create profile
             await supabaseAdmin.from("profiles").upsert({
               user_id: newUserId,
@@ -340,6 +342,7 @@ Deno.serve(async (req) => {
               last_name: lastName,
               phone: local,
               needs_password: true,
+              registration_token: registrationToken,
             }, { onConflict: "user_id" });
             // Link order to new user
             await supabaseAdmin.from("orders").update({ user_id: newUserId }).eq("id", newOrder.id);

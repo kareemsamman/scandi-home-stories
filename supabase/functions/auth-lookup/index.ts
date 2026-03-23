@@ -149,27 +149,23 @@ Deno.serve(async (req) => {
       return json({ sent: true, via: smsSent ? "sms" : "email" });
     }
 
-    /* ── action: "get_order_data" ── fetch latest order details by phone for pre-filling registration */
+    /* ── action: "get_order_data" ── check if phone has orders + return registration token */
     if (action === "get_order_data") {
       const { phone } = body;
       if (!phone) return json({ found: false });
       const local = normalizePhone(phone);
       const intl = toIntl(local);
+      // Check if orders exist for this phone
       const { data: orders } = await supabaseAdmin
         .from("orders")
-        .select("first_name, last_name, email")
+        .select("id")
         .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`)
-        .order("created_at", { ascending: false })
         .limit(1);
-      const order = orders?.[0];
-      if (!order) return json({ found: false });
-      // Only return name, mask email to prevent PII leakage
-      const email = order.email || "";
-      const atIdx = email.indexOf("@");
-      const maskedEmail = atIdx > 0
-        ? email[0] + "***" + email.slice(atIdx)
-        : "";
-      return json({ found: true, firstName: order.first_name, lastName: order.last_name, email: maskedEmail });
+      if (!orders?.[0]) return json({ found: false });
+      // Fetch registration token from profile (needed for set-password)
+      const profile = await findProfileByPhone(supabaseAdmin, local);
+      const regToken = profile?.registration_token || null;
+      return json({ found: true, registrationToken: regToken });
     }
 
     /* ── action: "check_phone" ── is phone already registered? */

@@ -229,16 +229,20 @@ const AdminOrderDetail = () => {
       ? "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;"
       : "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;";
 
+    // HTML-escape helper to prevent XSS in print template
+    const esc = (s: string | null | undefined) =>
+      (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
     const itemsHtml = (order.order_items || []).map((item: DbOrderItem) => {
       const sku = item.product_id ? (skuMap.get(item.product_id) || "") : "";
       const isCustom = item.color_name && !item.color_hex;
       return `
         <tr>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
-            <div style="font-weight:600; font-size:13px;">${item.product_name}</div>
-            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${sku}</div>` : ""}
-            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${item.color_name}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
-            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${item.size}</div>` : ""}
+            <div style="font-weight:600; font-size:13px;">${esc(item.product_name)}</div>
+            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${esc(sku)}</div>` : ""}
+            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${esc(item.color_name)}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
+            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${esc(item.size)}</div>` : ""}
           </td>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:center; font-size:13px;">×${item.quantity}</td>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-size:13px; color:#6b7280;">₪${item.price.toLocaleString()}</td>
