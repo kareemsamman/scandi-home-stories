@@ -28,28 +28,16 @@ const CompleteRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [registrationToken, setRegistrationToken] = useState(tokenFromUrl);
 
-  // If arriving from Login (no name/email in URL), fetch from latest order by phone
+  // If arriving from Login (no name/email in URL), fetch registration token via auth-lookup
   useEffect(() => {
-    if (!phoneFromUrl || (firstNameFromUrl && lastNameFromUrl)) return;
-    const digits = phoneFromUrl.replace(/[\s\-\+\(\)]/g, "");
-    const local = digits.startsWith("972") ? "0" + digits.slice(3) : digits;
-    const intl = local.startsWith("0") ? "972" + local.slice(1) : local;
-    (supabase as any)
-      .from("orders")
-      .select("first_name, last_name, email")
-      .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }: { data: any[] | null }) => {
-        const order = data?.[0];
-        if (!order) return;
-        setForm(prev => ({
-          ...prev,
-          firstName: prev.firstName || order.first_name || "",
-          lastName: prev.lastName || order.last_name || "",
-          email: prev.email || (order.email && !order.email.includes("@no-email.amg-pergola.com") ? order.email : ""),
-        }));
-      });
+    if (!phoneFromUrl) return;
+    supabase.functions.invoke("auth-lookup", {
+      body: { action: "get_order_data", phone: phoneFromUrl },
+    }).then(({ data }: any) => {
+      if (data?.registrationToken && !registrationToken) {
+        setRegistrationToken(data.registrationToken);
+      }
+    });
   }, [phoneFromUrl]);
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
