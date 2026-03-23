@@ -133,9 +133,16 @@ export const SiteFooter = () => {
         }}
       >
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-          {typeof copyright === "string"
-            ? copyright.replace("{year}", new Date().getFullYear().toString())
-            : ""}
+          © {new Date().getFullYear()}, AMG Pergola | Developed by{" "}
+          <a
+            href="https://kareemsamman.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-white transition-colors"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
+            Kareem Samman
+          </a>
         </p>
       </div>
     </footer>
