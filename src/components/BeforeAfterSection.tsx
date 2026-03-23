@@ -74,7 +74,6 @@ export const BeforeAfterSection = ({ sectionKey = "before_after" }: { sectionKey
               alt={dbData?.before_label || t("beforeAfter.before")}
               className="absolute inset-0 w-full h-full object-cover"
             />
-            />
           </div>
 
           {/* Divider */}
