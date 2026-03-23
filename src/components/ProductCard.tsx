@@ -8,6 +8,7 @@ import { useShopData } from "@/hooks/useShopData";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { QuickBuyModal } from "./QuickBuyModal";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
