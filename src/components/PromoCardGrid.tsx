@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/i18n/useLocale";
 import { ArrowLeft } from "lucide-react";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 const promoImages = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=75&fm=webp&fit=crop",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=75&fm=webp&fit=crop",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=75&fm=webp&fit=crop",
 ];
 
 export const PromoCardGrid = ({ sectionKey = "promo_grid" }: { sectionKey?: string }) => {
