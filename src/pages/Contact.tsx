@@ -32,11 +32,11 @@ const Contact = () => {
   const heroImageMb  = heroDb?.image_mobile|| heroDb?.image || DEFAULT_HERO_IMAGE_MB;
 
   // Contact details
-  const phone   = detailsDb?.phone   || "03-1234567";
-  const email   = detailsDb?.email   || "info@amgpergola.co.il";
+  const phone   = detailsDb?.phone   || "052-812-2846";
+  const email   = detailsDb?.email   || "mail@amgpergola.co.il";
   const address = detailsDb?.address || t("contact.addressText");
   const hours   = detailsDb?.hours   || t("contact.hoursText");
-  const mapSrc  = detailsDb?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d108623.3654726395!2d34.7229978!3d32.0879976!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151d4ca6193b7c1f%3A0xc1fb72a2c0963f90!2sTel%20Aviv-Yafo!5e0!3m2!1sen!2sil!4v1710000000000!5m2!1sen!2sil";
+  const mapSrc  = detailsDb?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3391.5!2d35.4636!3d31.7767!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z16LXptee15XXoNeUIDEsINee16LXnNeUIOeT15XXnteZ150!5e0!3m2!1she!2sil";
 
   const contactInfo = [
     { icon: Mail,   label: t("contact.emailLabel"),   value: email,   href: `mailto:${email}` },

@@ -170,7 +170,7 @@ const AdminContactPage = () => {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Phone">
-            <Input value={details.phone} onChange={e => patchDetails({ phone: e.target.value })} placeholder="03-1234567" />
+            <Input value={details.phone} onChange={e => patchDetails({ phone: e.target.value })} placeholder="052-812-2846" />
           </Field>
           <Field label="Email">
             <Input value={details.email} onChange={e => patchDetails({ email: e.target.value })} placeholder="info@example.com" />

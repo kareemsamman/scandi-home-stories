@@ -28,7 +28,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       messages: [
         'משלוח חינם לכל הזמנה',
         'התקנה מקצועית בכל הארץ',
-        'ייעוץ חינם: 03-1234567',
+        'ייעוץ חינם: 052-812-2846',
       ],
     },
     hero: {
@@ -112,8 +112,8 @@ export const translations: Record<Locale, Record<string, any>> = {
           { label: 'הסיפור שלנו', href: '/about' },
         ]},
         { title: 'יצירת קשר', links: [
-          { label: 'support@pergolaamg.com', href: 'mailto:support@pergolaamg.com' },
-          { label: '+972528122846', href: 'tel:+972528122846' },
+          { label: 'mail@amgpergola.co.il', href: 'mailto:mail@amgpergola.co.il' },
+          { label: '052-812-2846', href: 'tel:+972528122846' },
         ]},
       ],
       copyright: '© {year}, AMG Pergola',
@@ -377,7 +377,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailLabel: 'דוא"ל',
       phoneLabel: 'טלפון',
       addressLabel: 'כתובת',
-      addressText: 'אזור התעשייה, ישראל',
+      addressText: 'עצמונה 1, מעלה אדומים',
       hoursLabel: 'שעות פעילות',
       hoursText: 'א׳-ה׳ 08:00-17:00',
     },
@@ -493,7 +493,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       messages: [
         'شحن مجاني لجميع الطلبات',
         'تركيب احترافي في جميع أنحاء البلاد',
-        'استشارة مجانية: 03-1234567',
+        'استشارة مجانية: 052-812-2846',
       ],
     },
     hero: {
@@ -577,8 +577,8 @@ export const translations: Record<Locale, Record<string, any>> = {
           { label: 'قصتنا', href: '/about' },
         ]},
         { title: 'التواصل', links: [
-          { label: 'support@pergolaamg.com', href: 'mailto:support@pergolaamg.com' },
-          { label: '+972528122846', href: 'tel:+972528122846' },
+          { label: 'mail@amgpergola.co.il', href: 'mailto:mail@amgpergola.co.il' },
+          { label: '052-812-2846', href: 'tel:+972528122846' },
         ]},
       ],
       copyright: '© {year}, AMG Pergola',
@@ -842,7 +842,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       emailLabel: 'البريد الإلكتروني',
       phoneLabel: 'الهاتف',
       addressLabel: 'العنوان',
-      addressText: 'المنطقة الصناعية، إسرائيل',
+      addressText: 'عتسمونا 1، معاليه أدوميم',
       hoursLabel: 'ساعات العمل',
       hoursText: 'أحد-خميس 08:00-17:00',
     },
