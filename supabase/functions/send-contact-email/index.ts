@@ -21,6 +21,12 @@ const escapeXml = (str: string): string =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
+const getClientIp = (req: Request): string => {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")
+    || "unknown";
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -52,6 +58,31 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ── Rate limiting: 5 submissions per IP per 15 minutes ──────────────
+    const clientIp = getClientIp(req);
+    const rateLimitKey = `contact:${clientIp}`;
+    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+    // Cleanup old entries occasionally
+    if (Math.random() < 0.05) {
+      try { await supabaseAdmin.rpc("cleanup_rate_limits"); } catch {}
+    }
+
+    const { count } = await supabaseAdmin
+      .from("rate_limits")
+      .select("id", { count: "exact", head: true })
+      .eq("key", rateLimitKey)
+      .gte("created_at", since);
+
+    if ((count ?? 0) >= 5) {
+      return new Response(JSON.stringify({ error: "Too many submissions. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Record this request
+    await supabaseAdmin.from("rate_limits").insert({ key: rateLimitKey });
 
     // ── Save submission to DB ────────────────────────────────────────────
     try {
@@ -114,7 +145,7 @@ serve(async (req) => {
 
     if (!smsRes.ok) {
       console.error("019 SMS error:", smsResult);
-      return new Response(JSON.stringify({ success: true, sms_sent: false, reason: "SMS send failed", detail: smsResult }), {
+      return new Response(JSON.stringify({ success: true, sms_sent: false, reason: "SMS send failed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
