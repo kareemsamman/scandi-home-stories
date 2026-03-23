@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle } from "lucide-react";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
   useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
-  useAdminOrderSettings,
+  useAdminOrderSettings, useWhatsappSettings,
   DEFAULT_SMS_MESSAGES,
-  type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings,
+  type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings, type WhatsappSettings,
 } from "@/hooks/useAppSettings";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,7 @@ const STATUS_KEYS = [
   { key: "cancelled", label: "בוטלה" },
 ];
 
-type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders";
+type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp";
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
@@ -68,6 +68,12 @@ const AdminSettings = () => {
   const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
   useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
 
+  /* WhatsApp */
+  const { data: dbWhatsapp } = useWhatsappSettings();
+  const saveWhatsapp = useSaveSetting("whatsapp");
+  const [whatsapp, setWhatsapp] = useState<WhatsappSettings>({ phone: "", enabled: false });
+  useEffect(() => { if (dbWhatsapp) setWhatsapp(dbWhatsapp); }, [dbWhatsapp]);
+
   const [testPhone, setTestPhone] = useState("");
   const [testStatus, setTestStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
 
@@ -102,13 +108,14 @@ const AdminSettings = () => {
       else if (tab === "sms") await saveSms.mutateAsync(sms);
       else if (tab === "messages" && msgs) await saveMsgs.mutateAsync(msgs);
       else if (tab === "orders") await saveAdminOrders.mutateAsync(adminOrders);
+      else if (tab === "whatsapp") await saveWhatsapp.mutateAsync(whatsapp);
       toast({ title: "Saved successfully" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   };
 
-  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending;
+  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending || saveWhatsapp.isPending;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
@@ -118,6 +125,7 @@ const AdminSettings = () => {
     { id: "general", label: "General", icon: <Globe className="w-4 h-4" /> },
     { id: "roles", label: "Roles", icon: <Shield className="w-4 h-4" /> },
     { id: "orders", label: "Orders", icon: <ShoppingCart className="w-4 h-4" /> },
+    { id: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="w-4 h-4" /> },
   ];
 
   const SaveBtn = ({ tab }: { tab: Tab }) => (
@@ -378,6 +386,55 @@ const AdminSettings = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── WhatsApp ── */}
+      {activeTab === "whatsapp" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#25D366] flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 32 32" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.004 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.347.627 4.64 1.813 6.64L2.667 29.333l6.907-1.787A13.267 13.267 0 0 0 16.004 29.333c7.36 0 13.33-5.973 13.33-13.333S23.363 2.667 16.004 2.667Zm0 24c-2.107 0-4.16-.56-5.96-1.627l-.427-.253-4.093 1.067 1.093-3.973-.28-.44A10.64 10.64 0 0 1 5.333 16c0-5.88 4.787-10.667 10.667-10.667S26.667 10.12 26.667 16 21.88 26.667 16.004 26.667Zm5.853-7.987c-.32-.16-1.893-.933-2.187-1.04-.293-.107-.507-.16-.72.16-.213.32-.827 1.04-.987 1.24-.16.2-.32.213-.64.053-.32-.16-1.347-.493-2.56-1.573-.947-.84-1.587-1.88-1.773-2.2-.187-.32-.02-.493.14-.653.147-.147.32-.373.48-.56.16-.187.213-.32.32-.533.107-.213.053-.4-.027-.56-.08-.16-.72-1.733-.987-2.373-.26-.627-.52-.533-.72-.547l-.613-.013c-.213 0-.56.08-.853.4-.293.32-1.12 1.093-1.12 2.667s1.147 3.093 1.307 3.307c.16.213 2.253 3.44 5.453 4.827.76.333 1.36.533 1.827.68.76.24 1.453.213 2 .133.613-.093 1.893-.773 2.16-1.52.267-.747.267-1.387.187-1.52-.08-.133-.293-.213-.613-.373Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">WhatsApp Button</h2>
+              <p className="text-xs text-gray-400 mt-0.5">כפתור WhatsApp צף בפינה שמאל-תחתון של האתר</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">הצג כפתור WhatsApp</p>
+              <p className="text-xs text-gray-400 mt-0.5">הפעל או כבה את הכפתור באתר</p>
+            </div>
+            <button
+              onClick={() => setWhatsapp(p => ({ ...p, enabled: !p.enabled }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${whatsapp.enabled ? "bg-[#25D366]" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${whatsapp.enabled ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          <Field label="מספר WhatsApp (פורמט: 0501234567 או 972501234567)">
+            <TInput
+              value={whatsapp.phone}
+              onChange={v => setWhatsapp(p => ({ ...p, phone: v }))}
+              placeholder="0501234567"
+            />
+          </Field>
+
+          {whatsapp.phone && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+              <span>קישור:</span>
+              <span className="font-mono text-green-700 break-all">
+                https://wa.me/{whatsapp.phone.replace(/[\s\-\+\(\)]/g, "").replace(/^0/, "972")}
+              </span>
+            </div>
+          )}
+
+          <SaveBtn tab="whatsapp" />
         </div>
       )}
 

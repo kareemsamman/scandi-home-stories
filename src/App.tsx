@@ -48,12 +48,14 @@ import AdminLegalPages from "./pages/admin/LegalPages";
 import AdminNotFoundPage from "./pages/admin/NotFoundPage";
 import LegalPage from "./pages/LegalPage";
 import PaymentLink from "./pages/PaymentLink";
+import { WhatsAppButton } from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
 const LocaleRoutes = () => (
   <LocaleProvider>
     <ScrollToTop />
+    <WhatsAppButton />
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/shop" element={<Products />} />

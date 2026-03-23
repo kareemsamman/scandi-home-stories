@@ -12,6 +12,11 @@ export interface SmsSettings {
   enabled: boolean;
 }
 
+export interface WhatsappSettings {
+  phone: string;
+  enabled: boolean;
+}
+
 export interface BankSettings {
   bank_name: string;
   account_name: string;
@@ -103,6 +108,13 @@ export const useAdminOrderSettings = () =>
   useQuery<AdminOrderSettings>({
     queryKey: ["app_settings", "admin_orders"],
     queryFn: async () => (await fetchSetting("admin_orders")) ?? { enabled: false },
+    staleTime: 1000 * 60 * 5,
+  });
+
+export const useWhatsappSettings = () =>
+  useQuery<WhatsappSettings>({
+    queryKey: ["app_settings", "whatsapp"],
+    queryFn: async () => (await fetchSetting("whatsapp")) ?? { phone: "", enabled: false },
     staleTime: 1000 * 60 * 5,
   });
 
