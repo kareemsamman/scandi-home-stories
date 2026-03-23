@@ -99,8 +99,8 @@ export const collections: Collection[] = [
     name: { he: "פרגולות ביוקלימטיות", ar: "برجولات بيوكليماتيكية" },
     slug: "bioclimatic",
     description: { he: "למלות מתכווננות לשליטה מלאה באור ואוורור", ar: "شرائح قابلة للتعديل للتحكم الكامل في الضوء والتهوية" },
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-    heroImage: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=75&fm=webp&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=75&fm=webp&fit=crop",
   },
   {
     id: "motorized",
