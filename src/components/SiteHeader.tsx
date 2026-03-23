@@ -138,8 +138,10 @@ export const SiteHeader = () => {
             <div className="flex items-center justify-start">
               <Link to={localePath("/")}>
                 <img
-                  src={dbHeader?.logo || logoWhite}
+                  src={dbHeader?.logo ? optimizeImageUrl(dbHeader.logo, 200) : logoWhite}
                   alt="AMG Pergola"
+                  width={82}
+                  height={64}
                   className={cn(
                     "h-16 w-auto transition-all duration-[240ms]",
                     showInvert && "invert"
