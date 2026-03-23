@@ -836,6 +836,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+        }
+        Relationships: []
+      }
       shared_carts: {
         Row: {
           cart_items: Json
@@ -1028,6 +1046,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       get_invoice_order: { Args: { order_id: string }; Returns: Json }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }

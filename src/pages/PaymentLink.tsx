@@ -87,20 +87,31 @@ const PaymentLink = () => {
     setUploading(true);
     setUploadError("");
     try {
-      const paths: string[] = [];
+      // Upload files via server-side edge function
+      const formData = new FormData();
+      formData.append("orderId", order.id);
+      formData.append("token", token || "");
+      formData.append("orderNumber", order.order_number);
       for (let i = 0; i < files.length; i++) {
         const compressed = await compressImage(files[i].file);
-        const ext = compressed.type === "image/jpeg" ? "jpg" : (files[i].file.name.split(".").pop() || "jpg");
-        const safeName = order.order_number.replace(/[^a-zA-Z0-9]/g, "");
-        const path = `receipts/${safeName}_pay_${Date.now()}_${i + 1}.${ext}`;
-        const { error } = await supabase.storage.from("receipts").upload(path, compressed, { upsert: false });
-        if (error) throw new Error(`שגיאה בהעלאת קובץ: ${error.message}`);
-        paths.push(`receipts:${path}`);
+        formData.append(`file${i}`, compressed, files[i].file.name);
+      }
+      const uploadRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-receipt`,
+        {
+          method: "POST",
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: formData,
+        }
+      );
+      const uploadResult = await uploadRes.json();
+      if (!uploadRes.ok || !uploadResult.paths) {
+        throw new Error(uploadResult?.error || "שגיאה בהעלאת קובץ");
       }
 
       // Use edge function to update order (bypasses RLS for anonymous users)
       const { data, error: fnErr } = await supabase.functions.invoke("submit-payment", {
-        body: { orderId: order.id, token, receiptPaths: paths },
+        body: { orderId: order.id, token, receiptPaths: uploadResult.paths },
       });
       if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message || "שגיאה בשמירת הנתונים");
 
