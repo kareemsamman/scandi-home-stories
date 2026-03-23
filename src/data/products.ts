@@ -131,8 +131,8 @@ export const collections: Collection[] = [
     name: { he: "אביזרים ותוספות", ar: "إكسسوارات وإضافات" },
     slug: "accessories",
     description: { he: "תאורה, ניקוז, חיישנים ואביזרים נלווים", ar: "إضاءة وتصريف وأجهزة استشعار وملحقات" },
-    image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80",
-    heroImage: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1920&q=80",
+    image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600&q=75&fm=webp&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1400&q=75&fm=webp&fit=crop",
   },
   {
     id: "profiles",
