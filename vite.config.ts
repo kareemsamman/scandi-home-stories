@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null,
       workbox: {
         // Cache images aggressively — serve from cache first, update in background
         runtimeCaching: [
