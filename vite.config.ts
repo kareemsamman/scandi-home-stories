@@ -77,12 +77,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-dropdown-menu', '@radix-ui/react-accordion', '@radix-ui/react-tabs', '@radix-ui/react-select'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-supabase': ['@supabase/supabase-js'],
+        manualChunks(id) {
+          // Only split out react core — it's used on every page
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) {
+            return 'vendor-react';
+          }
+          // Let Rollup auto-split everything else so lazy routes
+          // carry their own vendor deps and the homepage stays lean
         },
       },
     },
