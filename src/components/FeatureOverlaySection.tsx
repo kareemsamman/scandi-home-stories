@@ -87,7 +87,7 @@ export const FeatureOverlaySection = ({ sectionKey = "feature_overlay" }: { sect
         <div className="relative rounded-2xl overflow-hidden flex flex-col justify-end min-h-[460px] md:min-h-[560px]">
           {/* Background image */}
           <img
-            src={dbData?.bg_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"}
+            src={optimizeImageUrl(dbData?.bg_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80", 1280)}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"

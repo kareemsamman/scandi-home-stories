@@ -228,8 +228,10 @@ export const SiteHeader = () => {
 
             <Link to={localePath("/")} className="absolute start-1/2 -translate-x-1/2 rtl:translate-x-1/2">
               <img
-                src={dbHeader?.logo || logoWhite}
+                src={dbHeader?.logo ? optimizeImageUrl(dbHeader.logo, 200) : logoWhite}
                 alt="AMG Pergola"
+                width={46}
+                height={36}
                 className={cn(
                   "h-9 w-auto transition-all duration-[240ms]",
                   showInvert && "invert"

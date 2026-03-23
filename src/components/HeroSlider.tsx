@@ -52,7 +52,7 @@ export const HeroSlider = () => {
           {slides.map((slide, index) => (
             <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative h-full bg-gray-200">
               <img
-                src={optimizeSupabaseImage(slide.image)}
+                src={optimizeImageUrl(slide.image, 1400)}
                 alt=""
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "low"}

@@ -34,7 +34,7 @@ export const PromoCardGrid = ({ sectionKey = "promo_grid" }: { sectionKey?: stri
                 className="block relative h-[320px] md:h-[400px] rounded-lg overflow-hidden group"
               >
                 <img
-                  src={promo.image || promoImages[index % promoImages.length]}
+                  src={optimizeImageUrl(promo.image || promoImages[index % promoImages.length], 600)}
                   alt={promo.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                   loading="lazy"

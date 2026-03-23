@@ -20,7 +20,7 @@ export const LifestyleMediaSection = ({ sectionKey = "lifestyle_media" }: { sect
           className="rounded-lg overflow-hidden mb-10"
         >
           <img
-            src={dbData?.image || "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1920&q=80"}
+            src={optimizeImageUrl(dbData?.image || "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1920&q=80", 1280)}
             alt=""
             className="w-full h-[300px] md:h-[500px] object-cover"
             loading="lazy"
