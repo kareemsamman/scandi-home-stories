@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       return json({ sent: true, via: smsSent ? "sms" : "email" });
     }
 
-    /* ── action: "get_order_data" ── check if phone has orders + return registration token */
+    /* ── action: "get_order_data" ── check if phone has orders (token is NOT returned) */
     if (action === "get_order_data") {
       const { phone } = body;
       if (!phone) return json({ found: false });
@@ -162,10 +162,7 @@ Deno.serve(async (req) => {
         .or(`phone.eq.${local},phone.eq.${intl},phone.eq.+${intl}`)
         .limit(1);
       if (!orders?.[0]) return json({ found: false });
-      // Fetch registration token from profile (needed for set-password)
-      const profile = await findProfileByPhone(supabaseAdmin, local);
-      const regToken = profile?.registration_token || null;
-      return json({ found: true, registrationToken: regToken });
+      return json({ found: true });
     }
 
     /* ── action: "check_phone" ── is phone already registered? */

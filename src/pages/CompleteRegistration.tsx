@@ -26,19 +26,7 @@ const CompleteRegistration = () => {
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const [registrationToken, setRegistrationToken] = useState(tokenFromUrl);
-
-  // If arriving from Login (no name/email in URL), fetch registration token via auth-lookup
-  useEffect(() => {
-    if (!phoneFromUrl) return;
-    supabase.functions.invoke("auth-lookup", {
-      body: { action: "get_order_data", phone: phoneFromUrl },
-    }).then(({ data }: any) => {
-      if (data?.registrationToken && !registrationToken) {
-        setRegistrationToken(data.registrationToken);
-      }
-    });
-  }, [phoneFromUrl]);
+  const registrationToken = tokenFromUrl;
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
