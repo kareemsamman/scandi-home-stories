@@ -139,6 +139,14 @@ Deno.serve(async (req) => {
       const { phone } = body;
       if (!phone) return json({ error: "phone required" }, 400);
       const local = normalizePhone(phone);
+
+      // Per-identifier rate limit: 5 lookups per phone per 10 minutes
+      const phoneKey = `login-phone:${local}`;
+      const phoneAllowed = await checkRateLimit(supabaseAdmin, phoneKey, 5, 10);
+      if (!phoneAllowed) {
+        return json({ error: "Too many attempts for this number. Please try again later." }, 429);
+      }
+
       const profile = await findProfileByPhone(supabaseAdmin, local);
       if (!profile) return json({ email: null, found: false });
       if (profile.needs_password) return json({ email: null, found: true, needs_password: true });
