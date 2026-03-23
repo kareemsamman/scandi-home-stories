@@ -75,7 +75,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
         <motion.article initial={animate ? { opacity: 0, y: 20 } : false} whileInView={animate ? { opacity: 1, y: 0 } : undefined} viewport={animate ? { once: true, margin: "-50px" } : undefined} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
           <Link to={localePath(`/product/${product.slug}`)} className="block">
             <div className="relative aspect-square overflow-hidden bg-muted">
-              <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+              <img src={optimizeImageUrl(product.images[0], 500)} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
               {isOutOfStock && (
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                   <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
