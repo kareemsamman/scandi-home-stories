@@ -36,7 +36,7 @@ const Contact = () => {
   const email   = detailsDb?.email   || "mail@amgpergola.co.il";
   const address = detailsDb?.address || t("contact.addressText");
   const hours   = detailsDb?.hours   || t("contact.hoursText");
-  const mapSrc  = detailsDb?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3391.5!2d35.4636!3d31.7767!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z16LXptee15XXoNeUIDEsINee16LXnNeUIOeT15XXnteZ150!5e0!3m2!1she!2sil";
+  const mapSrc  = detailsDb?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3391.2742193302615!2d35.3435366!3d31.790275700000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15032c338e3a06f3%3A0x5cfb04379fea4705!2sAtsmona%20St%201%2C%20Ma%27ale%20Adumim!5e0!3m2!1sen!2sil!4v1774268401453!5m2!1sen!2sil";
 
   const contactInfo = [
     { icon: Mail,   label: t("contact.emailLabel"),   value: email,   href: `mailto:${email}` },
