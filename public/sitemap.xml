@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <!-- Homepage -->
+
+  <!-- ── Homepage ── -->
   <url>
     <loc>https://pergolaamg.com/he</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he"/>
@@ -17,7 +18,7 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Shop -->
+  <!-- ── Shop (all products) ── -->
   <url>
     <loc>https://pergolaamg.com/he/shop</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop"/>
@@ -33,7 +34,103 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- Catalog -->
+  <!-- ── Category: Bioclimatic (פרגולות ביוקלימטיות) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=bioclimatic</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=bioclimatic"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=bioclimatic"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=bioclimatic</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=bioclimatic"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=bioclimatic"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ── Category: Motorized (מערכות למלות מוטוריות) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=motorized</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=motorized"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=motorized"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=motorized</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=motorized"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=motorized"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ── Category: Fixed (פרגולות קבועות) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=fixed</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=fixed"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=fixed"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=fixed</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=fixed"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=fixed"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ── Category: Retractable (גגות נפתחים) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=retractable</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=retractable"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=retractable"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=retractable</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=retractable"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=retractable"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ── Category: Accessories (אביזרים) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=accessories</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=accessories"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=accessories"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=accessories</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=accessories"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=accessories"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ── Category: Profiles (פרופילים) ── -->
+  <url>
+    <loc>https://pergolaamg.com/he/shop?collection=profiles</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=profiles"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=profiles"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/shop?collection=profiles</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/shop?collection=profiles"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/shop?collection=profiles"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ── Catalog ── -->
   <url>
     <loc>https://pergolaamg.com/he/catalog</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/catalog"/>
@@ -49,7 +146,7 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- About -->
+  <!-- ── About ── -->
   <url>
     <loc>https://pergolaamg.com/he/about</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/about"/>
@@ -65,7 +162,7 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- Contact -->
+  <!-- ── Contact ── -->
   <url>
     <loc>https://pergolaamg.com/he/contact</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/contact"/>
@@ -81,7 +178,7 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- Legal Pages -->
+  <!-- ── Legal Pages ── -->
   <url>
     <loc>https://pergolaamg.com/he/legal/privacy</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/legal/privacy"/>
@@ -152,4 +249,5 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+
 </urlset>
