@@ -569,18 +569,7 @@ const Checkout = () => {
       return;
     }
 
-    // Save marketing opt-in subscriber
-    if (emailMarketing) {
-      try {
-        await (supabase as any).from("marketing_subscribers").insert({
-          email: form.email,
-          phone: form.phone,
-          first_name: form.firstName,
-          last_name: form.lastName,
-          locale,
-        });
-      } catch { /* non-blocking */ }
-    }
+    // Marketing opt-in is now handled server-side in the create-order edge function
 
     // If guest (not logged in), check if email matches an existing account's past order
     const db = supabase as any;

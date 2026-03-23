@@ -357,6 +357,19 @@ Deno.serve(async (req) => {
       // Don't fail the order if auto-user creation fails
     }
 
+    // --- Save marketing subscriber if opted in ---
+    if (marketingOptIn && email) {
+      try {
+        await supabaseAdmin.from("marketing_subscribers").upsert({
+          email: typeof email === "string" ? email.trim().slice(0, 255) : "",
+          phone: (phone || "").slice(0, 20),
+          first_name: (firstName || "").slice(0, 100),
+          last_name: (lastName || "").slice(0, 100),
+          locale: locale === "ar" ? "ar" : "he",
+        }, { onConflict: "email" }).then(() => {});
+      } catch { /* non-blocking */ }
+    }
+
     // --- Record coupon use ---
     if (validatedCouponId && discountAmount > 0) {
       await supabaseAdmin.from("coupon_uses").insert({
