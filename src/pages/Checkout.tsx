@@ -526,29 +526,33 @@ const Checkout = () => {
     const orderNumber = generateOrderNumber();
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
 
-    // Upload all receipt files to Supabase storage
+    // Upload receipt files via server-side edge function
     let receiptUrl: string | undefined;
     let receiptUploadFailed = false;
     try {
-      const uploadedUrls: string[] = [];
+      const formData = new FormData();
+      formData.append("orderId", "pending"); // Will be set after order creation
+      formData.append("token", "pending");
+      formData.append("orderNumber", orderNumber);
       for (let i = 0; i < uploadedFiles.length; i++) {
         const compressed = await compressImage(uploadedFiles[i].file);
-        const file = compressed;
-        const ext = file.type === "image/jpeg" ? "jpg" : (uploadedFiles[i].file.name.split(".").pop() || "jpg");
-        const safeOrderNum = orderNumber.replace(/#/g, "").replace(/[^a-zA-Z0-9_-]/g, "_");
-        const path = `receipts/${safeOrderNum}_${Date.now()}_${i + 1}.${ext}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("receipts")
-          .upload(path, file, { upsert: false });
-        if (!uploadErr) {
-          // Store the storage path (not a public URL) — admins use signed URLs to view
-          uploadedUrls.push(`receipts:${path}`);
-        } else {
-          console.error("[receipt upload] storage error:", uploadErr.message);
-          receiptUploadFailed = true;
-        }
+        formData.append(`file${i}`, compressed, uploadedFiles[i].file.name);
       }
-      if (uploadedUrls.length > 0) receiptUrl = uploadedUrls.join("|");
+      const uploadRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-receipt`,
+        {
+          method: "POST",
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: formData,
+        }
+      );
+      const uploadResult = await uploadRes.json();
+      if (!uploadRes.ok || !uploadResult.paths) {
+        console.error("[receipt upload] server error:", uploadResult);
+        receiptUploadFailed = true;
+      } else {
+        receiptUrl = uploadResult.paths.join("|");
+      }
     } catch (e) {
       console.error("[receipt upload] unexpected error:", e);
       receiptUploadFailed = true;
