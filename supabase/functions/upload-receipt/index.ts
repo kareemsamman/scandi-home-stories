@@ -29,19 +29,21 @@ Deno.serve(async (req) => {
     const token = formData.get("token") as string;
     const orderNumber = formData.get("orderNumber") as string;
 
-    if (!orderId || !token || !orderNumber) {
-      return json({ error: "Missing orderId, token, or orderNumber" }, 400);
+    if (!orderNumber) {
+      return json({ error: "Missing orderNumber" }, 400);
     }
 
-    // Verify order token
-    const { data: order, error: fetchErr } = await supabaseAdmin
-      .from("orders")
-      .select("id, payment_token, payment_status")
-      .eq("id", orderId)
-      .maybeSingle();
+    // If orderId and token are provided (not "pending"), verify the order token
+    if (orderId && orderId !== "pending" && token && token !== "pending") {
+      const { data: order, error: fetchErr } = await supabaseAdmin
+        .from("orders")
+        .select("id, payment_token")
+        .eq("id", orderId)
+        .maybeSingle();
 
-    if (fetchErr || !order) return json({ error: "Order not found" }, 404);
-    if (order.payment_token !== token) return json({ error: "Invalid token" }, 403);
+      if (fetchErr || !order) return json({ error: "Order not found" }, 404);
+      if (order.payment_token !== token) return json({ error: "Invalid token" }, 403);
+    }
 
     // Collect files from form data
     const files: File[] = [];
