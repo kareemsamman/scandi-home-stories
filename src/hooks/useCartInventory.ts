@@ -9,9 +9,13 @@ interface InvRow {
   stock_quantity: number;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Fetches inventory for all products currently in the cart (single batch query). */
 export const useCartInventory = (items: CartItem[]) => {
-  const productIds = [...new Set(items.map(i => i.product.id))];
+  const allIds = [...new Set(items.map(i => i.product.id))];
+  // Only query DB for real UUID product IDs — static/slug IDs have no inventory rows
+  const productIds = allIds.filter(id => UUID_RE.test(id));
 
   const { data: inventory = [] } = useQuery<InvRow[]>({
     queryKey: ["cart_inventory", ...productIds],
