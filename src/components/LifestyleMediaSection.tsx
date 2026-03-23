@@ -4,6 +4,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomeContent } from "@/hooks/useHomeContent";
+import { optimizeImageUrl } from "@/lib/imageOptimize";
 
 export const LifestyleMediaSection = ({ sectionKey = "lifestyle_media" }: { sectionKey?: string }) => {
   const { t, localePath, locale } = useLocale();
