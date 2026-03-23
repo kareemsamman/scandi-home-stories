@@ -115,8 +115,8 @@ export const collections: Collection[] = [
     name: { he: "פרגולות קבועות", ar: "برجولات ثابتة" },
     slug: "fixed",
     description: { he: "מבנים קבועים ויציבים להצללה קבועה", ar: "هياكل ثابتة ومتينة للتظليل الدائم" },
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-    heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80",
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=75&fm=webp&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&q=75&fm=webp&fit=crop",
   },
   {
     id: "retractable",
