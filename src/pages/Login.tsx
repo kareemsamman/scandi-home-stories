@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
-  const { t, localePath } = useLocale();
+  const { t, localePath, locale } = useLocale();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn } = useAuth();
