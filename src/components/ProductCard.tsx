@@ -38,14 +38,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   const hasOptions = (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
   // OOS check: if all tracked inventory rows sum to 0
-  const { data: inventory = [] } = useQuery({
-    queryKey: ['product_inventory', product.id],
-    queryFn: async () => {
-      const { data } = await (supabase as any).from('inventory').select('stock_quantity').eq('product_id', product.id);
-      return (data || []) as { stock_quantity: number }[];
-    },
-    staleTime: 1000 * 60,
-  });
+  const inventory = useProductInventory(product.id);
   // Products with custom color groups are never fully OOS (custom colors are made-to-order)
   const hasCustomColors = contractor?.colorGroups && contractor.colorGroups.length > 1 &&
     contractor.colorGroups.slice(1).some(g => g.colors.length > 0);
