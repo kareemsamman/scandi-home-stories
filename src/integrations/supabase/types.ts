@@ -1026,6 +1026,10 @@ export type Database = {
     }
     Functions: {
       get_invoice_order: { Args: { order_id: string }; Returns: Json }
+      get_order_by_token: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: Json
+      }
       get_order_owner_hint: { Args: { p_order_id: string }; Returns: Json }
       has_role: {
         Args: {
