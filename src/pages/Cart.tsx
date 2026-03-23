@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { CouponInput } from "@/components/CouponInput";
 import { useCouponStore } from "@/hooks/useCoupons";
 import { useCartInventory } from "@/hooks/useCartInventory";
+import { SEOHead } from '@/components/SEOHead';
 
 /* ── Lock icon for checkout button ── */
 const LockIcon = () => (
@@ -40,6 +41,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <Layout>
+      <SEOHead noIndex={true} title="סל קניות | AMG Pergola" description="" />
         <div className="section-container py-28 text-center mt-16 md:mt-20">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <ShoppingBag className="w-14 h-14 mx-auto mb-6 text-muted-foreground/30" />

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DbOrderItem } from "@/hooks/useDbData";
 import logoWhite from "@/assets/logo-white.png";
 import { useLocale } from "@/i18n/useLocale";
+import { SEOHead } from '@/components/SEOHead';
 
 const calcShipping = (order: any): number => {
   const itemsTotal = (order.order_items || []).reduce(
@@ -99,6 +100,7 @@ const InvoicePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
+      <SEOHead noIndex={true} title="חשבונית | AMG Pergola" description="" />
       {/* Toolbar — hidden on print */}
       <div className="print:hidden bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-end sticky top-0 z-10">
         <button

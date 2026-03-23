@@ -6,6 +6,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead } from '@/components/SEOHead';
 
 /* Defined outside component so it is never recreated on re-render */
 const FloatingField = ({
@@ -102,6 +103,7 @@ const Signup = () => {
 
   return (
     <Layout>
+      <SEOHead noIndex={true} title="הרשמה | AMG Pergola" description="" />
       <div className="min-h-[60vh] flex items-center justify-center px-6 py-16" style={{ backgroundColor: "rgb(242,242,242)" }}>
         <div className="w-full max-w-md bg-white rounded-xl border border-border shadow-sm p-8 space-y-6">
           <h1 className="text-xl font-bold text-foreground text-center">{t("auth.signup")}</h1>

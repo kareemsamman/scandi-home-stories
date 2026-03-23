@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
 import { loadAllRecords } from "@/utils/cityStreetApi";
+import { SEOHead } from '@/components/SEOHead';
 
 /* ---------- Address fields: see top-of-file imports ---------- */
 
@@ -127,6 +128,7 @@ const Account = () => {
   if (loading) {
     return (
       <Layout>
+      <SEOHead noIndex={true} title="החשבון שלי | AMG Pergola" description="" />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>

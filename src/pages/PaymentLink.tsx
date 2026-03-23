@@ -4,6 +4,7 @@ import { Loader2, Building2, Upload, X, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBankSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
+import { SEOHead } from "@/components/SEOHead";
 import logoWhite from "@/assets/logo-white.png";
 
 const db = supabase as any;
@@ -171,6 +172,7 @@ const PaymentLink = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
+      <SEOHead noIndex={true} title={ar ? "الدفع | AMG Pergola" : "תשלום הזמנה | AMG Pergola"} description="" />
       <header className="sticky top-0 z-30 bg-gray-900" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div className="max-w-lg mx-auto flex items-center px-6" style={{ height: 64 }}>
           <img src={logoWhite} alt="AMG Pergola" className="h-10" />

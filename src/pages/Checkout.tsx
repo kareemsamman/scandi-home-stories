@@ -20,6 +20,7 @@ import { loadAllRecords } from "@/utils/cityStreetApi";
 import { useBankSettings, useSmsSettings, useAdminOrderSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
+import { SEOHead } from '@/components/SEOHead';
 
 /* ---------- icons ---------- */
 const CartBagIcon = () => (

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
 import logoWhite from "@/assets/logo-white.png";
+import { SEOHead } from '@/components/SEOHead';
 
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
@@ -20,6 +21,7 @@ const CheckoutThankYou = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
+      <SEOHead noIndex={true} title="תודה על ההזמנה | AMG Pergola" description="" />
       {/* Header */}
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>

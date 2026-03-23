@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SEOHead } from '@/components/SEOHead';
 
 const OrderDetail = () => {
   const { t, localePath, locale } = useLocale();
@@ -97,6 +98,7 @@ const OrderDetail = () => {
   if (isLoading || directLoading) {
     return (
       <Layout>
+      <SEOHead noIndex={true} title="פרטי הזמנה | AMG Pergola" description="" />
         <div className="flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
