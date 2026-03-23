@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHeroSlides, getLocaleField } from "@/hooks/useDbData";
 import { optimizeImageUrl } from "@/lib/imageOptimize";
+
+const FALLBACK_HERO_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=75&fm=webp&fit=crop";
 
 export const HeroSlider = () => {
   const { locale, localePath } = useLocale();
@@ -34,16 +36,26 @@ export const HeroSlider = () => {
     return () => clearInterval(timer);
   }, [emblaApi]);
 
-  if (isLoading) {
+  const slides = dbSlides || [];
+
+  // While loading or no slides, render the preloaded fallback image immediately
+  // so the browser can use the <link rel="preload"> from index.html — eliminates
+  // the massive resource-load-delay that was killing LCP.
+  if (isLoading || slides.length === 0) {
     return (
-      <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem] bg-muted flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem]">
+        <img
+          src={FALLBACK_HERO_IMAGE}
+          alt=""
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
       </section>
     );
   }
-
-  const slides = dbSlides || [];
-  if (slides.length === 0) return null;
 
   return (
     <section className="relative h-[65vh] md:h-[80vh] overflow-hidden -mt-14 md:-mt-[7rem]">
