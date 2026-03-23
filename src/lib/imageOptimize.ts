@@ -26,13 +26,9 @@ export function optimizeImageUrl(
     }
   }
 
-  // Supabase Storage public URLs → render/image transform endpoint
-  const match = url.match(
-    /^(https:\/\/[^/]+\.supabase\.co)\/storage\/v1\/object\/public\/(.+)$/,
-  );
-  if (match) {
-    return `${match[1]}/storage/v1/render/image/public/${match[2]}?width=${width}&quality=${quality}&format=webp`;
-  }
+  // Supabase Storage public URLs – return as-is (render/image transforms
+  // are not available on all Supabase plans / Lovable Cloud)
+
 
   return url;
 }
