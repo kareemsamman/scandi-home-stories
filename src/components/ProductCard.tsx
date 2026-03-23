@@ -2,14 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Ruler } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { Product, RetailProduct, ContractorProduct, getLocaleText } from "@/data/products";
 import { useShopData } from "@/hooks/useShopData";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
 import { QuickBuyModal } from "./QuickBuyModal";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { useProductInventory } from "@/hooks/useInventoryBatch";
 
 interface ProductCardProps {
   product: Product;
