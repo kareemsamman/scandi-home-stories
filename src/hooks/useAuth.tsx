@@ -55,19 +55,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          // Use setTimeout to avoid potential deadlock with Supabase client
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRoles(session.user.id);
-          }, 0);
-        } else {
+
+        if (event === 'SIGNED_OUT') {
           setProfile(null);
           setRoles([]);
+          setRolesLoaded(false);
+        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          // Use setTimeout to avoid potential deadlock with Supabase client
+          setTimeout(() => {
+            if (session?.user) {
+              fetchProfile(session.user.id);
+              fetchRoles(session.user.id).then(() => setRolesLoaded(true));
+            }
+          }, 0);
         }
+        // TOKEN_REFRESHED / INITIAL_SESSION: just update session/user, skip DB queries
         setLoading(false);
       }
     );
