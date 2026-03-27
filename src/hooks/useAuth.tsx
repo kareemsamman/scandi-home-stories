@@ -39,11 +39,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const fetchRoles = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    if (data) setRoles(data.map((r) => r.role));
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (data) setRoles(data.map((r) => r.role));
+    } catch {
+      // Even on error, mark roles as loaded so guards don't hang
+    }
+    setRolesLoaded(true);
   }, []);
 
   const refreshProfile = useCallback(async () => {
