@@ -188,18 +188,19 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const renderContent = () => (
     <>
       {/* Search input: icon LEFT, input CENTER, clear + close RIGHT */}
-      <div className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
+      <div dir="ltr" className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
         <span className="text-foreground/40 shrink-0" style={{ marginInlineEnd: 12 }}>
           <SearchIcon />
         </span>
         <input
           ref={inputRef}
+          dir="auto"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("search.placeholder")}
           className="flex-1 bg-transparent text-foreground outline-none placeholder:text-foreground/40"
-          style={{ fontSize: 16, fontWeight: 500 }}
+          style={{ fontSize: 16, fontWeight: 500, textAlign: locale === "ar" ? "right" : "left" }}
         />
         {query && (
           <button
