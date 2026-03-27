@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: AppRole[];
+  rolesLoaded: boolean;
   profile: { first_name: string; last_name: string; phone: string; avatar_url: string } | null;
   isAdmin: boolean;
   isWorker: boolean;
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
@@ -53,19 +55,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          // Use setTimeout to avoid potential deadlock with Supabase client
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRoles(session.user.id);
-          }, 0);
-        } else {
+
+        if (event === 'SIGNED_OUT') {
           setProfile(null);
           setRoles([]);
+          setRolesLoaded(false);
+        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          // Use setTimeout to avoid potential deadlock with Supabase client
+          setTimeout(() => {
+            if (session?.user) {
+              fetchProfile(session.user.id);
+              fetchRoles(session.user.id).then(() => setRolesLoaded(true));
+            }
+          }, 0);
         }
+        // TOKEN_REFRESHED / INITIAL_SESSION: just update session/user, skip DB queries
         setLoading(false);
       }
     );
@@ -76,6 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         await Promise.all([fetchProfile(session.user.id), fetchRoles(session.user.id)]);
+        setRolesLoaded(true);
       }
       setLoading(false);
     });
@@ -114,6 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setRolesLoaded(false);
     // Clear persisted user-specific data from localStorage
     localStorage.removeItem("amg-addresses");
     localStorage.removeItem("amg-profile");
@@ -127,6 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         session,
         loading,
         roles,
+        rolesLoaded,
         profile,
         isAdmin: roles.includes("admin"),
         isWorker: roles.includes("worker"),
