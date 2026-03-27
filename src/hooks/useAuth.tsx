@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(() => {
             if (session?.user) {
               fetchProfile(session.user.id);
-              fetchRoles(session.user.id).then(() => setRolesLoaded(true));
+              fetchRoles(session.user.id);
             }
           }, 0);
         }
