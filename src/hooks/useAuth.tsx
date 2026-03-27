@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: AppRole[];
+  rolesLoaded: boolean;
   profile: { first_name: string; last_name: string; phone: string; avatar_url: string } | null;
   isAdmin: boolean;
   isWorker: boolean;
