@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLocale } from "@/i18n/useLocale";
-import { products, getLocaleName, getLocaleText } from "@/data/products";
+import { getLocaleName, getLocaleText } from "@/data/products";
 import type { Product, Collection } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -67,7 +67,7 @@ function SkeletonResults() {
 export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const { t, locale, localePath } = useLocale();
   const isMobile = useIsMobile();
-  const { collections } = useShopData();
+  const { collections, products } = useShopData();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -157,17 +157,24 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       }
       return false;
     });
-  }, [debouncedQuery, locale]);
+  }, [debouncedQuery, locale, products]);
 
   // Collections: show collections that contain matching products
   const filteredCollections = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
-    // Get unique collection IDs from filtered products
     const matchedCollectionIds = new Set(filteredProducts.map(p => p.collection));
     return collections.filter(c => matchedCollectionIds.has(c.id));
-  }, [debouncedQuery, locale, filteredProducts]);
+  }, [debouncedQuery, filteredProducts, collections]);
 
-  const hasResults = filteredProducts.length > 0 || filteredCollections.length > 0;
+  // Suggestions: other products from the same collections as matched products
+  const suggestions = useMemo(() => {
+    if (!debouncedQuery.trim() || filteredProducts.length === 0) return [];
+    const matchedCollectionIds = new Set(filteredProducts.map(p => p.collection));
+    const matchedProductIds = new Set(filteredProducts.map(p => p.id));
+    return products.filter(p => matchedCollectionIds.has(p.collection) && !matchedProductIds.has(p.id));
+  }, [debouncedQuery, filteredProducts, products]);
+
+  const hasResults = filteredProducts.length > 0 || filteredCollections.length > 0 || suggestions.length > 0;
   const hasQuery = query.trim().length > 0;
   const hasSearched = debouncedQuery.trim().length > 0;
 
@@ -293,7 +300,21 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             )}
 
             {activeTab === "suggestions" && (
-              <EmptyState message={t("search.noResults")} />
+              suggestions.length > 0 ? (
+                <div className="flex flex-col" style={{ gap: 16 }}>
+                  {suggestions.map((product) => (
+                    <ProductResultItem
+                      key={product.id}
+                      product={product}
+                      locale={locale}
+                      localePath={localePath}
+                      onClose={onClose}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState message={t("search.noResults")} />
+              )
             )}
 
             {activeTab === "collections" && (
