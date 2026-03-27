@@ -13,7 +13,22 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 
 // Lazy-loaded pages — only fetched when navigated to
-const Catalog = lazy(() => import("./pages/Catalog"));
+// Retry wrapper: on chunk-load failure, hard-reload once so the browser fetches fresh assets
+const lazyRetry = (factory: () => Promise<any>) =>
+  lazy(() =>
+    factory().catch((err: any) => {
+      const key = "chunk_reload";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        window.location.reload();
+        return new Promise(() => {}); // never resolves — page is reloading
+      }
+      sessionStorage.removeItem(key);
+      throw err;
+    })
+  );
+
+const Catalog = lazyRetry(() => import("./pages/Catalog"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const About = lazy(() => import("./pages/About"));
