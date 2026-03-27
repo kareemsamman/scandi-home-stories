@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { adjustInventory } from "@/hooks/useOrders";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
@@ -73,6 +75,41 @@ const AdminSettings = () => {
   const saveWhatsapp = useSaveSetting("whatsapp");
   const [whatsapp, setWhatsapp] = useState<WhatsappSettings>({ phone: "", enabled: false });
   useEffect(() => { if (dbWhatsapp) setWhatsapp(dbWhatsapp); }, [dbWhatsapp]);
+
+  /* Delete all orders */
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deleteAllStatus, setDeleteAllStatus] = useState<"idle" | "deleting" | "done">("idle");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  const handleDeleteAllOrders = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    setDeleteAllStatus("deleting");
+    try {
+      // Fetch all orders with items to restore inventory
+      const { data: orders } = await supabase.from("orders").select("id, status, order_items");
+      if (orders) {
+        const cancelStatuses = ["not_approved", "cancelled"];
+        for (const order of orders) {
+          if (!cancelStatuses.includes(order.status)) {
+            const items = ((order.order_items as any[]) || []).map((i: any) => ({
+              productId: i.product_id || undefined,
+              quantity: i.quantity,
+            }));
+            await adjustInventory(items, 1);
+          }
+        }
+      }
+      // Delete all orders
+      const { error } = await supabase.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+      setDeleteAllStatus("done");
+      toast({ title: "כל ההזמנות נמחקו והמלאי שוחזר" });
+      setTimeout(() => { setShowDeleteAll(false); setDeleteAllStatus("idle"); setDeleteConfirmText(""); }, 2000);
+    } catch {
+      toast({ title: "מחיקה נכשלה", variant: "destructive" });
+      setDeleteAllStatus("idle");
+    }
+  };
 
   const [testPhone, setTestPhone] = useState("");
   const [testStatus, setTestStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
@@ -458,6 +495,74 @@ const AdminSettings = () => {
             </button>
           </div>
           <SaveBtn tab="orders" />
+
+          {/* Danger zone — Delete all orders */}
+          <div className="border-t border-red-200 pt-6 mt-6">
+            <div className="border border-red-200 rounded-xl p-5 bg-red-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-red-800">Delete All Orders</p>
+                  <p className="text-xs text-red-500 mt-0.5">מחק את כל ההזמנות במערכת. המלאי ישוחזר אוטומטית.</p>
+                </div>
+              </div>
+              <p className="text-xs text-red-600 mb-3">פעולה זו בלתי הפיכה. כל ההזמנות יימחקו לצמיתות.</p>
+              <button
+                onClick={() => setShowDeleteAll(true)}
+                className="flex items-center gap-2 h-9 px-4 text-sm font-semibold text-red-600 hover:text-white bg-white hover:bg-red-500 border border-red-300 rounded-xl transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                מחק את כל ההזמנות
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete all orders confirmation modal ── */}
+      {showDeleteAll && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { if (deleteAllStatus !== "deleting") { setShowDeleteAll(false); setDeleteConfirmText(""); } }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">מחיקת כל ההזמנות</p>
+                <p className="text-xs text-gray-500">פעולה זו בלתי הפיכה</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">כל ההזמנות יימחקו לצמיתות. המלאי ישוחזר אוטומטית. רק הזמנות יימחקו — מוצרים, קטגוריות ומשתמשים לא יושפעו.</p>
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">הקלד DELETE לאישור:</label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-red-300"
+                disabled={deleteAllStatus === "deleting"}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteAllOrders}
+                disabled={deleteConfirmText !== "DELETE" || deleteAllStatus === "deleting"}
+                className="flex-1 h-10 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleteAllStatus === "deleting" ? <><Loader2 className="w-4 h-4 animate-spin" /> מוחק…</> : deleteAllStatus === "done" ? "✓ נמחק!" : "מחק הכל"}
+              </button>
+              <button
+                onClick={() => { setShowDeleteAll(false); setDeleteConfirmText(""); }}
+                disabled={deleteAllStatus === "deleting"}
+                className="flex-1 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

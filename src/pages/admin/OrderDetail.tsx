@@ -429,152 +429,160 @@ const AdminOrderDetail = () => {
 
       {/* ── Header card ── */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        {/* Top bar: back + order number + date */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <button
-            onClick={() => navigate("/admin/orders")}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            חזרה
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900">{order.order_number}</h1>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${st.color}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-                {st.label}
+        {/* Top bar: back + order info */}
+        <div className="px-4 sm:px-5 pt-4 pb-3 border-b border-gray-100">
+          {/* Row 1: back button */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => navigate("/admin/orders")}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              חזרה
+            </button>
+            {sendingSms && (
+              <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
+                <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
               </span>
-              {/* Payment badge */}
-              {isAdmin && (order.payment_status || "paid") === "unpaid" && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
-                  💳 טרם שולם
-                </span>
-              )}
-              {isAdmin && (order.payment_status || "paid") === "paid" && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
-                  ✅ שולם
-                </span>
-              )}
-            </div>
-            <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
+            )}
+          </div>
+          {/* Row 2: order number + date */}
+          <div className="flex items-baseline gap-3 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900">{order.order_number}</h1>
+            <p className="text-gray-400 text-xs flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {(() => { const d = new Date(order.created_at); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()}
             </p>
           </div>
+          {/* Row 3: badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${st.color}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+              {st.label}
+            </span>
+            {isAdmin && (order.payment_status || "paid") === "unpaid" && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+                💳 טרם שולם
+              </span>
+            )}
+            {isAdmin && (order.payment_status || "paid") === "paid" && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                ✅ שולם
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Status selector */}
-        <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">סטטוס הזמנה</span>
-          <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
-            <SelectTrigger className={`h-9 px-3 text-sm font-semibold border rounded-xl gap-2 w-auto min-w-[160px] ${st.color}`}>
-              <span className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${st.dot}`} />
-                <SelectValue />
-              </span>
-            </SelectTrigger>
-            <SelectContent>
-              {STATUSES.map(s => {
-                const workerBlocked = isWorker && !isAdmin && (order.status !== "in_process" || s.value !== "in_delivery");
-                return (
-                  <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
-                    <span className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
-                      {s.label}
-                      {workerBlocked && <span className="text-[10px] text-gray-400 ms-1">— אדמין בלבד</span>}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+        <div className="px-4 sm:px-5 py-3 border-b border-gray-100">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">סטטוס הזמנה</span>
+            <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
+              <SelectTrigger className={`h-9 px-3 text-sm font-semibold border rounded-xl gap-2 w-auto min-w-[160px] ${st.color}`}>
+                <span className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${st.dot}`} />
+                  <SelectValue />
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map(s => {
+                  const workerBlocked = isWorker && !isAdmin && (order.status !== "in_process" || s.value !== "in_delivery");
+                  return (
+                    <SelectItem key={s.value} value={s.value} disabled={workerBlocked}>
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
+                        {s.label}
+                        {workerBlocked && <span className="text-[10px] text-gray-400 ms-1">— אדמין בלבד</span>}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
           {isWorker && !isAdmin && (
-            <p className="text-[10px] text-amber-600 flex items-center gap-1">
+            <p className="text-[10px] text-amber-600 flex items-center gap-1 mt-2">
               <AlertTriangle className="w-3 h-3" />
               {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא למשלוח"' : 'שינוי זמין רק כשהסטטוס "בתהליך"'}
             </p>
           )}
-          {sendingSms && (
-            <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium ms-auto">
-              <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
-            </span>
-          )}
         </div>
 
-        {/* Actions grid */}
-        <div className="px-5 py-3 flex flex-wrap gap-2 items-center">
+        {/* Actions — grid on mobile, flex on desktop */}
+        <div className="px-4 sm:px-5 py-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
 
-          {/* Payment actions — unpaid only */}
-          {(order.payment_status || "paid") === "unpaid" && isAdmin && (
-            <>
-              <button
-                onClick={() => markAsPaid.mutate(order.id)}
-                disabled={markAsPaid.isPending}
-                className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-green-700 hover:text-green-900 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors disabled:opacity-50"
-              >
-                {markAsPaid.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                סמן כשולם
-              </button>
-              <button
-                onClick={() => sendPaymentLink.mutate({ id: order.id, phone: order.phone })}
-                disabled={sendPaymentLink.isPending}
-                className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
-              >
-                {sendPaymentLink.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                שלח קישור תשלום ב-SMS
-              </button>
-              {order.payment_token && (
+            {/* Payment actions — unpaid only */}
+            {(order.payment_status || "paid") === "unpaid" && isAdmin && (
+              <>
                 <button
-                  onClick={copyPaymentLink}
-                  className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
+                  onClick={() => markAsPaid.mutate(order.id)}
+                  disabled={markAsPaid.isPending}
+                  className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-green-700 hover:text-green-900 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors disabled:opacity-50"
                 >
-                  {paymentLinkCopied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                  {paymentLinkCopied ? "הועתק!" : "העתק קישור תשלום"}
+                  {markAsPaid.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 shrink-0" />}
+                  סמן כשולם
                 </button>
-              )}
-            </>
-          )}
+                <button
+                  onClick={() => sendPaymentLink.mutate({ id: order.id, phone: order.phone })}
+                  disabled={sendPaymentLink.isPending}
+                  className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {sendPaymentLink.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5 shrink-0" />}
+                  קישור תשלום
+                </button>
+                {order.payment_token && (
+                  <button
+                    onClick={copyPaymentLink}
+                    className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors col-span-2 sm:col-span-1"
+                  >
+                    {paymentLinkCopied ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <ExternalLink className="w-3.5 h-3.5 shrink-0" />}
+                    {paymentLinkCopied ? "הועתק!" : "העתק קישור תשלום"}
+                  </button>
+                )}
+              </>
+            )}
 
-          {/* Print */}
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
-          >
-            <Printer className="w-4 h-4" />
-            הדפסה
-          </button>
-
-          {/* Send invoice */}
-          <button
-            onClick={async () => {
-              const locale = order.locale || "he";
-              const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
-              const msg = locale === "ar"
-                ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة لطلبك #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`
-                : `שלום ${order.first_name} 👋\n🧾 החשבונית להזמנה #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`;
-              setSendingSms(true);
-              const ok = await sendSms(order.phone, msg);
-              setSendingSms(false);
-              toast({ title: ok ? `חשבונית נשלחה ב-SMS ל-${order.phone}` : "שליחה נכשלה", variant: ok ? "default" : "destructive" });
-            }}
-            disabled={sendingSms}
-            className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
-          >
-            <Send className="w-4 h-4" />
-            שלח חשבונית ב-SMS
-          </button>
-
-          {/* Delete — admin only, pushed to end */}
-          {isAdmin && (
+            {/* Print */}
             <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors ms-auto"
+              onClick={handlePrint}
+              className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
             >
-              <Trash2 className="w-4 h-4" />
-              מחק הזמנה
+              <Printer className="w-4 h-4 shrink-0" />
+              הדפסה
             </button>
-          )}
+
+            {/* Send invoice */}
+            <button
+              onClick={async () => {
+                const locale = order.locale || "he";
+                const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
+                const msg = locale === "ar"
+                  ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة لطلبك #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`
+                  : `שלום ${order.first_name} 👋\n🧾 החשבונית להזמנה #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`;
+                setSendingSms(true);
+                const ok = await sendSms(order.phone, msg);
+                setSendingSms(false);
+                toast({ title: ok ? `חשבונית נשלחה ב-SMS ל-${order.phone}` : "שליחה נכשלה", variant: ok ? "default" : "destructive" });
+              }}
+              disabled={sendingSms}
+              className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
+            >
+              <Send className="w-4 h-4 shrink-0" />
+              חשבונית SMS
+            </button>
+
+            {/* Delete — admin only, full width on mobile */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors col-span-2 sm:col-span-1 sm:ms-auto"
+              >
+                <Trash2 className="w-4 h-4 shrink-0" />
+                מחק הזמנה
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
