@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useContext } from "react";
 import { LayoutDashboard } from "lucide-react";
+import { AuthContext } from "@/hooks/useAuth";
 
 export const AdminTopBar = () => {
-  const { isAdmin, isWorker, loading } = useAuth();
+  const auth = useContext(AuthContext);
+
+  // If AuthProvider isn't mounted yet, render nothing
+  if (!auth) return null;
+
+  const { isAdmin, isWorker, loading } = auth;
 
   if (loading || (!isAdmin && !isWorker)) return null;
 
