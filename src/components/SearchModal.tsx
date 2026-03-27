@@ -188,19 +188,18 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const renderContent = () => (
     <>
       {/* Search input: icon LEFT, input CENTER, clear + close RIGHT */}
-      <div dir="ltr" className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
+      <div className="flex items-center" style={{ paddingBottom: 12, borderBottom: "2px solid hsl(var(--foreground))" }}>
         <span className="text-foreground/40 shrink-0" style={{ marginInlineEnd: 12 }}>
           <SearchIcon />
         </span>
         <input
           ref={inputRef}
-          dir="auto"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("search.placeholder")}
           className="flex-1 bg-transparent text-foreground outline-none placeholder:text-foreground/40"
-          style={{ fontSize: 16, fontWeight: 500, textAlign: locale === "ar" ? "right" : "left" }}
+          style={{ fontSize: 16, fontWeight: 500 }}
         />
         {query && (
           <button
@@ -378,9 +377,9 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
   // ── DESKTOP: right-side panel ──
   const panelStyle: React.CSSProperties = prefersReducedMotion
-    ? { width: 420 }
+    ? { width: 450 }
     : {
-        width: 420,
+        width: 450,
         transform: isVisible ? "translateX(0)" : "translateX(100%)",
         opacity: isVisible ? 1 : 0,
         transition: "transform 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease",
@@ -399,7 +398,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
           top: 24,
           bottom: 24,
           insetInlineEnd: 24,
-          width: 420,
+          width: 450,
           transform: isVisible ? "translateX(0)" : (document.documentElement.dir === "rtl" ? "translateX(-100%)" : "translateX(100%)"),
           opacity: isVisible ? 1 : 0,
           transition: "transform 340ms cubic-bezier(.22,.61,.36,1), opacity 240ms ease",

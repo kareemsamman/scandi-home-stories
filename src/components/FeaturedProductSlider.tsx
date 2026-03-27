@@ -114,7 +114,7 @@ export const FeaturedProductSlider = ({ sectionKey = "featured_slider" }: { sect
             data-slider-card
             className={compact
               ? "shrink-0 w-[55vw] sm:w-[32vw] md:w-[21vw] lg:w-[19vw]"
-              : "shrink-0 w-[82vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
+              : "shrink-0 w-[75vw] sm:w-[46vw] md:w-[31vw] lg:w-[29.5vw]"
             }
           >
             <ProductCard product={product} index={i} animate={false} />
