@@ -29,7 +29,7 @@ export const ProtectedRoute = ({ children, requiredRole, redirectTo = "/login" }
   }
 
   // User is authenticated but roles haven't loaded yet from DB — wait
-  if (roles.length === 0) {
+  if (!rolesLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
