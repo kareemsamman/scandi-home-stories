@@ -39,11 +39,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const fetchRoles = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    if (data) setRoles(data.map((r) => r.role));
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (data) setRoles(data.map((r) => r.role));
+    } catch {
+      // Even on error, mark roles as loaded so guards don't hang
+    }
+    setRolesLoaded(true);
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -68,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(() => {
             if (session?.user) {
               fetchProfile(session.user.id);
-              fetchRoles(session.user.id).then(() => setRolesLoaded(true));
+              fetchRoles(session.user.id);
             }
           }, 0);
         }
@@ -83,6 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         await Promise.all([fetchProfile(session.user.id), fetchRoles(session.user.id)]);
+      } else {
         setRolesLoaded(true);
       }
       setLoading(false);
