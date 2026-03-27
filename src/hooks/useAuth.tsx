@@ -122,6 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setRolesLoaded(false);
     // Clear persisted user-specific data from localStorage
     localStorage.removeItem("amg-addresses");
     localStorage.removeItem("amg-profile");
