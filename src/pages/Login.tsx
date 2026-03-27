@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
@@ -12,7 +12,7 @@ const Login = () => {
   const { t, localePath, locale } = useLocale();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user, rolesLoaded, isAdmin, isWorker } = useAuth();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || localePath("/account");
   const [identifier, setIdentifier] = useState("");
@@ -20,6 +20,27 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [guestHint, setGuestHint] = useState(false);
   const [needsRegistration, setNeedsRegistration] = useState(false);
+  // Track whether login was just submitted so redirect effect only fires post-login
+  const justSignedIn = useRef(false);
+
+  // Redirect already-authenticated users (or post-login once roles load)
+  useEffect(() => {
+    if (!user || !rolesLoaded) return;
+    // Only auto-redirect if user just signed in from this page
+    if (!justSignedIn.current) return;
+    justSignedIn.current = false;
+
+    if (isAdmin) {
+      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+      navigate("/admin", { replace: true });
+    } else if (isWorker) {
+      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+      navigate("/admin/orders", { replace: true });
+    } else {
+      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
+      navigate(redirectTo, { replace: true });
+    }
+  }, [user, rolesLoaded, isAdmin, isWorker, navigate, redirectTo, toast, t]);
 
   const checkEmailHasGuestOrders = async (email: string) => {
     const db = supabase as any;
@@ -27,10 +48,8 @@ const Login = () => {
     return (data?.length ?? 0) > 0;
   };
 
-  /** Detect if input looks like an Israeli phone number */
   const isPhoneInput = (v: string) => /^[\d\s\-\+]{7,15}$/.test(v.trim()) && !v.includes("@");
 
-  /** Resolve identifier to email (look up by phone if needed) */
   const resolveEmail = async (raw: string): Promise<{ email: string | null; needs_password?: boolean }> => {
     if (!isPhoneInput(raw)) return { email: raw.trim() };
     const res = await supabase.functions.invoke("auth-lookup", {
@@ -48,7 +67,6 @@ const Login = () => {
     setGuestHint(false);
     setNeedsRegistration(false);
 
-    // Resolve phone → email if needed
     const { email: resolvedEmail, needs_password } = await resolveEmail(identifier.trim());
 
     if (needs_password) {
@@ -65,6 +83,7 @@ const Login = () => {
 
     const { error } = await signIn({ email: resolvedEmail, password });
     setLoading(false);
+
     if (error) {
       const isCredentialsError = error.message === "Invalid login credentials" || error.message === "Invalid email or password";
 
@@ -86,26 +105,8 @@ const Login = () => {
       const msg = locale === "ar" ? errEntry.ar : errEntry.he;
       toast({ title: locale === "ar" ? "خطأ" : "שגיאה", description: msg, variant: "destructive" });
     } else {
-      // Check if user is admin — redirect to /admin
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id);
-        if (roles?.some(r => r.role === "admin")) {
-          toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
-          navigate("/admin");
-          return;
-        }
-        if (roles?.some(r => r.role === "worker")) {
-          toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
-          navigate("/admin/orders");
-          return;
-        }
-      }
-      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessText") });
-      navigate(redirectTo);
+      // Mark that we just signed in — the useEffect will handle navigation once roles load
+      justSignedIn.current = true;
     }
   };
 
