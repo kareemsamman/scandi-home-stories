@@ -185,7 +185,7 @@ const AdminLayoutInner = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir="rtl">
           <Outlet />
         </main>
       </div>
