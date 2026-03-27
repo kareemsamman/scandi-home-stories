@@ -72,8 +72,8 @@ const AdminLegalPages = lazyRetry(() => import("./pages/admin/LegalPages"));
 const AdminNotFoundPage = lazyRetry(() => import("./pages/admin/NotFoundPage"));
 
 // Lazy-loaded non-critical UI components
-const WhatsAppButton = lazy(() => import("./components/WhatsAppButton").then(m => ({ default: m.WhatsAppButton })));
-const AccessibilityWidget = lazy(() => import("./components/AccessibilityWidget").then(m => ({ default: m.AccessibilityWidget })));
+const WhatsAppButton = lazyRetry(() => import("./components/WhatsAppButton").then(m => ({ default: m.WhatsAppButton })));
+const AccessibilityWidget = lazyRetry(() => import("./components/AccessibilityWidget").then(m => ({ default: m.AccessibilityWidget })));
 
 const queryClient = new QueryClient();
 
