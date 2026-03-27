@@ -1,14 +1,20 @@
 import { Link } from "react-router-dom";
-import { useContext } from "react";
 import { LayoutDashboard } from "lucide-react";
+import { createContext, useContext } from "react";
 
-// Import the context directly to avoid throwing when provider is missing
-import { useAuth } from "@/hooks/useAuth";
+// Safe wrapper: if AuthProvider is missing, return null gracefully
+function useSafeAuth() {
+  try {
+    // Dynamic import to avoid circular issues
+    const { useAuth } = require("@/hooks/useAuth");
+    return useAuth();
+  } catch {
+    return { isAdmin: false, isWorker: false, loading: true };
+  }
+}
 
 export const AdminTopBar = () => {
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { isAdmin, isWorker, loading } = useAuth();
+  const { isAdmin, isWorker, loading } = useSafeAuth();
 
   if (loading || (!isAdmin && !isWorker)) return null;
 
