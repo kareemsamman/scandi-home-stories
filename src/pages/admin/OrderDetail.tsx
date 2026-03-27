@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
-  ArrowLeft, Package, MapPin, User, FileText, ImageIcon,
+  ArrowLeft, ArrowRight, Package, MapPin, User, FileText, ImageIcon,
   Phone, Mail, Receipt, AlertTriangle, X, ChevronLeft, ChevronRight,
   MessageSquare, Hash, ExternalLink, Calendar, Tag, Trash2, Printer, Pencil, Check, Send, Loader2,
 } from "lucide-react";
@@ -437,7 +437,7 @@ const AdminOrderDetail = () => {
               onClick={() => navigate("/admin/orders")}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 shrink-0"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" />
               חזרה
             </button>
             {sendingSms && (

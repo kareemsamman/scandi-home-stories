@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package, Receipt, Search, ArrowUpDown, X, ChevronRight,
+  Package, Receipt, Search, ArrowUpDown, X, ChevronLeft,
 } from "lucide-react";
 import { useOrders } from "@/hooks/useDbData";
 import { useAuth } from "@/hooks/useAuth";
@@ -205,7 +205,7 @@ const AdminOrders = () => {
                 </div>
 
                 {/* Arrow */}
-                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+                <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
               </button>
             );
           })}

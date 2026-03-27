@@ -185,7 +185,7 @@ const AdminLayoutInner = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir="rtl">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir={location.pathname.startsWith("/admin/orders") || location.pathname.startsWith("/admin/inventory") ? "rtl" : undefined}>
           <Outlet />
         </main>
       </div>
