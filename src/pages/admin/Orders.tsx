@@ -194,7 +194,7 @@ const AdminOrders = () => {
                     )}
                   </div>
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {order.first_name} {order.last_name} · {order.phone} · {new Date(order.created_at).toLocaleDateString("he-IL")}
+                    {order.first_name} {order.last_name} · {order.phone} · {(() => { const d = new Date(order.created_at); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()}
                   </p>
                 </div>
 

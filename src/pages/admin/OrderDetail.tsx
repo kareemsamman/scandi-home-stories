@@ -459,7 +459,7 @@ const AdminOrderDetail = () => {
             </div>
             <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {new Date(order.created_at).toLocaleDateString("he-IL", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              {(() => { const d = new Date(order.created_at); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()}
             </p>
           </div>
         </div>
@@ -503,7 +503,7 @@ const AdminOrderDetail = () => {
         </div>
 
         {/* Actions grid */}
-        <div className="px-5 py-3 flex flex-wrap gap-2">
+        <div className="px-5 py-3 flex flex-wrap gap-2 items-center">
 
           {/* Payment actions — unpaid only */}
           {(order.payment_status || "paid") === "unpaid" && isAdmin && (

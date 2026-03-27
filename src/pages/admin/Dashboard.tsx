@@ -119,6 +119,7 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
                     <p className="text-xs text-gray-400">{order.first_name} {order.last_name}</p>
+                    <p className="text-[10px] text-gray-300 mt-0.5">{(() => { const d = new Date(order.created_at); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()}</p>
                   </div>
                   <div className="text-end">
                     <p className="text-sm font-semibold text-gray-900">₪{Number(order.total).toLocaleString()}</p>
@@ -150,6 +151,7 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-sm font-semibold text-amber-900">{order.order_number}</p>
                     <p className="text-xs text-amber-700">{order.first_name} {order.last_name}</p>
+                    <p className="text-[10px] text-amber-500 mt-0.5">{(() => { const d = new Date(order.created_at); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()}</p>
                   </div>
                   <p className="text-sm font-bold text-amber-800">₪{Number(order.total).toLocaleString()}</p>
                 </div>
