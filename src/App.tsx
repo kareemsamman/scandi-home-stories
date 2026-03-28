@@ -47,6 +47,7 @@ const InvoicePage = lazyRetry(() => import("./pages/Invoice"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const PaymentLink = lazyRetry(() => import("./pages/PaymentLink"));
+const PergolaRequest = lazyRetry(() => import("./pages/PergolaRequest"));
 
 // Admin pages — heavy, rarely accessed by regular users
 const AdminLayout = lazyRetry(() => import("./components/AdminLayout"));
@@ -70,6 +71,8 @@ const AdminCoupons = lazyRetry(() => import("./pages/admin/Coupons"));
 const AdminMarketing = lazyRetry(() => import("./pages/admin/Marketing"));
 const AdminLegalPages = lazyRetry(() => import("./pages/admin/LegalPages"));
 const AdminNotFoundPage = lazyRetry(() => import("./pages/admin/NotFoundPage"));
+const AdminPergolaRequests = lazyRetry(() => import("./pages/admin/PergolaRequests"));
+const AdminPergolaRequestDetail = lazyRetry(() => import("./pages/admin/PergolaRequestDetail"));
 
 // Lazy-loaded non-critical UI components
 const WhatsAppButton = lazyRetry(() => import("./components/WhatsAppButton").then(m => ({ default: m.WhatsAppButton })));
@@ -95,6 +98,7 @@ const LocaleRoutes = () => (
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/pergola-request" element={<PergolaRequest />} />
         <Route path="/legal/:page" element={<LegalPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -149,6 +153,8 @@ const App = () => (
                 <Route path="marketing" element={<AdminMarketing />} />
                 <Route path="legal" element={<AdminLegalPages />} />
                 <Route path="404-page" element={<AdminNotFoundPage />} />
+                <Route path="pergola-requests" element={<AdminPergolaRequests />} />
+                <Route path="pergola-requests/:requestId" element={<AdminPergolaRequestDetail />} />
               </Route>
               <Route path="/invoice/:orderId" element={<InvoicePage />} />
               <Route path="/:locale/pay/:orderId" element={<PaymentLink />} />

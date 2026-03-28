@@ -82,6 +82,10 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) {
             return 'vendor-react';
           }
+          // jsPDF is heavy — isolate it so it only loads on pergola page
+          if (id.includes('node_modules/jspdf')) {
+            return 'vendor-jspdf';
+          }
           // Let Rollup auto-split everything else so lazy routes
           // carry their own vendor deps and the homepage stays lean
         },

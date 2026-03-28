@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
   Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu,
   Grid3X3, BarChart3, Home, Layout, Tag, Ticket, Mail, Loader2,
+  PencilRuler,
 } from "lucide-react";
 
 interface NavItem {
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { label: "Coupons", icon: Ticket, path: "/admin/coupons", roles: ["admin"] },
   { label: "Marketing", icon: Mail, path: "/admin/marketing", roles: ["admin"] },
   { label: "Orders", icon: ShoppingBag, path: "/admin/orders", roles: ["admin", "worker"] },
+  { label: "Pergola Requests", icon: PencilRuler, path: "/admin/pergola-requests", roles: ["admin"] },
   { label: "Inventory", icon: BarChart3, path: "/admin/inventory", roles: ["admin", "worker"] },
   { label: "Hero Slides", icon: Image, path: "/admin/hero-slides", roles: ["admin"] },
   { label: "Header & Footer", icon: Layout, path: "/admin/site-content", roles: ["admin"] },
