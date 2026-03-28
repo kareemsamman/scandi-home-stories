@@ -27,7 +27,7 @@ const LockIcon = () => (
 );
 
 export const MiniCart = () => {
-  const { t, localePath } = useLocale();
+  const { t, locale, localePath } = useLocale();
   const isMobile = useIsMobile();
   const isOpen = useCart((s) => s.isOpen);
   const closeCart = useCart((s) => s.closeCart);
@@ -178,7 +178,7 @@ export const MiniCart = () => {
                   ? p.colorGroups?.flatMap((g) => g.colors).slice(0, 5) ?? []
                   : (p.colors ?? []).slice(0, 5);
                 const lengthLabel = p.type === "contractor" && p.sizes?.length
-                  ? `${p.sizes[p.sizes.length - 1].label}–${p.sizes[0].label}`
+                  ? `${p.sizes[p.sizes.length - 1].label[locale]}–${p.sizes[0].label[locale]}`
                   : null;
                 return (
                   <div
