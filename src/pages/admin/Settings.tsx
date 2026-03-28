@@ -86,7 +86,7 @@ const AdminSettings = () => {
     setDeleteAllStatus("deleting");
     try {
       // Fetch all orders with items to restore inventory
-      const { data: orders } = await supabase.from("orders").select("id, status, order_items");
+      const { data: orders } = await (supabase as any).from("orders").select("id, status, order_items(product_id, quantity)");
       if (orders) {
         const cancelStatuses = ["not_approved", "cancelled"];
         for (const order of orders) {
