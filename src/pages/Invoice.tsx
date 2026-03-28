@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Printer, Package, Loader2, LogIn } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Printer, Package, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DbOrderItem } from "@/hooks/useDbData";
 import logoWhite from "@/assets/logo-white.png";
-import { useLocale } from "@/i18n/useLocale";
 import { SEOHead } from '@/components/SEOHead';
 
 const calcShipping = (order: any): number => {
@@ -16,23 +15,26 @@ const calcShipping = (order: any): number => {
 
 const InvoicePage = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const navigate = useNavigate();
-  const { localePath } = useLocale();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [needsAuth, setNeedsAuth] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
     const fetchInvoice = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setNeedsAuth(true);
+      // Try RPC first (works for authenticated users with RLS)
+      const { data } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
+      if (data) {
+        setOrder(data);
         setLoading(false);
         return;
       }
-      const { data } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
-      setOrder(data);
+      // Fallback: direct query (for public invoice links)
+      const { data: orderData } = await (supabase as any)
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("id", orderId)
+        .single();
+      setOrder(orderData);
       setLoading(false);
     };
     fetchInvoice();
@@ -64,21 +66,6 @@ const InvoicePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
-  if (needsAuth) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-gray-500">
-        <LogIn className="w-12 h-12" />
-        <p className="font-medium">{t.loginRequired}</p>
-        <button
-          onClick={() => navigate(localePath("/login"))}
-          className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors"
-        >
-          {t.loginBtn}
-        </button>
       </div>
     );
   }
