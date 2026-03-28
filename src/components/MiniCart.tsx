@@ -7,7 +7,8 @@ import { useLocale } from "@/i18n/useLocale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuantitySelector } from "./QuantitySelector";
 import { QuickBuyModal } from "./QuickBuyModal";
-import { products, Product } from "@/data/products";
+import { Product } from "@/data/products";
+import { useShopData } from "@/hooks/useShopData";
 import { cn } from "@/lib/utils";
 import { useCartInventory } from "@/hooks/useCartInventory";
 
@@ -41,22 +42,23 @@ export const MiniCart = () => {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [quickBuyProduct, setQuickBuyProduct] = useState<Product | null>(null);
   const { getStockMax } = useCartInventory(items);
-  
+  const { products } = useShopData();
+
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
 
-  // Build related "buy with" products based on cart contents
+  // Build related "buy with" products based on cart contents — match by category (collection)
   const buyWithProducts = useMemo(() => {
     const cartIds = new Set(items.map((i) => i.product.id));
     const cartCollections = new Set(items.map((i) => i.product.collection));
-    
+
     const related = products.filter((p) => !cartIds.has(p.id) && cartCollections.has(p.collection));
-    
+
     if (related.length >= 10) return related.slice(0, 10);
-    
+
     const remaining = products.filter((p) => !cartIds.has(p.id) && !cartCollections.has(p.collection));
     return [...related, ...remaining].slice(0, 10);
-  }, [items]);
+  }, [items, products]);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
