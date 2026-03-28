@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminLanguageProvider, useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
   Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu,
-  Grid3X3, BarChart3, Home, Layout, Tag, Ticket, Mail,
+  Grid3X3, BarChart3, Home, Layout, Tag, Ticket, Mail, Loader2,
 } from "lucide-react";
 
 interface NavItem {
@@ -186,7 +186,9 @@ const AdminLayoutInner = () => {
         </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir={location.pathname.startsWith("/admin/orders") || location.pathname.startsWith("/admin/inventory") ? "rtl" : undefined}>
-          <Outlet />
+          <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
