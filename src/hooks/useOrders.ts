@@ -22,6 +22,7 @@ export interface OrderItem {
   quantity: number;
   size?: string;
   color?: string;
+  colorHex?: string;
   colorId?: string;
   sizeId?: string;
   productId?: string;
@@ -211,6 +212,7 @@ export const useAddOrder = () => {
             quantity: item.quantity,
             size: item.size || null,
             color_name: item.color || null,
+            color_hex: item.colorHex || null,
           }))
         );
         if (itemsErr) throw itemsErr;

@@ -241,7 +241,10 @@ const AdminOrderDetail = () => {
 
     const itemsHtml = (order.order_items || []).map((item: DbOrderItem) => {
       const sku = item.product_id ? (skuMap.get(item.product_id) || "") : "";
-      const isCustom = item.color_name && !item.color_hex;
+      const sp = item.product_id ? shopProducts.find(p => p.id === item.product_id) : null;
+      const stdColors = sp?.type === "contractor" && sp.colorGroups?.[0]?.colors || [];
+      const isStdColor = stdColors.some((c: any) => c.name?.he === item.color_name || c.name?.ar === item.color_name || c.hex === item.color_hex);
+      const isCustom = item.color_name && stdColors.length > 0 && !isStdColor;
       return `
         <tr>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
@@ -788,7 +791,11 @@ const AdminOrderDetail = () => {
                 )}
                 <div className="mt-1.5 space-y-0.5">
                   {item.color_name && (() => {
-                    const isCustom = !item.color_hex;
+                    // Detect custom color: check if color exists in product's standard (first) color group
+                    const shopProduct = item.product_id ? shopProducts.find(p => p.id === item.product_id) : null;
+                    const standardColors = shopProduct?.type === "contractor" && shopProduct.colorGroups?.[0]?.colors || [];
+                    const isStandardColor = standardColors.some((c: any) => c.name?.he === item.color_name || c.name?.ar === item.color_name || c.hex === item.color_hex);
+                    const isCustom = standardColors.length > 0 && !isStandardColor;
                     return (
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs text-gray-400">{orderLocale === "ar" ? "اللون" : "צבע"}:</span>

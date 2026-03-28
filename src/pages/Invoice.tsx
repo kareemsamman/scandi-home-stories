@@ -22,20 +22,8 @@ const InvoicePage = () => {
   useEffect(() => {
     if (!orderId) return;
     const fetchInvoice = async () => {
-      // Try RPC first (works for authenticated users with RLS)
-      let orderData: any = null;
-      const { data } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
-      if (data) {
-        orderData = data;
-      } else {
-        // Fallback: direct query (for public invoice links)
-        const { data: fallback } = await (supabase as any)
-          .from("orders")
-          .select("*, order_items(*)")
-          .eq("id", orderId)
-          .single();
-        orderData = fallback;
-      }
+      // Uses SECURITY DEFINER RPC — works for both anon and authenticated users
+      const { data: orderData } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
       if (orderData) {
         setOrder(orderData);
         // Fetch translated product names

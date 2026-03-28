@@ -422,7 +422,7 @@ const Checkout = () => {
             const sizeId = item.product.type === "contractor"
               ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
               : undefined;
-            return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorId, sizeId };
+            return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId };
           }),
         },
       });
@@ -615,6 +615,7 @@ const Checkout = () => {
               quantity: item.quantity,
               size: sizeLabel,
               color: item.options?.color?.name,
+              colorHex: item.options?.color?.hex,
               colorId,
               sizeId,
             };

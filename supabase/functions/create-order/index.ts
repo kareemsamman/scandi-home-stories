@@ -161,6 +161,7 @@ Deno.serve(async (req) => {
         quantity: item.quantity,
         size: item.size || null,
         color_name: item.color || null,
+        color_hex: item.colorHex || null,
       });
     }
 
