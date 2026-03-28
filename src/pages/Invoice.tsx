@@ -18,6 +18,7 @@ const InvoicePage = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [productNames, setProductNames] = useState<Map<string, { he: string; ar: string }>>(new Map());
+  const [productColors, setProductColors] = useState<Map<string, any[]>>(new Map());
 
   useEffect(() => {
     if (!orderId) return;
