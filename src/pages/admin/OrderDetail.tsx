@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSmsSettings, useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
 import { adjustInventory } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
+import { useShopData } from "@/hooks/useShopData";
 import { AddressFields, AddressState } from "@/components/AddressFields";
 
 /* ── Status config ── */
@@ -91,6 +92,11 @@ const AdminOrderDetail = () => {
   /* Build SKU map */
   const skuMap = new Map<string, string | null>();
   products.forEach((p: any) => skuMap.set(p.id, p.sku));
+
+  /* Locale-aware product names for order display */
+  const { products: shopProducts } = useShopData();
+  const orderLocale = (order?.locale || "he") as "he" | "ar";
+  const productNameMap = new Map(shopProducts.map(p => [p.id, p.name]));
 
   /* Resolve signed URLs on mount */
   useEffect(() => {
@@ -239,7 +245,7 @@ const AdminOrderDetail = () => {
       return `
         <tr>
           <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
-            <div style="font-weight:600; font-size:13px;">${esc(item.product_name)}</div>
+            <div style="font-weight:600; font-size:13px;">${esc(item.product_id && productNameMap.get(item.product_id)?.[orderLocale] || item.product_name)}</div>
             ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${esc(sku)}</div>` : ""}
             ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${esc(item.color_name)}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
             ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${esc(item.size)}</div>` : ""}
@@ -757,7 +763,7 @@ const AdminOrderDetail = () => {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 text-base">{item.product_name}</p>
+                <p className="font-semibold text-gray-900 text-base">{item.product_id && productNameMap.get(item.product_id)?.[orderLocale] || item.product_name}</p>
                 {item.product_id && (
                   isAdmin ? (
                     <button
@@ -780,14 +786,14 @@ const AdminOrderDetail = () => {
                     const isCustom = !item.color_hex;
                     return (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-gray-400">צבע:</span>
+                        <span className="text-xs text-gray-400">{orderLocale === "ar" ? "اللون" : "צבע"}:</span>
                         <span className="inline-flex items-center gap-1 text-xs text-gray-700 font-medium">
                           {item.color_hex && (
                             <span className="w-3.5 h-3.5 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
                           )}
                           {item.color_name}
                           {isCustom && (
-                            <span className="text-[9px] font-semibold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">מותאם</span>
+                            <span className="text-[9px] font-semibold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">{orderLocale === "ar" ? "مخصص" : "מותאם"}</span>
                           )}
                         </span>
                       </div>
@@ -795,7 +801,7 @@ const AdminOrderDetail = () => {
                   })()}
                   {item.size && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-400">אורך:</span>
+                      <span className="text-xs text-gray-400">{orderLocale === "ar" ? "الطول" : "אורך"}:</span>
                       <span className="text-xs text-gray-700 font-medium">{item.size}</span>
                     </div>
                   )}
@@ -804,7 +810,7 @@ const AdminOrderDetail = () => {
               <div className="text-end shrink-0 space-y-0.5">
                 <p className="text-sm text-gray-400">×{item.quantity}</p>
                 <p className="font-bold text-gray-900 text-base">₪{(item.price * item.quantity).toLocaleString()}</p>
-                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} ליח'</p>
+                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} {orderLocale === "ar" ? "للقطعة" : "ליח'"}</p>
               </div>
             </div>
           ))}
