@@ -17,24 +17,44 @@ const InvoicePage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [productNames, setProductNames] = useState<Map<string, { he: string; ar: string }>>(new Map());
 
   useEffect(() => {
     if (!orderId) return;
     const fetchInvoice = async () => {
       // Try RPC first (works for authenticated users with RLS)
+      let orderData: any = null;
       const { data } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
       if (data) {
-        setOrder(data);
-        setLoading(false);
-        return;
+        orderData = data;
+      } else {
+        // Fallback: direct query (for public invoice links)
+        const { data: fallback } = await (supabase as any)
+          .from("orders")
+          .select("*, order_items(*)")
+          .eq("id", orderId)
+          .single();
+        orderData = fallback;
       }
-      // Fallback: direct query (for public invoice links)
-      const { data: orderData } = await (supabase as any)
-        .from("orders")
-        .select("*, order_items(*)")
-        .eq("id", orderId)
-        .single();
-      setOrder(orderData);
+      if (orderData) {
+        setOrder(orderData);
+        // Fetch translated product names
+        const productIds = (orderData.order_items || [])
+          .map((i: any) => i.product_id).filter(Boolean);
+        if (productIds.length > 0) {
+          const [{ data: products }, { data: trans }] = await Promise.all([
+            supabase.from("products").select("id, name").in("id", productIds),
+            (supabase as any).from("product_translations").select("product_id, name, locale").in("product_id", productIds),
+          ]);
+          const nameMap = new Map<string, { he: string; ar: string }>();
+          (products || []).forEach((p: any) => nameMap.set(p.id, { he: p.name, ar: p.name }));
+          (trans || []).forEach((t: any) => {
+            const existing = nameMap.get(t.product_id);
+            if (existing && t.name) existing[t.locale as "he" | "ar"] = t.name;
+          });
+          setProductNames(nameMap);
+        }
+      }
       setLoading(false);
     };
     fetchInvoice();
@@ -156,7 +176,7 @@ const InvoicePage = () => {
                     return (
                       <tr key={item.id ?? idx} className={idx > 0 ? "border-t border-gray-100" : ""}>
                         <td className="px-4 py-3">
-                          <p className="font-semibold text-gray-900">{item.product_name}</p>
+                          <p className="font-semibold text-gray-900">{(item.product_id && productNames.get(item.product_id)?.[isAr ? "ar" : "he"]) || item.product_name}</p>
                           {item.color_name && (
                             <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                               {item.color_hex && <span className="w-3 h-3 rounded-full border border-gray-200 inline-block" style={{ backgroundColor: item.color_hex }} />}
