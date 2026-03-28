@@ -32,7 +32,7 @@ const InvoicePage = () => {
           .map((i: any) => i.product_id).filter(Boolean);
         if (productIds.length > 0) {
           const [{ data: products }, { data: trans }] = await Promise.all([
-            supabase.from("products").select("id, name").in("id", productIds),
+            supabase.from("products").select("id, name, type, colors, use_color_groups, custom_color_groups").in("id", productIds),
             (supabase as any).from("product_translations").select("product_id, name, locale").in("product_id", productIds),
           ]);
           const nameMap = new Map<string, { he: string; ar: string }>();
