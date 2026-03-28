@@ -18,6 +18,7 @@ const InvoicePage = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [productNames, setProductNames] = useState<Map<string, { he: string; ar: string }>>(new Map());
+  const [productColors, setProductColors] = useState<Map<string, any[]>>(new Map());
 
   useEffect(() => {
     if (!orderId) return;
@@ -31,16 +32,25 @@ const InvoicePage = () => {
           .map((i: any) => i.product_id).filter(Boolean);
         if (productIds.length > 0) {
           const [{ data: products }, { data: trans }] = await Promise.all([
-            supabase.from("products").select("id, name").in("id", productIds),
+            supabase.from("products").select("id, name, type, colors, use_color_groups, custom_color_groups").in("id", productIds),
             (supabase as any).from("product_translations").select("product_id, name, locale").in("product_id", productIds),
           ]);
           const nameMap = new Map<string, { he: string; ar: string }>();
-          (products || []).forEach((p: any) => nameMap.set(p.id, { he: p.name, ar: p.name }));
+          const colorsMap = new Map<string, any[]>();
+          (products || []).forEach((p: any) => {
+            nameMap.set(p.id, { he: p.name, ar: p.name });
+            // Collect standard colors from first color group
+            const stdColors = (p.type === "contractor" && Array.isArray(p.colors) && p.colors.length > 0)
+              ? (p.colors[0]?.colors || [])
+              : [];
+            colorsMap.set(p.id, stdColors);
+          });
           (trans || []).forEach((t: any) => {
             const existing = nameMap.get(t.product_id);
             if (existing && t.name) existing[t.locale as "he" | "ar"] = t.name;
           });
           setProductNames(nameMap);
+          setProductColors(colorsMap);
         }
       }
       setLoading(false);
@@ -160,7 +170,9 @@ const InvoicePage = () => {
                 </thead>
                 <tbody>
                   {(order.order_items || []).map((item: DbOrderItem, idx: number) => {
-                    const isCustom = item.color_name && !item.color_hex;
+                    const stdColors = item.product_id ? (productColors.get(item.product_id) || []) : [];
+                    const isStdColor = stdColors.some((c: any) => c.name?.he === item.color_name || c.name?.ar === item.color_name || c.hex === item.color_hex);
+                    const isCustom = item.color_name && stdColors.length > 0 && !isStdColor;
                     return (
                       <tr key={item.id ?? idx} className={idx > 0 ? "border-t border-gray-100" : ""}>
                         <td className="px-4 py-3">
@@ -215,7 +227,7 @@ const InvoicePage = () => {
         {/* Footer */}
         <div className="border-t border-gray-100 px-8 py-5 text-center text-xs text-gray-400">
           <p className="font-semibold text-gray-600 mb-1">{isAr ? "شكراً لطلبك" : "תודה על הזמנתך"}</p>
-          <p>AMG Pergola · amgpergola.com</p>
+          <p>AMG Pergola · pergolaamg.com</p>
         </div>
       </div>
 
