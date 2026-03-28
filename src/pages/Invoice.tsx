@@ -36,12 +36,21 @@ const InvoicePage = () => {
             (supabase as any).from("product_translations").select("product_id, name, locale").in("product_id", productIds),
           ]);
           const nameMap = new Map<string, { he: string; ar: string }>();
-          (products || []).forEach((p: any) => nameMap.set(p.id, { he: p.name, ar: p.name }));
+          const colorsMap = new Map<string, any[]>();
+          (products || []).forEach((p: any) => {
+            nameMap.set(p.id, { he: p.name, ar: p.name });
+            // Collect standard colors from first color group
+            const stdColors = (p.type === "contractor" && Array.isArray(p.colors) && p.colors.length > 0)
+              ? (p.colors[0]?.colors || [])
+              : [];
+            colorsMap.set(p.id, stdColors);
+          });
           (trans || []).forEach((t: any) => {
             const existing = nameMap.get(t.product_id);
             if (existing && t.name) existing[t.locale as "he" | "ar"] = t.name;
           });
           setProductNames(nameMap);
+          setProductColors(colorsMap);
         }
       }
       setLoading(false);
