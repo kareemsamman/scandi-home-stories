@@ -1,5 +1,4 @@
-import { ReactNode, useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { ReactNode, useState, useRef, useEffect } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -17,72 +16,20 @@ const LANGUAGES = [
   { code: "ar" as const, label: "العربية" },
 ];
 
-/* ── Full-page transition overlay ── */
-const TransitionOverlay = ({ targetLabel, onDone }: { targetLabel: string; onDone: () => void }) => {
-  const [phase, setPhase] = useState<"enter" | "show" | "exit">("enter");
-
-  useEffect(() => {
-    // enter → show (after fade-in)
-    const t1 = setTimeout(() => setPhase("show"), 50);
-    // show → exit (after brief display)
-    const t2 = setTimeout(() => setPhase("exit"), 400);
-    // done (after fade-out)
-    const t3 = setTimeout(onDone, 750);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onDone]);
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
-      style={{
-        backgroundColor: "white",
-        opacity: phase === "enter" ? 0 : phase === "show" ? 1 : 0,
-        transition: phase === "exit" ? "opacity 350ms ease-out" : "opacity 200ms ease-in",
-      }}
-    >
-      <div
-        className="flex flex-col items-center gap-3"
-        style={{
-          opacity: phase === "show" ? 1 : 0,
-          transform: phase === "show" ? "scale(1)" : "scale(0.95)",
-          transition: "all 200ms ease-out",
-        }}
-      >
-        <svg width="32" height="32" viewBox="0 0 22 22" fill="none" stroke="#888" strokeWidth="1.5">
-          <circle cx="11" cy="11" r="8" />
-          <ellipse cx="11" cy="11" rx="3.5" ry="8" />
-          <path d="M3 11h16" strokeLinecap="round" />
-        </svg>
-        <span className="text-lg font-bold text-gray-800">{targetLabel}</span>
-      </div>
-    </div>,
-    document.body
-  );
-};
-
 export const LocaleSwitcher = ({ icon, scrolled, inline }: LocaleSwitcherProps) => {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [transition, setTransition] = useState<{ code: "he" | "ar"; label: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
-  const switchTo = useCallback((code: "he" | "ar") => {
+  const switchTo = (code: "he" | "ar") => {
     if (code === locale) { setOpen(false); return; }
-    const target = LANGUAGES.find(l => l.code === code)!;
+    const pathWithoutLocale = location.pathname.replace(/^\/(he|ar)/, "");
+    localStorage.setItem("amg-locale", code);
     setOpen(false);
-    setTransition({ code, label: target.label });
-
-    // Navigate after overlay fades in
-    setTimeout(() => {
-      const pathWithoutLocale = location.pathname.replace(/^\/(he|ar)/, "");
-      localStorage.setItem("amg-locale", code);
-      navigate(`/${code}${pathWithoutLocale}${location.search}`);
-    }, 250);
-  }, [locale, location, navigate]);
-
-  const handleTransitionDone = useCallback(() => setTransition(null), []);
+    navigate(`/${code}${pathWithoutLocale}${location.search}`);
+  };
 
   // Close on outside click
   useEffect(() => {
@@ -102,96 +49,87 @@ export const LocaleSwitcher = ({ icon, scrolled, inline }: LocaleSwitcherProps) 
     return () => document.removeEventListener("keydown", handler);
   }, [open]);
 
-  /* ── Transition overlay (rendered via portal) ── */
-  const overlay = transition ? (
-    <TransitionOverlay targetLabel={transition.label} onDone={handleTransitionDone} />
-  ) : null;
-
   /* ── Mobile inline pills ── */
   if (inline) {
     return (
-      <>
-        {overlay}
-        <div className="flex items-center gap-2">
-          <svg role="presentation" strokeWidth="2" focusable="false" width="18" height="18" viewBox="0 0 22 22" fill="none" className="text-muted-foreground shrink-0">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" fill="none" />
-            <ellipse cx="11" cy="11" rx="3.5" ry="8" stroke="currentColor" fill="none" />
-            <path d="M3 11h16" stroke="currentColor" strokeLinecap="round" />
-          </svg>
-          <div className="flex gap-1.5">
-            {LANGUAGES.map((lang) => {
-              const isActive = locale === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  onClick={() => switchTo(lang.code)}
-                  className={cn(
-                    "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200",
-                    isActive
-                      ? "bg-foreground text-background"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {lang.label}
-                </button>
-              );
-            })}
-          </div>
+      <div className="flex items-center gap-2">
+        <svg role="presentation" strokeWidth="2" focusable="false" width="18" height="18" viewBox="0 0 22 22" fill="none" className="text-muted-foreground shrink-0">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" fill="none" />
+          <ellipse cx="11" cy="11" rx="3.5" ry="8" stroke="currentColor" fill="none" />
+          <path d="M3 11h16" stroke="currentColor" strokeLinecap="round" />
+        </svg>
+        <div className="flex gap-1.5">
+          {LANGUAGES.map((lang) => {
+            const isActive = locale === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => switchTo(lang.code)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200",
+                  isActive
+                    ? "bg-foreground text-background"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {lang.label}
+              </button>
+            );
+          })}
         </div>
-      </>
+      </div>
     );
   }
 
   /* ── Desktop dropdown ── */
   return (
-    <>
-      {overlay}
-      <div ref={ref} className="relative">
-        <button
-          onClick={() => setOpen(!open)}
-          className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-200",
-            icon
-              ? (scrolled
-                  ? "text-foreground hover:bg-foreground/5"
-                  : "text-white hover:bg-white/10")
-              : "text-foreground hover:bg-foreground/5"
-          )}
-          aria-label="Switch language"
-          aria-expanded={open}
-        >
-          {icon || (
-            <svg role="presentation" strokeWidth="2" focusable="false" width="20" height="20" viewBox="0 0 22 22" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" fill="none" />
-              <ellipse cx="11" cy="11" rx="3.5" ry="8" stroke="currentColor" fill="none" />
-              <path d="M3 11h16" stroke="currentColor" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
-
-        {open && (
-          <div className="absolute z-50 mt-2 w-44 bg-background border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 end-0">
-            {LANGUAGES.map((lang) => {
-              const isActive = locale === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  onClick={() => switchTo(lang.code)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors",
-                    isActive
-                      ? "bg-foreground/5 font-semibold text-foreground"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  )}
-                >
-                  <span className="flex-1 text-start">{lang.label}</span>
-                  {isActive && <Check className="w-4 h-4 text-foreground" />}
-                </button>
-              );
-            })}
-          </div>
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-200",
+          icon
+            ? (scrolled
+                ? "text-foreground hover:bg-foreground/5"
+                : "text-white hover:bg-white/10")
+            : "text-foreground hover:bg-foreground/5"
         )}
-      </div>
-    </>
+        aria-label="Switch language"
+        aria-expanded={open}
+      >
+        {icon || (
+          <svg role="presentation" strokeWidth="2" focusable="false" width="20" height="20" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" fill="none" />
+            <ellipse cx="11" cy="11" rx="3.5" ry="8" stroke="currentColor" fill="none" />
+            <path d="M3 11h16" stroke="currentColor" strokeLinecap="round" />
+          </svg>
+        )}
+      </button>
+
+      {open && (
+        <div
+          className="absolute z-50 mt-2 w-44 bg-background border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 end-0"
+        >
+          {LANGUAGES.map((lang) => {
+            const isActive = locale === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => switchTo(lang.code)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors",
+                  isActive
+                    ? "bg-foreground/5 font-semibold text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                )}
+              >
+                <span className="flex-1 text-start">{lang.label}</span>
+                {isActive && <Check className="w-4 h-4 text-foreground" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 };
