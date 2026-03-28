@@ -101,7 +101,7 @@ const InvoicePage = () => {
   const itemsTotal = (order.order_items || []).reduce(
     (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
   );
-  const dateLocale = order.locale === "ar" ? "ar-u-ca-gregory" : "he-IL";
+  const dateLocale = order.locale === "ar" ? "ar-SA" : "he-IL";
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
@@ -126,7 +126,7 @@ const InvoicePage = () => {
             <p className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t.invoice}</p>
             <h1 className="text-2xl font-black">{order.order_number}</h1>
             <p className="text-gray-400 text-sm mt-1">
-              {t.date}: {new Date(order.created_at).toLocaleDateString(dateLocale, { year: "numeric", month: "2-digit", day: "2-digit" })}
+              {t.date}: {new Date(order.created_at).toLocaleDateString(dateLocale, { year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
           <img src={logoWhite} alt="AMG Pergola" className="h-12 object-contain opacity-90" />
