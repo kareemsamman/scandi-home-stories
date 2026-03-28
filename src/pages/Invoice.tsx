@@ -170,7 +170,9 @@ const InvoicePage = () => {
                 </thead>
                 <tbody>
                   {(order.order_items || []).map((item: DbOrderItem, idx: number) => {
-                    const isCustom = item.color_name && !item.color_hex;
+                    const stdColors = item.product_id ? (productColors.get(item.product_id) || []) : [];
+                    const isStdColor = stdColors.some((c: any) => c.name?.he === item.color_name || c.name?.ar === item.color_name || c.hex === item.color_hex);
+                    const isCustom = item.color_name && stdColors.length > 0 && !isStdColor;
                     return (
                       <tr key={item.id ?? idx} className={idx > 0 ? "border-t border-gray-100" : ""}>
                         <td className="px-4 py-3">
