@@ -1047,19 +1047,7 @@ export type Database = {
     }
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
-      get_invoice_order:
-        | {
-            Args: { order_id: string }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.get_invoice_order(order_id => text), public.get_invoice_order(order_id => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
-        | {
-            Args: { order_id: string }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.get_invoice_order(order_id => text), public.get_invoice_order(order_id => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
+      get_invoice_order: { Args: { order_id: string }; Returns: Json }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
         Returns: Json
