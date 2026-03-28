@@ -50,7 +50,7 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
     }
     const contractorProducts = relevantProducts.filter((p): p is ContractorProduct => p.type === "contractor");
     const retailProducts = relevantProducts.filter((p): p is RetailProduct => p.type === "retail");
-    const lengths = Array.from(new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label)))).sort((a, b) => parseFloat(a) - parseFloat(b));
+    const lengths = Array.from(new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label[locale])))).sort((a, b) => parseFloat(a) - parseFloat(b));
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
     contractorProducts.forEach((p) => { if (p.colorGroups[0]) p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c)); });
     retailProducts.forEach((p) => { p.colors.forEach((c) => colorMap.set(c.id, c)); });
@@ -113,9 +113,9 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">{t("shop.filters.priceRange")}</label>
                       <div className="flex items-center gap-2">
-                        <input type="number" value={filters.priceMin || ""} onChange={(e) => onFilterChange({ priceMin: Number(e.target.value) || 0 })} placeholder="₪ מינ'" className="w-full h-10 px-3 text-sm bg-muted border border-border rounded-xl outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <input type="number" value={filters.priceMin || ""} onChange={(e) => onFilterChange({ priceMin: Number(e.target.value) || 0 })} placeholder={t("shop.filters.priceMin")} className="w-full h-10 px-3 text-sm bg-muted border border-border rounded-xl outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                         <span className="text-muted-foreground">–</span>
-                        <input type="number" value={filters.priceMax || ""} onChange={(e) => onFilterChange({ priceMax: Number(e.target.value) || 0 })} placeholder="₪ מקס'" className="w-full h-10 px-3 text-sm bg-muted border border-border rounded-xl outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <input type="number" value={filters.priceMax || ""} onChange={(e) => onFilterChange({ priceMax: Number(e.target.value) || 0 })} placeholder={t("shop.filters.priceMax")} className="w-full h-10 px-3 text-sm bg-muted border border-border rounded-xl outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                       </div>
                     </div>
                     {availableLengths.length > 0 && (

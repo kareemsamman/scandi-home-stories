@@ -225,7 +225,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
               type="number"
               value={filters.priceMin || ""}
               onChange={(e) => onFilterChange({ priceMin: Number(e.target.value) || 0 })}
-              placeholder="₪ מינימום"
+              placeholder={t("shop.filters.priceMin")}
               className="w-full h-8 px-2 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-xs text-muted-foreground">–</span>
@@ -233,7 +233,7 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
               type="number"
               value={filters.priceMax || ""}
               onChange={(e) => onFilterChange({ priceMax: Number(e.target.value) || 0 })}
-              placeholder="₪ מקסימום"
+              placeholder={t("shop.filters.priceMax")}
               className="w-full h-8 px-2 text-xs bg-muted border border-border rounded-lg outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
