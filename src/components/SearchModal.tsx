@@ -139,7 +139,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     const q = normalize(debouncedQuery);
     return products.filter((p) => {
       // Name match
-      if (normalize(p.name).includes(q)) return true;
+      if (normalize(p.name.he).includes(q) || normalize(p.name.ar).includes(q)) return true;
       // Description match
       if (normalize(getLocaleText(p.description, locale)).includes(q)) return true;
       // SKU match (contractor products)
@@ -451,14 +451,14 @@ function ProductResultItem({
     >
       <img
         src={product.images[0]}
-        alt={product.name}
+        alt={product.name[locale]}
         className="object-cover rounded shrink-0"
         style={{ width: 64, height: 64, borderRadius: 4 }}
       />
       <div className="flex flex-col">
         <span className="text-foreground/50" style={{ fontSize: 12 }}>AMG Pergola</span>
         <span className="text-foreground font-semibold group-hover:text-foreground/70 transition-colors" style={{ fontSize: 14 }}>
-          {product.name}
+          {product.name[locale]}
         </span>
         <span className="text-foreground/70" style={{ fontSize: 14 }}>
           {currency}{product.price.toLocaleString()}

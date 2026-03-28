@@ -112,10 +112,10 @@ export const MiniCart = () => {
             const key = getItemKey(item);
             return (
               <div key={key} className="flex gap-4">
-                <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-20 rounded object-cover flex-shrink-0" />
+                <img src={item.product.images[0]} alt={item.product.name[locale]} className="w-16 h-20 rounded object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-muted-foreground">AMG Pergola</p>
-                  <p className="text-sm font-semibold text-foreground truncate">{item.product.name}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">{item.product.name[locale]}</p>
                   {item.options?.size && (
                     <p className="text-[11px] text-muted-foreground">
                       {t("contractor.length")}: {item.options.size}
@@ -187,10 +187,10 @@ export const MiniCart = () => {
                     style={{ width: 300, scrollSnapAlign: "start", backgroundColor: "rgb(242,242,242)" }}
                   >
                     <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                      <img src={p.images[0]} alt={p.name[locale]} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1.5">
-                      <p className="text-xs font-semibold truncate">{p.name}</p>
+                      <p className="text-xs font-semibold truncate">{p.name[locale]}</p>
                       <p className="text-xs text-muted-foreground">{t("common.currency")}{p.price.toLocaleString()}</p>
                       {hasColors && colorSwatches.length > 0 && (
                         <div className="flex items-center gap-1">

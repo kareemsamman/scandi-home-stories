@@ -88,11 +88,11 @@ const Cart = () => {
                     <div className="hidden md:grid grid-cols-[1fr_auto_auto] gap-6 items-start">
                       <div className="flex gap-4">
                         <Link to={localePath(`/product/${item.product.slug}`)} className="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                          <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                          <img src={item.product.images[0]} alt={item.product.name[locale]} className="w-full h-full object-cover" />
                         </Link>
                         <div className="space-y-1 min-w-0">
                           <Link to={localePath(`/product/${item.product.slug}`)} className="text-sm font-semibold hover:text-accent-strong transition-colors block truncate">
-                            {item.product.name}
+                            {item.product.name[locale]}
                           </Link>
                           <p className="text-xs text-muted-foreground">{t("common.currency")}{item.product.price.toLocaleString()}</p>
                           {item.options?.size && (
@@ -131,11 +131,11 @@ const Cart = () => {
                     {/* Mobile row */}
                     <div className="md:hidden flex gap-4">
                       <Link to={localePath(`/product/${item.product.slug}`)} className="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                        <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                        <img src={item.product.images[0]} alt={item.product.name[locale]} className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0 space-y-1">
                         <Link to={localePath(`/product/${item.product.slug}`)} className="text-sm font-semibold hover:text-accent-strong transition-colors block truncate">
-                          {item.product.name}
+                          {item.product.name[locale]}
                         </Link>
                         {item.options?.size && (
                           <p className="text-[11px] text-muted-foreground">{t("contractor.length")}: {item.options.size}</p>

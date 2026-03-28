@@ -76,25 +76,25 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       const cId = selectedColor?.id || standardColors[0]?.id;
       return cId ? getComboStock(cId, s.id) > 0 : true;
     });
-    setSelectedSize(firstInStock?.label || availableSizes[0]?.label || null);
+    setSelectedSize(firstInStock?.label[locale] || availableSizes[0]?.label[locale] || null);
   }, [selectedColor?.id, availableSizes.length, inventory.length]);
 
   // Dynamic price
   const currentPrice = useMemo(() => {
     if (!product) return 0;
     if (isCustomColor && selectedColor?.prices) {
-      const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
+      const sizeObj = availableSizes.find(s => s.label[locale] === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
       if (sizeObj) return selectedColor.prices[sizeObj.id] || product.price;
     }
     if (contractor && selectedColor) {
       const colorObj = standardColors.find(c => c.id === selectedColor.id);
-      const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
+      const sizeObj = availableSizes.find(s => s.label[locale] === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
       if (colorObj && sizeObj && (colorObj as any).combo_prices) {
         const cp = (colorObj as any).combo_prices[sizeObj.id];
         if (cp && cp > 0) return cp;
       }
       if (!selectedSize && contractor.sizes[0]?.price) return contractor.sizes[0].price;
-      const sizeOption = availableSizes.find(s => s.label === selectedSize);
+      const sizeOption = availableSizes.find(s => s.label[locale] === selectedSize);
       if (sizeOption?.price) return sizeOption.price;
     }
     return product.price;
@@ -108,7 +108,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     }
     if (isContractor && !isCustomColor) {
       const cId = selectedColor?.id || standardColors[0]?.id;
-      const sizeObj = availableSizes.find(s => s.label === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
+      const sizeObj = availableSizes.find(s => s.label[locale] === selectedSize || (!selectedSize && s.id === availableSizes[0]?.id));
       if (cId && sizeObj) return getComboStock(cId, sizeObj.id);
     }
     return 9999;
@@ -118,7 +118,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
 
   // Cart-aware effective max: subtract what's already in the cart for this exact combo
   const activeColorId = selectedColor?.id || standardColors[0]?.id || "";
-  const activeSizeLabel = selectedSize || availableSizes[0]?.label || "";
+  const activeSizeLabel = selectedSize || availableSizes[0]?.label[locale] || "";
   const cartKey = product ? `${product.id}__${activeSizeLabel}__${activeColorId}` : "";
   const cartQty = cartItems
     .filter(i => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === cartKey)
@@ -139,7 +139,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     let freshStock = 9999;
     if (isRetail && activeColorId) freshStock = Number(freshMap.get(`color:${activeColorId}`) ?? 9999);
     if (isContractor && !isCustomColor && activeColorId) {
-      const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
+      const sizeObj = availableSizes.find(s => s.label[locale] === activeSizeLabel);
       if (sizeObj) freshStock = Number(freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999);
     }
 
@@ -214,11 +214,11 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
               <div className="flex items-center gap-4 p-5 border-b border-border">
                 <img
                   src={product.images[0]}
-                  alt={product.name}
+                  alt={product.name[locale]}
                   className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-border"
                 />
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground pe-8">{product.name}</h3>
+                  <h3 className="text-base font-bold text-foreground pe-8">{product.name[locale]}</h3>
                   {contractor && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {t("contractor.sku")}: {contractor.sku}
@@ -326,14 +326,14 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                         const cId = selectedColor?.id || standardColors[0]?.id;
                         const sizeStock = cId ? getComboStock(cId, size.id) : 9999;
                         const sizeOos = sizeStock === 0;
-                        const isActive = selectedSize === size.label || (!selectedSize && size.id === availableSizes[0].id);
+                        const isActive = selectedSize === size.label[locale] || (!selectedSize && size.id === availableSizes[0].id);
                         const sizePrice = isCustomColor
                           ? selectedColor?.prices?.[size.id]
                           : cId ? (activeColorObj as any)?.combo_prices?.[size.id] : undefined;
                         return (
                           <button
                             key={size.id}
-                            onClick={() => !sizeOos && setSelectedSize(size.label)}
+                            onClick={() => !sizeOos && setSelectedSize(size.label[locale])}
                             className={cn(
                               "relative px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center min-w-[56px] text-center",
                               sizeOos
@@ -343,7 +343,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                                 : "border-border hover:border-muted-foreground"
                             )}
                           >
-                            <span className={cn(sizeOos && "opacity-40")}>{size.label}</span>
+                            <span className={cn(sizeOos && "opacity-40")}>{size.label[locale]}</span>
                             {sizePrice != null && sizePrice > 0 && (
                               <span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground", sizeOos && "opacity-30")}>
                                 {t("common.currency")}{sizePrice}
@@ -436,12 +436,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
           setIsCustomColor(true);
           if (color.prices && contractor) {
             const firstSize = contractor.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
-            if (firstSize) setSelectedSize(firstSize.label);
+            if (firstSize) setSelectedSize(firstSize.label[locale]);
           }
         }}
         colorGroups={customColorGroups}
         selectedColorId={selectedColor?.id}
-        selectedSizeId={availableSizes.find(s => s.label === (selectedSize || availableSizes[0]?.label))?.id}
+        selectedSizeId={availableSizes.find(s => s.label[locale] === (selectedSize || availableSizes[0]?.label[locale]))?.id}
       />
     </>
   );

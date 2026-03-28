@@ -35,7 +35,7 @@ export interface ColorGroup {
 
 export interface SizeOption {
   id: string;
-  label: string;
+  label: LocaleString;
   price?: number;
 }
 
@@ -49,7 +49,7 @@ export interface SubCategory {
 // Base product fields
 interface BaseProduct {
   id: string;
-  name: string;
+  name: LocaleString;
   slug: string;
   collection: string;
   price: number;
@@ -205,10 +205,10 @@ const contractorColorGroups: ColorGroup[] = [
 ];
 
 const defaultSizes: SizeOption[] = [
-  { id: "3m", label: "3m", price: 80 },
-  { id: "4m", label: "4m", price: 100 },
-  { id: "5m", label: "5m", price: 110 },
-  { id: "6m", label: "6m", price: 120 },
+  { id: "3m", label: { he: "3m", ar: "3m" }, price: 80 },
+  { id: "4m", label: { he: "4m", ar: "4m" }, price: 100 },
+  { id: "5m", label: { he: "5m", ar: "5m" }, price: 110 },
+  { id: "6m", label: { he: "6m", ar: "6m" }, price: 120 },
 ];
 
 export const products: Product[] = [
@@ -216,7 +216,7 @@ export const products: Product[] = [
   {
     id: "elite-4000",
     type: "retail",
-    name: "AMG Elite 4000",
+    name: { he: "AMG Elite 4000", ar: "AMG Elite 4000" },
     slug: "amg-elite-4000",
     collection: "bioclimatic",
     price: 45000,
@@ -234,7 +234,7 @@ export const products: Product[] = [
   {
     id: "pro-3000",
     type: "retail",
-    name: "AMG Pro 3000",
+    name: { he: "AMG Pro 3000", ar: "AMG Pro 3000" },
     slug: "amg-pro-3000",
     collection: "bioclimatic",
     price: 35000,
@@ -252,7 +252,7 @@ export const products: Product[] = [
   {
     id: "louvermax-500",
     type: "retail",
-    name: "AMG LouverMax 500",
+    name: { he: "AMG LouverMax 500", ar: "AMG LouverMax 500" },
     slug: "amg-louvermax-500",
     collection: "motorized",
     price: 52000,
@@ -270,7 +270,7 @@ export const products: Product[] = [
   {
     id: "smartblade-200",
     type: "retail",
-    name: "AMG SmartBlade 200",
+    name: { he: "AMG SmartBlade 200", ar: "AMG SmartBlade 200" },
     slug: "amg-smartblade-200",
     collection: "motorized",
     price: 42000,
@@ -288,7 +288,7 @@ export const products: Product[] = [
   {
     id: "classicshade-100",
     type: "retail",
-    name: "AMG ClassicShade",
+    name: { he: "AMG ClassicShade", ar: "AMG ClassicShade" },
     slug: "amg-classicshade",
     collection: "fixed",
     price: 22000,
@@ -305,7 +305,7 @@ export const products: Product[] = [
   {
     id: "solidtop-500",
     type: "retail",
-    name: "AMG SolidTop 500",
+    name: { he: "AMG SolidTop 500", ar: "AMG SolidTop 500" },
     slug: "amg-solidtop-500",
     collection: "fixed",
     price: 28000,
@@ -323,7 +323,7 @@ export const products: Product[] = [
   {
     id: "flexroof-600",
     type: "retail",
-    name: "AMG FlexRoof 600",
+    name: { he: "AMG FlexRoof 600", ar: "AMG FlexRoof 600" },
     slug: "amg-flexroof-600",
     collection: "retractable",
     price: 38000,
@@ -341,7 +341,7 @@ export const products: Product[] = [
   {
     id: "stormguard-800",
     type: "retail",
-    name: "AMG StormGuard 800",
+    name: { he: "AMG StormGuard 800", ar: "AMG StormGuard 800" },
     slug: "amg-stormguard-800",
     collection: "retractable",
     price: 48000,
@@ -359,7 +359,7 @@ export const products: Product[] = [
   {
     id: "led-kit",
     type: "retail",
-    name: "AMG LED Lighting Kit",
+    name: { he: "AMG LED Lighting Kit", ar: "AMG LED Lighting Kit" },
     slug: "amg-led-lighting-kit",
     collection: "accessories",
     price: 3500,
@@ -375,7 +375,7 @@ export const products: Product[] = [
   {
     id: "drainage-system",
     type: "retail",
-    name: "AMG Rain Drainage System",
+    name: { he: "AMG Rain Drainage System", ar: "AMG Rain Drainage System" },
     slug: "amg-rain-drainage-system",
     collection: "accessories",
     price: 4200,
@@ -393,7 +393,7 @@ export const products: Product[] = [
   {
     id: "profile-gate-tube",
     type: "contractor",
-    name: "פרופיל שער צינור",
+    name: { he: "פרופיל שער צינור", ar: "פרופיל שער צינור" },
     slug: "profile-gate-tube",
     collection: "profiles",
     subCategory: "gate-profiles",
@@ -410,7 +410,7 @@ export const products: Product[] = [
   {
     id: "profile-hinge",
     type: "contractor",
-    name: "פרופיל ציר",
+    name: { he: "פרופיל ציר", ar: "פרופיל ציר" },
     slug: "profile-hinge",
     collection: "profiles",
     subCategory: "gate-profiles",
@@ -427,7 +427,7 @@ export const products: Product[] = [
   {
     id: "gate-stopper",
     type: "contractor",
-    name: "סטופר לשער",
+    name: { he: "סטופר לשער", ar: "סטופר לשער" },
     slug: "gate-stopper",
     collection: "profiles",
     subCategory: "accessories",
@@ -438,9 +438,9 @@ export const products: Product[] = [
     longDescription: { he: "סטופר מאלומיניום לבלימת שערים הזזה. התקנה קלה עם ברגים מובנים. עמיד לכל תנאי מזג האוויר.", ar: "ماسك من الألمنيوم لإيقاف البوابات المنزلقة. تركيب سهل بمسامير مدمجة." },
     materials: "Aluminum 6063-T5",
     sizes: [
-      { id: "2.5m", label: "2.5m" },
-      { id: "3m", label: "3m" },
-      { id: "4m", label: "4m" },
+      { id: "2.5m", label: { he: "2.5m", ar: "2.5m" } },
+      { id: "3m", label: { he: "3m", ar: "3m" } },
+      { id: "4m", label: { he: "4m", ar: "4m" } },
     ],
     colorGroups: contractorColorGroups,
     images: [profileGateTubeImg],
@@ -448,7 +448,7 @@ export const products: Product[] = [
   {
     id: "beak-profile",
     type: "contractor",
-    name: "משופע מקור 40x20 6 מ׳",
+    name: { he: "משופע מקור 40x20 6 מ׳", ar: "משופע מקור 40x20 6 מ׳" },
     slug: "beak-profile",
     collection: "profiles",
     subCategory: "gate-profiles",
@@ -466,7 +466,7 @@ export const products: Product[] = [
   {
     id: "fence-slat",
     type: "contractor",
-    name: "למלת גדר",
+    name: { he: "למלת גדר", ar: "למלת גדר" },
     slug: "fence-slat",
     collection: "profiles",
     subCategory: "fences-gates",
@@ -477,10 +477,10 @@ export const products: Product[] = [
     longDescription: { he: "למלת אלומיניום לבניית גדרות פרטיות. עיצוב מודרני, התקנה מהירה, ומגוון צבעים.", ar: "شريحة ألمنيوم لبناء أسوار الخصوصية. تصميم عصري وتركيب سريع." },
     materials: "Aluminum 6063-T5",
     sizes: [
-      { id: "3m", label: "3m" },
-      { id: "4m", label: "4m" },
-      { id: "5m", label: "5m" },
-      { id: "6m", label: "6m" },
+      { id: "3m", label: { he: "3m", ar: "3m" } },
+      { id: "4m", label: { he: "4m", ar: "4m" } },
+      { id: "5m", label: { he: "5m", ar: "5m" } },
+      { id: "6m", label: { he: "6m", ar: "6m" } },
     ],
     colorGroups: contractorColorGroups,
     images: [profileHitechImg],
@@ -489,7 +489,7 @@ export const products: Product[] = [
   {
     id: "diamond-40x20",
     type: "contractor",
-    name: "מעוין 40x20",
+    name: { he: "מעוין 40x20", ar: "מעוין 40x20" },
     slug: "diamond-40x20",
     collection: "profiles",
     subCategory: "gate-profiles",
@@ -506,7 +506,7 @@ export const products: Product[] = [
   {
     id: "hitech-sealed-20",
     type: "contractor",
-    name: "הייטק אטום 20",
+    name: { he: "הייטק אטום 20", ar: "הייטק אטום 20" },
     slug: "hitech-sealed-20",
     collection: "profiles",
     subCategory: "hitech",
@@ -523,7 +523,7 @@ export const products: Product[] = [
   {
     id: "hitech-sealed-40",
     type: "contractor",
-    name: "הייטק אטום 40",
+    name: { he: "הייטק אטום 40", ar: "הייטק אטום 40" },
     slug: "hitech-sealed-40",
     collection: "profiles",
     subCategory: "hitech",
@@ -541,7 +541,7 @@ export const products: Product[] = [
   {
     id: "equal-angle-25",
     type: "contractor",
-    name: "זווית שווה 25x25",
+    name: { he: "זווית שווה 25x25", ar: "זווית שווה 25x25" },
     slug: "equal-angle-25",
     collection: "profiles",
     subCategory: "angles",
@@ -558,7 +558,7 @@ export const products: Product[] = [
   {
     id: "equal-angle-40",
     type: "contractor",
-    name: "זווית שווה 40x40",
+    name: { he: "זווית שווה 40x40", ar: "זווית שווה 40x40" },
     slug: "equal-angle-40",
     collection: "profiles",
     subCategory: "angles",
@@ -575,7 +575,7 @@ export const products: Product[] = [
   {
     id: "fence-post-60",
     type: "contractor",
-    name: "עמוד גדר 60x60",
+    name: { he: "עמוד גדר 60x60", ar: "עמוד גדר 60x60" },
     slug: "fence-post-60",
     collection: "profiles",
     subCategory: "fences-gates",
@@ -586,9 +586,9 @@ export const products: Product[] = [
     longDescription: { he: "עמוד אלומיניום 60x60 מ\"מ לגדרות ושערים. חוזק מרבי, מתאים לכל סוגי הגדרות.", ar: "عمود ألمنيوم 60x60 مم للأسوار والبوابات. قوة قصوى." },
     materials: "Aluminum 6063-T5",
     sizes: [
-      { id: "2m", label: "2m" },
-      { id: "2.5m", label: "2.5m" },
-      { id: "3m", label: "3m" },
+      { id: "2m", label: { he: "2m", ar: "2m" } },
+      { id: "2.5m", label: { he: "2.5m", ar: "2.5m" } },
+      { id: "3m", label: { he: "3m", ar: "3m" } },
     ],
     colorGroups: contractorColorGroups,
     images: [profileGateTubeImg],
@@ -596,7 +596,7 @@ export const products: Product[] = [
   {
     id: "u-channel-20",
     type: "contractor",
-    name: "פרופיל U 20x20",
+    name: { he: "פרופיל U 20x20", ar: "פרופיל U 20x20" },
     slug: "u-channel-20",
     collection: "profiles",
     subCategory: "accessories",

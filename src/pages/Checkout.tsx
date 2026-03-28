@@ -691,11 +691,11 @@ const Checkout = () => {
         {items.map((item) => (
           <div key={getItemKey(item)} className="flex gap-4">
             <div className="relative w-16 h-16 md:w-[72px] md:h-[72px] rounded-lg border border-border bg-white flex-shrink-0">
-              <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
+              <img src={item.product.images[0]} alt={item.product.name[locale]} className="w-full h-full object-cover rounded-lg" />
               <span className="absolute -top-1 -end-1 w-5 h-5 rounded-full bg-foreground/80 text-background text-[10px] font-bold flex items-center justify-center">{item.quantity}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{item.product.name}</p>
+              <p className="text-sm font-semibold truncate">{item.product.name[locale]}</p>
               {item.options?.size && <p className="text-xs text-muted-foreground mt-0.5">{t("contractor.length")}: {item.options.size}</p>}
               {item.options?.color && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

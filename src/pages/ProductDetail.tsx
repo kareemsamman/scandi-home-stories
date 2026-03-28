@@ -185,22 +185,22 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     setTimeout(() => setAddedConfirm(false), 1000);
   };
 
-  const productDesc = getLocaleText(product.description, locale) || product.name;
+  const productDesc = getLocaleText(product.description, locale) || product.name[locale];
   const colName = collection ? collection.name[locale] : "";
   const seoJsonLd = [
     getOrganizationSchema(),
-    getProductSchema({ name: product.name, description: productDesc, price: product.price, images: product.images, slug: product.slug, collection: colName }),
+    getProductSchema({ name: product.name[locale], description: productDesc, price: product.price, images: product.images, slug: product.slug, collection: colName }),
     getBreadcrumbSchema([
       { name: t("nav.shop"), url: `/${locale}/shop` },
       ...(collection ? [{ name: colName, url: `/${locale}/shop?collection=${collection.slug}` }] : []),
-      { name: product.name, url: `/${locale}/product/${product.slug}` },
+      { name: product.name[locale], url: `/${locale}/product/${product.slug}` },
     ]),
   ];
 
   return (
     <Layout>
       <SEOHead
-        title={`${product.name} | A.M.G PERGOLA`}
+        title={`${product.name[locale]} | A.M.G PERGOLA`}
         description={productDesc.slice(0, 155)}
         ogImage={product.images[0]}
         ogType="product"
@@ -211,7 +211,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground">{product.name[locale]}</span>
         </div>
       </div>
 
@@ -230,7 +230,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
               {collection && <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong mb-2 block">{collection.name[locale]}</Link>}
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name[locale]}</h1>
               <p className="text-2xl font-bold mb-4">{t("common.currency")}{product.price.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">{getLocaleText(product.description, locale)}</p>
               <div className="h-px bg-border mb-5" />
@@ -317,7 +317,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
           <div className="grid md:grid-cols-2 gap-10 md:gap-16">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("product.about")}</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name[locale]}</h2>
               <p className="text-base text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
             </div>
             <div>
@@ -375,7 +375,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; prices?: Record<string, number> } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label || null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label[locale] || null);
   const [quantity, setQuantity] = useState(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -416,7 +416,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   })();
 
   // Current selected size object
-  const selectedSizeObj = availableSizes.find(s => s.label === selectedSize);
+  const selectedSizeObj = availableSizes.find(s => s.label[locale] === selectedSize);
 
   // Price: custom color uses per-size prices, otherwise combo_prices or base price
   const currentPrice = (() => {
@@ -432,7 +432,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
 
   // Stock for current selection
   const activeColorId = selectedColor?.id || standardColors[0]?.id || "";
-  const activeSizeLabel = selectedSize || availableSizes[0]?.label || "";
+  const activeSizeLabel = selectedSize || availableSizes[0]?.label[locale] || "";
   const currentStock = selectedColor && selectedSizeObj
     ? getComboStock(selectedColor.id, selectedSizeObj.id)
     : 9999;
@@ -455,8 +455,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
       if (!selectedColor) return true;
       return getComboStock(selectedColor.id, s.id) > 0;
     });
-    if (firstInStock) setSelectedSize(firstInStock.label);
-    else if (availableSizes.length > 0) setSelectedSize(availableSizes[0].label);
+    if (firstInStock) setSelectedSize(firstInStock.label[locale]);
+    else if (availableSizes.length > 0) setSelectedSize(availableSizes[0].label[locale]);
   }, [selectedColor?.id, inventory.length]);
 
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
@@ -470,7 +470,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
     if (!isCustomColor) {
       const { data: freshInv } = await (supabase as any).from('inventory').select('variation_key,stock_quantity').eq('product_id', product.id);
       const freshMap = new Map((freshInv || []).map((r: any) => [r.variation_key, r.stock_quantity]));
-      const sizeObj = availableSizes.find(s => s.label === activeSizeLabel);
+      const sizeObj = availableSizes.find(s => s.label[locale] === activeSizeLabel);
       const freshStock: number = activeColorId && sizeObj ? Number(freshMap.get(`combo:${activeColorId}|${sizeObj.id}`) ?? 9999) : 9999;
       const freshEffective = Math.max(0, freshStock - cartQty);
       if (freshEffective === 0 && freshStock !== 9999) {
@@ -488,22 +488,22 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
   };
 
-  const productDesc = getLocaleText(product.description, locale) || product.name;
+  const productDesc = getLocaleText(product.description, locale) || product.name[locale];
   const colName = collection ? collection.name[locale] : "";
   const seoJsonLd = [
     getOrganizationSchema(),
-    getProductSchema({ name: product.name, description: productDesc, price: product.price, images: product.images, sku: product.sku, slug: product.slug, collection: colName }),
+    getProductSchema({ name: product.name[locale], description: productDesc, price: product.price, images: product.images, sku: product.sku, slug: product.slug, collection: colName }),
     getBreadcrumbSchema([
       { name: t("nav.shop"), url: `/${locale}/shop` },
       ...(collection ? [{ name: colName, url: `/${locale}/shop?collection=${collection.slug}` }] : []),
-      { name: product.name, url: `/${locale}/product/${product.slug}` },
+      { name: product.name[locale], url: `/${locale}/product/${product.slug}` },
     ]),
   ];
 
   return (
     <Layout>
       <SEOHead
-        title={`${product.name} | A.M.G PERGOLA`}
+        title={`${product.name[locale]} | A.M.G PERGOLA`}
         description={productDesc.slice(0, 155)}
         ogImage={product.images[0]}
         ogType="product"
@@ -514,7 +514,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground">{product.name[locale]}</span>
         </div>
       </div>
 
@@ -525,7 +525,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
               {isMobile ? (<MobileGallery images={product.images} onZoom={handleZoom} />) : (<div className="sticky top-24"><DesktopGallery images={product.images} onZoom={handleZoom} /></div>)}
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start">
-              <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name}</h1>
+              <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name[locale]}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
               <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{getLocaleText(product.description, locale)}</p>
@@ -570,17 +570,17 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                     {availableSizes.map((size) => {
                       const sizeStock = selectedColor ? getComboStock(selectedColor.id, size.id) : 9999;
                       const sizeOutOfStock = sizeStock === 0;
-                      const isActive = selectedSize === size.label || (!selectedSize && size.id === availableSizes[0].id);
+                      const isActive = selectedSize === size.label[locale] || (!selectedSize && size.id === availableSizes[0].id);
                       const sizePrice = colorObj?.combo_prices?.[size.id];
                       return (
-                        <button key={size.id} onClick={() => !sizeOutOfStock && setSelectedSize(size.label)}
+                        <button key={size.id} onClick={() => !sizeOutOfStock && setSelectedSize(size.label[locale])}
                           className={cn(
                             "relative px-3 py-2.5 rounded-lg border text-sm font-medium transition-all min-w-[56px] text-center",
                             sizeOutOfStock ? "border-red-200 bg-red-50 text-red-300 cursor-not-allowed" :
                             isActive ? "border-foreground bg-foreground text-background" :
                             "border-border hover:border-muted-foreground"
                           )}>
-                          <span className={cn(sizeOutOfStock && "opacity-50")}>{size.label}</span>
+                          <span className={cn(sizeOutOfStock && "opacity-50")}>{size.label[locale]}</span>
                           {sizePrice != null && sizePrice > 0 && (
                             <div className={cn("text-[10px] block", sizeOutOfStock ? "opacity-30" : isActive ? "opacity-80" : "text-muted-foreground")}>
                               {t("common.currency")}{sizePrice}
@@ -648,7 +648,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
           <div className="grid md:grid-cols-2 gap-10 md:gap-16">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("product.about")}</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-5">{product.name[locale]}</h2>
               <p className="text-base text-muted-foreground leading-relaxed">{getLocaleText(product.longDescription, locale)}</p>
             </div>
             <div>
@@ -699,7 +699,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
           setIsCustomColor(true);
           if (color.prices) {
             const firstSize = product.sizes.find(s => color.prices![s.id] != null && color.prices![s.id] > 0);
-            if (firstSize) setSelectedSize(firstSize.label);
+            if (firstSize) setSelectedSize(firstSize.label[locale]);
           }
         }}
         colorGroups={customColorGroups}

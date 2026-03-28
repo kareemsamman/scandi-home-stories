@@ -52,7 +52,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
 
   const getLengthRange = () => {
     if (!contractor || contractor.sizes.length === 0) return null;
-    const labels = contractor.sizes.map(s => s.label);
+    const labels = contractor.sizes.map(s => s.label[locale]);
     if (labels.length === 1) return labels[0];
     return `${labels[0]}–${labels[labels.length - 1]}`;
   };
@@ -66,7 +66,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
         <motion.article initial={animate ? { opacity: 0, y: 20 } : false} whileInView={animate ? { opacity: 1, y: 0 } : undefined} viewport={animate ? { once: true, margin: "-50px" } : undefined} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
           <Link to={localePath(`/product/${product.slug}`)} className="block">
             <div className="relative aspect-square overflow-hidden bg-muted">
-              <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+              <img src={product.images[0]} alt={product.name[locale]} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
               {isOutOfStock && (
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                   <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
@@ -79,7 +79,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             </div>
           </Link>
           <div className="p-3 space-y-1.5">
-            <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name}</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
             <p className="text-[11px] text-muted-foreground">{t("contractor.sku")}: {contractor.sku}</p>
             {lengthRange && (<p className="text-[11px] text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{lengthRange}</p>)}
             <p className="text-sm font-bold text-foreground">{t("common.currency")}{displayPrice.toLocaleString()}</p>
@@ -96,7 +96,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
               <div className="pt-0.5">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
                 <div className="flex gap-1.5 flex-wrap">
-                  {contractor.sizes.map((s) => (<span key={s.id} className="px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight border-border text-muted-foreground"><span>{s.label}</span>{s.price && (<span className="text-[9px] text-muted-foreground">{t("common.currency")}{s.price}</span>)}</span>))}
+                  {contractor.sizes.map((s) => (<span key={s.id} className="px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight border-border text-muted-foreground"><span>{s.label[locale]}</span>{s.price && (<span className="text-[9px] text-muted-foreground">{t("common.currency")}{s.price}</span>)}</span>))}
                 </div>
               </div>
             )}
@@ -113,7 +113,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
       <motion.article initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
         <Link to={localePath(`/product/${product.slug}`)} className="block">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <img src={product.images[0]} alt={product.name} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
+            <img src={product.images[0]} alt={product.name[locale]} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
             {hasSecondImage && !isOutOfStock && (<img src={product.images[1]} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
             {isOutOfStock && (
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
@@ -131,7 +131,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
         </Link>
         <div className="p-3 space-y-1.5">
           {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
-          <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name}</h3>
+          <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
           <p className="text-sm font-bold text-foreground">{t("common.currency")}{product.price.toLocaleString()}</p>
           {retail && retail.colors.length > 0 && (
             <div className="pt-0.5">

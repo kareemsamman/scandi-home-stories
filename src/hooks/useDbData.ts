@@ -122,6 +122,7 @@ export const useProducts = () =>
       return (prods || []).map((p: any) => ({
         ...p,
         name: tm.get(p.id)?.he?.name || p.name || "",
+        name_ar: tm.get(p.id)?.ar?.name || (p as any).name_ar || "",
         description_he: tm.get(p.id)?.he?.description || p.description_he || "",
         description_ar: tm.get(p.id)?.ar?.description || p.description_ar || "",
         long_description_he: tm.get(p.id)?.he?.long_description || p.long_description_he || "",
@@ -146,6 +147,7 @@ export const useProductBySlug = (slug: string) =>
       return {
         ...p,
         name: tm.get(p.id)?.he?.name || p.name || "",
+        name_ar: tm.get(p.id)?.ar?.name || (p as any).name_ar || "",
         description_he: tm.get(p.id)?.he?.description || p.description_he || "",
         description_ar: tm.get(p.id)?.ar?.description || p.description_ar || "",
         long_description_he: tm.get(p.id)?.he?.long_description || p.long_description_he || "",

@@ -104,7 +104,7 @@ const Products = () => {
       const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "");
       const q = normalize(filters.search);
       result = result.filter((p) => {
-        const matchName = normalize(p.name).includes(q);
+        const matchName = normalize(p.name.he).includes(q) || normalize(p.name.ar).includes(q);
         const matchSku = p.type === "contractor" && normalize((p as ContractorProduct).sku).includes(q);
         const matchCollection = collections.find((c) => c.id === p.collection);
         const matchCol = matchCollection ? (normalize(matchCollection.name.he).includes(q) || normalize(matchCollection.name.ar).includes(q)) : false;
@@ -125,7 +125,7 @@ const Products = () => {
     if (filters.lengths.length > 0) {
       result = result.filter((p) => {
         if (p.type === "contractor") {
-          return (p as ContractorProduct).sizes.some((s) => filters.lengths.includes(s.label));
+          return (p as ContractorProduct).sizes.some((s) => filters.lengths.includes(s.label.he) || filters.lengths.includes(s.label.ar));
         }
         return true;
       });
@@ -164,7 +164,7 @@ const Products = () => {
       case "newest": result = result.filter((p) => p.new).concat(result.filter((p) => !p.new)); break;
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
-      case "name-asc": result.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case "name-asc": result.sort((a, b) => a.name[locale].localeCompare(b.name[locale])); break;
       default: result.sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999)); break;
     }
     return result;

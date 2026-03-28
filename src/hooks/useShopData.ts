@@ -47,7 +47,7 @@ export const useShopData = () => {
   const products: Product[] = (dbProducts || []).map(p => {
     const base = {
       id: p.id,
-      name: p.name,
+      name: { he: p.name, ar: (p as any).name_ar || p.name },
       slug: p.slug,
       collection: p.category_id || "",
       price: Number(p.price),
@@ -133,7 +133,7 @@ export const useShopData = () => {
         length: { he: p.length_he || "", ar: p.length_ar || "" },
         sizes: ((p.sizes as any[]) || []).map((s: any) => ({
           id: s.tax_id || s.id || s.value || s.label,
-          label: s.label_he || s.value || s.label || "",
+          label: { he: s.label_he || s.value || s.label || "", ar: s.label_ar || s.label_he || s.value || s.label || "" },
           price: s.price ? Number(s.price) : undefined,
         })) as SizeOption[],
         colorGroups,

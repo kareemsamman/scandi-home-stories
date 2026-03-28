@@ -152,11 +152,11 @@ export const SendCartModal = ({ open, onClose }: Props) => {
                         <div key={i} className="flex items-center gap-3">
                           <img
                             src={item.product.images?.[0]}
-                            alt={item.product.name}
+                            alt={item.product.name[locale]}
                             className="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{item.product.name}</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">{item.product.name[locale]}</p>
                             {item.options?.size && <p className="text-xs text-gray-400">{item.options.size}</p>}
                           </div>
                           <span className="text-sm font-semibold text-gray-700 shrink-0">×{item.quantity}</span>
