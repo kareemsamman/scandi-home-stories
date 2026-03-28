@@ -9,6 +9,7 @@ import { useAddresses, useAddAddress, useUpdateAddress, useRemoveAddress, useSet
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
+import { useShopData } from "@/hooks/useShopData";
 import { loadAllRecords } from "@/utils/cityStreetApi";
 import { SEOHead } from '@/components/SEOHead';
 
@@ -198,6 +199,8 @@ const OrdersTab = () => {
   const { t, localePath, locale } = useLocale();
   const { data: orders = [], isLoading } = useOrders();
   const { isAdmin } = useAuth();
+  const { products } = useShopData();
+  const productNameMap = new Map(products.map(p => [p.id, p.name]));
 
   const ArrowIcon = locale === "he" || locale === "ar" ? ChevronLeft : ChevronRight;
 
@@ -288,10 +291,10 @@ const OrdersTab = () => {
               {order.items.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3 px-5 py-3">
                   <div className="w-14 h-14 rounded-xl overflow-hidden border border-border shrink-0 bg-muted/20">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.image} alt={item.productId && productNameMap.get(item.productId)?.[locale] || item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground leading-snug">{item.name}</p>
+                    <p className="text-sm font-bold text-foreground leading-snug">{item.productId && productNameMap.get(item.productId)?.[locale] || item.name}</p>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {item.color && (
                         <span className="inline-flex items-center gap-1 text-[11px] bg-muted/60 px-2 py-0.5 rounded-full text-muted-foreground font-medium">

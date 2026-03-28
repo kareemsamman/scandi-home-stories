@@ -10,9 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SEOHead } from '@/components/SEOHead';
+import { useShopData } from "@/hooks/useShopData";
 
 const OrderDetail = () => {
   const { t, localePath, locale } = useLocale();
+  const { products } = useShopData();
+  const productNameMap = new Map(products.map(p => [p.id, p.name]));
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -306,10 +309,10 @@ const OrderDetail = () => {
             {order.items.map((item, idx) => (
               <div key={idx} className={`px-5 py-4 flex gap-4 items-start ${idx > 0 ? "border-t border-border" : ""}`}>
                 <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shrink-0 bg-muted/20">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={item.image} alt={item.productId && productNameMap.get(item.productId)?.[locale] || item.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-bold text-foreground leading-snug mb-2">{item.name}</p>
+                  <p className="text-base font-bold text-foreground leading-snug mb-2">{item.productId && productNameMap.get(item.productId)?.[locale] || item.name}</p>
                   {item.color && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[11px] font-semibold text-muted-foreground">{t("contractor.color")}:</span>
