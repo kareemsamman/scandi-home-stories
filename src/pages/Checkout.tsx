@@ -1052,6 +1052,14 @@ const Checkout = () => {
                     touched={addrTouched}
                     onBlur={(field) => setAddrTouched(p => ({ ...p, [field]: true }))}
                     isStaff={isStaff}
+                    labels={{
+                      city: t("checkout.city"),
+                      street: t("checkout.street"),
+                      houseNumber: t("checkout.houseNumber"),
+                      apartment: t("checkout.apartment"),
+                      selectCity: t("checkout.selectCity"),
+                      chooseCity: t("checkout.chooseCity"),
+                    }}
                   />
                   {user && (selectedAddressId === "__new__" || savedAddresses.length === 0) && (
                     <label className="flex items-center gap-2.5 mt-2 cursor-pointer select-none">

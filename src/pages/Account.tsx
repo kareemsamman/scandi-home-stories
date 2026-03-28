@@ -505,6 +505,14 @@ const AddressForm = ({ initial, onSave, onCancel }: AddressFormProps) => {
         errors={{ city: errors.city, street: errors.street, houseNumber: errors.houseNumber }}
         touched={addrTouched}
         onBlur={(field) => setAddrTouched(p => ({ ...p, [field]: true }))}
+        labels={{
+          city: t("checkout.city"),
+          street: t("checkout.street"),
+          houseNumber: t("checkout.houseNumber"),
+          apartment: t("checkout.apartment"),
+          selectCity: t("checkout.selectCity"),
+          chooseCity: t("checkout.chooseCity"),
+        }}
       />
       <div className="flex gap-3 pt-2">
         <button type="submit" className="h-12 px-8 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
