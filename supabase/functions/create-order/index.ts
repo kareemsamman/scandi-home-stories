@@ -123,6 +123,17 @@ Deno.serve(async (req) => {
 
     const priceMap = new Map(products.map((p: any) => [p.id, p]));
 
+    // Fetch Arabic product names if order is in Arabic
+    const arNameMap = new Map<string, string>();
+    if (locale === "ar") {
+      const { data: trans } = await supabaseAdmin
+        .from("product_translations")
+        .select("product_id, name")
+        .eq("locale", "ar")
+        .in("product_id", productIds);
+      (trans || []).forEach((t: any) => { if (t.name) arNameMap.set(t.product_id, t.name); });
+    }
+
     // Validate all items have valid products and compute server-side total
     let serverTotal = 0;
     const validatedItems: any[] = [];
@@ -144,7 +155,7 @@ Deno.serve(async (req) => {
 
       validatedItems.push({
         product_id: item.productId,
-        product_name: product.name || "",
+        product_name: (locale === "ar" && arNameMap.get(item.productId)) || product.name || "",
         product_image: product.images?.[0] || "",
         price: Number(product.price),
         quantity: item.quantity,
@@ -442,7 +453,7 @@ Deno.serve(async (req) => {
         const customerLocalePrefix = locale === "ar" ? "ar" : "he";
         const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
         const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}`;
-        const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : "חינם";
+        const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : (locale === "ar" ? "مجاني" : "חינם");
 
         const vars: Record<string, string> = {
           name: firstName,

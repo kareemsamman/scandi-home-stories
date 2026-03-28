@@ -44,7 +44,7 @@ export const useCartInventory = (items: CartItem[]) => {
 
     if (item.product.type === "contractor" && colorId && sizeLabel) {
       const contractor = item.product as ContractorProduct;
-      const sizeId = contractor.sizes?.find(s => s.label === sizeLabel)?.id;
+      const sizeId = contractor.sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id;
       if (sizeId) {
         const row = rows.find(r => r.variation_key === `combo:${colorId}|${sizeId}`);
         if (row) return row.stock_quantity;

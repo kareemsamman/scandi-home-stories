@@ -377,17 +377,22 @@ const AdminOrderDetail = () => {
     const msgTemplate = (smsMessages as any)[newStatus];
     if (!msgTemplate) return;
 
-    const locale = order.locale || "he";
+    const oLocale = (order.locale || "he") as "he" | "ar";
     const shippingCost = calcShipping(order);
     const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
+    const itemsList = (order.order_items || []).map((i: any) => {
+      const pName = i.product_id && productNameMap.get(i.product_id)?.[oLocale] || i.product_name;
+      return `• ${pName} ×${i.quantity} – ₪${(i.price * i.quantity).toLocaleString()}`;
+    }).join("\n");
     const message = formatSms(
-      typeof msgTemplate === "object" ? (msgTemplate[locale] || msgTemplate.he) : msgTemplate,
+      typeof msgTemplate === "object" ? (msgTemplate[oLocale] || msgTemplate.he) : msgTemplate,
       {
         name: order.first_name || "",
         order_number: order.order_number || "",
         phone: order.phone || "",
         total: Number(order.total || 0).toLocaleString(),
-        shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : "חינם",
+        shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : (oLocale === "ar" ? "مجاني" : "חינם"),
+        items: itemsList,
         invoice_link: invoiceLink,
       }
     );

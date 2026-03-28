@@ -420,7 +420,7 @@ const Checkout = () => {
             const colorId = item.options?.color?.id;
             const sizeLabel = item.options?.size;
             const sizeId = item.product.type === "contractor"
-              ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
+              ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
               : undefined;
             return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorId, sizeId };
           }),
@@ -608,7 +608,7 @@ const Checkout = () => {
             const colorId = item.options?.color?.id;
             const sizeLabel = item.options?.size;
             const sizeId = item.product.type === "contractor"
-              ? (item.product as ContractorProduct).sizes?.find(s => s.label === sizeLabel)?.id
+              ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
               : undefined;
             return {
               productId: item.product.id,
