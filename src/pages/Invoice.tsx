@@ -227,7 +227,7 @@ const InvoicePage = () => {
         {/* Footer */}
         <div className="border-t border-gray-100 px-8 py-5 text-center text-xs text-gray-400">
           <p className="font-semibold text-gray-600 mb-1">{isAr ? "شكراً لطلبك" : "תודה על הזמנתך"}</p>
-          <p>AMG Pergola · amgpergola.com</p>
+          <p>AMG Pergola · pergolaamg.com</p>
         </div>
       </div>
 
