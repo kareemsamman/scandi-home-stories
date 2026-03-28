@@ -197,7 +197,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                   <ChevronCircle />
                 </Link>
                 <div className="py-2">
-                  <LocaleSwitcher />
+                  <LocaleSwitcher inline />
                 </div>
               </div>
             </div>
