@@ -4,9 +4,16 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Register service worker after page load to avoid render-blocking
+// Register service worker only in production to avoid stale-cache issues during dev
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/registerSW.js", { scope: "/" });
-  });
+  if (import.meta.env.PROD) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/registerSW.js", { scope: "/" });
+    });
+  } else {
+    // Unregister any existing SW in dev so old chunks don't persist
+    navigator.serviceWorker.getRegistrations().then((regs) =>
+      regs.forEach((r) => r.unregister())
+    );
+  }
 }
