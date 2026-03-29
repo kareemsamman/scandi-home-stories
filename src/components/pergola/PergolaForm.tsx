@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  STANDARD_COLORS, SANTAF_COLORS,
+  STANDARD_COLORS, SANTAF_COLORS, LIGHTING_TEMPS,
   type MountType, type LightingChoice, type SpacingMode, type PergolaType, type SantafChoice,
   type LightingPosition, type LightingFixture,
 } from "@/types/pergola";
@@ -23,7 +23,7 @@ const schema = z.object({
   pergolaType: z.enum(["fixed", "pvc"]),
   mountType: z.enum(["wall", "freestanding"]),
   installation: z.boolean(),
-  lighting: z.enum(["none", "white", "rgb"]),
+  lighting: z.enum(["none", "3000k", "4000k", "6000k"]),
   lightingPosition: z.enum(["none", "all_posts", "selected_posts", "no_posts"]),
   lightingFixture: z.enum(["none", "spotlight", "led_strip", "rgb_strip", "mixed"]),
   lightingRoof: z.boolean(),
@@ -186,23 +186,23 @@ export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
               setValue("lightingRoof", false);
             } else {
               setValue("lightingPosition", "all_posts");
-              setValue("lightingFixture", v === "rgb" ? "rgb_strip" : "led_strip");
+              setValue("lightingFixture", "led_strip");
             }
           }}
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
         >
-          {(["none", "white", "rgb"] as const).map((lt) => (
+          {([{ id: "none" as const, color: "bg-gray-300", label: t("pergolaRequest.lightingNone") }, ...LIGHTING_TEMPS.map(lt => ({ id: lt.id, color: "", label: `${lt.label} ${locale === "ar" ? lt.name_ar : lt.name_he}` }))]).map((lt) => (
             <label
-              key={lt}
+              key={lt.id}
               className={`flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-center justify-center ${
-                w.lighting === lt
+                w.lighting === lt.id
                   ? "border-gray-900 bg-gray-50"
                   : "border-gray-100 hover:border-gray-200"
               }`}
             >
-              <RadioGroupItem value={lt} id={`lt-${lt}`} className="sr-only" />
-              <span className={`w-3 h-3 rounded-full shrink-0 ${lt === "none" ? "bg-gray-300" : lt === "white" ? "bg-yellow-200 border border-yellow-300" : "bg-gradient-to-r from-red-400 via-green-400 to-blue-400"}`} />
-              <span className="text-sm font-medium">{t(`pergolaRequest.lighting${lt.charAt(0).toUpperCase() + lt.slice(1)}`)}</span>
+              <RadioGroupItem value={lt.id} id={`lt-${lt.id}`} className="sr-only" />
+              <span className="w-3 h-3 rounded-full shrink-0 border border-gray-200" style={{ backgroundColor: lt.id === "none" ? "#d1d5db" : LIGHTING_TEMPS.find(t => t.id === lt.id)?.color || "#d1d5db" }} />
+              <span className="text-sm font-medium">{lt.label}</span>
             </label>
           ))}
         </RadioGroup>

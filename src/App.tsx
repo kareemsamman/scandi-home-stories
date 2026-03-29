@@ -48,6 +48,7 @@ const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const PaymentLink = lazyRetry(() => import("./pages/PaymentLink"));
 const PergolaRequest = lazyRetry(() => import("./pages/PergolaRequest"));
+const PergolaResponse = lazyRetry(() => import("./pages/PergolaResponse"));
 
 // Admin pages — heavy, rarely accessed by regular users
 const AdminLayout = lazyRetry(() => import("./components/AdminLayout"));
@@ -99,6 +100,7 @@ const LocaleRoutes = () => (
         <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pergola-request" element={<PergolaRequest />} />
+        <Route path="/pergola-response/:requestId" element={<PergolaResponse />} />
         <Route path="/legal/:page" element={<LegalPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

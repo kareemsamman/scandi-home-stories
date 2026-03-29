@@ -161,6 +161,9 @@ export interface PergolaRequest {
   status: PergolaRequestStatus;
   admin_notes: string;
   admin_modified_config: Record<string, any> | null;
+  quoted_price: number | null;
+  admin_response_sent_at: string | null;
+  response_token: string | null;
   locale: string;
   created_at: string;
   updated_at: string;

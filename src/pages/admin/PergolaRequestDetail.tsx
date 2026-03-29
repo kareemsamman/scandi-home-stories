@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronRight, Download, Loader2 } from "lucide-react";
+import { ChevronRight, Download, Loader2, Send } from "lucide-react";
 import { usePergolaRequestById, useUpdatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
 import { computeSpecs } from "@/lib/pergolaRules";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
 import { PergolaTopView } from "@/components/pergola/PergolaTopView";
 import { PergolaFrontView } from "@/components/pergola/PergolaFrontView";
 import { PergolaIsometricView } from "@/components/pergola/PergolaIsometricView";
@@ -40,16 +41,19 @@ const AdminPergolaRequestDetail = () => {
 
   const [status, setStatus] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [quotedPrice, setQuotedPrice] = useState<string>("");
   const [activeView, setActiveView] = useState<"top" | "front" | "isometric">("top");
   const [editingSpecs, setEditingSpecs] = useState(false);
   const [editedFrontPosts, setEditedFrontPosts] = useState(0);
   const [editedBackPosts, setEditedBackPosts] = useState(0);
   const [editLightingPosts, setEditLightingPosts] = useState<number[]>([]);
   const [inited, setInited] = useState(false);
+  const [sendingSms, setSendingSms] = useState(false);
 
   if (req && !inited) {
     setStatus(req.status);
     setAdminNotes(req.admin_notes || "");
+    setQuotedPrice(req.quoted_price != null ? String(req.quoted_price) : "");
     setEditedFrontPosts(req.front_post_count);
     setEditedBackPosts(req.back_post_count);
     setEditLightingPosts(req.lighting_posts || []);
@@ -94,7 +98,12 @@ const AdminPergolaRequestDetail = () => {
   };
 
   const handleSave = async () => {
-    const updates: Record<string, any> = { id: req.id, status, admin_notes: adminNotes };
+    const updates: Record<string, any> = {
+      id: req.id,
+      status,
+      admin_notes: adminNotes,
+      quoted_price: quotedPrice ? Number(quotedPrice) : null,
+    };
     if (editingSpecs) {
       updates.admin_modified_config = { front_post_count: editedFrontPosts, back_post_count: editedBackPosts };
       updates.front_post_count = editedFrontPosts;
@@ -102,11 +111,32 @@ const AdminPergolaRequestDetail = () => {
     }
     updates.lighting_posts = editLightingPosts;
     try {
-      await updateRequest.mutateAsync(updates);
+      await updateRequest.mutateAsync(updates as { id: string; [key: string]: any });
       toast({ title: "הבקשה עודכנה" });
       setEditingSpecs(false);
     } catch {
       toast({ title: "שגיאה", description: "לא ניתן לעדכן", variant: "destructive" });
+    }
+  };
+
+  const handleSendResponse = async () => {
+    // Save first
+    await handleSave();
+    setSendingSms(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-pergola-sms", {
+        body: {
+          action: "notify_customer",
+          request_id: req.id,
+          site_origin: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast({ title: "ההודעה נשלחה ללקוח" });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן לשלוח הודעה", variant: "destructive" });
+    } finally {
+      setSendingSms(false);
     }
   };
 
@@ -276,13 +306,34 @@ const AdminPergolaRequestDetail = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-gray-600">הערות פנימיות</Label>
-                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={4} placeholder="הערות לשימוש פנימי בלבד..." />
+                <Label className="text-sm text-gray-600">מחיר מוצע (₪)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  placeholder="הכנס מחיר..."
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-600">הערות ללקוח</Label>
+                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={4} placeholder="הערות שיוצגו ללקוח..." />
               </div>
               <button onClick={handleSave} disabled={updateRequest.isPending}
                 className="w-full bg-gray-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50">
                 {updateRequest.isPending ? "שומר..." : "שמור שינויים"}
               </button>
+              <button onClick={handleSendResponse} disabled={sendingSms || updateRequest.isPending}
+                className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {sendingSms ? <><Loader2 className="w-4 h-4 animate-spin" /> שולח...</> : <><Send className="w-4 h-4" /> שלח תשובה ללקוח</>}
+              </button>
+              {req.admin_response_sent_at && (
+                <p className="text-xs text-gray-400 text-center">
+                  תשובה אחרונה נשלחה: {new Date(req.admin_response_sent_at).toLocaleDateString("he-IL")} {new Date(req.admin_response_sent_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              )}
             </div>
           </Card>
         </div>

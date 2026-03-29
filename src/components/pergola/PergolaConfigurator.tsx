@@ -4,6 +4,7 @@ import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useCreatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
 import { generatePergolaPdf, svgToImage, type PdfImages } from "@/lib/generatePergolaPdf";
+import { supabase } from "@/integrations/supabase/client";
 import { cmToMm } from "@/types/pergola";
 import type { PergolaType } from "@/types/pergola";
 import { PergolaStartStep } from "./PergolaStartStep";
@@ -143,7 +144,7 @@ export const PergolaConfigurator = () => {
         carrier_configs: carrierConfigs,
       };
 
-      await createRequest.mutateAsync({
+      const result = await createRequest.mutateAsync({
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_email: customerEmail || null,
@@ -169,6 +170,17 @@ export const PergolaConfigurator = () => {
 
       setGeneratedPdfUrl(pdfUrl);
       setStep("success");
+
+      // Send SMS notification to admin (fire & forget)
+      try {
+        await supabase.functions.invoke("send-pergola-sms", {
+          body: {
+            action: "notify_admin",
+            request_id: result.id,
+            site_origin: window.location.origin,
+          },
+        });
+      } catch { /* non-critical */ }
     } catch (err: any) {
       const msg = err?.message || err?.error?.message || JSON.stringify(err);
       console.error("Submit error:", msg, err);

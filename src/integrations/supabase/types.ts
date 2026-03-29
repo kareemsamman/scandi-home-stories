@@ -636,6 +636,132 @@ export type Database = {
         }
         Relationships: []
       }
+      pergola_requests: {
+        Row: {
+          admin_modified_config: Json | null
+          admin_notes: string | null
+          admin_response_sent_at: string | null
+          back_post_count: number
+          carrier_count: number
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          frame_color: string | null
+          front_post_count: number
+          height: number | null
+          id: string
+          installation: boolean
+          length: number
+          lighting: string
+          lighting_position: string | null
+          lighting_posts: Json | null
+          lighting_roof: boolean | null
+          lighting_type: string | null
+          locale: string | null
+          module_classification: string
+          mount_type: string
+          notes: string | null
+          pdf_url: string | null
+          pergola_type: string
+          post_layout: Json | null
+          profile_preset: string | null
+          quoted_price: number | null
+          response_token: string | null
+          roof_color: string | null
+          santaf_color: string | null
+          santaf_roofing: boolean
+          selected_profiles: Json | null
+          spacing_cm: number | null
+          spacing_mode: string | null
+          status: string
+          updated_at: string | null
+          width: number
+        }
+        Insert: {
+          admin_modified_config?: Json | null
+          admin_notes?: string | null
+          admin_response_sent_at?: string | null
+          back_post_count?: number
+          carrier_count: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          frame_color?: string | null
+          front_post_count: number
+          height?: number | null
+          id?: string
+          installation?: boolean
+          length: number
+          lighting?: string
+          lighting_position?: string | null
+          lighting_posts?: Json | null
+          lighting_roof?: boolean | null
+          lighting_type?: string | null
+          locale?: string | null
+          module_classification: string
+          mount_type?: string
+          notes?: string | null
+          pdf_url?: string | null
+          pergola_type?: string
+          post_layout?: Json | null
+          profile_preset?: string | null
+          quoted_price?: number | null
+          response_token?: string | null
+          roof_color?: string | null
+          santaf_color?: string | null
+          santaf_roofing?: boolean
+          selected_profiles?: Json | null
+          spacing_cm?: number | null
+          spacing_mode?: string | null
+          status?: string
+          updated_at?: string | null
+          width: number
+        }
+        Update: {
+          admin_modified_config?: Json | null
+          admin_notes?: string | null
+          admin_response_sent_at?: string | null
+          back_post_count?: number
+          carrier_count?: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          frame_color?: string | null
+          front_post_count?: number
+          height?: number | null
+          id?: string
+          installation?: boolean
+          length?: number
+          lighting?: string
+          lighting_position?: string | null
+          lighting_posts?: Json | null
+          lighting_roof?: boolean | null
+          lighting_type?: string | null
+          locale?: string | null
+          module_classification?: string
+          mount_type?: string
+          notes?: string | null
+          pdf_url?: string | null
+          pergola_type?: string
+          post_layout?: Json | null
+          profile_preset?: string | null
+          quoted_price?: number | null
+          response_token?: string | null
+          roof_color?: string | null
+          santaf_color?: string | null
+          santaf_roofing?: boolean
+          selected_profiles?: Json | null
+          spacing_cm?: number | null
+          spacing_mode?: string | null
+          status?: string
+          updated_at?: string | null
+          width?: number
+        }
+        Relationships: []
+      }
       product_translations: {
         Row: {
           content_html: string | null
@@ -1053,6 +1179,10 @@ export type Database = {
         Returns: Json
       }
       get_order_owner_hint: { Args: { p_order_id: string }; Returns: Json }
+      get_pergola_response: {
+        Args: { p_request_id: string; p_token: string }
+        Returns: Json
+      }
       get_shared_cart_by_token: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {

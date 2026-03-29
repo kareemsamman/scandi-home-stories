@@ -34,6 +34,8 @@ export interface SmsMessages {
   not_approved: { he: string; ar: string };
   cancelled: { he: string; ar: string };
   share_cart: string;
+  pergola_admin_new: { he: string; ar: string };
+  pergola_customer_response: { he: string; ar: string };
 }
 
 const DEFAULT_BANK: BankSettings = {
@@ -71,6 +73,14 @@ export const DEFAULT_SMS_MESSAGES: SmsMessages = {
     ar: "مرحباً {name}\n🚫 تم إلغاء الطلب #{order_number}\n\nنحن هنا لأي استفسار 😊\n\n🏗 AMG PERGOLA",
   },
   share_cart: "שלום! 🛒\nAMG פרגולה הכינו עבורך עגלת קנייה מוכנה.\n\nלחץ כאן להשלמת הרכישה:\n{link}\n\n🏗 AMG PERGOLA",
+  pergola_admin_new: {
+    he: "🏗 בקשת פרגולה חדשה!\n👤 {name}\n📞 {phone}\n📏 {width}×{length} cm\n🔗 {link}\n\n🏗 AMG PERGOLA",
+    ar: "🏗 طلب برجولة جديد!\n👤 {name}\n📞 {phone}\n📏 {width}×{length} cm\n🔗 {link}\n\n🏗 AMG PERGOLA",
+  },
+  pergola_customer_response: {
+    he: "שלום {name} 👋\n🏗 קיבלנו תשובה לבקשת הפרגולה שלך!\n💰 מחיר: ₪{price}\n🔗 צפה בפרטים: {link}\n\n🏗 AMG PERGOLA",
+    ar: "مرحباً {name} 👋\n🏗 لدينا رد على طلب البرجولة الخاص بك!\n💰 السعر: ₪{price}\n🔗 عرض التفاصيل: {link}\n\n🏗 AMG PERGOLA",
+  },
 };
 
 /* ── Fetcher ── */
