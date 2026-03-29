@@ -23,7 +23,7 @@ const schema = z.object({
   pergolaType: z.enum(["fixed", "pvc"]),
   mountType: z.enum(["wall", "freestanding"]),
   installation: z.boolean(),
-  lighting: z.enum(["none", "white", "rgb"]),
+  lighting: z.enum(["none", "3000k", "4000k", "6000k"]),
   lightingPosition: z.enum(["none", "all_posts", "selected_posts", "no_posts"]),
   lightingFixture: z.enum(["none", "spotlight", "led_strip", "rgb_strip", "mixed"]),
   lightingRoof: z.boolean(),
