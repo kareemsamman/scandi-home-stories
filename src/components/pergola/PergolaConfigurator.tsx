@@ -144,7 +144,7 @@ export const PergolaConfigurator = () => {
         carrier_configs: carrierConfigs,
       };
 
-      await createRequest.mutateAsync({
+      const result = await createRequest.mutateAsync({
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_email: customerEmail || null,
