@@ -105,9 +105,7 @@ export const PergolaTopView = ({ config }: Props) => {
       ))}
 
       {/* Internal slats — per-carrier sections, each clickable with own color */}
-      {isFixedSlats && specs.slatCount > 0 && carrierPositions.length >= 2 && (() => {
-        const slatW = specs.slatWidthMm;
-        const globalGap = specs.slatGapMm;
+      {isFixedSlats && carrierPositions.length >= 2 && (() => {
         const globalColor = slatColor || "#383E42";
         const sections = carrierPositions.length - 1;
 
@@ -115,15 +113,16 @@ export const PergolaTopView = ({ config }: Props) => {
           const cc = carrierConfigs[secIdx];
           const secColor = cc?.slatColor || globalColor;
           const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
+          const secSlatW = cc?.slatSize === "20x40" ? 20 : 20; // both 20mm face
           const y1 = carrierPositions[secIdx];
           const y2 = carrierPositions[secIdx + 1];
           const secH = y2 - y1;
 
-          // Calculate slats for this section
-          const totalUnit = slatW + secGapMm;
-          const secSlatCount = Math.max(1, Math.floor(widthMm / totalUnit));
-          const totalUsed = secSlatCount * slatW + (secSlatCount + 1) * secGapMm;
-          const startX = (widthMm - totalUsed) / 2 + secGapMm;
+          // Fill entire width edge-to-edge: start at 0, place slats with gap
+          const totalUnit = secSlatW + secGapMm;
+          const secSlatCount = Math.max(1, Math.floor((widthMm - secGapMm) / totalUnit));
+          // Distribute evenly: recalculate actual gap to fill width perfectly
+          const actualGap = secSlatCount > 0 ? (widthMm - secSlatCount * secSlatW) / (secSlatCount + 1) : secGapMm;
 
           const el: SelectedElement = { type: "carrier", index: secIdx };
           const isSel = isSelected(el);
@@ -141,13 +140,13 @@ export const PergolaTopView = ({ config }: Props) => {
                   stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={4} rx={4}
                   strokeDasharray={isSel ? undefined : "12 6"} />
               )}
-              {/* Slats in this section */}
-              {Array.from({ length: Math.min(secSlatCount, 80) }, (_, i) => {
-                const x = startX + i * totalUnit;
+              {/* Slats — render all, filling entire width */}
+              {Array.from({ length: secSlatCount }, (_, i) => {
+                const x = actualGap + i * (secSlatW + actualGap);
                 return (
                   <rect key={`slat-${secIdx}-${i}`}
-                    x={ox + x} y={oy + y1 + 8} width={slatW} height={secH - 16}
-                    fill={secColor} fillOpacity={0.75} rx={1} />
+                    x={ox + x} y={oy + y1 + 6} width={secSlatW} height={secH - 12}
+                    fill={secColor} fillOpacity={0.8} rx={1} />
                 );
               })}
               {/* Section label on hover/select */}
@@ -156,7 +155,7 @@ export const PergolaTopView = ({ config }: Props) => {
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
                   fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
-                  נשא {secIdx + 1}
+                  נשא {secIdx + 1} — {secSlatCount} שלבים
                 </text>
               )}
             </g>

@@ -1,17 +1,21 @@
+import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
 import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
 import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
+import { calcSlatCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
 import { PergolaIsometricView } from "./PergolaIsometricView";
 import { PergolaElementEditor } from "./PergolaElementEditor";
 import {
-  Columns3, Lightbulb, Paintbrush, Mountain, ArrowRight, MousePointerClick, Maximize2,
+  Columns3, Lightbulb, Mountain, ArrowRight, MousePointerClick,
+  ZoomIn, ZoomOut, RotateCcw,
 } from "lucide-react";
 
 const VIEWS = ["isometric", "top", "front"] as const;
+const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
 
 interface Props {
   onNext: () => void;
@@ -21,8 +25,15 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
   const { t } = useLocale();
   const { config, specs, activeView, setActiveView, setConfig, carrierConfigs } = usePergolaConfigurator();
   const { selected } = usePergolaEditor();
+  const [zoom, setZoom] = useState(1);
+
+  const zoomIn = () => setZoom((z) => Math.min(2, +(z + 0.25).toFixed(2)));
+  const zoomOut = () => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)));
+  const zoomReset = () => setZoom(1);
 
   if (!specs) return null;
+
+  const widthMm = cmToMm(Number(config.widthCm) || 400);
 
   const drawingConfig: DrawingConfig = {
     widthMm: cmToMm(Number(config.widthCm) || 400),
@@ -116,10 +127,26 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
       <div className="grid lg:grid-cols-4 gap-4">
         {/* Visual editor: 3 columns */}
         <div className="lg:col-span-3">
-          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-6 min-h-[480px] flex items-center justify-center relative" id="pergola-preview-svg">
-            {activeView === "isometric" && <PergolaIsometricView config={drawingConfig} />}
-            {activeView === "top" && <PergolaTopView config={drawingConfig} />}
-            {activeView === "front" && <PergolaFrontView config={drawingConfig} />}
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-6 min-h-[480px] relative overflow-hidden" id="pergola-preview-svg">
+            {/* Zoom controls */}
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+              <button onClick={zoomIn} className="w-8 h-8 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 hover:border-gray-300 shadow-sm">
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button onClick={zoomReset} className="w-8 h-8 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:border-gray-300 shadow-sm">
+                {Math.round(zoom * 100)}%
+              </button>
+              <button onClick={zoomOut} className="w-8 h-8 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 hover:border-gray-300 shadow-sm">
+                <ZoomOut className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Zoomable SVG container */}
+            <div className="flex items-center justify-center min-h-[460px]" style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.2s ease" }}>
+              {activeView === "isometric" && <PergolaIsometricView config={drawingConfig} />}
+              {activeView === "top" && <PergolaTopView config={drawingConfig} />}
+              {activeView === "front" && <PergolaFrontView config={drawingConfig} />}
+            </div>
 
             {/* Hint overlay when nothing selected */}
             {!selected && (
@@ -263,6 +290,34 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               <SpecRow label={t("pergolaRequest.frontPosts")} value={String(specs.frontPostCount)} />
               {specs.backPostCount > 0 && <SpecRow label={t("pergolaRequest.backPosts")} value={String(specs.backPostCount)} />}
               <SpecRow label={t("pergolaRequest.carriers")} value={String(specs.carrierCount)} />
+
+              {/* Total slats + per-carrier breakdown */}
+              {config.pergolaType === "fixed" && config.roofFillMode === "slats" && (() => {
+                const sections = Math.max(1, specs.carrierCount - 1);
+                let totalSlats = 0;
+                const perSec: number[] = [];
+                for (let i = 0; i < sections; i++) {
+                  const cc = carrierConfigs[i];
+                  const gapMm = (cc?.slatGapCm || Number(config.slatGapCm) || 3) * 10;
+                  const count = calcSlatCount(widthMm, gapMm, cc?.slatSize || config.slatSize as string);
+                  totalSlats += count;
+                  perSec.push(count);
+                }
+                return (
+                  <>
+                    <SpecRow label={`${t("pergolaRequest.slatsLabel")} (${t("pergolaRequest.summaryTitle")})`} value={String(totalSlats)} />
+                    {perSec.map((c, i) => (
+                      <div key={i} className="flex justify-between text-[10px]">
+                        <span className="text-gray-300 flex items-center gap-1">
+                          {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
+                          נשא {i + 1}
+                        </span>
+                        <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
+                      </div>
+                    ))}
+                  </>
+                );
+              })()}
             </div>
           </SideCard>
         </div>
