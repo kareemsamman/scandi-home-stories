@@ -1,71 +1,105 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useCreatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
 import { generatePergolaPdf } from "@/lib/generatePergolaPdf";
 import { cmToMm } from "@/types/pergola";
-import { PergolaForm, type PergolaFormValues } from "./PergolaForm";
-import { PergolaPreview } from "./PergolaPreview";
-import { PergolaSpecsSummary } from "./PergolaSpecsSummary";
+import type { PergolaType } from "@/types/pergola";
+import { PergolaStartStep } from "./PergolaStartStep";
+import { PergolaEditorStep } from "./PergolaEditorStep";
+import { PergolaSummaryStep } from "./PergolaSummaryStep";
 import { CheckCircle2, ArrowRight } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
+type Step = "start" | "editor" | "summary" | "success";
 
 export const PergolaConfigurator = () => {
   const { t, locale, localePath } = useLocale();
-  const { specs, config } = usePergolaConfigurator();
+  const { specs, config, setConfig, setActiveView } = usePergolaConfigurator();
   const createRequest = useCreatePergolaRequest();
   const { toast } = useToast();
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState<Step>("start");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const pendingValues = useRef<PergolaFormValues | null>(null);
 
-  const handleFormSubmit = (values: PergolaFormValues) => {
-    pendingValues.current = values;
-    setConfirmOpen(true);
+  // Step 1 → Step 2: Initialize config and open editor
+  const handleStart = (widthCm: number, lengthCm: number, pergolaType: PergolaType) => {
+    setConfig({ widthCm, lengthCm, pergolaType });
+    setActiveView("isometric"); // Default to 3D-like view
+    setStep("editor");
   };
 
-  const handleConfirm = async () => {
-    const values = pendingValues.current;
-    if (!values || !specs) return;
-    setConfirmOpen(false);
+  // Step 2 → Step 3: Move to summary
+  const handleEditorNext = () => {
+    setStep("summary");
+  };
+
+  // Step 3 → Back to editor
+  const handleSummaryBack = () => {
+    setStep("editor");
+  };
+
+  // Step 3 → Submit
+  const handleSubmit = async (
+    customerName: string,
+    customerPhone: string,
+    customerEmail: string,
+    notes: string,
+    installation: boolean,
+  ) => {
+    if (!specs) return;
     setIsSubmitting(true);
 
     try {
       const svgEl = document.querySelector("#pergola-preview-svg svg") as SVGSVGElement | null;
-      const pdfUrl = await generatePergolaPdf(values, specs, locale, svgEl);
+      const pdfValues = {
+        customerName,
+        customerPhone,
+        customerEmail,
+        widthCm: Number(config.widthCm) || 400,
+        lengthCm: Number(config.lengthCm) || 400,
+        heightCm: Number(config.heightCm) || 250,
+        pergolaType: config.pergolaType || "fixed",
+        mountType: config.mountType || "wall",
+        installation,
+        lighting: config.lighting || "none",
+        lightingPosition: config.lightingPosition || "none",
+        lightingFixture: config.lightingFixture || "none",
+        lightingRoof: config.lightingRoof || false,
+        santaf: config.santaf || "without",
+        santafColor: config.santafColor || "",
+        frameColor: config.frameColor || "#383838",
+        roofColor: config.roofColor || "#C0C0C0",
+        spacingMode: config.spacingMode || "automatic",
+        notes,
+      };
+      const pdfUrl = await generatePergolaPdf(pdfValues, specs, locale, svgEl);
 
       await createRequest.mutateAsync({
-        customer_name: values.customerName.trim(),
-        customer_phone: values.customerPhone.trim(),
-        customer_email: values.customerEmail?.trim() || null,
-        width: cmToMm(Number(values.widthCm)),
-        length: cmToMm(Number(values.lengthCm)),
-        height: values.heightCm ? cmToMm(Number(values.heightCm)) : null,
-        pergola_type: values.pergolaType,
-        mount_type: values.mountType,
-        installation: values.installation,
-        lighting: values.lighting,
-        lighting_position: values.lightingPosition,
-        lighting_type: values.lightingFixture,
-        lighting_posts: [],
-        lighting_roof: values.lightingRoof,
-        santaf_roofing: values.santaf === "with",
-        santaf_color: values.santafColor || "",
-        frame_color: values.frameColor,
-        roof_color: values.roofColor,
-        notes: values.notes.trim(),
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail || null,
+        width: cmToMm(Number(config.widthCm)),
+        length: cmToMm(Number(config.lengthCm)),
+        height: config.heightCm ? cmToMm(Number(config.heightCm)) : null,
+        pergola_type: config.pergolaType || "fixed",
+        mount_type: config.mountType || "wall",
+        installation,
+        lighting: config.lighting || "none",
+        lighting_position: config.lightingPosition || "none",
+        lighting_type: config.lightingFixture || "none",
+        lighting_posts: config.lightingPosts || [],
+        lighting_roof: config.lightingRoof || false,
+        santaf_roofing: config.santaf === "with",
+        santaf_color: config.santafColor || "",
+        frame_color: config.frameColor || "#383838",
+        roof_color: config.roofColor || "#C0C0C0",
+        notes,
         module_classification: specs.moduleClassification,
         carrier_count: specs.carrierCount,
         front_post_count: specs.frontPostCount,
         back_post_count: specs.backPostCount,
-        spacing_mode: values.spacingMode,
+        spacing_mode: config.spacingMode || "automatic",
         spacing_cm: specs.spacingMm / 10,
         profile_preset: "standard",
         selected_profiles: specs.profiles as any,
@@ -74,8 +108,8 @@ export const PergolaConfigurator = () => {
         locale,
       });
 
-      setSubmitted(true);
-    } catch (err) {
+      setStep("success");
+    } catch {
       toast({
         title: locale === "ar" ? "خطأ" : "שגיאה",
         description: locale === "ar" ? "حدث خطأ. حاول مرة أخرى." : "אירעה שגיאה. נסו שוב.",
@@ -86,7 +120,9 @@ export const PergolaConfigurator = () => {
     }
   };
 
-  if (submitted) {
+  // ── Step rendering ──
+
+  if (step === "success") {
     return (
       <div className="text-center py-16 space-y-6">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -105,40 +141,23 @@ export const PergolaConfigurator = () => {
     );
   }
 
-  return (
-    <>
-      <div className="grid lg:grid-cols-5 gap-8 lg:gap-10">
-        {/* Form: 3 columns */}
-        <div className="lg:col-span-3">
-          <PergolaForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-        </div>
+  if (step === "start") {
+    return <PergolaStartStep onStart={handleStart} />;
+  }
 
-        {/* Preview: 2 columns, sticky */}
-        <div className="lg:col-span-2 lg:sticky lg:top-8 lg:self-start space-y-5">
-          <PergolaSpecsSummary />
-          <PergolaPreview />
-          <p className="text-xs text-gray-400 leading-relaxed px-1">
-            {t("pergolaRequest.disclaimer")}
-          </p>
-        </div>
-      </div>
+  if (step === "editor") {
+    return <PergolaEditorStep onNext={handleEditorNext} />;
+  }
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("pergolaRequest.submitConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span>{t("pergolaRequest.submitConfirmText")}</span>
-              <br />
-              <span className="text-xs text-gray-400 block mt-2">{t("pergolaRequest.disclaimer")}</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("pergolaRequest.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>{t("pergolaRequest.confirm")}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+  if (step === "summary") {
+    return (
+      <PergolaSummaryStep
+        onBack={handleSummaryBack}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
+    );
+  }
+
+  return null;
 };
