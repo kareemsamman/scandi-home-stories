@@ -1,6 +1,45 @@
 import { create } from "zustand";
-import type { PergolaFormInput, PergolaSpecs } from "@/types/pergola";
+import type {
+  PergolaFormInput, PergolaSpecs, MountType, SpacingMode, PergolaType,
+} from "@/types/pergola";
 import { computeSpecs } from "@/lib/pergolaRules";
+import { cmToMm } from "@/types/pergola";
+
+const DEFAULT_CONFIG: PergolaFormInput = {
+  widthCm: 400,
+  lengthCm: 400,
+  heightCm: 250,
+  pergolaType: "fixed",
+  mountType: "wall",
+  installation: false,
+  lighting: "none",
+  lightingPosition: "none",
+  lightingFixture: "none",
+  lightingRoof: false,
+  lightingPosts: [],
+  santaf: "without",
+  santafColor: "",
+  frameColor: "#383838",
+  roofColor: "#C0C0C0",
+  spacingMode: "automatic",
+  selectedProfiles: {} as any,
+  notes: "",
+  customerName: "",
+  customerPhone: "",
+};
+
+function recompute(config: Partial<PergolaFormInput>): PergolaSpecs | null {
+  const w = cmToMm(Number(config.widthCm) || 0);
+  const l = cmToMm(Number(config.lengthCm) || 0);
+  if (w <= 0 || l <= 0) return null;
+  return computeSpecs({
+    widthMm: w,
+    lengthMm: l,
+    mountType: (config.mountType || "wall") as MountType,
+    spacingMode: (config.spacingMode || "automatic") as SpacingMode,
+    pergolaType: (config.pergolaType || "fixed") as PergolaType,
+  });
+}
 
 interface PergolaConfiguratorState {
   config: Partial<PergolaFormInput>;
@@ -8,38 +47,29 @@ interface PergolaConfiguratorState {
   activeView: "top" | "front" | "isometric";
   setConfig: (partial: Partial<PergolaFormInput>) => void;
   setActiveView: (view: "top" | "front" | "isometric") => void;
+  resetConfig: () => void;
 }
 
 export const usePergolaConfigurator = create<PergolaConfiguratorState>((set) => ({
-  config: {
-    width: 4000,
-    length: 4000,
-    height: 2500,
-    mountType: "wall",
-    lighting: "none",
-    pergolaType: "bioclimatic",
-    installation: false,
-    santafRoofing: false,
-    frameColor: "#333333",
-    roofColor: "#CCCCCC",
-    notes: "",
-    customerName: "",
-    customerPhone: "",
-  },
-  specs: computeSpecs({ width: 4000, length: 4000, mountType: "wall" }),
+  config: DEFAULT_CONFIG,
+  specs: recompute(DEFAULT_CONFIG),
   activeView: "top",
 
   setConfig: (partial) =>
     set((state) => {
       const next = { ...state.config, ...partial };
-      const w = Number(next.width) || 0;
-      const l = Number(next.length) || 0;
-      const mt = next.mountType || "wall";
       return {
         config: next,
-        specs: w > 0 && l > 0 ? computeSpecs({ width: w, length: l, mountType: mt }) : state.specs,
+        specs: recompute(next) ?? state.specs,
       };
     }),
 
   setActiveView: (view) => set({ activeView: view }),
+
+  resetConfig: () =>
+    set({
+      config: DEFAULT_CONFIG,
+      specs: recompute(DEFAULT_CONFIG),
+      activeView: "top",
+    }),
 }));

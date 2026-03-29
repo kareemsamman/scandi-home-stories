@@ -10,19 +10,28 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { MountType, LightingType } from "@/types/pergola";
+import {
+  STANDARD_COLORS, SANTAF_COLORS,
+  type MountType, type LightingChoice, type SpacingMode, type PergolaType, type SantafChoice,
+  type LightingPosition, type LightingFixture,
+} from "@/types/pergola";
 
 const schema = z.object({
-  width: z.coerce.number().min(1000).max(15000),
-  length: z.coerce.number().min(2000).max(10000),
-  height: z.coerce.number().min(1500).max(5000).optional().or(z.literal("")),
-  pergolaType: z.string().min(1),
+  widthCm: z.coerce.number().min(100).max(1500),
+  lengthCm: z.coerce.number().min(200).max(1000),
+  heightCm: z.coerce.number().min(150).max(500).optional().or(z.literal(0)),
+  pergolaType: z.enum(["fixed", "pvc"]),
   mountType: z.enum(["wall", "freestanding"]),
   installation: z.boolean(),
   lighting: z.enum(["none", "white", "rgb"]),
-  santafRoofing: z.boolean(),
-  frameColor: z.string(),
-  roofColor: z.string(),
+  lightingPosition: z.enum(["none", "all_posts", "selected_posts", "no_posts"]),
+  lightingFixture: z.enum(["none", "spotlight", "led_strip", "rgb_strip", "mixed"]),
+  lightingRoof: z.boolean(),
+  santaf: z.enum(["without", "with"]),
+  santafColor: z.string(),
+  frameColor: z.string().min(1),
+  roofColor: z.string().min(1),
+  spacingMode: z.enum(["automatic", "dense", "standard", "wide"]),
   notes: z.string(),
   customerName: z.string().min(2),
   customerPhone: z.string().regex(/^[0-9\s\-\+\(\)]{7,15}$/),
@@ -37,7 +46,7 @@ interface Props {
 }
 
 export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const setConfig = usePergolaConfigurator((s) => s.setConfig);
 
   const {
@@ -49,16 +58,21 @@ export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
   } = useForm<PergolaFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      width: 4000,
-      length: 4000,
-      height: 2500,
-      pergolaType: "bioclimatic",
+      widthCm: 400,
+      lengthCm: 400,
+      heightCm: 250,
+      pergolaType: "fixed",
       mountType: "wall",
       installation: false,
       lighting: "none",
-      santafRoofing: false,
-      frameColor: "#333333",
-      roofColor: "#CCCCCC",
+      lightingPosition: "none",
+      lightingFixture: "none",
+      lightingRoof: false,
+      santaf: "without",
+      santafColor: "",
+      frameColor: "#383838",
+      roofColor: "#C0C0C0",
+      spacingMode: "automatic",
       notes: "",
       customerName: "",
       customerPhone: "",
@@ -66,148 +80,273 @@ export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
     },
   });
 
+  const w = watch();
+
   // Sync form → Zustand store for live preview
-  const watchAll = watch();
   useEffect(() => {
     setConfig({
-      width: Number(watchAll.width) || 0,
-      length: Number(watchAll.length) || 0,
-      height: Number(watchAll.height) || 2500,
-      mountType: watchAll.mountType as MountType,
-      lighting: watchAll.lighting as LightingType,
-      pergolaType: watchAll.pergolaType,
-      installation: watchAll.installation,
-      santafRoofing: watchAll.santafRoofing,
-      frameColor: watchAll.frameColor,
-      roofColor: watchAll.roofColor,
+      widthCm: Number(w.widthCm) || 0,
+      lengthCm: Number(w.lengthCm) || 0,
+      heightCm: Number(w.heightCm) || 250,
+      mountType: w.mountType as MountType,
+      lighting: w.lighting as LightingChoice,
+      lightingPosition: w.lightingPosition as LightingPosition,
+      lightingFixture: w.lightingFixture as LightingFixture,
+      lightingRoof: w.lightingRoof,
+      pergolaType: w.pergolaType as PergolaType,
+      santaf: w.santaf as SantafChoice,
+      santafColor: w.santafColor,
+      frameColor: w.frameColor,
+      roofColor: w.roofColor,
+      spacingMode: w.spacingMode as SpacingMode,
+      installation: w.installation,
     });
   }, [
-    watchAll.width, watchAll.length, watchAll.height,
-    watchAll.mountType, watchAll.lighting, watchAll.pergolaType,
-    watchAll.installation, watchAll.santafRoofing,
-    watchAll.frameColor, watchAll.roofColor, setConfig,
+    w.widthCm, w.lengthCm, w.heightCm, w.mountType, w.lighting,
+    w.lightingPosition, w.lightingFixture, w.lightingRoof,
+    w.pergolaType, w.santaf, w.santafColor,
+    w.frameColor, w.roofColor, w.spacingMode, w.installation, setConfig,
   ]);
 
-  const pergolaTypes = [
-    { value: "bioclimatic", label: t("pergolaRequest.pergolaTypes.bioclimatic") },
-    { value: "motorized", label: t("pergolaRequest.pergolaTypes.motorized") },
-    { value: "fixed", label: t("pergolaRequest.pergolaTypes.fixed") },
-    { value: "retractable", label: t("pergolaRequest.pergolaTypes.retractable") },
-  ];
-
-  const fieldError = (name: keyof PergolaFormValues) => {
-    if (!errors[name]) return null;
-    const msg = errors[name]?.message;
-    if (msg) return msg;
-    // Fallback messages from translations
-    const map: Record<string, string> = {
-      width: t("pergolaRequest.minWidth"),
-      length: t("pergolaRequest.minLength"),
-      customerName: t("pergolaRequest.required"),
-      customerPhone: t("pergolaRequest.invalidPhone"),
-    };
-    return map[name] || t("pergolaRequest.required");
-  };
+  const showLightingDetails = w.lighting !== "none";
+  const showSantafColor = w.santaf === "with";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Dimensions */}
-      <Section title={t("pergolaRequest.dimensions")}>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label={t("pergolaRequest.width")} error={fieldError("width")}>
-            <Input type="number" {...register("width")} min={1000} max={15000} step={100} />
+      {/* ── Dimensions (cm) ── */}
+      <Section title={t("pergolaRequest.dimensions")} icon="📐">
+        <div className="grid grid-cols-3 gap-4">
+          <Field label={t("pergolaRequest.width")} error={fieldErr(errors.widthCm, t)}>
+            <Input type="number" {...register("widthCm")} min={100} max={1500} step={10} />
           </Field>
-          <Field label={t("pergolaRequest.length")} error={fieldError("length")}>
-            <Input type="number" {...register("length")} min={2000} max={10000} step={100} />
+          <Field label={t("pergolaRequest.length")} error={fieldErr(errors.lengthCm, t)}>
+            <Input type="number" {...register("lengthCm")} min={200} max={1000} step={10} />
+          </Field>
+          <Field label={t("pergolaRequest.height")} error={fieldErr(errors.heightCm, t)}>
+            <Input type="number" {...register("heightCm")} min={150} max={500} step={10} placeholder="250" />
           </Field>
         </div>
-        <Field label={t("pergolaRequest.height")} error={fieldError("height")}>
-          <Input type="number" {...register("height")} min={1500} max={5000} step={100} placeholder="2500" />
-        </Field>
       </Section>
 
-      {/* Configuration */}
-      <Section title={t("pergolaRequest.configuration")}>
-        <Field label={t("pergolaRequest.pergolaType")}>
-          <Select defaultValue="bioclimatic" onValueChange={(v) => setValue("pergolaType", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {pergolaTypes.map((pt) => (
-                <SelectItem key={pt.value} value={pt.value}>{pt.label}</SelectItem>
+      {/* ── Pergola Type ── */}
+      <Section title={t("pergolaRequest.pergolaType")} icon="🏗️">
+        <RadioGroup
+          defaultValue="fixed"
+          onValueChange={(v) => setValue("pergolaType", v as PergolaType)}
+          className="grid grid-cols-2 gap-3"
+        >
+          {(["fixed", "pvc"] as const).map((pt) => (
+            <label
+              key={pt}
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                w.pergolaType === pt
+                  ? "border-gray-900 bg-gray-50"
+                  : "border-gray-100 hover:border-gray-200"
+              }`}
+            >
+              <RadioGroupItem value={pt} id={`pt-${pt}`} />
+              <span className="font-medium text-sm">{t(`pergolaRequest.pergolaTypes.${pt}`)}</span>
+            </label>
+          ))}
+        </RadioGroup>
+      </Section>
+
+      {/* ── Mount Type ── */}
+      <Section title={t("pergolaRequest.mountType")} icon="🔩">
+        <RadioGroup
+          defaultValue="wall"
+          onValueChange={(v) => setValue("mountType", v as MountType)}
+          className="grid grid-cols-2 gap-3"
+        >
+          <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${w.mountType === "wall" ? "border-gray-900 bg-gray-50" : "border-gray-100 hover:border-gray-200"}`}>
+            <RadioGroupItem value="wall" id="mount-wall" />
+            <span className="font-medium text-sm">{t("pergolaRequest.mountWall")}</span>
+          </label>
+          <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${w.mountType === "freestanding" ? "border-gray-900 bg-gray-50" : "border-gray-100 hover:border-gray-200"}`}>
+            <RadioGroupItem value="freestanding" id="mount-free" />
+            <span className="font-medium text-sm">{t("pergolaRequest.mountFreestanding")}</span>
+          </label>
+        </RadioGroup>
+
+        <div className="flex items-center justify-between py-3 px-1">
+          <Label className="text-sm">{t("pergolaRequest.installation")}</Label>
+          <Switch checked={w.installation} onCheckedChange={(v) => setValue("installation", v)} />
+        </div>
+      </Section>
+
+      {/* ── Lighting ── */}
+      <Section title={t("pergolaRequest.lighting")} icon="💡">
+        <RadioGroup
+          defaultValue="none"
+          onValueChange={(v) => {
+            setValue("lighting", v as LightingChoice);
+            if (v === "none") {
+              setValue("lightingPosition", "none");
+              setValue("lightingFixture", "none");
+              setValue("lightingRoof", false);
+            } else {
+              setValue("lightingPosition", "all_posts");
+              setValue("lightingFixture", v === "rgb" ? "rgb_strip" : "led_strip");
+            }
+          }}
+          className="grid grid-cols-3 gap-3"
+        >
+          {(["none", "white", "rgb"] as const).map((lt) => (
+            <label
+              key={lt}
+              className={`flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-center justify-center ${
+                w.lighting === lt
+                  ? "border-gray-900 bg-gray-50"
+                  : "border-gray-100 hover:border-gray-200"
+              }`}
+            >
+              <RadioGroupItem value={lt} id={`lt-${lt}`} className="sr-only" />
+              <span className={`w-3 h-3 rounded-full shrink-0 ${lt === "none" ? "bg-gray-300" : lt === "white" ? "bg-yellow-200 border border-yellow-300" : "bg-gradient-to-r from-red-400 via-green-400 to-blue-400"}`} />
+              <span className="text-sm font-medium">{t(`pergolaRequest.lighting${lt.charAt(0).toUpperCase() + lt.slice(1)}`)}</span>
+            </label>
+          ))}
+        </RadioGroup>
+
+        {showLightingDetails && (
+          <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
+            <Field label={t("pergolaRequest.lightingPosition")}>
+              <Select value={w.lightingPosition} onValueChange={(v) => setValue("lightingPosition", v as LightingPosition)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all_posts">{t("pergolaRequest.lightingAllPosts")}</SelectItem>
+                  <SelectItem value="selected_posts">{t("pergolaRequest.lightingSelectedPosts")}</SelectItem>
+                  <SelectItem value="no_posts">{t("pergolaRequest.lightingNoPosts")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label={t("pergolaRequest.lightingFixture")}>
+              <Select value={w.lightingFixture} onValueChange={(v) => setValue("lightingFixture", v as LightingFixture)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spotlight">{t("pergolaRequest.fixtureSpotlight")}</SelectItem>
+                  <SelectItem value="led_strip">{t("pergolaRequest.fixtureLedStrip")}</SelectItem>
+                  <SelectItem value="rgb_strip">{t("pergolaRequest.fixtureRgbStrip")}</SelectItem>
+                  <SelectItem value="mixed">{t("pergolaRequest.fixtureMixed")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">{t("pergolaRequest.lightingRoof")}</Label>
+              <Switch checked={w.lightingRoof} onCheckedChange={(v) => setValue("lightingRoof", v)} />
+            </div>
+          </div>
+        )}
+      </Section>
+
+      {/* ── Roofing / סנטף ── */}
+      <Section title={t("pergolaRequest.santafRoofing")} icon="🏠">
+        <RadioGroup
+          defaultValue="without"
+          onValueChange={(v) => {
+            setValue("santaf", v as SantafChoice);
+            if (v === "without") setValue("santafColor", "");
+          }}
+          className="grid grid-cols-2 gap-3"
+        >
+          <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${w.santaf === "without" ? "border-gray-900 bg-gray-50" : "border-gray-100 hover:border-gray-200"}`}>
+            <RadioGroupItem value="without" id="santaf-no" />
+            <span className="text-sm font-medium">{t("pergolaRequest.santafWithout")}</span>
+          </label>
+          <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${w.santaf === "with" ? "border-gray-900 bg-gray-50" : "border-gray-100 hover:border-gray-200"}`}>
+            <RadioGroupItem value="with" id="santaf-yes" />
+            <span className="text-sm font-medium">{t("pergolaRequest.santafWith")}</span>
+          </label>
+        </RadioGroup>
+
+        {showSantafColor && (
+          <div className="mt-4">
+            <Label className="text-sm text-gray-600 mb-2 block">{t("pergolaRequest.santafColorLabel")}</Label>
+            <div className="flex flex-wrap gap-2">
+              {SANTAF_COLORS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setValue("santafColor", c.hex)}
+                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                    w.santafColor === c.hex ? "border-gray-900 scale-110 shadow-md" : "border-gray-200 hover:border-gray-400"
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                  title={locale === "ar" ? c.name_ar : c.name_he}
+                />
               ))}
-            </SelectContent>
-          </Select>
-        </Field>
+            </div>
+          </div>
+        )}
+      </Section>
 
-        <Field label={t("pergolaRequest.mountType")}>
-          <RadioGroup defaultValue="wall" onValueChange={(v) => setValue("mountType", v as MountType)} className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="wall" id="mount-wall" />
-              <Label htmlFor="mount-wall">{t("pergolaRequest.mountWall")}</Label>
+      {/* ── Colors ── */}
+      <Section title={t("pergolaRequest.colors")} icon="🎨">
+        <div className="space-y-5">
+          <div>
+            <Label className="text-sm text-gray-600 mb-2 block">{t("pergolaRequest.frameColor")}</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {STANDARD_COLORS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setValue("frameColor", c.hex)}
+                  className={`w-9 h-9 rounded-lg border-2 transition-all ${
+                    w.frameColor === c.hex ? "border-gray-900 scale-110 shadow-md" : "border-gray-200 hover:border-gray-400"
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                  title={locale === "ar" ? c.name_ar : c.name_he}
+                />
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="freestanding" id="mount-free" />
-              <Label htmlFor="mount-free">{t("pergolaRequest.mountFreestanding")}</Label>
-            </div>
-          </RadioGroup>
-        </Field>
+            <Input {...register("frameColor")} className="w-40 text-xs" dir="ltr" />
+          </div>
 
-        <div className="flex items-center justify-between py-2">
-          <Label>{t("pergolaRequest.installation")}</Label>
-          <Switch checked={watchAll.installation} onCheckedChange={(v) => setValue("installation", v)} />
-        </div>
-
-        <Field label={t("pergolaRequest.lighting")}>
-          <RadioGroup defaultValue="none" onValueChange={(v) => setValue("lighting", v as LightingType)} className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="none" id="light-none" />
-              <Label htmlFor="light-none">{t("pergolaRequest.lightingNone")}</Label>
+          <div>
+            <Label className="text-sm text-gray-600 mb-2 block">{t("pergolaRequest.roofColor")}</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {STANDARD_COLORS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setValue("roofColor", c.hex)}
+                  className={`w-9 h-9 rounded-lg border-2 transition-all ${
+                    w.roofColor === c.hex ? "border-gray-900 scale-110 shadow-md" : "border-gray-200 hover:border-gray-400"
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                  title={locale === "ar" ? c.name_ar : c.name_he}
+                />
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="white" id="light-white" />
-              <Label htmlFor="light-white">{t("pergolaRequest.lightingWhite")}</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="rgb" id="light-rgb" />
-              <Label htmlFor="light-rgb">{t("pergolaRequest.lightingRgb")}</Label>
-            </div>
-          </RadioGroup>
-        </Field>
-
-        <div className="flex items-center justify-between py-2">
-          <Label>{t("pergolaRequest.santafRoofing")}</Label>
-          <Switch checked={watchAll.santafRoofing} onCheckedChange={(v) => setValue("santafRoofing", v)} />
+            <Input {...register("roofColor")} className="w-40 text-xs" dir="ltr" />
+          </div>
         </div>
       </Section>
 
-      {/* Colors */}
-      <Section title={t("pergolaRequest.colors")}>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label={t("pergolaRequest.frameColor")}>
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                {...register("frameColor")}
-                className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-              />
-              <Input {...register("frameColor")} className="flex-1" />
-            </div>
-          </Field>
-          <Field label={t("pergolaRequest.roofColor")}>
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                {...register("roofColor")}
-                className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-              />
-              <Input {...register("roofColor")} className="flex-1" />
-            </div>
-          </Field>
-        </div>
+      {/* ── Spacing ── */}
+      <Section title={t("pergolaRequest.spacing")} icon="↔️">
+        <RadioGroup
+          defaultValue="automatic"
+          onValueChange={(v) => setValue("spacingMode", v as SpacingMode)}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+        >
+          {(["automatic", "dense", "standard", "wide"] as const).map((sm) => (
+            <label
+              key={sm}
+              className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                w.spacingMode === sm
+                  ? "border-gray-900 bg-gray-50"
+                  : "border-gray-100 hover:border-gray-200"
+              }`}
+            >
+              <RadioGroupItem value={sm} className="sr-only" />
+              <span className="text-xs font-medium">{t(`pergolaRequest.spacing${sm.charAt(0).toUpperCase() + sm.slice(1)}`)}</span>
+            </label>
+          ))}
+        </RadioGroup>
       </Section>
 
-      {/* Notes */}
-      <Section title={t("pergolaRequest.notes")}>
+      {/* ── Notes ── */}
+      <Section title={t("pergolaRequest.notes")} icon="📝">
         <Textarea
           {...register("notes")}
           placeholder={t("pergolaRequest.notesPlaceholder")}
@@ -215,24 +354,26 @@ export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
         />
       </Section>
 
-      {/* Customer info */}
-      <Section title={t("pergolaRequest.customerInfo")}>
-        <Field label={t("pergolaRequest.customerName")} error={fieldError("customerName")}>
-          <Input {...register("customerName")} />
-        </Field>
-        <Field label={t("pergolaRequest.customerPhone")} error={fieldError("customerPhone")}>
-          <Input {...register("customerPhone")} type="tel" dir="ltr" />
-        </Field>
-        <Field label={t("pergolaRequest.customerEmail")} error={fieldError("customerEmail")}>
-          <Input {...register("customerEmail")} type="email" dir="ltr" />
-        </Field>
+      {/* ── Customer Info ── */}
+      <Section title={t("pergolaRequest.customerInfo")} icon="👤">
+        <div className="space-y-3">
+          <Field label={t("pergolaRequest.customerName")} error={fieldErr(errors.customerName, t)}>
+            <Input {...register("customerName")} />
+          </Field>
+          <Field label={t("pergolaRequest.customerPhone")} error={fieldErr(errors.customerPhone, t)}>
+            <Input {...register("customerPhone")} type="tel" dir="ltr" />
+          </Field>
+          <Field label={t("pergolaRequest.customerEmail")} error={fieldErr(errors.customerEmail, t)}>
+            <Input {...register("customerEmail")} type="email" dir="ltr" />
+          </Field>
+        </div>
       </Section>
 
       {/* Submit */}
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-gray-900 text-white py-3.5 px-6 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
       >
         {isSubmitting ? t("pergolaRequest.submitting") : t("pergolaRequest.submit")}
       </button>
@@ -240,10 +381,15 @@ export const PergolaForm = ({ onSubmit, isSubmitting }: Props) => {
   );
 };
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// ── Helpers ──
+
+function Section({ title, icon, children }: { title: string; icon?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-800 border-b border-gray-100 pb-2">{title}</h3>
+      <h3 className="text-base font-semibold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
+        {icon && <span className="text-lg">{icon}</span>}
+        {title}
+      </h3>
       {children}
     </div>
   );
@@ -257,4 +403,9 @@ function Field({ label, error, children }: { label: string; error?: string | nul
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
+}
+
+function fieldErr(err: any, t: (k: string) => any): string | null {
+  if (!err) return null;
+  return err.message || t("pergolaRequest.required");
 }

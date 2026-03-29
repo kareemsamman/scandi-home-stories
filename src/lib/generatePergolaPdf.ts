@@ -5,38 +5,54 @@ interface PdfInput {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
-  width: number;
-  length: number;
-  height?: number | "";
+  widthCm: number;
+  lengthCm: number;
+  heightCm?: number | 0;
   pergolaType: string;
   mountType: string;
   installation: boolean;
   lighting: string;
-  santafRoofing: boolean;
+  lightingPosition: string;
+  lightingFixture: string;
+  lightingRoof: boolean;
+  santaf: string;
+  santafColor: string;
   frameColor: string;
   roofColor: string;
+  spacingMode: string;
   notes: string;
 }
 
-const MODULE_LABELS: Record<string, Record<string, string>> = {
-  he: { single: "יחיד", double: "כפול", triple: "משולש", custom: "דורש בדיקה" },
-  ar: { single: "فردية", double: "مزدوجة", triple: "ثلاثية", custom: "يتطلب مراجعة" },
-};
+const TYPE_LABELS: Record<string, string> = { fixed: "פרגולה קבועה / Fixed Pergola", pvc: "פרגולה PVC / PVC Pergola" };
+const MOUNT_LABELS: Record<string, string> = { wall: "Wall-Mounted / צמוד קיר", freestanding: "Freestanding / עצמאי" };
+const LIGHT_LABELS: Record<string, string> = { none: "None", white: "White", rgb: "RGB" };
+const LIGHT_POS_LABELS: Record<string, string> = { none: "None", all_posts: "All Posts", selected_posts: "Selected Posts", no_posts: "No Posts" };
+const FIXTURE_LABELS: Record<string, string> = { none: "None", spotlight: "Spotlight", led_strip: "LED Strip", rgb_strip: "RGB Strip", mixed: "Mixed Package" };
+const SPACING_LABELS: Record<string, string> = { automatic: "Automatic", dense: "Dense", standard: "Standard", wide: "Wide" };
+const MODULE_LABELS: Record<string, string> = { single: "Single", double: "Double", triple: "Triple", custom: "Custom Review" };
 
-const MOUNT_LABELS: Record<string, Record<string, string>> = {
-  he: { wall: "צמוד קיר", freestanding: "עצמאי" },
-  ar: { wall: "مثبتة على الحائط", freestanding: "مستقلة" },
-};
-
-const LIGHTING_LABELS: Record<string, Record<string, string>> = {
-  he: { none: "ללא", white: "לבנה", rgb: "RGB" },
-  ar: { none: "بدون", white: "أبيض", rgb: "RGB" },
-};
-
-const PERGOLA_TYPE_LABELS: Record<string, Record<string, string>> = {
-  he: { bioclimatic: "ביוקלימטית", motorized: "למלות מוטורית", fixed: "קבועה", retractable: "נפתחת" },
-  ar: { bioclimatic: "بيوكليماتيك", motorized: "لاميلا موتورية", fixed: "ثابتة", retractable: "قابلة للسحب" },
-};
+async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = 2;
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#F9FAFB";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/png"));
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 export async function generatePergolaPdf(
   input: PdfInput,
@@ -45,166 +61,131 @@ export async function generatePergolaPdf(
   svgElement: SVGSVGElement | null,
 ): Promise<string> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const isRtl = locale === "he" || locale === "ar";
   const pageW = 210;
-  const margin = 15;
+  const margin = 14;
   const contentW = pageW - margin * 2;
   let y = margin;
 
-  // Helper: text aligned based on RTL
-  const addText = (text: string, x: number, yPos: number, opts?: { fontSize?: number; bold?: boolean; color?: [number, number, number]; align?: string }) => {
-    doc.setFontSize(opts?.fontSize || 10);
-    doc.setTextColor(...(opts?.color || [51, 51, 51]));
-    if (opts?.bold) doc.setFont("helvetica", "bold");
-    else doc.setFont("helvetica", "normal");
-    doc.text(text, x, yPos, { align: (opts?.align || "left") as any });
+  const text = (s: string, x: number, yy: number, opts?: { size?: number; bold?: boolean; color?: [number, number, number]; align?: string }) => {
+    doc.setFontSize(opts?.size || 9);
+    doc.setTextColor(...(opts?.color || [40, 40, 40]));
+    doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    doc.text(s, x, yy, { align: (opts?.align || "left") as any });
+  };
+
+  const line = () => { doc.setDrawColor(220, 220, 220); doc.line(margin, y, pageW - margin, y); y += 3; };
+
+  const row = (label: string, value: string) => {
+    text(label, margin, y, { size: 8, color: [120, 120, 120] });
+    text(value, margin + 52, y, { size: 9 });
+    y += 4.5;
   };
 
   // ── Header ──
-  addText("AMG PERGOLA", pageW / 2, y, { fontSize: 18, bold: true, align: "center" });
-  y += 6;
-  addText("Pergola Request Summary", pageW / 2, y, { fontSize: 10, color: [120, 120, 120], align: "center" });
-  y += 4;
-  addText(new Date().toLocaleDateString("en-GB"), pageW / 2, y, { fontSize: 8, color: [150, 150, 150], align: "center" });
-  y += 10;
-
-  // Separator
-  doc.setDrawColor(200, 200, 200);
-  doc.line(margin, y, pageW - margin, y);
-  y += 8;
-
-  // ── Customer Info ──
-  addText("Customer Information", margin, y, { fontSize: 12, bold: true });
-  y += 7;
-  const customerRows = [
-    ["Name", input.customerName],
-    ["Phone", input.customerPhone],
-  ];
-  if (input.customerEmail) customerRows.push(["Email", input.customerEmail]);
-
-  customerRows.forEach(([label, value]) => {
-    addText(`${label}:`, margin, y, { fontSize: 9, color: [100, 100, 100] });
-    addText(value, margin + 30, y, { fontSize: 9 });
-    y += 5;
-  });
+  text("AMG PERGOLA LTD", pageW / 2, y, { size: 16, bold: true, align: "center" });
   y += 5;
+  text("Pergola Configuration Request", pageW / 2, y, { size: 9, color: [100, 100, 100], align: "center" });
+  y += 4;
+  text(new Date().toLocaleDateString("en-GB"), pageW / 2, y, { size: 7, color: [160, 160, 160], align: "center" });
+  y += 7;
+  line();
+
+  // ── Customer ──
+  text("Customer Information", margin, y, { size: 11, bold: true }); y += 5;
+  row("Name", input.customerName);
+  row("Phone", input.customerPhone);
+  if (input.customerEmail) row("Email", input.customerEmail);
+  y += 2; line();
 
   // ── Dimensions ──
-  addText("Dimensions", margin, y, { fontSize: 12, bold: true });
-  y += 7;
-  const dimRows = [
-    ["Width", `${input.width} mm`],
-    ["Depth / Projection", `${input.length} mm`],
-  ];
-  if (input.height) dimRows.push(["Height", `${input.height} mm`]);
-
-  dimRows.forEach(([label, value]) => {
-    addText(`${label}:`, margin, y, { fontSize: 9, color: [100, 100, 100] });
-    addText(value, margin + 50, y, { fontSize: 9 });
-    y += 5;
-  });
-  y += 5;
+  text("Dimensions", margin, y, { size: 11, bold: true }); y += 5;
+  row("Width", `${input.widthCm} cm (${input.widthCm * 10} mm)`);
+  row("Depth / Projection", `${input.lengthCm} cm (${input.lengthCm * 10} mm)`);
+  if (input.heightCm) row("Height", `${input.heightCm} cm (${Number(input.heightCm) * 10} mm)`);
+  y += 2; line();
 
   // ── Configuration ──
-  addText("Configuration", margin, y, { fontSize: 12, bold: true });
-  y += 7;
-  const l = locale === "ar" ? "ar" : "he";
-  const configRows = [
-    ["Pergola Type", PERGOLA_TYPE_LABELS[l]?.[input.pergolaType] || input.pergolaType],
-    ["Mount Type", MOUNT_LABELS[l]?.[input.mountType] || input.mountType],
-    ["Installation", input.installation ? "Yes" : "No"],
-    ["Lighting", LIGHTING_LABELS[l]?.[input.lighting] || input.lighting],
-    ["Santaf Roofing", input.santafRoofing ? "Yes" : "No"],
-    ["Frame Color", input.frameColor],
-    ["Roof Color", input.roofColor],
-  ];
+  text("Configuration", margin, y, { size: 11, bold: true }); y += 5;
+  row("Pergola Type", TYPE_LABELS[input.pergolaType] || input.pergolaType);
+  row("Mount Type", MOUNT_LABELS[input.mountType] || input.mountType);
+  row("Installation", input.installation ? "Yes" : "No");
+  row("Frame Color", input.frameColor);
+  row("Roof / Fabric Color", input.roofColor);
+  row("Spacing Preset", SPACING_LABELS[input.spacingMode] || input.spacingMode);
+  y += 2; line();
 
-  configRows.forEach(([label, value]) => {
-    addText(`${label}:`, margin, y, { fontSize: 9, color: [100, 100, 100] });
-    addText(value, margin + 50, y, { fontSize: 9 });
-    y += 5;
-  });
-  y += 5;
+  // ── Lighting ──
+  text("Lighting", margin, y, { size: 11, bold: true }); y += 5;
+  row("Lighting", LIGHT_LABELS[input.lighting] || input.lighting);
+  if (input.lighting !== "none") {
+    row("Position", LIGHT_POS_LABELS[input.lightingPosition] || input.lightingPosition);
+    row("Fixture Type", FIXTURE_LABELS[input.lightingFixture] || input.lightingFixture);
+    row("Roof Lighting", input.lightingRoof ? "Yes" : "No");
+  }
+  y += 2; line();
+
+  // ── Santaf ──
+  text("Roofing / Santaf", margin, y, { size: 11, bold: true }); y += 5;
+  row("Santaf", input.santaf === "with" ? "Yes / Included" : "No / Without");
+  if (input.santaf === "with" && input.santafColor) {
+    row("Santaf Color", input.santafColor);
+  }
+  y += 2; line();
 
   // ── Technical Specs ──
-  addText("Technical Specifications", margin, y, { fontSize: 12, bold: true });
-  y += 7;
-  const specRows = [
-    ["Module Type", MODULE_LABELS[l]?.[specs.moduleClassification] || specs.moduleClassification],
-    ["Carrier Count", String(specs.carrierCount)],
-    ["Front Posts", String(specs.frontPostCount)],
-    ["Back Posts", String(specs.backPostCount)],
-  ];
+  text("Technical Specifications", margin, y, { size: 11, bold: true }); y += 5;
+  row("Module Type", MODULE_LABELS[specs.moduleClassification] || specs.moduleClassification);
+  row("Carrier Count", String(specs.carrierCount));
+  row("Front Posts", String(specs.frontPostCount));
+  if (specs.backPostCount > 0) row("Back Posts", String(specs.backPostCount));
+  row("Profile Spacing", `~${(specs.spacingMm / 10).toFixed(1)} cm`);
+  y += 2;
 
-  specRows.forEach(([label, value]) => {
-    addText(`${label}:`, margin, y, { fontSize: 9, color: [100, 100, 100] });
-    addText(value, margin + 50, y, { fontSize: 9 });
-    y += 5;
-  });
-  y += 5;
+  // Profiles
+  if (specs.profiles) {
+    row("Rafter", specs.profiles.rafter);
+    row("Carrier Post", specs.profiles.carrier_post);
+    row("Fabric Master", specs.profiles.fabric_master);
+    row("Fabric Carrier", specs.profiles.fabric_carrier);
+    row("Motor Box", specs.profiles.motor_box);
+    row("Gutter", specs.profiles.gutter);
+  }
+  y += 2; line();
 
   // ── Notes ──
   if (input.notes.trim()) {
-    addText("Notes", margin, y, { fontSize: 12, bold: true });
-    y += 7;
+    text("Notes", margin, y, { size: 11, bold: true }); y += 5;
     const lines = doc.splitTextToSize(input.notes.trim(), contentW);
-    doc.setFontSize(9);
-    doc.setTextColor(51, 51, 51);
+    doc.setFontSize(8); doc.setTextColor(60, 60, 60);
     doc.text(lines, margin, y);
-    y += lines.length * 4 + 5;
+    y += lines.length * 3.5 + 3;
+    line();
   }
 
-  // ── SVG Drawing (if available) ──
+  // ── Drawing ──
   if (svgElement) {
     try {
-      // Convert SVG to data URL via canvas
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(svgBlob);
-
-      const imgData = await new Promise<string>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const scale = 2;
-          canvas.width = img.naturalWidth * scale;
-          canvas.height = img.naturalHeight * scale;
-          const ctx = canvas.getContext("2d")!;
-          ctx.fillStyle = "#F9FAFB";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/png"));
-          URL.revokeObjectURL(url);
-        };
-        img.onerror = reject;
-        img.src = url;
-      });
-
-      // Check remaining page space
-      const remainingSpace = 297 - y - 30; // A4 height - current y - footer
-      const imgW = contentW;
-      const imgH = Math.min(remainingSpace, 80);
-
-      if (imgH > 30) {
-        addText("Top View Drawing", margin, y, { fontSize: 12, bold: true });
-        y += 5;
-        doc.addImage(imgData, "PNG", margin, y, imgW, imgH);
-        y += imgH + 5;
+      const imgData = await svgToImage(svgElement);
+      const remain = 297 - y - 25;
+      const imgH = Math.min(remain, 65);
+      if (imgH > 25) {
+        text("Top View Drawing", margin, y, { size: 11, bold: true }); y += 4;
+        doc.addImage(imgData, "PNG", margin, y, contentW, imgH);
+        y += imgH + 3;
       }
-    } catch {
-      // Silently skip if SVG rendering fails
-    }
+    } catch { /* skip */ }
   }
 
   // ── Disclaimer ──
-  y = Math.max(y, 260);
-  doc.setDrawColor(200, 200, 200);
-  doc.line(margin, y, pageW - margin, y);
-  y += 5;
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  const disclaimer = "Drawing and post distribution are preliminary and subject to technical/site inspection.";
-  doc.text(disclaimer, pageW / 2, y, { align: "center" });
+  y = Math.max(y + 5, 270);
+  doc.setDrawColor(220, 220, 220); doc.line(margin, y, pageW - margin, y); y += 4;
+  doc.setFontSize(6.5); doc.setTextColor(160, 160, 160);
+  const disclaimer = [
+    "This is a configuration request summary, not a final price quotation.",
+    "Drawing and post distribution are preliminary and subject to technical review and site inspection.",
+    "Final solution may differ based on structural requirements.",
+  ];
+  disclaimer.forEach((d) => { doc.text(d, pageW / 2, y, { align: "center" }); y += 3; });
 
   return doc.output("datauristring");
 }

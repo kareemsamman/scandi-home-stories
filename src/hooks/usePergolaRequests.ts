@@ -4,8 +4,6 @@ import type { PergolaRequest } from "@/types/pergola";
 
 const db = supabase as any;
 
-// ── Queries ──
-
 export const usePergolaRequests = () =>
   useQuery<PergolaRequest[]>({
     queryKey: ["pergola_requests"],
@@ -34,12 +32,10 @@ export const usePergolaRequestById = (id: string) =>
     enabled: !!id,
   });
 
-// ── Mutations ──
-
 export const useCreatePergolaRequest = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (row: Omit<PergolaRequest, "id" | "created_at" | "updated_at" | "status" | "admin_notes" | "admin_modified_config">) => {
+    mutationFn: async (row: Record<string, any>) => {
       const { data, error } = await db
         .from("pergola_requests")
         .insert(row)
@@ -57,7 +53,7 @@ export const useCreatePergolaRequest = () => {
 export const useUpdatePergolaRequest = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string } & Partial<PergolaRequest>) => {
+    mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
       const { error } = await db
         .from("pergola_requests")
         .update(updates)

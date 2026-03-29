@@ -1,6 +1,9 @@
-import type { MountType, ModuleClassification, PergolaSpecs } from "@/types/pergola";
+import type {
+  MountType, ModuleClassification, PergolaSpecs, SpacingMode,
+  PergolaType, ProfileName, PROFILE_NAMES,
+} from "@/types/pergola";
 
-// ── Module classification by width ──
+// ── Module classification by width (mm) ──
 
 export function classifyModule(widthMm: number): { classification: ModuleClassification; moduleCount: number } {
   if (widthMm <= 4500) return { classification: "single", moduleCount: 1 };
@@ -9,31 +12,27 @@ export function classifyModule(widthMm: number): { classification: ModuleClassif
   return { classification: "custom", moduleCount: 0 };
 }
 
-// ── Carrier count by projection/depth ──
-// 3000mm → 7, each +500mm adds 1 carrier, up to 10000mm → 21
-// Below 3000mm: scale down proportionally (minimum 3)
+// ── Carrier count by projection/depth (mm) ──
+// Table: 3000→7, 3500→8, ... 10000→21
 
 export function calcCarrierCount(lengthMm: number): number {
   if (lengthMm <= 0) return 3;
   if (lengthMm < 3000) {
-    // Scale proportionally: at 2000mm ≈ 5 carriers, minimum 3
     return Math.max(3, Math.round((lengthMm / 3000) * 7));
   }
   if (lengthMm > 10000) {
-    // Extrapolate beyond table: +1 per 500mm
     return 21 + Math.ceil((lengthMm - 10000) / 500);
   }
   return 7 + Math.ceil((lengthMm - 3000) / 500);
 }
 
-// ── Post count by width ──
+// ── Post count by width (mm) ──
 
 function postCountByWidth(widthMm: number): number {
   if (widthMm <= 3000) return 2;
   if (widthMm <= 6000) return 3;
   if (widthMm <= 9000) return 4;
   if (widthMm <= 13500) return 5;
-  // Beyond 13500: add 1 per 3000mm extra
   return 5 + Math.ceil((widthMm - 13500) / 3000);
 }
 
@@ -45,10 +44,42 @@ export function calcPostCount(widthMm: number, mountType: MountType): { front: n
   };
 }
 
+// ── Spacing between profiles (mm) ──
+// Default ~500mm (~50cm). Modes adjust this.
+
+const SPACING_FACTORS: Record<SpacingMode, number> = {
+  automatic: 1.0,
+  dense: 0.75,
+  standard: 1.0,
+  wide: 1.35,
+};
+
+export function calcSpacing(lengthMm: number, carrierCount: number, spacingMode: SpacingMode): number {
+  if (carrierCount <= 1) return lengthMm;
+  const baseSpacing = lengthMm / (carrierCount - 1);
+  return Math.round(baseSpacing * SPACING_FACTORS[spacingMode]);
+}
+
+// ── Adjusted carrier count for spacing mode ──
+
+export function adjustedCarrierCount(lengthMm: number, spacingMode: SpacingMode): number {
+  const baseCount = calcCarrierCount(lengthMm);
+  if (spacingMode === "automatic" || spacingMode === "standard") return baseCount;
+  if (spacingMode === "dense") {
+    // Increase carriers for denser spacing
+    return Math.max(baseCount, Math.round(baseCount * 1.3));
+  }
+  if (spacingMode === "wide") {
+    // Decrease carriers for wider spacing
+    return Math.max(3, Math.round(baseCount * 0.75));
+  }
+  return baseCount;
+}
+
 // ── Module widths ──
 
 export function calcModuleWidths(widthMm: number, moduleCount: number): number[] {
-  if (moduleCount <= 0) return [widthMm]; // custom: treat as single for drawing
+  if (moduleCount <= 0) return [widthMm];
   const w = widthMm / moduleCount;
   return Array.from({ length: moduleCount }, () => w);
 }
@@ -73,17 +104,63 @@ export function calcCarrierPositions(lengthMm: number, carrierCount: number): nu
   return positions;
 }
 
+// ── Profile selection per pergola type ──
+
+export interface ProfileSet {
+  rafter: string;
+  gutter: string;
+  carrier_post: string;
+  fabric_master: string;
+  fabric_carrier: string;
+  motor_box: string;
+  roof_sash: string;
+  motor_shaft_thick: string;
+  motor_shaft_thin: string;
+}
+
+const FIXED_PROFILES: ProfileSet = {
+  rafter: "Rafter Profile",
+  gutter: "Gutter Profile",
+  carrier_post: "Carrier Post Profile",
+  fabric_master: "Fabric Profile | Master",
+  fabric_carrier: "Fabric Profile | Carrier",
+  motor_box: "Motor Box Profile",
+  roof_sash: "Roof Sash Profile",
+  motor_shaft_thick: "Motor Shaft Pipe | Thick",
+  motor_shaft_thin: "Motor Shaft Pipe | Thin",
+};
+
+const PVC_PROFILES: ProfileSet = {
+  rafter: "Rafter Profile",
+  gutter: "Gutter Profile",
+  carrier_post: "Carrier Post Profile",
+  fabric_master: "PVC Fabric Profile | Master",
+  fabric_carrier: "PVC Fabric Profile | Carrier",
+  motor_box: "Motor Box Profile",
+  roof_sash: "Roof Sash Profile",
+  motor_shaft_thick: "Motor Shaft Pipe | Thick",
+  motor_shaft_thin: "Motor Shaft Pipe | Thin",
+};
+
+export function getProfilesForType(pergolaType: PergolaType): ProfileSet {
+  return pergolaType === "pvc" ? PVC_PROFILES : FIXED_PROFILES;
+}
+
 // ── Compose all specs ──
 
 export function computeSpecs(input: {
-  width: number;
-  length: number;
+  widthMm: number;
+  lengthMm: number;
   mountType: MountType;
+  spacingMode: SpacingMode;
+  pergolaType: PergolaType;
 }): PergolaSpecs {
-  const { classification, moduleCount } = classifyModule(input.width);
-  const carrierCount = calcCarrierCount(input.length);
-  const { front, back } = calcPostCount(input.width, input.mountType);
-  const moduleWidths = calcModuleWidths(input.width, moduleCount);
+  const { classification, moduleCount } = classifyModule(input.widthMm);
+  const carrierCount = adjustedCarrierCount(input.lengthMm, input.spacingMode);
+  const { front, back } = calcPostCount(input.widthMm, input.mountType);
+  const moduleWidths = calcModuleWidths(input.widthMm, moduleCount);
+  const spacingMm = calcSpacing(input.lengthMm, carrierCount, input.spacingMode);
+  const profiles = getProfilesForType(input.pergolaType);
 
   return {
     moduleClassification: classification,
@@ -92,5 +169,7 @@ export function computeSpecs(input: {
     frontPostCount: front,
     backPostCount: back,
     moduleWidths,
+    spacingMm,
+    profiles,
   };
 }
