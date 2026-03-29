@@ -6,7 +6,6 @@ import { calcSlatCount } from "@/lib/pergolaRules";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { PergolaPartsSection } from "./PergolaPartsSection";
 import { ArrowLeft, Send, User, FileText, Loader2 } from "lucide-react";
 
@@ -29,10 +28,21 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
 
   if (!specs) return null;
 
+  const handlePhoneChange = (value: string) => {
+    // Only allow digits
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    setPhone(digits);
+    if (digits.length > 0 && digits.length !== 10) {
+      setErrors((prev) => ({ ...prev, phone: t("pergolaRequest.phoneMustBe10") }));
+    } else {
+      setErrors((prev) => { const { phone: _, ...rest } = prev; return rest; });
+    }
+  };
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!name.trim() || name.trim().length < 2) errs.name = t("pergolaRequest.required");
-    if (!phone.trim() || !/^[0-9\s\-\+\(\)]{7,15}$/.test(phone.trim())) errs.phone = t("pergolaRequest.invalidPhone");
+    if (!phone.trim() || phone.trim().length !== 10 || !/^\d{10}$/.test(phone.trim())) errs.phone = t("pergolaRequest.phoneMustBe10");
     return errs;
   };
 
@@ -135,7 +145,7 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
           </div>
           <div className="space-y-1.5">
             <Label className="text-sm">{t("pergolaRequest.customerPhone")}</Label>
-            <Input value={phone} onChange={(e) => { setPhone(e.target.value); setErrors({}); }} type="tel" dir="ltr" />
+            <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} type="tel" dir="ltr" placeholder="05XXXXXXXX" maxLength={10} />
             {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
           </div>
         </div>
@@ -149,7 +159,19 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
         </div>
         <div className="flex items-center justify-between py-1">
           <Label className="text-sm">{t("pergolaRequest.installation")}</Label>
-          <Switch checked={installation} onCheckedChange={setInstallation} />
+          <button
+            type="button"
+            role="switch"
+            aria-checked={installation}
+            onClick={() => setInstallation(!installation)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+              installation ? "bg-gray-900" : "bg-gray-200"
+            }`}
+          >
+            <span className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+              installation ? "translate-x-5" : "translate-x-0"
+            }`} />
+          </button>
         </div>
       </div>
 

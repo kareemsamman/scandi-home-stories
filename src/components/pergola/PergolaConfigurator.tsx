@@ -9,7 +9,7 @@ import type { PergolaType } from "@/types/pergola";
 import { PergolaStartStep } from "./PergolaStartStep";
 import { PergolaEditorStep } from "./PergolaEditorStep";
 import { PergolaSummaryStep } from "./PergolaSummaryStep";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, Download } from "lucide-react";
 
 type Step = "start" | "editor" | "summary" | "success";
 
@@ -21,6 +21,7 @@ export const PergolaConfigurator = () => {
 
   const [step, setStep] = useState<Step>("start");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
 
   // Step 1 → Step 2: Initialize config and open editor
   const handleStart = (widthCm: number, lengthCm: number, pergolaType: PergolaType) => {
@@ -29,8 +30,38 @@ export const PergolaConfigurator = () => {
     setStep("editor");
   };
 
-  // Step 2 → Step 3: Move to summary
-  const handleEditorNext = () => {
+  // Step 2 → Step 3: Capture SVG from editor, then move to summary
+  const handleEditorNext = async () => {
+    // Capture SVG while it's still in the DOM
+    const svgEl = document.querySelector("#pergola-preview-svg svg") as SVGSVGElement | null;
+    if (svgEl && specs) {
+      try {
+        const pdfUrl = await generatePergolaPdf({
+          customerName: "",
+          customerPhone: "",
+          widthCm: Number(config.widthCm) || 400,
+          lengthCm: Number(config.lengthCm) || 400,
+          heightCm: Number(config.heightCm) || 250,
+          pergolaType: config.pergolaType || "fixed",
+          mountType: config.mountType || "wall",
+          installation: false,
+          lighting: config.lighting || "none",
+          lightingPosition: config.lightingPosition || "none",
+          lightingFixture: config.lightingFixture || "none",
+          lightingRoof: config.lightingRoof || false,
+          roofFillMode: config.roofFillMode || "slats",
+          slatGapCm: Number(config.slatGapCm) || 3,
+          slatColor: config.slatColor || "#383E42",
+          santaf: config.santaf || "without",
+          santafColor: config.santafColor || "",
+          frameColor: config.frameColor || "#383E42",
+          roofColor: config.roofColor || "#A5A5A5",
+          spacingMode: config.spacingMode || "automatic",
+          notes: "",
+        }, specs, locale, svgEl);
+        setGeneratedPdfUrl(pdfUrl);
+      } catch { /* proceed without PDF preview */ }
+    }
     setStep("summary");
   };
 
@@ -51,8 +82,8 @@ export const PergolaConfigurator = () => {
     setIsSubmitting(true);
 
     try {
-      const svgEl = document.querySelector("#pergola-preview-svg svg") as SVGSVGElement | null;
-      const pdfValues = {
+      // Regenerate PDF with customer details (SVG was captured when leaving editor)
+      const pdfUrl = await generatePergolaPdf({
         customerName,
         customerPhone,
         customerEmail,
@@ -68,15 +99,14 @@ export const PergolaConfigurator = () => {
         lightingRoof: config.lightingRoof || false,
         roofFillMode: config.roofFillMode || "slats",
         slatGapCm: Number(config.slatGapCm) || 3,
-        slatColor: config.slatColor || "#383838",
+        slatColor: config.slatColor || "#383E42",
         santaf: config.santaf || "without",
         santafColor: config.santafColor || "",
-        frameColor: config.frameColor || "#383838",
-        roofColor: config.roofColor || "#C0C0C0",
+        frameColor: config.frameColor || "#383E42",
+        roofColor: config.roofColor || "#A5A5A5",
         spacingMode: config.spacingMode || "automatic",
         notes,
-      };
-      const pdfUrl = await generatePergolaPdf(pdfValues, specs, locale, svgEl);
+      }, specs, locale, null); // null SVG — text-only PDF
 
       await createRequest.mutateAsync({
         customer_name: customerName,
@@ -107,12 +137,14 @@ export const PergolaConfigurator = () => {
         profile_preset: "standard",
         selected_profiles: specs.profiles as any,
         post_layout: null,
-        pdf_url: pdfUrl,
+        pdf_url: null, // PDF downloaded directly by customer
         locale,
       });
 
+      setGeneratedPdfUrl(pdfUrl);
       setStep("success");
-    } catch {
+    } catch (err) {
+      console.error("Submit error:", err);
       toast({
         title: locale === "ar" ? "خطأ" : "שגיאה",
         description: locale === "ar" ? "حدث خطأ. حاول مرة أخرى." : "אירעה שגיאה. נסו שוב.",
@@ -126,6 +158,13 @@ export const PergolaConfigurator = () => {
   // ── Step rendering ──
 
   if (step === "success") {
+    const handleDownloadPdf = () => {
+      if (!generatedPdfUrl) return;
+      const link = document.createElement("a");
+      link.href = generatedPdfUrl;
+      link.download = `pergola-request-${Date.now()}.pdf`;
+      link.click();
+    };
     return (
       <div className="text-center py-16 space-y-6">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -133,13 +172,24 @@ export const PergolaConfigurator = () => {
         </div>
         <h2 className="text-2xl font-bold text-gray-900">{t("pergolaRequest.successTitle")}</h2>
         <p className="text-gray-500 max-w-md mx-auto">{t("pergolaRequest.successText")}</p>
-        <a
-          href={localePath("/")}
-          className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors"
-        >
-          {t("pergolaRequest.backToHome")}
-          <ArrowRight className="w-4 h-4" />
-        </a>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {generatedPdfUrl && (
+            <button
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center gap-2 bg-white border-2 border-gray-900 text-gray-900 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+            >
+              <Download className="w-5 h-5" />
+              {t("pergolaRequest.downloadPdf")}
+            </button>
+          )}
+          <a
+            href={localePath("/")}
+            className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors"
+          >
+            {t("pergolaRequest.backToHome")}
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
       </div>
     );
   }

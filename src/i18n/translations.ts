@@ -577,6 +577,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       lightingPosts: 'תאורת עמודים',
       lightingLengthLabel: 'אורך פס תאורה',
       lightingPerCarrierHint: 'לחצו על נשא בשרטוט לבחירת תאורה לכל נשא בנפרד',
+      phoneMustBe10: 'מספר טלפון חייב להכיל 10 ספרות',
+      downloadPdf: 'הורד PDF',
     },
   },
   ar: {
@@ -1149,6 +1151,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       lightingPosts: 'إضاءة الأعمدة',
       lightingLengthLabel: 'طول شريط الإضاءة',
       lightingPerCarrierHint: 'انقر على حامل في الرسم لاختيار إضاءة لكل حامل بشكل منفصل',
+      phoneMustBe10: 'يجب أن يتكون رقم الهاتف من 10 أرقام',
+      downloadPdf: 'تحميل PDF',
     },
     notFound: {
       title: 'الصفحة غير موجودة',
