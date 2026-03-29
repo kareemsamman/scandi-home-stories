@@ -170,6 +170,17 @@ export const PergolaConfigurator = () => {
 
       setGeneratedPdfUrl(pdfUrl);
       setStep("success");
+
+      // Send SMS notification to admin (fire & forget)
+      try {
+        await supabase.functions.invoke("send-pergola-sms", {
+          body: {
+            action: "notify_admin",
+            request_id: result.id,
+            site_origin: window.location.origin,
+          },
+        });
+      } catch { /* non-critical */ }
     } catch (err: any) {
       const msg = err?.message || err?.error?.message || JSON.stringify(err);
       console.error("Submit error:", msg, err);
