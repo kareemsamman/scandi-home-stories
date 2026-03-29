@@ -1,7 +1,7 @@
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
-import { cmToMm, mmToCm, STANDARD_COLORS, SANTAF_COLORS } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
 import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
@@ -210,7 +210,18 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                     ))}
                   </div>
                   <p className="text-[10px] text-gray-400">{specs.slatCount} {t("pergolaRequest.slatsLabel")}</p>
-                  <MiniColorRow label={t("pergolaRequest.slatColor")} value={config.slatColor || "#383838"} onChange={(v) => setConfig({ slatColor: v })} colors={STANDARD_COLORS} />
+                  <div className="mt-1.5">
+                    <label className="text-[10px] text-gray-400">{t("pergolaRequest.slatSizeLabel")}</label>
+                    <div className="flex gap-1 mt-0.5">
+                      {SLAT_SIZES.map((s) => (
+                        <button key={s.id} onClick={() => setConfig({ slatSize: s.id as any, slatCount: 0 })}
+                          className={`flex-1 py-1 rounded-md text-[9px] font-medium border-2 transition-all ${
+                            (config.slatSize || "20x70") === s.id ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
+                          }`}>{s.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <MiniColorRow label={t("pergolaRequest.slatColor")} value={config.slatColor || "#383E42"} onChange={(v) => setConfig({ slatColor: v })} colors={SLAT_COLORS} />
                 </div>
               )}
               {config.roofFillMode === "santaf" && (

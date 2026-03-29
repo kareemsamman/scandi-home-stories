@@ -31,27 +31,38 @@ export interface ColorPreset {
   hex: string;
 }
 
+/** RAL color presets — used for frame, roof, and general elements */
 export const STANDARD_COLORS: ColorPreset[] = [
-  { id: 'white', name_he: 'לבן', name_ar: 'أبيض', hex: '#FFFFFF' },
-  { id: 'cream', name_he: 'שמנת', name_ar: 'كريمي', hex: '#FFF5E1' },
-  { id: 'silver', name_he: 'כסוף', name_ar: 'فضي', hex: '#C0C0C0' },
-  { id: 'anthracite', name_he: 'אנתרציט', name_ar: 'أنثراسايت', hex: '#383838' },
-  { id: 'black', name_he: 'שחור', name_ar: 'أسود', hex: '#1A1A1A' },
-  { id: 'brown', name_he: 'חום', name_ar: 'بني', hex: '#5C3317' },
-  { id: 'gray', name_he: 'אפור', name_ar: 'رمادي', hex: '#808080' },
-  { id: 'dark_gray', name_he: 'אפור כהה', name_ar: 'رمادي غامق', hex: '#4A4A4A' },
-  { id: 'wood_oak', name_he: 'אלון', name_ar: 'بلوط', hex: '#8B6914' },
-  { id: 'wood_walnut', name_he: 'אגוז', name_ar: 'جوز', hex: '#5C4033' },
+  { id: 'ral9007', name_he: 'RAL 9007 אפור אלומיניום', name_ar: 'RAL 9007 رمادي ألومنيوم', hex: '#8F8F8F' },
+  { id: 'ral7016', name_he: 'RAL 7016 אנתרציט', name_ar: 'RAL 7016 أنثراسايت', hex: '#383E42' },
+  { id: 'ral9016', name_he: 'RAL 9016 לבן', name_ar: 'RAL 9016 أبيض', hex: '#ECEAE4' },
+  { id: 'ral9005', name_he: 'RAL 9005 שחור', name_ar: 'RAL 9005 أسود', hex: '#0A0A0A' },
+  { id: 'ral9006', name_he: 'RAL 9006 אלומיניום לבן', name_ar: 'RAL 9006 ألومنيوم أبيض', hex: '#A5A5A5' },
+  { id: 'ral1013', name_he: 'RAL 1013 שנהב', name_ar: 'RAL 1013 عاجي', hex: '#E3D9BA' },
 ];
 
-export const SANTAF_COLORS: ColorPreset[] = [
-  { id: 'santaf_red', name_he: 'אדום', name_ar: 'أحمر', hex: '#B22222' },
-  { id: 'santaf_brown', name_he: 'חום', name_ar: 'بني', hex: '#6B3A2A' },
-  { id: 'santaf_gray', name_he: 'אפור', name_ar: 'رمادي', hex: '#6B6B6B' },
-  { id: 'santaf_black', name_he: 'שחור', name_ar: 'أسود', hex: '#2C2C2C' },
-  { id: 'santaf_green', name_he: 'ירוק', name_ar: 'أخضر', hex: '#2E5E3F' },
-  { id: 'santaf_terracotta', name_he: 'טרקוטה', name_ar: 'تيراكوتا', hex: '#C04000' },
+/** Profile/slat colors — RAL colors + 2 wood finishes */
+export const SLAT_COLORS: ColorPreset[] = [
+  ...STANDARD_COLORS,
+  { id: 'wood_dark', name_he: 'עץ כהה', name_ar: 'خشب غامق', hex: '#7A4B2A' },
+  { id: 'wood_light', name_he: 'עץ בהיר', name_ar: 'خشب فاتح', hex: '#C8923C' },
 ];
+
+/** סנטף colors — only 2 options */
+export const SANTAF_COLORS: ColorPreset[] = [
+  { id: 'santaf_gray', name_he: 'אפור', name_ar: 'رمادي', hex: '#7A8B9A' },
+  { id: 'santaf_clear', name_he: 'שקוף / תכלת', name_ar: 'شفاف / أزرق فاتح', hex: '#A8D4E6' },
+];
+
+/** Slat profile sizes (width x height in mm) */
+export const SLAT_SIZES = [
+  { id: '20x70', label: '20 × 70 mm', widthMm: 20, heightMm: 70 },
+  { id: '20x40', label: '20 × 40 mm', widthMm: 20, heightMm: 40 },
+] as const;
+export type SlatSizeId = typeof SLAT_SIZES[number]['id'];
+
+/** Slat available lengths in mm */
+export const SLAT_LENGTHS = [3000, 4000, 6000] as const;
 
 /** What the customer fills in the form — dimensions in cm */
 export interface PergolaFormInput {
@@ -72,6 +83,7 @@ export interface PergolaFormInput {
   // Slats (when roofFillMode === 'slats')
   slatCount: number;
   slatGapCm: number; // gap between slats in cm (1, 2, 3, 4)
+  slatSize: SlatSizeId; // '20x70' or '20x40'
   slatColor: string;
   // Santaf (when roofFillMode === 'santaf')
   santaf: SantafChoice;

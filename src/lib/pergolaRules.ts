@@ -147,19 +147,34 @@ export function getProfilesForType(pergolaType: PergolaType): ProfileSet {
 }
 
 // ── Slat calculations for fixed pergola ──
+// Slat sizes: 20×70mm or 20×40mm — the 20mm is the visible face width when mounted vertically
 
-const SLAT_PROFILE_WIDTH_MM = 40; // each slat profile is ~40mm wide
+export function getSlatProfileWidth(slatSize: string): number {
+  return slatSize === "20x40" ? 20 : 20; // both are 20mm face width
+}
 
-export function calcSlatCount(widthMm: number, gapMm: number): number {
+export function getSlatProfileHeight(slatSize: string): number {
+  return slatSize === "20x40" ? 40 : 70;
+}
+
+export function calcSlatCount(widthMm: number, gapMm: number, slatSize?: string): number {
   if (gapMm <= 0) return 0;
-  const totalUnit = SLAT_PROFILE_WIDTH_MM + gapMm;
+  const slatW = getSlatProfileWidth(slatSize || "20x70");
+  const totalUnit = slatW + gapMm;
   return Math.max(2, Math.floor(widthMm / totalUnit));
 }
 
-export function calcSlatGapFromCount(widthMm: number, count: number): number {
+export function calcSlatGapFromCount(widthMm: number, count: number, slatSize?: string): number {
   if (count <= 1) return widthMm;
-  const totalSlatWidth = count * SLAT_PROFILE_WIDTH_MM;
+  const slatW = getSlatProfileWidth(slatSize || "20x70");
+  const totalSlatWidth = count * slatW;
   return Math.max(5, Math.round((widthMm - totalSlatWidth) / (count + 1)));
+}
+
+/** How many slats fit between each pair of carriers (נשאים) */
+export function slatsPerCarrier(totalSlats: number, carrierCount: number): number {
+  if (carrierCount <= 1) return totalSlats;
+  return Math.round(totalSlats / (carrierCount - 1));
 }
 
 /** Valid gap presets in cm */
@@ -181,6 +196,7 @@ export function computeSpecs(input: {
   pergolaType: PergolaType;
   slatGapCm?: number;
   slatCount?: number;
+  slatSize?: string;
 }): PergolaSpecs {
   const { classification, moduleCount } = classifyModule(input.widthMm);
   const carrierCount = adjustedCarrierCount(input.lengthMm, input.spacingMode);
@@ -191,8 +207,9 @@ export function computeSpecs(input: {
 
   // Slat calculations for fixed pergola
   const gapMm = (input.slatGapCm || 3) * 10;
-  const slatCount = input.slatCount || calcSlatCount(input.widthMm, gapMm);
-  const slatGapMm = calcSlatGapFromCount(input.widthMm, slatCount);
+  const ss = input.slatSize || "20x70";
+  const slatCount = input.slatCount || calcSlatCount(input.widthMm, gapMm, ss);
+  const slatGapMm = calcSlatGapFromCount(input.widthMm, slatCount, ss);
 
   return {
     moduleClassification: classification,
@@ -205,6 +222,6 @@ export function computeSpecs(input: {
     profiles,
     slatCount,
     slatGapMm,
-    slatWidthMm: SLAT_PROFILE_WIDTH_MM,
+    slatWidthMm: getSlatProfileWidth(ss),
   };
 }

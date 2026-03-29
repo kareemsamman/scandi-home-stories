@@ -571,6 +571,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatsLabel: 'שלבים',
       slatGap: 'מרווח בין שלבים',
       slatColor: 'צבע שלבים',
+      slatSizeLabel: 'גודל פרופיל שלב',
+      slatsPerCarrier: 'שלבים לכל נשא',
     },
   },
   ar: {
@@ -1137,6 +1139,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatsLabel: 'شرائح',
       slatGap: 'المسافة بين الشرائح',
       slatColor: 'لون الشرائح',
+      slatSizeLabel: 'حجم بروفيل الشريحة',
+      slatsPerCarrier: 'شرائح لكل حامل',
     },
     notFound: {
       title: 'الصفحة غير موجودة',

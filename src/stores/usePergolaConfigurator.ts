@@ -20,7 +20,8 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   roofFillMode: "slats",
   slatCount: 0, // 0 = auto-calculate
   slatGapCm: 3,
-  slatColor: "#383838",
+  slatSize: "20x70",
+  slatColor: "#383E42",
   santaf: "without",
   santafColor: "",
   frameColor: "#383838",
@@ -44,6 +45,7 @@ function recompute(config: Partial<PergolaFormInput>): PergolaSpecs | null {
     pergolaType: (config.pergolaType || "fixed") as PergolaType,
     slatGapCm: Number(config.slatGapCm) || 3,
     slatCount: Number(config.slatCount) || undefined,
+    slatSize: (config.slatSize as string) || "20x70",
   });
 }
 

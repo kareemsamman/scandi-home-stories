@@ -1,6 +1,7 @@
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useLocale } from "@/i18n/useLocale";
 import { mmToCm } from "@/types/pergola";
+import { slatsPerCarrier } from "@/lib/pergolaRules";
 import { AlertTriangle } from "lucide-react";
 
 export const PergolaSpecsSummary = () => {
@@ -16,6 +17,7 @@ export const PergolaSpecsSummary = () => {
     custom: t("pergolaRequest.moduleCustom"),
   };
   const isCustom = specs.moduleClassification === "custom";
+  const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
 
   const rows: [string, string][] = [
     [t("pergolaRequest.moduleType"), moduleLabels[specs.moduleClassification]],
@@ -27,7 +29,20 @@ export const PergolaSpecsSummary = () => {
   }
   rows.push([t("pergolaRequest.spacingLabel"), `~${mmToCm(specs.spacingMm)} cm`]);
 
-  // Lighting summary
+  // Slat info for fixed pergola
+  if (isFixedSlats) {
+    rows.push([t("pergolaRequest.slatsLabel"), String(specs.slatCount)]);
+    rows.push([t("pergolaRequest.slatsPerCarrier"), String(slatsPerCarrier(specs.slatCount, specs.carrierCount))]);
+    rows.push([t("pergolaRequest.slatGap"), `${config.slatGapCm || 3} cm`]);
+    rows.push([t("pergolaRequest.slatSizeLabel"), config.slatSize === "20x40" ? "20 × 40 mm" : "20 × 70 mm"]);
+  }
+
+  // Roof fill mode
+  if (config.pergolaType === "fixed") {
+    rows.push([t("pergolaRequest.roofFillMode"), config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")]);
+  }
+
+  // Lighting
   if (config.lighting && config.lighting !== "none") {
     rows.push([t("pergolaRequest.lightingLabel"), t(`pergolaRequest.lighting${config.lighting.charAt(0).toUpperCase() + config.lighting.slice(1)}`)]);
     if (config.lightingFixture && config.lightingFixture !== "none") {
@@ -38,8 +53,8 @@ export const PergolaSpecsSummary = () => {
     }
   }
 
-  // Santaf
-  if (config.santaf === "with") {
+  // Santaf (for santaf mode or PVC)
+  if (config.santaf === "with" || config.roofFillMode === "santaf") {
     rows.push([t("pergolaRequest.santafRoofing"), t("pergolaRequest.santafWith")]);
   }
 
@@ -48,11 +63,10 @@ export const PergolaSpecsSummary = () => {
     rows.push([t("pergolaRequest.height"), `${config.heightCm} cm`]);
   }
 
-  // Profiles summary
+  // Profiles
   if (specs.profiles) {
     rows.push([t("pergolaRequest.profileRafter"), specs.profiles.rafter]);
     rows.push([t("pergolaRequest.profileCarrierPost"), specs.profiles.carrier_post]);
-    rows.push([t("pergolaRequest.profileFabricMaster"), specs.profiles.fabric_master]);
   }
 
   return (

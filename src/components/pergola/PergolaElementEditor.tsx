@@ -2,8 +2,8 @@ import { X, Plus, Trash2, Lightbulb, AlertCircle } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaEditor, canAddPost, canRemovePost, canTogglePostLight } from "@/stores/usePergolaEditor";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
-import { cmToMm, mmToCm, STANDARD_COLORS, SANTAF_COLORS } from "@/types/pergola";
-import type { LightingChoice, SantafChoice } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
+import type { LightingChoice, SantafChoice, SlatSizeId } from "@/types/pergola";
 import { calcPostCount } from "@/lib/pergolaRules";
 
 export const PergolaElementEditor = () => {
@@ -188,6 +188,12 @@ export const PergolaElementEditor = () => {
 
         {config.roofFillMode === "slats" && (
           <>
+            <Label>גודל פרופיל שלב</Label>
+            <div className="flex gap-1.5 mb-3">
+              {SLAT_SIZES.map((s) => (
+                <ToggleBtn key={s.id} active={(config.slatSize || "20x70") === s.id} onClick={() => setConfig({ slatSize: s.id as SlatSizeId, slatCount: 0 })} label={s.label} />
+              ))}
+            </div>
             <Label>מרווח בין שלבים (ס"מ)</Label>
             <div className="flex gap-1.5 mb-3">
               {gapPresets.map((g) => (
@@ -199,7 +205,7 @@ export const PergolaElementEditor = () => {
             )}
             <div className="mt-3">
               <Label>צבע שלבים</Label>
-              <ColorPicker value={config.slatColor || "#383838"} colors={STANDARD_COLORS} locale={locale} onChange={(hex) => setConfig({ slatColor: hex })} />
+              <ColorPicker value={config.slatColor || "#383E42"} colors={SLAT_COLORS} locale={locale} onChange={(hex) => setConfig({ slatColor: hex })} />
             </div>
           </>
         )}
