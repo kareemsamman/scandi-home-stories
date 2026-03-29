@@ -640,6 +640,7 @@ export type Database = {
         Row: {
           admin_modified_config: Json | null
           admin_notes: string | null
+          admin_response_sent_at: string | null
           back_post_count: number
           carrier_count: number
           created_at: string | null
@@ -665,6 +666,8 @@ export type Database = {
           pergola_type: string
           post_layout: Json | null
           profile_preset: string | null
+          quoted_price: number | null
+          response_token: string | null
           roof_color: string | null
           santaf_color: string | null
           santaf_roofing: boolean
@@ -678,6 +681,7 @@ export type Database = {
         Insert: {
           admin_modified_config?: Json | null
           admin_notes?: string | null
+          admin_response_sent_at?: string | null
           back_post_count?: number
           carrier_count: number
           created_at?: string | null
@@ -703,6 +707,8 @@ export type Database = {
           pergola_type?: string
           post_layout?: Json | null
           profile_preset?: string | null
+          quoted_price?: number | null
+          response_token?: string | null
           roof_color?: string | null
           santaf_color?: string | null
           santaf_roofing?: boolean
@@ -716,6 +722,7 @@ export type Database = {
         Update: {
           admin_modified_config?: Json | null
           admin_notes?: string | null
+          admin_response_sent_at?: string | null
           back_post_count?: number
           carrier_count?: number
           created_at?: string | null
@@ -741,6 +748,8 @@ export type Database = {
           pergola_type?: string
           post_layout?: Json | null
           profile_preset?: string | null
+          quoted_price?: number | null
+          response_token?: string | null
           roof_color?: string | null
           santaf_color?: string | null
           santaf_roofing?: boolean
