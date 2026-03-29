@@ -41,12 +41,14 @@ const AdminPergolaRequestDetail = () => {
 
   const [status, setStatus] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [quotedPrice, setQuotedPrice] = useState<string>("");
   const [activeView, setActiveView] = useState<"top" | "front" | "isometric">("top");
   const [editingSpecs, setEditingSpecs] = useState(false);
   const [editedFrontPosts, setEditedFrontPosts] = useState(0);
   const [editedBackPosts, setEditedBackPosts] = useState(0);
   const [editLightingPosts, setEditLightingPosts] = useState<number[]>([]);
   const [inited, setInited] = useState(false);
+  const [sendingSms, setSendingSms] = useState(false);
 
   if (req && !inited) {
     setStatus(req.status);
