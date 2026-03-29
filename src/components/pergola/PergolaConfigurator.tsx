@@ -15,7 +15,7 @@ type Step = "start" | "editor" | "summary" | "success";
 
 export const PergolaConfigurator = () => {
   const { t, locale, localePath } = useLocale();
-  const { specs, config, setConfig, setActiveView } = usePergolaConfigurator();
+  const { specs, config, setConfig, setActiveView, carrierConfigs } = usePergolaConfigurator();
   const createRequest = useCreatePergolaRequest();
   const { toast } = useToast();
 
@@ -108,6 +108,23 @@ export const PergolaConfigurator = () => {
         notes,
       }, specs, locale, null); // null SVG — text-only PDF
 
+      // Build extra config data as JSON (safe for both v1 and v2 schemas)
+      const extraConfig = {
+        lighting_position: config.lightingPosition || "none",
+        lighting_type: config.lightingFixture || "none",
+        lighting_posts: config.lightingPosts || [],
+        lighting_roof: config.lightingRoof || false,
+        santaf_color: config.santafColor || "",
+        spacing_mode: config.spacingMode || "automatic",
+        spacing_cm: specs.spacingMm / 10,
+        roof_fill_mode: config.roofFillMode || "slats",
+        slat_gap_cm: Number(config.slatGapCm) || 3,
+        slat_size: config.slatSize || "20x70",
+        slat_color: config.slatColor || "#383E42",
+        profiles: specs.profiles,
+        carrier_configs: carrierConfigs,
+      };
+
       await createRequest.mutateAsync({
         customer_name: customerName,
         customer_phone: customerPhone,
@@ -119,25 +136,16 @@ export const PergolaConfigurator = () => {
         mount_type: config.mountType || "wall",
         installation,
         lighting: config.lighting || "none",
-        lighting_position: config.lightingPosition || "none",
-        lighting_type: config.lightingFixture || "none",
-        lighting_posts: config.lightingPosts || [],
-        lighting_roof: config.lightingRoof || false,
         santaf_roofing: config.santaf === "with",
-        santaf_color: config.santafColor || "",
-        frame_color: config.frameColor || "#383838",
-        roof_color: config.roofColor || "#C0C0C0",
+        frame_color: config.frameColor || "#383E42",
+        roof_color: config.roofColor || "#A5A5A5",
         notes,
         module_classification: specs.moduleClassification,
         carrier_count: specs.carrierCount,
         front_post_count: specs.frontPostCount,
         back_post_count: specs.backPostCount,
-        spacing_mode: config.spacingMode || "automatic",
-        spacing_cm: specs.spacingMm / 10,
-        profile_preset: "standard",
-        selected_profiles: specs.profiles as any,
-        post_layout: null,
-        pdf_url: null, // PDF downloaded directly by customer
+        admin_modified_config: extraConfig,
+        pdf_url: null,
         locale,
       });
 
@@ -208,6 +216,7 @@ export const PergolaConfigurator = () => {
         onBack={handleSummaryBack}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        pdfUrl={generatedPdfUrl}
       />
     );
   }

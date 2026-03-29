@@ -7,15 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { PergolaPartsSection } from "./PergolaPartsSection";
-import { ArrowLeft, Send, User, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, User, FileText, Loader2, Download } from "lucide-react";
 
 interface Props {
   onBack: () => void;
   onSubmit: (customerName: string, customerPhone: string, customerEmail: string, notes: string, installation: boolean) => void;
   isSubmitting: boolean;
+  pdfUrl: string | null;
 }
 
-export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) => {
+export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: Props) => {
   const { t, locale } = useLocale();
   const { config, specs, carrierConfigs } = usePergolaConfigurator();
 
@@ -98,6 +99,22 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
             <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={config.santafColor} color={config.santafColor} />
           )}
         </div>
+
+        {/* PDF Download */}
+        {pdfUrl && (
+          <button
+            onClick={() => {
+              const link = document.createElement("a");
+              link.href = pdfUrl;
+              link.download = `pergola-request-${Date.now()}.pdf`;
+              link.click();
+            }}
+            className="inline-flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          >
+            <Download className="w-5 h-5" />
+            {t("pergolaRequest.downloadPdf")}
+          </button>
+        )}
       </div>
 
       {/* Parts section */}
