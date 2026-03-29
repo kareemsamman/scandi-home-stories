@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  STANDARD_COLORS, SANTAF_COLORS,
+  STANDARD_COLORS, SANTAF_COLORS, LIGHTING_TEMPS,
   type MountType, type LightingChoice, type SpacingMode, type PergolaType, type SantafChoice,
   type LightingPosition, type LightingFixture,
 } from "@/types/pergola";

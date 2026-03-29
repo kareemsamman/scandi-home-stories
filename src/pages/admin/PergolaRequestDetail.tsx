@@ -102,7 +102,7 @@ const AdminPergolaRequestDetail = () => {
     }
     updates.lighting_posts = editLightingPosts;
     try {
-      await updateRequest.mutateAsync(updates);
+      await updateRequest.mutateAsync(updates as { id: string; [key: string]: any });
       toast({ title: "הבקשה עודכנה" });
       setEditingSpecs(false);
     } catch {
