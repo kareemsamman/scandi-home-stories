@@ -4,6 +4,7 @@ import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useCreatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
 import { generatePergolaPdf, svgToImage, type PdfImages } from "@/lib/generatePergolaPdf";
+import { supabase } from "@/integrations/supabase/client";
 import { cmToMm } from "@/types/pergola";
 import type { PergolaType } from "@/types/pergola";
 import { PergolaStartStep } from "./PergolaStartStep";
