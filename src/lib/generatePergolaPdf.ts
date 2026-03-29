@@ -55,28 +55,39 @@ export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
 }
 
 export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<CapturedImage> {
-  const svgData = new XMLSerializer().serializeToString(svgEl);
+  // Clone the SVG and set explicit pixel dimensions for high-res capture
+  const clone = svgEl.cloneNode(true) as SVGSVGElement;
+  const vb = svgEl.getAttribute("viewBox");
+  let vbW = 1000, vbH = 1000;
+  if (vb) {
+    const parts = vb.split(/[\s,]+/).map(Number);
+    if (parts.length >= 4) { vbW = parts[2]; vbH = parts[3]; }
+  }
+  const ratio = vbW / vbH;
+
+  // Render at high resolution: 2400px wide
+  const renderW = 2400;
+  const renderH = Math.round(renderW / ratio);
+  clone.setAttribute("width", String(renderW));
+  clone.setAttribute("height", String(renderH));
+
+  const svgData = new XMLSerializer().serializeToString(clone);
   const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      const scale = 2.5;
-      canvas.width = img.naturalWidth * scale;
-      canvas.height = img.naturalHeight * scale;
+      canvas.width = renderW;
+      canvas.height = renderH;
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const data = canvas.toDataURL("image/png");
+      ctx.drawImage(img, 0, 0, renderW, renderH);
+      const data = canvas.toDataURL("image/png", 0.92);
       URL.revokeObjectURL(url);
-      resolve({
-        data,
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-        ratio: img.naturalWidth / img.naturalHeight,
-      });
+      resolve({ data, width: renderW, height: renderH, ratio });
     };
     img.onerror = reject;
     img.src = url;
@@ -254,28 +265,33 @@ export async function generatePergolaPdf(
     y = 30;
 
     for (const [label, entry] of availableViews) {
-      // Auto-calculate height from aspect ratio
-      const imgW = cw - 4;
-      const imgH = Math.min(120, Math.max(40, imgW / entry.ratio));
-      const frameH = imgH + 4;
+      // Fit image proportionally within page width
+      const maxImgW = cw - 8;
+      const maxImgH = 130; // max height per image on page
+      let imgW = maxImgW;
+      let imgH = imgW / entry.ratio;
+      if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * entry.ratio; }
+      const frameW = imgW + 8;
+      const frameH = imgH + 8;
+      const frameX = m + (cw - frameW) / 2; // center the frame
 
-      if (y + frameH + 12 > H - 30) {
+      if (y + frameH + 14 > H - 30) {
         doc.addPage();
         y = m;
       }
 
       // Label
       txt(label, W / 2, y, 9, [80, 80, 80], true, "center");
-      y += 4;
+      y += 5;
 
-      // Frame
+      // Frame — centered
       doc.setDrawColor(230, 230, 230);
-      doc.setFillColor(250, 250, 250);
-      doc.roundedRect(m, y, cw, frameH, 2, 2, "FD");
+      doc.setFillColor(252, 252, 252);
+      doc.roundedRect(frameX, y, frameW, frameH, 2, 2, "FD");
 
-      // Image — auto height
-      doc.addImage(entry.data, "PNG", m + 2, y + 2, imgW, imgH);
-      y += frameH + 8;
+      // Image — proportional, centered in frame
+      doc.addImage(entry.data, "PNG", frameX + 4, y + 4, imgW, imgH);
+      y += frameH + 10;
     }
   }
 
