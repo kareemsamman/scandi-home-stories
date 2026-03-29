@@ -65,8 +65,8 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
   }
   const ratio = vbW / vbH;
 
-  // Render at good quality but not huge: 1200px wide, JPEG compression
-  const renderW = 1200;
+  // Render at moderate resolution for small PDF (~1-2MB total)
+  const renderW = 900;
   const renderH = Math.round(renderW / ratio);
   clone.setAttribute("width", String(renderW));
   clone.setAttribute("height", String(renderH));
@@ -85,7 +85,7 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
       ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, renderW, renderH);
-      const data = canvas.toDataURL("image/jpeg", 0.75);
+      const data = canvas.toDataURL("image/jpeg", 0.6);
       URL.revokeObjectURL(url);
       resolve({ data, width: renderW, height: renderH, ratio });
     };
