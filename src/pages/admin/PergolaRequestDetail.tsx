@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronRight, Download, Loader2 } from "lucide-react";
+import { ChevronRight, Download, Loader2, Send } from "lucide-react";
 import { usePergolaRequestById, useUpdatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
 import { computeSpecs } from "@/lib/pergolaRules";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
 import { PergolaTopView } from "@/components/pergola/PergolaTopView";
 import { PergolaFrontView } from "@/components/pergola/PergolaFrontView";
 import { PergolaIsometricView } from "@/components/pergola/PergolaIsometricView";
