@@ -78,7 +78,22 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
             config.lighting === "none" ? t("pergolaRequest.lightingNone") :
             config.lighting === "white" ? t("pergolaRequest.lightingWhite") : "RGB"
           } />
-          <SummaryCard label={t("pergolaRequest.santafRoofing")} value={config.santaf === "with" ? t("pergolaRequest.santafWith") : t("pergolaRequest.santafWithout")} />
+          {config.pergolaType === "fixed" && (
+            <SummaryCard label={t("pergolaRequest.roofFillMode")} value={config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")} />
+          )}
+          {config.roofFillMode === "slats" && config.pergolaType === "fixed" && (
+            <>
+              <SummaryCard label={t("pergolaRequest.slatsLabel")} value={String(specs.slatCount)} />
+              <SummaryCard label={t("pergolaRequest.slatGap")} value={`${config.slatGapCm || 3} cm`} />
+              <SummaryCard label={t("pergolaRequest.slatColor")} value={config.slatColor || "#383838"} color={config.slatColor} />
+            </>
+          )}
+          {(config.roofFillMode === "santaf" || config.santaf === "with") && (
+            <SummaryCard label={t("pergolaRequest.santafRoofing")} value={t("pergolaRequest.santafWith")} />
+          )}
+          {(config.roofFillMode !== "santaf" && config.santaf !== "with") && config.pergolaType !== "fixed" && (
+            <SummaryCard label={t("pergolaRequest.santafRoofing")} value={t("pergolaRequest.santafWithout")} />
+          )}
           <SummaryCard label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383838"} color={config.frameColor} />
           <SummaryCard label={t("pergolaRequest.roofColor")} value={config.roofColor || "#C0C0C0"} color={config.roofColor} />
           {config.santaf === "with" && config.santafColor && (

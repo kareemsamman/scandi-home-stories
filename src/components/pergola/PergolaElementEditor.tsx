@@ -173,6 +173,47 @@ export const PergolaElementEditor = () => {
     );
   }
 
+  // ── Slats editor (fixed pergola) ──
+  if (selected.type === "slats") {
+    const gapPresets = [1, 2, 3, 4];
+    const currentGap = Number(config.slatGapCm) || 3;
+    return (
+      <Panel onClose={close} title="פרופילים פנימיים / שלבים">
+        {/* Roof fill mode toggle */}
+        <Label>מצב מילוי גג</Label>
+        <div className="flex gap-2 mb-3">
+          <ToggleBtn active={config.roofFillMode === "slats"} onClick={() => setConfig({ roofFillMode: "slats", santaf: "without" })} label="פרופילים / שלבים" />
+          <ToggleBtn active={config.roofFillMode === "santaf"} onClick={() => setConfig({ roofFillMode: "santaf", santaf: "with" })} label="סנטף בלבד" />
+        </div>
+
+        {config.roofFillMode === "slats" && (
+          <>
+            <Label>מרווח בין שלבים (ס"מ)</Label>
+            <div className="flex gap-1.5 mb-3">
+              {gapPresets.map((g) => (
+                <ToggleBtn key={g} active={currentGap === g} onClick={() => setConfig({ slatGapCm: g, slatCount: 0 })} label={`${g} ס"מ`} />
+              ))}
+            </div>
+            {specs && (
+              <p className="text-xs text-gray-400">{specs.slatCount} שלבים &middot; מרווח ~{mmToCm(specs.slatGapMm)} ס"מ</p>
+            )}
+            <div className="mt-3">
+              <Label>צבע שלבים</Label>
+              <ColorPicker value={config.slatColor || "#383838"} colors={STANDARD_COLORS} locale={locale} onChange={(hex) => setConfig({ slatColor: hex })} />
+            </div>
+          </>
+        )}
+
+        {config.roofFillMode === "santaf" && (
+          <div className="mt-2">
+            <Label>צבע סנטף</Label>
+            <ColorPicker value={config.santafColor || "#B22222"} colors={SANTAF_COLORS} locale={locale} onChange={(hex) => setConfig({ santafColor: hex })} />
+          </div>
+        )}
+      </Panel>
+    );
+  }
+
   return null;
 };
 

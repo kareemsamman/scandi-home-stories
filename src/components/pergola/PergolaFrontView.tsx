@@ -8,8 +8,9 @@ interface Props { config: DrawingConfig }
 const PAD = 500;
 
 export const PergolaFrontView = ({ config }: Props) => {
-  const { widthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, santaf, santafColor, specs, frameColor, roofColor } = config;
+  const { widthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType } = config;
   const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
+  const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
   const slopeOffset = 140;
@@ -81,6 +82,24 @@ export const PergolaFrontView = ({ config }: Props) => {
             className="cursor-pointer"
             onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
         );
+      })()}
+
+      {/* Internal slats cross-section (fixed pergola, slat mode) */}
+      {isFixedSlats && specs.slatCount > 0 && (() => {
+        const slatW = specs.slatWidthMm;
+        const totalSlats = specs.slatCount;
+        const gap = specs.slatGapMm;
+        const totalUsed = totalSlats * slatW + (totalSlats + 1) * gap;
+        const startX = (widthMm - totalUsed) / 2 + gap;
+        const slatH = beamH * 0.6;
+        return Array.from({ length: Math.min(totalSlats, 60) }, (_, i) => {
+          const x = startX + i * (slatW + gap);
+          return (
+            <rect key={`slat-f-${i}`} x={ox + x} y={groundY - heightMm - beamH + (beamH - slatH) / 2}
+              width={slatW} height={slatH}
+              fill={slatColor || "#383838"} fillOpacity={0.6} rx={1} />
+          );
+        });
       })()}
 
       {/* Slope line */}

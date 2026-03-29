@@ -17,6 +17,10 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   lightingFixture: "none",
   lightingRoof: false,
   lightingPosts: [],
+  roofFillMode: "slats",
+  slatCount: 0, // 0 = auto-calculate
+  slatGapCm: 3,
+  slatColor: "#383838",
   santaf: "without",
   santafColor: "",
   frameColor: "#383838",
@@ -38,6 +42,8 @@ function recompute(config: Partial<PergolaFormInput>): PergolaSpecs | null {
     mountType: (config.mountType || "wall") as MountType,
     spacingMode: (config.spacingMode || "automatic") as SpacingMode,
     pergolaType: (config.pergolaType || "fixed") as PergolaType,
+    slatGapCm: Number(config.slatGapCm) || 3,
+    slatCount: Number(config.slatCount) || undefined,
   });
 }
 

@@ -13,6 +13,7 @@ export type ElementType =
   | "frame"
   | "carrier"
   | "roof_lighting"
+  | "slats"
   | "add_post_slot";
 
 export interface SelectedElement {

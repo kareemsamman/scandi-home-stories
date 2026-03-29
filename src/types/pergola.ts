@@ -7,6 +7,7 @@ export type PergolaRequestStatus = 'new' | 'in_review' | 'needs_inspection' | 'r
 export type SpacingMode = 'automatic' | 'dense' | 'standard' | 'wide';
 export type PergolaType = 'fixed' | 'pvc';
 export type SantafChoice = 'without' | 'with';
+export type RoofFillMode = 'slats' | 'santaf'; // for fixed pergola only
 
 /** Profile names matching the technical PDF reference */
 export const PROFILE_NAMES = [
@@ -66,7 +67,13 @@ export interface PergolaFormInput {
   lightingFixture: LightingFixture;
   lightingRoof: boolean;
   lightingPosts: number[]; // indices of posts with lights (for selected_posts)
-  // Santaf
+  // Roof fill mode (fixed pergola only)
+  roofFillMode: RoofFillMode;
+  // Slats (when roofFillMode === 'slats')
+  slatCount: number;
+  slatGapCm: number; // gap between slats in cm (1, 2, 3, 4)
+  slatColor: string;
+  // Santaf (when roofFillMode === 'santaf')
   santaf: SantafChoice;
   santafColor: string;
   // Colors
@@ -93,6 +100,10 @@ export interface PergolaSpecs {
   moduleWidths: number[]; // in mm
   spacingMm: number; // actual spacing between profiles in mm
   profiles: Record<ProfileName, string>; // which profiles are active
+  // Slat calculations (fixed pergola)
+  slatCount: number;
+  slatGapMm: number;
+  slatWidthMm: number; // each slat profile width
 }
 
 /** Full DB row */
@@ -146,11 +157,14 @@ export interface DrawingConfig {
   lightingFixture: LightingFixture;
   lightingRoof: boolean;
   lightingPosts: number[];
+  roofFillMode: RoofFillMode;
   santaf: SantafChoice;
   santafColor: string;
+  slatColor: string;
   specs: PergolaSpecs;
   frameColor: string;
   roofColor: string;
+  pergolaType: PergolaType;
 }
 
 // ── Helpers ──

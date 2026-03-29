@@ -8,8 +8,9 @@ interface Props { config: DrawingConfig }
 const PAD = 500;
 
 export const PergolaTopView = ({ config }: Props) => {
-  const { widthMm, lengthMm, mountType, lighting, lightingPosition, lightingRoof, lightingPosts, santaf, santafColor, specs, frameColor, roofColor } = config;
+  const { widthMm, lengthMm, mountType, lighting, lightingPosition, lightingRoof, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType } = config;
   const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
+  const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
   const carrierPositions = calcCarrierPositions(lengthMm, specs.carrierCount);
@@ -102,6 +103,38 @@ export const PergolaTopView = ({ config }: Props) => {
             onMouseLeave={handleHover(null)} />
         </g>
       ))}
+
+      {/* Internal slats (fixed pergola, slat mode) — clickable area */}
+      {isFixedSlats && specs.slatCount > 0 && (() => {
+        const slatW = specs.slatWidthMm;
+        const totalSlats = specs.slatCount;
+        const gap = specs.slatGapMm;
+        const totalUsed = totalSlats * slatW + (totalSlats + 1) * gap;
+        const startX = (widthMm - totalUsed) / 2 + gap;
+        const el: SelectedElement = { type: "slats", index: -1 };
+        const isSel = isSelected(el);
+        return (
+          <g className="cursor-pointer" onClick={handleClick(el)}
+            onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
+            {/* Hit target for entire slat area */}
+            <rect x={ox + 10} y={oy + 10} width={widthMm - 20} height={lengthMm - 20}
+              fill="transparent" />
+            {/* Selection border */}
+            {isSel && (
+              <rect x={ox + 5} y={oy + 5} width={widthMm - 10} height={lengthMm - 10}
+                fill="none" stroke="#2563EB" strokeWidth={6} rx={6} strokeDasharray="20 8" />
+            )}
+            {/* Individual slat lines */}
+            {Array.from({ length: totalSlats }, (_, i) => {
+              const x = startX + i * (slatW + gap);
+              return (
+                <rect key={`slat-${i}`} x={ox + x} y={oy + 15} width={slatW} height={lengthMm - 30}
+                  fill={slatColor || "#383838"} fillOpacity={0.7} rx={2} />
+              );
+            })}
+          </g>
+        );
+      })()}
 
       {/* Roof lighting — clickable */}
       {lighting !== "none" && (

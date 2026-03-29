@@ -82,11 +82,14 @@ const AdminPergolaRequestDetail = () => {
     lightingFixture: (req.lighting_type || "none") as LightingFixture,
     lightingRoof: req.lighting_roof || false,
     lightingPosts: editLightingPosts,
+    roofFillMode: req.santaf_roofing ? "santaf" : "slats",
     santaf: req.santaf_roofing ? "with" : "without",
     santafColor: req.santaf_color || "",
+    slatColor: req.frame_color || "#383838",
     specs: displaySpecs,
     frameColor: req.frame_color || "#383838",
     roofColor: req.roof_color || "#C0C0C0",
+    pergolaType: (req.pergola_type || "fixed") as any,
   };
 
   const handleSave = async () => {

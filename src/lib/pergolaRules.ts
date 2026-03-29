@@ -146,6 +146,31 @@ export function getProfilesForType(pergolaType: PergolaType): ProfileSet {
   return pergolaType === "pvc" ? PVC_PROFILES : FIXED_PROFILES;
 }
 
+// ── Slat calculations for fixed pergola ──
+
+const SLAT_PROFILE_WIDTH_MM = 40; // each slat profile is ~40mm wide
+
+export function calcSlatCount(widthMm: number, gapMm: number): number {
+  if (gapMm <= 0) return 0;
+  const totalUnit = SLAT_PROFILE_WIDTH_MM + gapMm;
+  return Math.max(2, Math.floor(widthMm / totalUnit));
+}
+
+export function calcSlatGapFromCount(widthMm: number, count: number): number {
+  if (count <= 1) return widthMm;
+  const totalSlatWidth = count * SLAT_PROFILE_WIDTH_MM;
+  return Math.max(5, Math.round((widthMm - totalSlatWidth) / (count + 1)));
+}
+
+/** Valid gap presets in cm */
+export const SLAT_GAP_PRESETS_CM = [1, 2, 3, 4] as const;
+
+export function getValidSlatRange(widthMm: number): { min: number; max: number } {
+  const maxSlats = calcSlatCount(widthMm, SLAT_GAP_PRESETS_CM[0] * 10);
+  const minSlats = Math.max(2, calcSlatCount(widthMm, SLAT_GAP_PRESETS_CM[SLAT_GAP_PRESETS_CM.length - 1] * 10));
+  return { min: minSlats, max: maxSlats };
+}
+
 // ── Compose all specs ──
 
 export function computeSpecs(input: {
@@ -154,6 +179,8 @@ export function computeSpecs(input: {
   mountType: MountType;
   spacingMode: SpacingMode;
   pergolaType: PergolaType;
+  slatGapCm?: number;
+  slatCount?: number;
 }): PergolaSpecs {
   const { classification, moduleCount } = classifyModule(input.widthMm);
   const carrierCount = adjustedCarrierCount(input.lengthMm, input.spacingMode);
@@ -161,6 +188,11 @@ export function computeSpecs(input: {
   const moduleWidths = calcModuleWidths(input.widthMm, moduleCount);
   const spacingMm = calcSpacing(input.lengthMm, carrierCount, input.spacingMode);
   const profiles = getProfilesForType(input.pergolaType);
+
+  // Slat calculations for fixed pergola
+  const gapMm = (input.slatGapCm || 3) * 10;
+  const slatCount = input.slatCount || calcSlatCount(input.widthMm, gapMm);
+  const slatGapMm = calcSlatGapFromCount(input.widthMm, slatCount);
 
   return {
     moduleClassification: classification,
@@ -171,5 +203,8 @@ export function computeSpecs(input: {
     moduleWidths,
     spacingMm,
     profiles,
+    slatCount,
+    slatGapMm,
+    slatWidthMm: SLAT_PROFILE_WIDTH_MM,
   };
 }

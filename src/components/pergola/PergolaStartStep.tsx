@@ -110,7 +110,7 @@ export const PergolaStartStep = ({ onStart }: Props) => {
           className="w-full bg-gray-900 text-white py-4 px-6 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
         >
           {t("pergolaRequest.startEditor")}
-          <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+          <ArrowLeft className="w-4 h-4" />
         </button>
       </div>
     </div>

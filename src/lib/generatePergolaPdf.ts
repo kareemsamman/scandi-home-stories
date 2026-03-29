@@ -15,6 +15,9 @@ interface PdfInput {
   lightingPosition: string;
   lightingFixture: string;
   lightingRoof: boolean;
+  roofFillMode?: string;
+  slatGapCm?: number;
+  slatColor?: string;
   santaf: string;
   santafColor: string;
   frameColor: string;
@@ -124,11 +127,18 @@ export async function generatePergolaPdf(
   }
   y += 2; line();
 
-  // ── Santaf ──
-  text("Roofing / Santaf", margin, y, { size: 11, bold: true }); y += 5;
-  row("Santaf", input.santaf === "with" ? "Yes / Included" : "No / Without");
-  if (input.santaf === "with" && input.santafColor) {
-    row("Santaf Color", input.santafColor);
+  // ── Roof Fill ──
+  text("Roof Fill", margin, y, { size: 11, bold: true }); y += 5;
+  if (input.roofFillMode === "slats") {
+    row("Mode", "Internal Slats / Profiles");
+    row("Slat Count", String(specs.slatCount));
+    row("Slat Gap", `${input.slatGapCm || 3} cm`);
+    if (input.slatColor) row("Slat Color", input.slatColor);
+  } else if (input.roofFillMode === "santaf" || input.santaf === "with") {
+    row("Mode", "Santaf Roof");
+    if (input.santafColor) row("Santaf Color", input.santafColor);
+  } else {
+    row("Santaf", "No / Without");
   }
   y += 2; line();
 

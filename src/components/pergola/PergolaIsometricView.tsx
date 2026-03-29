@@ -12,8 +12,9 @@ function toIso(x: number, y: number, z: number): [number, number] {
 }
 
 export const PergolaIsometricView = ({ config }: Props) => {
-  const { widthMm, lengthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, santaf, santafColor, specs, frameColor, roofColor } = config;
+  const { widthMm, lengthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType } = config;
   const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
+  const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
   const carrierPositions = calcCarrierPositions(lengthMm, specs.carrierCount);
@@ -153,6 +154,22 @@ export const PergolaIsometricView = ({ config }: Props) => {
       {carrierPositions.map((y, i) =>
         isoLine(0, y, heightMm, widthMm, y, heightMm, "#9CA3AF", sw * 0.7, `car-${i}`, "25 12")
       )}
+
+      {/* Internal slats (fixed pergola, slat mode) */}
+      {isFixedSlats && specs.slatCount > 0 && (() => {
+        const slatW = specs.slatWidthMm;
+        const totalSlats = specs.slatCount;
+        const gap = specs.slatGapMm;
+        const totalUsed = totalSlats * slatW + (totalSlats + 1) * gap;
+        const startX = (widthMm - totalUsed) / 2 + gap;
+        return Array.from({ length: Math.min(totalSlats, 60) }, (_, i) => {
+          const x = startX + i * (slatW + gap);
+          const [s1x, s1y] = toIso(x + slatW / 2, 0, heightMm);
+          const [s2x, s2y] = toIso(x + slatW / 2, lengthMm, heightMm);
+          return <line key={`slat-${i}`} x1={s1x} y1={s1y} x2={s2x} y2={s2y}
+            stroke={slatColor || "#383838"} strokeWidth={sw * 0.8} opacity={0.65} />;
+        });
+      })()}
 
       {/* Carrier lights */}
       {lighting !== "none" && lightingPosition !== "no_posts" &&

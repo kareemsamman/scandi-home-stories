@@ -28,11 +28,14 @@ export const PergolaPreview = () => {
     lightingFixture: config.lightingFixture || "none",
     lightingRoof: config.lightingRoof || false,
     lightingPosts: config.lightingPosts || [],
+    roofFillMode: config.roofFillMode || "slats",
     santaf: config.santaf || "without",
     santafColor: config.santafColor || "",
+    slatColor: config.slatColor || "#383838",
     specs,
     frameColor: config.frameColor || "#383838",
     roofColor: config.roofColor || "#C0C0C0",
+    pergolaType: config.pergolaType || "fixed",
   };
 
   const viewLabels: Record<string, string> = {
