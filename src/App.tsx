@@ -100,6 +100,7 @@ const LocaleRoutes = () => (
         <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pergola-request" element={<PergolaRequest />} />
+        <Route path="/pergola-response/:requestId" element={<PergolaResponse />} />
         <Route path="/legal/:page" element={<LegalPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
