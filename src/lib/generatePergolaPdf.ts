@@ -65,8 +65,8 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
   }
   const ratio = vbW / vbH;
 
-  // Render at high resolution: 2400px wide
-  const renderW = 2400;
+  // Render at good quality but not huge: 1200px wide, JPEG compression
+  const renderW = 1200;
   const renderH = Math.round(renderW / ratio);
   clone.setAttribute("width", String(renderW));
   clone.setAttribute("height", String(renderH));
@@ -85,7 +85,7 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
       ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, renderW, renderH);
-      const data = canvas.toDataURL("image/png", 0.92);
+      const data = canvas.toDataURL("image/jpeg", 0.75);
       URL.revokeObjectURL(url);
       resolve({ data, width: renderW, height: renderH, ratio });
     };
@@ -97,7 +97,7 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
 export async function generatePergolaPdf(
   input: PdfInput,
   specs: PergolaSpecs,
-  locale: string,
+  _locale: string,
   images: PdfImages,
 ): Promise<string> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -290,7 +290,7 @@ export async function generatePergolaPdf(
       doc.roundedRect(frameX, y, frameW, frameH, 2, 2, "FD");
 
       // Image — proportional, centered in frame
-      doc.addImage(entry.data, "PNG", frameX + 4, y + 4, imgW, imgH);
+      doc.addImage(entry.data, "JPEG", frameX + 4, y + 4, imgW, imgH);
       y += frameH + 10;
     }
   }
