@@ -24,19 +24,37 @@ export interface PdfInput {
   roofColor: string;
   spacingMode: string;
   notes: string;
+  carrierConfigs?: { slatSize: string; slatGapCm: number; slatColor: string; lightingEnabled: boolean; lighting: string }[];
+}
+
+export interface PdfImageEntry {
+  data: string;
+  ratio: number; // width / height
 }
 
 export interface PdfImages {
-  isometric?: string;
-  top?: string;
-  front?: string;
+  isometric?: PdfImageEntry;
+  top?: PdfImageEntry;
+  front?: PdfImageEntry;
 }
 
 const TYPE_EN: Record<string, string> = { fixed: "Fixed Pergola", pvc: "PVC Pergola" };
 const MOUNT_EN: Record<string, string> = { wall: "Wall-Mounted", freestanding: "Freestanding" };
 const MODULE_EN: Record<string, string> = { single: "Single Module", double: "Double Module", triple: "Triple Module", custom: "Custom Review" };
 
+export interface CapturedImage {
+  data: string; // base64 PNG
+  width: number;
+  height: number;
+  ratio: number; // width / height
+}
+
 export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
+  const captured = await svgToImageWithSize(svgEl);
+  return captured.data;
+}
+
+export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<CapturedImage> {
   const svgData = new XMLSerializer().serializeToString(svgEl);
   const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
@@ -51,8 +69,14 @@ export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
       ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/png"));
+      const data = canvas.toDataURL("image/png");
       URL.revokeObjectURL(url);
+      resolve({
+        data,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        ratio: img.naturalWidth / img.naturalHeight,
+      });
     };
     img.onerror = reject;
     img.src = url;
@@ -178,6 +202,27 @@ export async function generatePergolaPdf(
   if (input.slatColor && input.roofFillMode === "slats") drawSwatch("Slat Profiles", input.slatColor);
   if (input.santaf === "with" && input.santafColor) drawSwatch("Santaf", input.santafColor);
 
+  // ── Per-carrier slat details ──
+  if (input.roofFillMode === "slats" && input.carrierConfigs && input.carrierConfigs.length > 0) {
+    y += 2; sep();
+    sectionTitle("SLATS PER CARRIER");
+    input.carrierConfigs.forEach((cc, i) => {
+      const slatW = 20; // mm face
+      const gapMm = cc.slatGapCm * 10;
+      const count = Math.max(1, Math.floor(((input.widthCm * 10) - gapMm) / (slatW + gapMm)));
+      const lightTxt = cc.lightingEnabled ? ` | Light: ${cc.lighting.toUpperCase()}` : "";
+      row(`Carrier ${i + 1}`, `${count} slats | ${cc.slatSize} | Gap: ${cc.slatGapCm}cm${lightTxt}`);
+      // Color swatch
+      try {
+        const r = parseInt(cc.slatColor.slice(1, 3), 16);
+        const g = parseInt(cc.slatColor.slice(3, 5), 16);
+        const b = parseInt(cc.slatColor.slice(5, 7), 16);
+        doc.setFillColor(r, g, b);
+        doc.roundedRect(m + 65 + 100, y - 8, 10, 4, 1, 1, "F");
+      } catch { /* skip */ }
+    });
+  }
+
   // ── Notes ──
   if (input.notes?.trim()) {
     y += 3; sep();
@@ -189,14 +234,14 @@ export async function generatePergolaPdf(
   }
 
   // ════════════════════════════════════════════
-  // PAGE 2+: Drawings
+  // PAGE 2+: Drawings (auto-height based on aspect ratio)
   // ════════════════════════════════════════════
-  const viewEntries: [string, string | undefined][] = [
+  const viewEntries: [string, PdfImageEntry | undefined][] = [
     ["ISOMETRIC VIEW", images.isometric],
     ["TOP VIEW", images.top],
     ["FRONT VIEW", images.front],
   ];
-  const availableViews = viewEntries.filter(([, img]) => img);
+  const availableViews = viewEntries.filter(([, img]) => img) as [string, PdfImageEntry][];
 
   if (availableViews.length > 0) {
     doc.addPage();
@@ -208,13 +253,13 @@ export async function generatePergolaPdf(
     txt("TECHNICAL DRAWINGS", W / 2, 14, 14, [255, 255, 255], true, "center");
     y = 30;
 
-    for (let i = 0; i < availableViews.length; i++) {
-      const [label, imgData] = availableViews[i];
-      if (!imgData) continue;
+    for (const [label, entry] of availableViews) {
+      // Auto-calculate height from aspect ratio
+      const imgW = cw - 4;
+      const imgH = Math.min(120, Math.max(40, imgW / entry.ratio));
+      const frameH = imgH + 4;
 
-      const imgH = i < 2 ? 72 : 58; // front view slightly shorter
-
-      if (y + imgH + 12 > H - 30) {
+      if (y + frameH + 12 > H - 30) {
         doc.addPage();
         y = m;
       }
@@ -226,11 +271,11 @@ export async function generatePergolaPdf(
       // Frame
       doc.setDrawColor(230, 230, 230);
       doc.setFillColor(250, 250, 250);
-      doc.roundedRect(m, y, cw, imgH, 2, 2, "FD");
+      doc.roundedRect(m, y, cw, frameH, 2, 2, "FD");
 
-      // Image
-      doc.addImage(imgData, "PNG", m + 2, y + 2, cw - 4, imgH - 4);
-      y += imgH + 8;
+      // Image — auto height
+      doc.addImage(entry.data, "PNG", m + 2, y + 2, imgW, imgH);
+      y += frameH + 8;
     }
   }
 

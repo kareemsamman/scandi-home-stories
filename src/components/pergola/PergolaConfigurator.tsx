@@ -3,7 +3,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useCreatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
-import { generatePergolaPdf, svgToImage, type PdfImages } from "@/lib/generatePergolaPdf";
+import { generatePergolaPdf, svgToImageWithSize, type PdfImages } from "@/lib/generatePergolaPdf";
 import { supabase } from "@/integrations/supabase/client";
 import { cmToMm } from "@/types/pergola";
 import type { PergolaType } from "@/types/pergola";
@@ -32,13 +32,13 @@ export const PergolaConfigurator = () => {
     setStep("editor");
   };
 
-  // Capture current SVG view as image (target the pergola drawing, not zoom icons)
-  const captureCurrentView = async (): Promise<string | undefined> => {
+  // Capture current SVG view as image with size (target the pergola drawing, not zoom icons)
+  const captureCurrentView = async () => {
     const container = document.querySelector("#pergola-drawing-area");
     if (!container) return undefined;
     const svgEl = container.querySelector("svg") as SVGSVGElement | null;
     if (!svgEl) return undefined;
-    try { return await svgToImage(svgEl); } catch { return undefined; }
+    try { return await svgToImageWithSize(svgEl); } catch { return undefined; }
   };
 
   // Step 2 → Step 3: Capture all 3 views, generate PDF, then move to summary
@@ -50,15 +50,15 @@ export const PergolaConfigurator = () => {
 
     // Capture current view first
     const currentImg = await captureCurrentView();
-    if (currentImg) images[currentView] = currentImg;
+    if (currentImg) images[currentView] = { data: currentImg.data, ratio: currentImg.ratio };
 
     // Capture the other 2 views
     const otherViews = (["isometric", "top", "front"] as const).filter((v) => v !== currentView);
     for (const view of otherViews) {
       setActiveView(view);
-      await new Promise((r) => setTimeout(r, 150)); // wait for render
+      await new Promise((r) => setTimeout(r, 200)); // wait for render
       const img = await captureCurrentView();
-      if (img) images[view] = img;
+      if (img) images[view] = { data: img.data, ratio: img.ratio };
     }
     setActiveView(currentView); // restore original view
     setCapturedImages(images);
@@ -77,6 +77,7 @@ export const PergolaConfigurator = () => {
         santafColor: config.santafColor || "", frameColor: config.frameColor || "#383E42",
         roofColor: config.roofColor || "#A5A5A5", spacingMode: config.spacingMode || "automatic",
         notes: "",
+        carrierConfigs: carrierConfigs as any,
       }, specs, locale, images);
       setGeneratedPdfUrl(pdfUrl);
     } catch { /* proceed without PDF */ }
@@ -125,6 +126,7 @@ export const PergolaConfigurator = () => {
         roofColor: config.roofColor || "#A5A5A5",
         spacingMode: config.spacingMode || "automatic",
         notes,
+        carrierConfigs: carrierConfigs as any,
       }, specs, locale, capturedImages);
 
       // Build extra config data as JSON (safe for both v1 and v2 schemas)
