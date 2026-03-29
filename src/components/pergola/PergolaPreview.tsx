@@ -12,7 +12,7 @@ import { MousePointerClick } from "lucide-react";
 const VIEWS = ["top", "front", "isometric"] as const;
 
 export const PergolaPreview = () => {
-  const { config, specs, activeView, setActiveView } = usePergolaConfigurator();
+  const { config, specs, activeView, setActiveView, carrierConfigs } = usePergolaConfigurator();
   const { selected } = usePergolaEditor();
   const { t } = useLocale();
 
@@ -36,6 +36,7 @@ export const PergolaPreview = () => {
     frameColor: config.frameColor || "#383838",
     roofColor: config.roofColor || "#C0C0C0",
     pergolaType: config.pergolaType || "fixed",
+    carrierConfigs,
   };
 
   const viewLabels: Record<string, string> = {

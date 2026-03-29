@@ -177,6 +177,31 @@ export interface DrawingConfig {
   frameColor: string;
   roofColor: string;
   pergolaType: PergolaType;
+  carrierConfigs: CarrierConfig[];
+}
+
+/** Per-carrier section configuration (allows per-נשא customization) */
+export interface CarrierConfig {
+  slatSize: SlatSizeId;
+  slatGapCm: number;
+  slatColor: string;
+  lighting: LightingChoice; // 'none' | 'white' | 'rgb'
+  lightingEnabled: boolean;
+}
+
+export function defaultCarrierConfig(global: {
+  slatSize?: SlatSizeId;
+  slatGapCm?: number;
+  slatColor?: string;
+  lighting?: LightingChoice;
+}): CarrierConfig {
+  return {
+    slatSize: global.slatSize || "20x70",
+    slatGapCm: global.slatGapCm || 3,
+    slatColor: global.slatColor || "#383E42",
+    lighting: global.lighting || "none",
+    lightingEnabled: (global.lighting || "none") !== "none",
+  };
 }
 
 // ── Helpers ──

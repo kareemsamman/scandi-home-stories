@@ -2,6 +2,7 @@ import { X, Plus, Trash2, Lightbulb, AlertCircle } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaEditor, canAddPost, canRemovePost, canTogglePostLight } from "@/stores/usePergolaEditor";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
+import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
 import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
 import type { LightingChoice, SantafChoice, SlatSizeId } from "@/types/pergola";
 import { calcPostCount } from "@/lib/pergolaRules";
@@ -151,24 +152,71 @@ export const PergolaElementEditor = () => {
     );
   }
 
-  // ── Carrier / spacing editor ──
+  // ── Carrier section editor (per-נשא) ──
   if (selected.type === "carrier") {
+    const secIdx = selected.index;
+    const { carrierConfigs, setCarrierConfig } = usePergolaConfigurator.getState();
+    const cc = carrierConfigs[secIdx];
+    const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
+
+    if (!isFixedSlats || !cc) {
+      // Fallback: just show spacing controls if not fixed slats
+      return (
+        <Panel onClose={close} title={`נשא ${secIdx + 1}`}>
+          <Label>מרווח בין נשאים</Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
+              <ToggleBtn key={m} active={config.spacingMode === m} onClick={() => setConfig({ spacingMode: m })}
+                label={m === "automatic" ? "אוטומטי" : m === "dense" ? "צפוף" : m === "standard" ? "רגיל" : "רחב"} />
+            ))}
+          </div>
+        </Panel>
+      );
+    }
+
+    const gapPresets = [1, 2, 3, 4];
+    const secWidthMm = cmToMm(Number(config.widthCm) || 400);
+    const secSlatW = getSlatProfileWidth(cc.slatSize);
+    const secSlatCount = calcSlatCount(secWidthMm, cc.slatGapCm * 10, cc.slatSize);
+
     return (
-      <Panel onClose={close} title="נשאים / מרווח פרופילים">
-        <Label>מרווח</Label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
-            <ToggleBtn
-              key={m}
-              active={config.spacingMode === m}
-              onClick={() => setConfig({ spacingMode: m })}
-              label={m === "automatic" ? "אוטומטי" : m === "dense" ? "צפוף" : m === "standard" ? "רגיל" : "רחב"}
-            />
+      <Panel onClose={close} title={`נשא ${secIdx + 1} — ${secSlatCount} שלבים`}>
+        {/* Slat size */}
+        <Label>גודל פרופיל שלב</Label>
+        <div className="flex gap-1.5 mb-2">
+          {SLAT_SIZES.map((s) => (
+            <ToggleBtn key={s.id} active={cc.slatSize === s.id}
+              onClick={() => setCarrierConfig(secIdx, { slatSize: s.id as SlatSizeId })} label={s.label} />
           ))}
         </div>
-        {specs && (
-          <p className="text-xs text-gray-400 mt-2">~{mmToCm(specs.spacingMm)} ס"מ בין נשאים &middot; {specs.carrierCount} נשאים</p>
-        )}
+
+        {/* Gap */}
+        <Label>מרווח בין שלבים (ס"מ)</Label>
+        <div className="flex gap-1.5 mb-2">
+          {gapPresets.map((g) => (
+            <ToggleBtn key={g} active={cc.slatGapCm === g}
+              onClick={() => setCarrierConfig(secIdx, { slatGapCm: g })} label={`${g}`} />
+          ))}
+        </div>
+
+        {/* Color */}
+        <Label>צבע שלבים</Label>
+        <ColorPicker value={cc.slatColor} colors={SLAT_COLORS} locale={locale}
+          onChange={(hex) => setCarrierConfig(secIdx, { slatColor: hex })} />
+
+        {/* Lighting */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <Label>תאורה בנשא</Label>
+          <div className="flex gap-1.5">
+            <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(secIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
+            <ToggleBtn active={cc.lightingEnabled && cc.lighting === "white"}
+              onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: "white" })} label="לבנה" dot="bg-yellow-200" />
+            <ToggleBtn active={cc.lightingEnabled && cc.lighting === "rgb"}
+              onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: "rgb" })} label="RGB" dot="bg-gradient-to-r from-red-400 via-green-400 to-blue-400" />
+          </div>
+        </div>
+
+        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; מרווח ~{cc.slatGapCm} ס"מ</p>
       </Panel>
     );
   }

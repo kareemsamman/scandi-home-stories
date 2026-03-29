@@ -8,7 +8,7 @@ interface Props { config: DrawingConfig }
 const PAD = 500;
 
 export const PergolaTopView = ({ config }: Props) => {
-  const { widthMm, lengthMm, mountType, lighting, lightingPosition, lightingRoof, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType } = config;
+  const { widthMm, lengthMm, mountType, lighting, lightingPosition, lightingRoof, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType, carrierConfigs } = config;
   const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
   const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
@@ -104,36 +104,64 @@ export const PergolaTopView = ({ config }: Props) => {
         </g>
       ))}
 
-      {/* Internal slats (fixed pergola, slat mode) — clickable area */}
-      {isFixedSlats && specs.slatCount > 0 && (() => {
+      {/* Internal slats — per-carrier sections, each clickable with own color */}
+      {isFixedSlats && specs.slatCount > 0 && carrierPositions.length >= 2 && (() => {
         const slatW = specs.slatWidthMm;
-        const totalSlats = specs.slatCount;
-        const gap = specs.slatGapMm;
-        const totalUsed = totalSlats * slatW + (totalSlats + 1) * gap;
-        const startX = (widthMm - totalUsed) / 2 + gap;
-        const el: SelectedElement = { type: "slats", index: -1 };
-        const isSel = isSelected(el);
-        return (
-          <g className="cursor-pointer" onClick={handleClick(el)}
-            onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
-            {/* Hit target for entire slat area */}
-            <rect x={ox + 10} y={oy + 10} width={widthMm - 20} height={lengthMm - 20}
-              fill="transparent" />
-            {/* Selection border */}
-            {isSel && (
-              <rect x={ox + 5} y={oy + 5} width={widthMm - 10} height={lengthMm - 10}
-                fill="none" stroke="#2563EB" strokeWidth={6} rx={6} strokeDasharray="20 8" />
-            )}
-            {/* Individual slat lines */}
-            {Array.from({ length: totalSlats }, (_, i) => {
-              const x = startX + i * (slatW + gap);
-              return (
-                <rect key={`slat-${i}`} x={ox + x} y={oy + 15} width={slatW} height={lengthMm - 30}
-                  fill={slatColor || "#383838"} fillOpacity={0.7} rx={2} />
-              );
-            })}
-          </g>
-        );
+        const globalGap = specs.slatGapMm;
+        const globalColor = slatColor || "#383E42";
+        const sections = carrierPositions.length - 1;
+
+        return Array.from({ length: sections }, (_, secIdx) => {
+          const cc = carrierConfigs[secIdx];
+          const secColor = cc?.slatColor || globalColor;
+          const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
+          const y1 = carrierPositions[secIdx];
+          const y2 = carrierPositions[secIdx + 1];
+          const secH = y2 - y1;
+
+          // Calculate slats for this section
+          const totalUnit = slatW + secGapMm;
+          const secSlatCount = Math.max(1, Math.floor(widthMm / totalUnit));
+          const totalUsed = secSlatCount * slatW + (secSlatCount + 1) * secGapMm;
+          const startX = (widthMm - totalUsed) / 2 + secGapMm;
+
+          const el: SelectedElement = { type: "carrier", index: secIdx };
+          const isSel = isSelected(el);
+          const isHov = isHovered(el);
+
+          return (
+            <g key={`sec-${secIdx}`} className="cursor-pointer"
+              onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
+              {/* Hit target */}
+              <rect x={ox} y={oy + y1} width={widthMm} height={secH} fill="transparent" />
+              {/* Selection highlight */}
+              {(isSel || isHov) && (
+                <rect x={ox + 3} y={oy + y1 + 3} width={widthMm - 6} height={secH - 6}
+                  fill={isSel ? "#2563EB" : "#93C5FD"} fillOpacity={0.06}
+                  stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={4} rx={4}
+                  strokeDasharray={isSel ? undefined : "12 6"} />
+              )}
+              {/* Slats in this section */}
+              {Array.from({ length: Math.min(secSlatCount, 80) }, (_, i) => {
+                const x = startX + i * totalUnit;
+                return (
+                  <rect key={`slat-${secIdx}-${i}`}
+                    x={ox + x} y={oy + y1 + 8} width={slatW} height={secH - 16}
+                    fill={secColor} fillOpacity={0.75} rx={1} />
+                );
+              })}
+              {/* Section label on hover/select */}
+              {(isSel || isHov) && (
+                <text x={ox + widthMm / 2} y={oy + y1 + secH / 2}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
+                  fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
+                  נשא {secIdx + 1}
+                </text>
+              )}
+            </g>
+          );
+        });
       })()}
 
       {/* Roof lighting — clickable */}

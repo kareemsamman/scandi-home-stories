@@ -573,6 +573,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatColor: 'צבע שלבים',
       slatSizeLabel: 'גודל פרופיל שלב',
       slatsPerCarrier: 'שלבים לכל נשא',
+      globalApplyHint: 'שינוי כאן חל על כל הנשאים. לחצו על נשא ספציפי בשרטוט להתאמה אישית',
     },
   },
   ar: {
@@ -1141,6 +1142,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatColor: 'لون الشرائح',
       slatSizeLabel: 'حجم بروفيل الشريحة',
       slatsPerCarrier: 'شرائح لكل حامل',
+      globalApplyHint: 'التغيير هنا ينطبق على جميع الحوامل. انقر على حامل محدد في الرسم للتخصيص',
     },
     notFound: {
       title: 'الصفحة غير موجودة',

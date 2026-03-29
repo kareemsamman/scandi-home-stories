@@ -1,11 +1,11 @@
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useLocale } from "@/i18n/useLocale";
-import { mmToCm } from "@/types/pergola";
-import { slatsPerCarrier } from "@/lib/pergolaRules";
+import { mmToCm, cmToMm } from "@/types/pergola";
+import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
 import { AlertTriangle } from "lucide-react";
 
 export const PergolaSpecsSummary = () => {
-  const { specs, config } = usePergolaConfigurator();
+  const { specs, config, carrierConfigs } = usePergolaConfigurator();
   const { t } = useLocale();
 
   if (!specs) return null;
@@ -18,6 +18,7 @@ export const PergolaSpecsSummary = () => {
   };
   const isCustom = specs.moduleClassification === "custom";
   const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
+  const widthMm = cmToMm(Number(config.widthCm) || 400);
 
   const rows: [string, string][] = [
     [t("pergolaRequest.moduleType"), moduleLabels[specs.moduleClassification]],
@@ -29,12 +30,15 @@ export const PergolaSpecsSummary = () => {
   }
   rows.push([t("pergolaRequest.spacingLabel"), `~${mmToCm(specs.spacingMm)} cm`]);
 
-  // Slat info for fixed pergola
-  if (isFixedSlats) {
+  // Total slats across all sections
+  if (isFixedSlats && carrierConfigs.length > 0) {
+    let totalSlats = 0;
+    carrierConfigs.forEach((cc) => {
+      totalSlats += calcSlatCount(widthMm, cc.slatGapCm * 10, cc.slatSize);
+    });
+    rows.push([t("pergolaRequest.slatsLabel"), String(totalSlats)]);
+  } else if (isFixedSlats) {
     rows.push([t("pergolaRequest.slatsLabel"), String(specs.slatCount)]);
-    rows.push([t("pergolaRequest.slatsPerCarrier"), String(slatsPerCarrier(specs.slatCount, specs.carrierCount))]);
-    rows.push([t("pergolaRequest.slatGap"), `${config.slatGapCm || 3} cm`]);
-    rows.push([t("pergolaRequest.slatSizeLabel"), config.slatSize === "20x40" ? "20 × 40 mm" : "20 × 70 mm"]);
   }
 
   // Roof fill mode
@@ -45,34 +49,18 @@ export const PergolaSpecsSummary = () => {
   // Lighting
   if (config.lighting && config.lighting !== "none") {
     rows.push([t("pergolaRequest.lightingLabel"), t(`pergolaRequest.lighting${config.lighting.charAt(0).toUpperCase() + config.lighting.slice(1)}`)]);
-    if (config.lightingFixture && config.lightingFixture !== "none") {
-      rows.push([t("pergolaRequest.lightingFixture"), t(`pergolaRequest.fixture${config.lightingFixture.split("_").map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join("")}`)]);
-    }
-    if (config.lightingRoof) {
-      rows.push([t("pergolaRequest.lightingRoof"), t("pergolaRequest.yes")]);
-    }
   }
 
-  // Santaf (for santaf mode or PVC)
+  // Santaf
   if (config.santaf === "with" || config.roofFillMode === "santaf") {
     rows.push([t("pergolaRequest.santafRoofing"), t("pergolaRequest.santafWith")]);
-  }
-
-  // Height
-  if (config.heightCm && Number(config.heightCm) !== 250) {
-    rows.push([t("pergolaRequest.height"), `${config.heightCm} cm`]);
-  }
-
-  // Profiles
-  if (specs.profiles) {
-    rows.push([t("pergolaRequest.profileRafter"), specs.profiles.rafter]);
-    rows.push([t("pergolaRequest.profileCarrierPost"), specs.profiles.carrier_post]);
   }
 
   return (
     <div className="space-y-3 mb-4">
       <h3 className="text-sm font-semibold text-gray-700">{t("pergolaRequest.specs")}</h3>
 
+      {/* Main specs */}
       <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
         {rows.map(([label, value], i) => (
           <div key={i} className="flex items-center justify-between px-3 py-2">
@@ -81,6 +69,36 @@ export const PergolaSpecsSummary = () => {
           </div>
         ))}
       </div>
+
+      {/* Per-carrier breakdown */}
+      {isFixedSlats && carrierConfigs.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-3">
+          <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            {t("pergolaRequest.slatsPerCarrier")}
+          </h4>
+          <div className="space-y-1">
+            {carrierConfigs.map((cc, i) => {
+              const count = calcSlatCount(widthMm, cc.slatGapCm * 10, cc.slatSize);
+              return (
+                <div key={i} className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-400 flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm border border-gray-200 shrink-0" style={{ backgroundColor: cc.slatColor }} />
+                    נשא {i + 1}
+                  </span>
+                  <span className="text-gray-600">
+                    {count} × {cc.slatSize === "20x40" ? "20×40" : "20×70"}
+                    <span className="text-gray-300 mx-1">&middot;</span>
+                    {cc.slatGapCm} cm
+                    {cc.lightingEnabled && (
+                      <span className="text-gray-300 mx-1">&middot; 💡</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isCustom && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs">

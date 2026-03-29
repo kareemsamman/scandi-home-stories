@@ -19,7 +19,7 @@ interface Props {
 
 export const PergolaEditorStep = ({ onNext }: Props) => {
   const { t } = useLocale();
-  const { config, specs, activeView, setActiveView, setConfig } = usePergolaConfigurator();
+  const { config, specs, activeView, setActiveView, setConfig, carrierConfigs } = usePergolaConfigurator();
   const { selected } = usePergolaEditor();
 
   if (!specs) return null;
@@ -42,6 +42,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
     frameColor: config.frameColor || "#383838",
     roofColor: config.roofColor || "#C0C0C0",
     pergolaType: config.pergolaType || "fixed",
+    carrierConfigs,
   };
 
   const viewLabels: Record<string, string> = {
@@ -222,6 +223,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                     </div>
                   </div>
                   <MiniColorRow label={t("pergolaRequest.slatColor")} value={config.slatColor || "#383E42"} onChange={(v) => setConfig({ slatColor: v })} colors={SLAT_COLORS} />
+                  <p className="text-[9px] text-gray-300 mt-1.5">{t("pergolaRequest.globalApplyHint")}</p>
                 </div>
               )}
               {config.roofFillMode === "santaf" && (

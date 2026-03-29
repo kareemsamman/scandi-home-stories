@@ -90,6 +90,7 @@ const AdminPergolaRequestDetail = () => {
     frameColor: req.frame_color || "#383838",
     roofColor: req.roof_color || "#C0C0C0",
     pergolaType: (req.pergola_type || "fixed") as any,
+    carrierConfigs: [],
   };
 
   const handleSave = async () => {
