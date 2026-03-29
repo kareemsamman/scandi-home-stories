@@ -100,21 +100,6 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
           )}
         </div>
 
-        {/* PDF Download */}
-        {pdfUrl && (
-          <button
-            onClick={() => {
-              const link = document.createElement("a");
-              link.href = pdfUrl;
-              link.download = `pergola-request-${Date.now()}.pdf`;
-              link.click();
-            }}
-            className="inline-flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          >
-            <Download className="w-5 h-5" />
-            {t("pergolaRequest.downloadPdf")}
-          </button>
-        )}
       </div>
 
       {/* Parts section */}
@@ -145,6 +130,33 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
       )}
 
       <PergolaPartsSection />
+
+      {/* PDF Download — centered, pro design */}
+      {pdfUrl && (
+        <div className="text-center py-6">
+          <div className="inline-flex flex-col items-center gap-3 bg-gradient-to-b from-gray-50 to-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+            <div className="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center">
+              <Download className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900">{t("pergolaRequest.downloadPdfTitle")}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{t("pergolaRequest.downloadPdfDesc")}</p>
+            </div>
+            <button
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = pdfUrl;
+                link.download = `AMG-Pergola-Request-${Date.now()}.pdf`;
+                link.click();
+              }}
+              className="bg-gray-900 text-white px-8 py-3 rounded-xl font-semibold text-sm hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              {t("pergolaRequest.downloadPdf")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Customer info form */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">

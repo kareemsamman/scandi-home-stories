@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import type { PergolaSpecs } from "@/types/pergola";
 
-interface PdfInput {
+export interface PdfInput {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -26,15 +26,18 @@ interface PdfInput {
   notes: string;
 }
 
-const TYPE_LABELS: Record<string, string> = { fixed: "פרגולה קבועה / Fixed Pergola", pvc: "פרגולה PVC / PVC Pergola" };
-const MOUNT_LABELS: Record<string, string> = { wall: "Wall-Mounted / צמוד קיר", freestanding: "Freestanding / עצמאי" };
-const LIGHT_LABELS: Record<string, string> = { none: "None", white: "White", rgb: "RGB" };
-const LIGHT_POS_LABELS: Record<string, string> = { none: "None", all_posts: "All Posts", selected_posts: "Selected Posts", no_posts: "No Posts" };
-const FIXTURE_LABELS: Record<string, string> = { none: "None", spotlight: "Spotlight", led_strip: "LED Strip", rgb_strip: "RGB Strip", mixed: "Mixed Package" };
-const SPACING_LABELS: Record<string, string> = { automatic: "Automatic", dense: "Dense", standard: "Standard", wide: "Wide" };
-const MODULE_LABELS: Record<string, string> = { single: "Single", double: "Double", triple: "Triple", custom: "Custom Review" };
+export interface PdfImages {
+  isometric?: string; // base64 PNG
+  top?: string;
+  front?: string;
+}
 
-async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
+const TYPE_HE: Record<string, string> = { fixed: "פרגולה קבועה", pvc: "פרגולה PVC" };
+const MOUNT_HE: Record<string, string> = { wall: "צמוד קיר", freestanding: "עצמאי" };
+const MODULE_HE: Record<string, string> = { single: "יחיד", double: "כפול", triple: "משולש", custom: "דורש בדיקה" };
+const FILL_HE: Record<string, string> = { slats: "שלבים / פרופילים", santaf: "סנטף" };
+
+export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
   const svgData = new XMLSerializer().serializeToString(svgEl);
   const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
@@ -42,11 +45,11 @@ async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      const scale = 2;
+      const scale = 2.5;
       canvas.width = img.naturalWidth * scale;
       canvas.height = img.naturalHeight * scale;
       const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#F9FAFB";
+      ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL("image/png"));
@@ -61,141 +64,204 @@ export async function generatePergolaPdf(
   input: PdfInput,
   specs: PergolaSpecs,
   locale: string,
-  svgElement: SVGSVGElement | null,
+  images: PdfImages,
 ): Promise<string> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageW = 210;
-  const margin = 14;
-  const contentW = pageW - margin * 2;
-  let y = margin;
+  const W = 210;
+  const H = 297;
+  const m = 15; // margin
+  const cw = W - m * 2; // content width
+  let y = m;
 
-  const text = (s: string, x: number, yy: number, opts?: { size?: number; bold?: boolean; color?: [number, number, number]; align?: string }) => {
-    doc.setFontSize(opts?.size || 9);
-    doc.setTextColor(...(opts?.color || [40, 40, 40]));
-    doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
-    doc.text(s, x, yy, { align: (opts?.align || "left") as any });
+  // ── Helpers ──
+  const txt = (s: string, x: number, yy: number, size = 9, color: [number, number, number] = [30, 30, 30], bold = false, align = "left") => {
+    doc.setFontSize(size);
+    doc.setTextColor(...color);
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.text(s, x, yy, { align: align as any });
+  };
+  const sep = () => { doc.setDrawColor(230, 230, 230); doc.line(m, y, W - m, y); y += 5; };
+  const pair = (label: string, value: string, col2x = 70) => {
+    txt(label, W - m, y, 8, [130, 130, 130], false, "right");
+    txt(value, W - m - col2x, y, 9, [30, 30, 30], true, "right");
+    y += 5;
   };
 
-  const line = () => { doc.setDrawColor(220, 220, 220); doc.line(margin, y, pageW - margin, y); y += 3; };
+  // ════════════════════════════════════════════
+  // PAGE 1: Header + Specs
+  // ════════════════════════════════════════════
 
-  const row = (label: string, value: string) => {
-    text(label, margin, y, { size: 8, color: [120, 120, 120] });
-    text(value, margin + 52, y, { size: 9 });
-    y += 4.5;
-  };
+  // Black header bar
+  doc.setFillColor(20, 20, 20);
+  doc.rect(0, 0, W, 38, "F");
 
-  // ── Header ──
-  text("AMG PERGOLA LTD", pageW / 2, y, { size: 16, bold: true, align: "center" });
-  y += 5;
-  text("Pergola Configuration Request", pageW / 2, y, { size: 9, color: [100, 100, 100], align: "center" });
-  y += 4;
-  text(new Date().toLocaleDateString("en-GB"), pageW / 2, y, { size: 7, color: [160, 160, 160], align: "center" });
+  // AMG PERGOLA text logo
+  txt("A.M.G PERGOLA", W / 2, 16, 22, [255, 255, 255], true, "center");
+  txt("LTD", W / 2, 23, 10, [180, 180, 180], false, "center");
+
+  // Subtitle
+  txt("Pergola Configuration Summary", W / 2, 31, 8, [160, 160, 160], false, "center");
+
+  y = 48;
+
+  // Date and reference
+  const dateStr = new Date().toLocaleDateString("en-GB");
+  const refNum = `REF-${Date.now().toString(36).toUpperCase()}`;
+  txt(dateStr, m, y, 8, [150, 150, 150]);
+  txt(refNum, W - m, y, 8, [150, 150, 150], false, "right");
+  y += 8;
+  sep();
+
+  // ── Customer Info ──
+  if (input.customerName) {
+    txt("Customer / לקוח", W - m, y, 11, [30, 30, 30], true, "right");
+    y += 7;
+    pair("שם", input.customerName);
+    pair("טלפון", input.customerPhone);
+    if (input.customerEmail) pair("דוא\"ל", input.customerEmail);
+    y += 2; sep();
+  }
+
+  // ── Pergola Details ──
+  txt("Pergola Details / פרטי פרגולה", W - m, y, 11, [30, 30, 30], true, "right");
   y += 7;
-  line();
-
-  // ── Customer ──
-  text("Customer Information", margin, y, { size: 11, bold: true }); y += 5;
-  row("Name", input.customerName);
-  row("Phone", input.customerPhone);
-  if (input.customerEmail) row("Email", input.customerEmail);
-  y += 2; line();
+  pair("סוג פרגולה", TYPE_HE[input.pergolaType] || input.pergolaType);
+  pair("סוג התקנה", MOUNT_HE[input.mountType] || input.mountType);
+  pair("התקנה מקצועית", input.installation ? "כן" : "לא");
+  y += 2; sep();
 
   // ── Dimensions ──
-  text("Dimensions", margin, y, { size: 11, bold: true }); y += 5;
-  row("Width", `${input.widthCm} cm (${input.widthCm * 10} mm)`);
-  row("Depth / Projection", `${input.lengthCm} cm (${input.lengthCm * 10} mm)`);
-  if (input.heightCm) row("Height", `${input.heightCm} cm (${Number(input.heightCm) * 10} mm)`);
-  y += 2; line();
+  txt("Dimensions / מידות", W - m, y, 11, [30, 30, 30], true, "right");
+  y += 7;
+  pair("רוחב", `${input.widthCm} cm`);
+  pair("עומק / הטלה", `${input.lengthCm} cm`);
+  if (input.heightCm) pair("גובה", `${input.heightCm} cm`);
+  pair("מודול", MODULE_HE[specs.moduleClassification] || specs.moduleClassification);
+  y += 2; sep();
 
-  // ── Configuration ──
-  text("Configuration", margin, y, { size: 11, bold: true }); y += 5;
-  row("Pergola Type", TYPE_LABELS[input.pergolaType] || input.pergolaType);
-  row("Mount Type", MOUNT_LABELS[input.mountType] || input.mountType);
-  row("Installation", input.installation ? "Yes" : "No");
-  row("Frame Color", input.frameColor);
-  row("Roof / Fabric Color", input.roofColor);
-  row("Spacing Preset", SPACING_LABELS[input.spacingMode] || input.spacingMode);
-  y += 2; line();
-
-  // ── Lighting ──
-  text("Lighting", margin, y, { size: 11, bold: true }); y += 5;
-  row("Lighting", LIGHT_LABELS[input.lighting] || input.lighting);
-  if (input.lighting !== "none") {
-    row("Position", LIGHT_POS_LABELS[input.lightingPosition] || input.lightingPosition);
-    row("Fixture Type", FIXTURE_LABELS[input.lightingFixture] || input.lightingFixture);
-    row("Roof Lighting", input.lightingRoof ? "Yes" : "No");
-  }
-  y += 2; line();
+  // ── Structure ──
+  txt("Structure / מבנה", W - m, y, 11, [30, 30, 30], true, "right");
+  y += 7;
+  pair("עמודים קדמיים", String(specs.frontPostCount));
+  if (specs.backPostCount > 0) pair("עמודים אחוריים", String(specs.backPostCount));
+  pair("נשאים", String(specs.carrierCount));
+  pair("מרווח בין נשאים", `~${(specs.spacingMm / 10).toFixed(1)} cm`);
+  y += 2; sep();
 
   // ── Roof Fill ──
-  text("Roof Fill", margin, y, { size: 11, bold: true }); y += 5;
+  txt("Roof / גג", W - m, y, 11, [30, 30, 30], true, "right");
+  y += 7;
   if (input.roofFillMode === "slats") {
-    row("Mode", "Internal Slats / Profiles");
-    row("Slat Count", String(specs.slatCount));
-    row("Slat Gap", `${input.slatGapCm || 3} cm`);
-    if (input.slatColor) row("Slat Color", input.slatColor);
-  } else if (input.roofFillMode === "santaf" || input.santaf === "with") {
-    row("Mode", "Santaf Roof");
-    if (input.santafColor) row("Santaf Color", input.santafColor);
-  } else {
-    row("Santaf", "No / Without");
+    pair("מצב מילוי", FILL_HE.slats);
+    pair("שלבים", String(specs.slatCount));
+    pair("מרווח בין שלבים", `${input.slatGapCm || 3} cm`);
   }
-  y += 2; line();
-
-  // ── Technical Specs ──
-  text("Technical Specifications", margin, y, { size: 11, bold: true }); y += 5;
-  row("Module Type", MODULE_LABELS[specs.moduleClassification] || specs.moduleClassification);
-  row("Carrier Count", String(specs.carrierCount));
-  row("Front Posts", String(specs.frontPostCount));
-  if (specs.backPostCount > 0) row("Back Posts", String(specs.backPostCount));
-  row("Profile Spacing", `~${(specs.spacingMm / 10).toFixed(1)} cm`);
-  y += 2;
-
-  // Profiles
-  if (specs.profiles) {
-    row("Rafter", specs.profiles.rafter);
-    row("Carrier Post", specs.profiles.carrier_post);
-    row("Fabric Master", specs.profiles.fabric_master);
-    row("Fabric Carrier", specs.profiles.fabric_carrier);
-    row("Motor Box", specs.profiles.motor_box);
-    row("Gutter", specs.profiles.gutter);
+  if (input.santaf === "with") {
+    pair("סנטף", "כן");
   }
-  y += 2; line();
+  pair("תאורה", input.lighting === "none" ? "ללא" : input.lighting.toUpperCase());
+  y += 2; sep();
+
+  // ── Colors ──
+  txt("Colors / צבעים", W - m, y, 11, [30, 30, 30], true, "right");
+  y += 7;
+  // Frame color swatch
+  const drawSwatch = (label: string, hex: string) => {
+    txt(label, W - m, y, 8, [130, 130, 130], false, "right");
+    try {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      doc.setFillColor(r, g, b);
+      doc.roundedRect(W - m - 80, y - 3.5, 12, 4.5, 1, 1, "F");
+      doc.setDrawColor(200, 200, 200);
+      doc.roundedRect(W - m - 80, y - 3.5, 12, 4.5, 1, 1, "S");
+    } catch { /* skip swatch */ }
+    txt(hex, W - m - 85, y, 7, [150, 150, 150], false, "right");
+    y += 5;
+  };
+  drawSwatch("צבע מסגרת", input.frameColor);
+  drawSwatch("צבע גג / בד", input.roofColor);
+  if (input.slatColor && input.roofFillMode === "slats") drawSwatch("צבע שלבים", input.slatColor);
+  if (input.santaf === "with" && input.santafColor) drawSwatch("צבע סנטף", input.santafColor);
 
   // ── Notes ──
-  if (input.notes.trim()) {
-    text("Notes", margin, y, { size: 11, bold: true }); y += 5;
-    const lines = doc.splitTextToSize(input.notes.trim(), contentW);
-    doc.setFontSize(8); doc.setTextColor(60, 60, 60);
-    doc.text(lines, margin, y);
-    y += lines.length * 3.5 + 3;
-    line();
+  if (input.notes?.trim()) {
+    y += 3; sep();
+    txt("Notes / הערות", W - m, y, 11, [30, 30, 30], true, "right");
+    y += 6;
+    const lines = doc.splitTextToSize(input.notes.trim(), cw);
+    doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
+    doc.text(lines, W - m, y, { align: "right" });
+    y += lines.length * 3.5;
   }
 
-  // ── Drawing ──
-  if (svgElement) {
-    try {
-      const imgData = await svgToImage(svgElement);
-      const remain = 297 - y - 25;
-      const imgH = Math.min(remain, 65);
-      if (imgH > 25) {
-        text("Top View Drawing", margin, y, { size: 11, bold: true }); y += 4;
-        doc.addImage(imgData, "PNG", margin, y, contentW, imgH);
-        y += imgH + 3;
-      }
-    } catch { /* skip */ }
+  // ════════════════════════════════════════════
+  // PAGE 2: Drawings
+  // ════════════════════════════════════════════
+  const hasAnyImage = images.isometric || images.top || images.front;
+  if (hasAnyImage) {
+    doc.addPage();
+    y = m;
+
+    // Header bar
+    doc.setFillColor(20, 20, 20);
+    doc.rect(0, 0, W, 22, "F");
+    txt("Technical Drawings / שרטוטים טכניים", W / 2, 14, 14, [255, 255, 255], true, "center");
+    y = 30;
+
+    const imgW = cw;
+
+    // Isometric view
+    if (images.isometric) {
+      txt("Isometric View / תלת מימד", W / 2, y, 9, [100, 100, 100], true, "center");
+      y += 3;
+      doc.setDrawColor(230, 230, 230);
+      doc.roundedRect(m, y, imgW, 70, 2, 2, "S");
+      doc.addImage(images.isometric, "PNG", m + 2, y + 2, imgW - 4, 66);
+      y += 74;
+    }
+
+    // Top view
+    if (images.top) {
+      txt("Top View / מבט עליון", W / 2, y, 9, [100, 100, 100], true, "center");
+      y += 3;
+      doc.setDrawColor(230, 230, 230);
+      doc.roundedRect(m, y, imgW, 70, 2, 2, "S");
+      doc.addImage(images.top, "PNG", m + 2, y + 2, imgW - 4, 66);
+      y += 74;
+    }
+
+    // Front view
+    if (images.front) {
+      if (y + 80 > H - 20) { doc.addPage(); y = m; }
+      txt("Front View / מבט קדמי", W / 2, y, 9, [100, 100, 100], true, "center");
+      y += 3;
+      doc.setDrawColor(230, 230, 230);
+      doc.roundedRect(m, y, imgW, 55, 2, 2, "S");
+      doc.addImage(images.front, "PNG", m + 2, y + 2, imgW - 4, 51);
+      y += 59;
+    }
   }
 
-  // ── Disclaimer ──
-  y = Math.max(y + 5, 270);
-  doc.setDrawColor(220, 220, 220); doc.line(margin, y, pageW - margin, y); y += 4;
-  doc.setFontSize(6.5); doc.setTextColor(160, 160, 160);
-  const disclaimer = [
-    "This is a configuration request summary, not a final price quotation.",
-    "Drawing and post distribution are preliminary and subject to technical review and site inspection.",
-    "Final solution may differ based on structural requirements.",
-  ];
-  disclaimer.forEach((d) => { doc.text(d, pageW / 2, y, { align: "center" }); y += 3; });
+  // ════════════════════════════════════════════
+  // Footer on last page
+  // ════════════════════════════════════════════
+  const lastPage = doc.getNumberOfPages();
+  doc.setPage(lastPage);
+
+  // Footer bar
+  doc.setFillColor(245, 245, 245);
+  doc.rect(0, H - 28, W, 28, "F");
+  doc.setDrawColor(230, 230, 230);
+  doc.line(0, H - 28, W, H - 28);
+
+  txt("A.M.G PERGOLA LTD", W / 2, H - 20, 8, [100, 100, 100], true, "center");
+
+  doc.setFontSize(6); doc.setTextColor(160, 160, 160); doc.setFont("helvetica", "normal");
+  doc.text("This is a configuration request summary, not a final price quotation.", W / 2, H - 14, { align: "center" });
+  doc.text("Drawings and technical specifications are preliminary and subject to site inspection.", W / 2, H - 11, { align: "center" });
+  doc.text("052-812-2846  |  mail@amgpergola.co.il", W / 2, H - 7, { align: "center" });
 
   return doc.output("datauristring");
 }

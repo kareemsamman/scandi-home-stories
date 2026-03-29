@@ -579,6 +579,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       lightingPerCarrierHint: 'לחצו על נשא בשרטוט לבחירת תאורה לכל נשא בנפרד',
       phoneMustBe10: 'מספר טלפון חייב להכיל 10 ספרות',
       downloadPdf: 'הורד PDF',
+      downloadPdfTitle: 'סיכום הבקשה מוכן',
+      downloadPdfDesc: 'כולל שרטוטים טכניים, מפרט ופרטי תצורה',
     },
   },
   ar: {
@@ -1153,6 +1155,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       lightingPerCarrierHint: 'انقر على حامل في الرسم لاختيار إضاءة لكل حامل بشكل منفصل',
       phoneMustBe10: 'يجب أن يتكون رقم الهاتف من 10 أرقام',
       downloadPdf: 'تحميل PDF',
+      downloadPdfTitle: 'ملخص الطلب جاهز',
+      downloadPdfDesc: 'يشمل الرسومات الفنية والمواصفات وتفاصيل الإعدادات',
     },
     notFound: {
       title: 'الصفحة غير موجودة',

@@ -3,7 +3,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useCreatePergolaRequest } from "@/hooks/usePergolaRequests";
 import { useToast } from "@/hooks/use-toast";
-import { generatePergolaPdf } from "@/lib/generatePergolaPdf";
+import { generatePergolaPdf, svgToImage, type PdfImages } from "@/lib/generatePergolaPdf";
 import { cmToMm } from "@/types/pergola";
 import type { PergolaType } from "@/types/pergola";
 import { PergolaStartStep } from "./PergolaStartStep";
@@ -22,6 +22,7 @@ export const PergolaConfigurator = () => {
   const [step, setStep] = useState<Step>("start");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [capturedImages, setCapturedImages] = useState<PdfImages>({});
 
   // Step 1 → Step 2: Initialize config and open editor
   const handleStart = (widthCm: number, lengthCm: number, pergolaType: PergolaType) => {
@@ -30,38 +31,53 @@ export const PergolaConfigurator = () => {
     setStep("editor");
   };
 
-  // Step 2 → Step 3: Capture SVG from editor, then move to summary
-  const handleEditorNext = async () => {
-    // Capture SVG while it's still in the DOM
+  // Capture current SVG view as image
+  const captureCurrentView = async (): Promise<string | undefined> => {
     const svgEl = document.querySelector("#pergola-preview-svg svg") as SVGSVGElement | null;
-    if (svgEl && specs) {
-      try {
-        const pdfUrl = await generatePergolaPdf({
-          customerName: "",
-          customerPhone: "",
-          widthCm: Number(config.widthCm) || 400,
-          lengthCm: Number(config.lengthCm) || 400,
-          heightCm: Number(config.heightCm) || 250,
-          pergolaType: config.pergolaType || "fixed",
-          mountType: config.mountType || "wall",
-          installation: false,
-          lighting: config.lighting || "none",
-          lightingPosition: config.lightingPosition || "none",
-          lightingFixture: config.lightingFixture || "none",
-          lightingRoof: config.lightingRoof || false,
-          roofFillMode: config.roofFillMode || "slats",
-          slatGapCm: Number(config.slatGapCm) || 3,
-          slatColor: config.slatColor || "#383E42",
-          santaf: config.santaf || "without",
-          santafColor: config.santafColor || "",
-          frameColor: config.frameColor || "#383E42",
-          roofColor: config.roofColor || "#A5A5A5",
-          spacingMode: config.spacingMode || "automatic",
-          notes: "",
-        }, specs, locale, svgEl);
-        setGeneratedPdfUrl(pdfUrl);
-      } catch { /* proceed without PDF preview */ }
+    if (!svgEl) return undefined;
+    try { return await svgToImage(svgEl); } catch { return undefined; }
+  };
+
+  // Step 2 → Step 3: Capture all 3 views, generate PDF, then move to summary
+  const handleEditorNext = async () => {
+    if (!specs) { setStep("summary"); return; }
+
+    const images: PdfImages = {};
+    const currentView = usePergolaConfigurator.getState().activeView;
+
+    // Capture current view first
+    const currentImg = await captureCurrentView();
+    if (currentImg) images[currentView] = currentImg;
+
+    // Capture the other 2 views
+    const otherViews = (["isometric", "top", "front"] as const).filter((v) => v !== currentView);
+    for (const view of otherViews) {
+      setActiveView(view);
+      await new Promise((r) => setTimeout(r, 150)); // wait for render
+      const img = await captureCurrentView();
+      if (img) images[view] = img;
     }
+    setActiveView(currentView); // restore original view
+    setCapturedImages(images);
+
+    // Generate PDF preview
+    try {
+      const pdfUrl = await generatePergolaPdf({
+        customerName: "", customerPhone: "",
+        widthCm: Number(config.widthCm) || 400, lengthCm: Number(config.lengthCm) || 400,
+        heightCm: Number(config.heightCm) || 250, pergolaType: config.pergolaType || "fixed",
+        mountType: config.mountType || "wall", installation: false,
+        lighting: config.lighting || "none", lightingPosition: config.lightingPosition || "none",
+        lightingFixture: config.lightingFixture || "none", lightingRoof: config.lightingRoof || false,
+        roofFillMode: config.roofFillMode || "slats", slatGapCm: Number(config.slatGapCm) || 3,
+        slatColor: config.slatColor || "#383E42", santaf: config.santaf || "without",
+        santafColor: config.santafColor || "", frameColor: config.frameColor || "#383E42",
+        roofColor: config.roofColor || "#A5A5A5", spacingMode: config.spacingMode || "automatic",
+        notes: "",
+      }, specs, locale, images);
+      setGeneratedPdfUrl(pdfUrl);
+    } catch { /* proceed without PDF */ }
+
     setStep("summary");
   };
 
@@ -106,7 +122,7 @@ export const PergolaConfigurator = () => {
         roofColor: config.roofColor || "#A5A5A5",
         spacingMode: config.spacingMode || "automatic",
         notes,
-      }, specs, locale, null); // null SVG — text-only PDF
+      }, specs, locale, capturedImages);
 
       // Build extra config data as JSON (safe for both v1 and v2 schemas)
       const extraConfig = {
