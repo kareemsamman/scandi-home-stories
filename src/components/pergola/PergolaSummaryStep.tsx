@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
-import { mmToCm } from "@/types/pergola";
+import { mmToCm, cmToMm } from "@/types/pergola";
+import { calcSlatCount } from "@/lib/pergolaRules";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ interface Props {
 
 export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) => {
   const { t, locale } = useLocale();
-  const { config, specs } = usePergolaConfigurator();
+  const { config, specs, carrierConfigs } = usePergolaConfigurator();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -81,21 +82,9 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
           {config.pergolaType === "fixed" && (
             <SummaryCard label={t("pergolaRequest.roofFillMode")} value={config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")} />
           )}
-          {config.roofFillMode === "slats" && config.pergolaType === "fixed" && (
-            <>
-              <SummaryCard label={t("pergolaRequest.slatsLabel")} value={String(specs.slatCount)} />
-              <SummaryCard label={t("pergolaRequest.slatGap")} value={`${config.slatGapCm || 3} cm`} />
-              <SummaryCard label={t("pergolaRequest.slatColor")} value={config.slatColor || "#383838"} color={config.slatColor} />
-            </>
-          )}
-          {(config.roofFillMode === "santaf" || config.santaf === "with") && (
-            <SummaryCard label={t("pergolaRequest.santafRoofing")} value={t("pergolaRequest.santafWith")} />
-          )}
-          {(config.roofFillMode !== "santaf" && config.santaf !== "with") && config.pergolaType !== "fixed" && (
-            <SummaryCard label={t("pergolaRequest.santafRoofing")} value={t("pergolaRequest.santafWithout")} />
-          )}
-          <SummaryCard label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383838"} color={config.frameColor} />
-          <SummaryCard label={t("pergolaRequest.roofColor")} value={config.roofColor || "#C0C0C0"} color={config.roofColor} />
+          <SummaryCard label={t("pergolaRequest.santafRoofing")} value={config.santaf === "with" ? t("pergolaRequest.santafWith") : t("pergolaRequest.santafWithout")} />
+          <SummaryCard label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} color={config.frameColor} />
+          <SummaryCard label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} color={config.roofColor} />
           {config.santaf === "with" && config.santafColor && (
             <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={config.santafColor} color={config.santafColor} />
           )}
@@ -103,6 +92,32 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
       </div>
 
       {/* Parts section */}
+      {/* Per-carrier details */}
+      {config.pergolaType === "fixed" && config.roofFillMode === "slats" && carrierConfigs.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-bold text-gray-900">{t("pergolaRequest.slatsPerCarrier")}</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {carrierConfigs.map((cc, i) => {
+              const count = calcSlatCount(cmToMm(Number(config.widthCm) || 400), cc.slatGapCm * 10, cc.slatSize);
+              return (
+                <div key={i} className="bg-white rounded-xl border border-gray-100 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-800">נשא {i + 1}</span>
+                    <span className="w-5 h-5 rounded border border-gray-200" style={{ backgroundColor: cc.slatColor }} />
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatsLabel")}</span><span className="font-medium text-gray-700">{count}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatSizeLabel")}</span><span className="font-medium text-gray-700">{cc.slatSize === "20x40" ? "20×40 mm" : "20×70 mm"}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatGap")}</span><span className="font-medium text-gray-700">{cc.slatGapCm} cm</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.lighting")}</span><span className="font-medium text-gray-700">{cc.lightingEnabled ? `${cc.lighting === "rgb" ? "RGB" : t("pergolaRequest.lightingWhite")} — ${cc.lightingLength / 100} cm` : t("pergolaRequest.lightingNone")}</span></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <PergolaPartsSection />
 
       {/* Customer info form */}

@@ -3,8 +3,8 @@ import { useLocale } from "@/i18n/useLocale";
 import { usePergolaEditor, canAddPost, canRemovePost, canTogglePostLight } from "@/stores/usePergolaEditor";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
-import type { LightingChoice, SantafChoice, SlatSizeId } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_LENGTHS } from "@/types/pergola";
+import type { LightingChoice, LightingLength, SantafChoice, SlatSizeId } from "@/types/pergola";
 import { calcPostCount } from "@/lib/pergolaRules";
 
 export const PergolaElementEditor = () => {
@@ -214,9 +214,21 @@ export const PergolaElementEditor = () => {
             <ToggleBtn active={cc.lightingEnabled && cc.lighting === "rgb"}
               onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: "rgb" })} label="RGB" dot="bg-gradient-to-r from-red-400 via-green-400 to-blue-400" />
           </div>
+          {cc.lightingEnabled && (
+            <>
+              <Label>אורך פס תאורה</Label>
+              <div className="flex gap-1.5">
+                {LIGHTING_LENGTHS.map((len) => (
+                  <ToggleBtn key={len} active={(cc.lightingLength || 3000) === len}
+                    onClick={() => setCarrierConfig(secIdx, { lightingLength: len as LightingLength })}
+                    label={`${len / 100} cm`} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
-        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; מרווח ~{cc.slatGapCm} ס"מ</p>
+        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ{cc.lightingEnabled ? ` &middot; תאורה ${cc.lighting === "rgb" ? "RGB" : "לבנה"} ${cc.lightingLength / 100} cm` : ""}</p>
       </Panel>
     );
   }

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES } from "@/types/pergola";
-import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_LENGTHS } from "@/types/pergola";
+import type { DrawingConfig, LightingChoice, LightingLength, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
 import { calcSlatCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
@@ -103,14 +103,12 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             icon={<Lightbulb className="w-4 h-4" />}
             label={t("pergolaRequest.lighting")}
           />
-          {config.pergolaType !== "fixed" && (
-            <QuickToggle
-              active={config.santaf === "with"}
-              onClick={() => setConfig({ santaf: config.santaf === "with" ? "without" : "with" as SantafChoice })}
-              icon={<Mountain className="w-4 h-4" />}
-              label={t("pergolaRequest.santafRoofing")}
-            />
-          )}
+          <QuickToggle
+            active={config.santaf === "with"}
+            onClick={() => setConfig({ santaf: config.santaf === "with" ? "without" : "with" as SantafChoice })}
+            icon={<Mountain className="w-4 h-4" />}
+            label={t("pergolaRequest.santafRoofing")}
+          />
         </div>
 
         {/* Next button */}
@@ -177,9 +175,9 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               onChange={(v) => setConfig({ heightCm: v })} min={150} max={500} step={10} suffix="cm" />
           </SideCard>
 
-          {/* Lighting details (when enabled) */}
+          {/* Lighting — post lights (global) */}
           {config.lighting !== "none" && (
-            <SideCard title={t("pergolaRequest.lighting")} icon="💡">
+            <SideCard title={t("pergolaRequest.lightingPosts")} icon="💡">
               <div className="flex gap-1.5">
                 {(["white", "rgb"] as const).map((lt) => (
                   <button key={lt} onClick={() => setConfig({ lighting: lt as LightingChoice })}
@@ -189,6 +187,17 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                     {lt === "white" ? t("pergolaRequest.lightingWhite") : "RGB"}
                   </button>
                 ))}
+              </div>
+              <div className="mt-2">
+                <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.lightingLengthLabel")}</label>
+                <div className="flex gap-1">
+                  {LIGHTING_LENGTHS.map((len) => (
+                    <button key={len} onClick={() => setConfig({ lightingLength: len as LightingLength })}
+                      className={`flex-1 py-1.5 rounded-md text-[10px] font-medium border-2 transition-all ${
+                        (config.lightingLength || 3000) === len ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
+                      }`}>{len / 100} cm</button>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center justify-between text-xs mt-2">
                 <span className="text-gray-400">{t("pergolaRequest.lightingRoof")}</span>
@@ -201,27 +210,44 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                   {config.lightingRoof ? t("pergolaRequest.yes") : t("pergolaRequest.no")}
                 </button>
               </div>
+              <p className="text-[9px] text-gray-300 mt-1">{t("pergolaRequest.lightingPerCarrierHint")}</p>
             </SideCard>
           )}
 
+          {/* סנטף (can be added on top of slats for fixed pergola) */}
+          <SideCard title={t("pergolaRequest.santafRoofing")} icon="🏠">
+            <div className="flex gap-1.5">
+              <button onClick={() => setConfig({ santaf: "without" })}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                  config.santaf !== "with" ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
+                }`}>{t("pergolaRequest.santafWithout")}</button>
+              <button onClick={() => setConfig({ santaf: "with" })}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                  config.santaf === "with" ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
+                }`}>{t("pergolaRequest.santafWith")}</button>
+            </div>
+            {config.santaf === "with" && (
+              <div className="mt-2">
+                <MiniColorRow label={t("pergolaRequest.santafColorLabel")} value={config.santafColor || "#7A8B9A"} onChange={(v) => setConfig({ santafColor: v })} colors={SANTAF_COLORS} />
+              </div>
+            )}
+          </SideCard>
+
           {/* Colors */}
           <SideCard title={t("pergolaRequest.colors")} icon="🎨">
-            <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383838"} onChange={(v) => setConfig({ frameColor: v })} colors={STANDARD_COLORS} />
-            <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#C0C0C0"} onChange={(v) => setConfig({ roofColor: v })} colors={STANDARD_COLORS} />
-            {config.santaf === "with" && (
-              <MiniColorRow label={t("pergolaRequest.santafColorLabel")} value={config.santafColor || "#B22222"} onChange={(v) => setConfig({ santafColor: v })} colors={SANTAF_COLORS} />
-            )}
+            <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} onChange={(v) => setConfig({ frameColor: v })} colors={STANDARD_COLORS} />
+            <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} onChange={(v) => setConfig({ roofColor: v })} colors={STANDARD_COLORS} />
           </SideCard>
 
           {/* Roof fill mode (fixed pergola only) */}
           {config.pergolaType === "fixed" && (
             <SideCard title={t("pergolaRequest.roofFillMode")} icon="🏗️">
               <div className="flex gap-1.5">
-                <button onClick={() => setConfig({ roofFillMode: "slats", santaf: "without" })}
+                <button onClick={() => setConfig({ roofFillMode: "slats" })}
                   className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
                     config.roofFillMode === "slats" ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                   }`}>{t("pergolaRequest.roofSlats")}</button>
-                <button onClick={() => setConfig({ roofFillMode: "santaf", santaf: "with" })}
+                <button onClick={() => setConfig({ roofFillMode: "santaf" })}
                   className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
                     config.roofFillMode === "santaf" ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                   }`}>{t("pergolaRequest.roofSantafOnly")}</button>

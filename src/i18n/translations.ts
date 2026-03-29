@@ -574,6 +574,9 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatSizeLabel: 'גודל פרופיל שלב',
       slatsPerCarrier: 'שלבים לכל נשא',
       globalApplyHint: 'שינוי כאן חל על כל הנשאים. לחצו על נשא ספציפי בשרטוט להתאמה אישית',
+      lightingPosts: 'תאורת עמודים',
+      lightingLengthLabel: 'אורך פס תאורה',
+      lightingPerCarrierHint: 'לחצו על נשא בשרטוט לבחירת תאורה לכל נשא בנפרד',
     },
   },
   ar: {
@@ -1143,6 +1146,9 @@ export const translations: Record<Locale, Record<string, any>> = {
       slatSizeLabel: 'حجم بروفيل الشريحة',
       slatsPerCarrier: 'شرائح لكل حامل',
       globalApplyHint: 'التغيير هنا ينطبق على جميع الحوامل. انقر على حامل محدد في الرسم للتخصيص',
+      lightingPosts: 'إضاءة الأعمدة',
+      lightingLengthLabel: 'طول شريط الإضاءة',
+      lightingPerCarrierHint: 'انقر على حامل في الرسم لاختيار إضاءة لكل حامل بشكل منفصل',
     },
     notFound: {
       title: 'الصفحة غير موجودة',

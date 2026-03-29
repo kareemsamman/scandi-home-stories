@@ -7,7 +7,7 @@ export type PergolaRequestStatus = 'new' | 'in_review' | 'needs_inspection' | 'r
 export type SpacingMode = 'automatic' | 'dense' | 'standard' | 'wide';
 export type PergolaType = 'fixed' | 'pvc';
 export type SantafChoice = 'without' | 'with';
-export type RoofFillMode = 'slats' | 'santaf'; // for fixed pergola only
+export type RoofFillMode = 'slats' | 'santaf'; // primary fill for fixed pergola (santaf can also be added on top of slats)
 
 /** Profile names matching the technical PDF reference */
 export const PROFILE_NAMES = [
@@ -64,6 +64,10 @@ export type SlatSizeId = typeof SLAT_SIZES[number]['id'];
 /** Slat available lengths in mm */
 export const SLAT_LENGTHS = [3000, 4000, 6000] as const;
 
+/** Lighting strip lengths */
+export const LIGHTING_LENGTHS = [3000, 4000, 6000] as const;
+export type LightingLength = typeof LIGHTING_LENGTHS[number];
+
 /** What the customer fills in the form — dimensions in cm */
 export interface PergolaFormInput {
   widthCm: number;
@@ -77,6 +81,7 @@ export interface PergolaFormInput {
   lightingPosition: LightingPosition;
   lightingFixture: LightingFixture;
   lightingRoof: boolean;
+  lightingLength: LightingLength; // 3000, 4000, 6000mm
   lightingPosts: number[]; // indices of posts with lights (for selected_posts)
   // Roof fill mode (fixed pergola only)
   roofFillMode: RoofFillMode;
@@ -187,6 +192,7 @@ export interface CarrierConfig {
   slatColor: string;
   lighting: LightingChoice; // 'none' | 'white' | 'rgb'
   lightingEnabled: boolean;
+  lightingLength: LightingLength;
 }
 
 export function defaultCarrierConfig(global: {
@@ -194,6 +200,7 @@ export function defaultCarrierConfig(global: {
   slatGapCm?: number;
   slatColor?: string;
   lighting?: LightingChoice;
+  lightingLength?: LightingLength;
 }): CarrierConfig {
   return {
     slatSize: global.slatSize || "20x70",
@@ -201,6 +208,7 @@ export function defaultCarrierConfig(global: {
     slatColor: global.slatColor || "#383E42",
     lighting: global.lighting || "none",
     lightingEnabled: (global.lighting || "none") !== "none",
+    lightingLength: global.lightingLength || 3000,
   };
 }
 
