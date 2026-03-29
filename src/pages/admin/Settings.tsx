@@ -26,6 +26,8 @@ const STATUS_KEYS = [
   { key: "in_delivery", label: "יצא למשלוח" },
   { key: "not_approved", label: "לא אושרה" },
   { key: "cancelled", label: "בוטלה" },
+  { key: "pergola_admin_new", label: "🏗 פרגולה — התראה לאדמין" },
+  { key: "pergola_customer_response", label: "🏗 פרגולה — תשובה ללקוח" },
 ];
 
 type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp";
