@@ -1179,6 +1179,10 @@ export type Database = {
         Returns: Json
       }
       get_order_owner_hint: { Args: { p_order_id: string }; Returns: Json }
+      get_pergola_response: {
+        Args: { p_request_id: string; p_token: string }
+        Returns: Json
+      }
       get_shared_cart_by_token: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
