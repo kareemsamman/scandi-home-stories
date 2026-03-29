@@ -48,7 +48,7 @@ export const PergolaSpecsSummary = () => {
 
   // Lighting
   if (config.lighting && config.lighting !== "none") {
-    rows.push([t("pergolaRequest.lightingLabel"), t(`pergolaRequest.lighting${config.lighting.charAt(0).toUpperCase() + config.lighting.slice(1)}`)]);
+    rows.push([t("pergolaRequest.lightingLabel"), config.lighting.toUpperCase()]);
   }
 
   // Santaf

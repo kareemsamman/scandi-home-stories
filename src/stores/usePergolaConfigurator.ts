@@ -17,7 +17,6 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   lightingPosition: "none",
   lightingFixture: "none",
   lightingRoof: false,
-  lightingLength: 3000,
   lightingPosts: [],
   roofFillMode: "slats",
   slatCount: 0,
@@ -102,7 +101,6 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
             slatGapCm: Number(next.slatGapCm) || 3,
             slatColor: next.slatColor,
             lighting: next.lighting as any,
-            lightingLength: (next.lightingLength as any) || 3000,
           });
           carrierConfigs = Array.from({ length: Math.max(1, specs.carrierCount - 1) }, () => ({ ...globalDef }));
         } else {
@@ -142,7 +140,6 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         slatGapCm: Number(state.config.slatGapCm) || 3,
         slatColor: state.config.slatColor,
         lighting: state.config.lighting as any,
-        lightingLength: (state.config.lightingLength as any) || 3000,
       });
       return {
         carrierConfigs: state.carrierConfigs.map(() => ({ ...globalDef })),

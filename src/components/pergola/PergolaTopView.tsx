@@ -1,5 +1,5 @@
 import type { DrawingConfig } from "@/types/pergola";
-import { mmToCm } from "@/types/pergola";
+import { mmToCm, lightingColor } from "@/types/pergola";
 import { calcPostPositions, calcCarrierPositions } from "@/lib/pergolaRules";
 import { usePergolaEditor, type SelectedElement } from "@/stores/usePergolaEditor";
 
@@ -168,7 +168,7 @@ export const PergolaTopView = ({ config }: Props) => {
         <rect x={ox + 60} y={oy + 60} width={widthMm - 120} height={lengthMm - 120}
           fill="none"
           stroke={lightingRoof
-            ? (selStroke({ type: "roof_lighting", index: -1 }) || (lighting === "rgb" ? "#E040FB" : "#FDE68A"))
+            ? (selStroke({ type: "roof_lighting", index: -1 }) || (lightingColor(lighting)))
             : (selStroke({ type: "roof_lighting", index: -1 }) || "#D1D5DB")}
           strokeWidth={sw * 0.8} strokeDasharray="30 15" rx={20}
           opacity={lightingRoof ? 0.7 : 0.3}
@@ -185,8 +185,8 @@ export const PergolaTopView = ({ config }: Props) => {
           return (
             <circle key={`clight-${i}`} cx={ox + widthMm / 2} cy={oy + midY}
               r={Math.max(22, widthMm * 0.007)}
-              fill={lighting === "white" ? "#FEF3C7" : "#E879F9"}
-              stroke={lighting === "white" ? "#F59E0B" : "#A855F7"} strokeWidth={3} opacity={0.8} />
+              fill={lightingColor(lighting)}
+              stroke={"#B8860B"} strokeWidth={3} opacity={0.8} />
           );
         })}
 
@@ -216,7 +216,7 @@ export const PergolaTopView = ({ config }: Props) => {
             {/* Light indicator */}
             {lit && (
               <circle cx={ox + x} cy={oy - postSize / 2 - 25} r={18}
-                fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />
+                fill={lightingColor(lighting)} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />
             )}
             {/* Post label */}
             {(isSel || isHov) && (
@@ -252,7 +252,7 @@ export const PergolaTopView = ({ config }: Props) => {
                 fill={frameColor || "#383838"} stroke={isSel ? "#2563EB" : "#000"} strokeWidth={isSel ? 6 : 4} rx={4} />
               {lit && (
                 <circle cx={ox + x} cy={oy + lengthMm + postSize / 2 + 25} r={18}
-                  fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />
+                  fill={lightingColor(lighting)} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />
               )}
               {(isSel || isHov) && (
                 <text x={ox + x} y={oy + lengthMm - postSize / 2 - 35} textAnchor="middle" fontSize={fontSize * 0.55} fill={isSel ? "#2563EB" : "#6B7280"} fontFamily="sans-serif" fontWeight="600">

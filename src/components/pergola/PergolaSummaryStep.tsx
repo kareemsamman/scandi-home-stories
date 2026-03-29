@@ -86,8 +86,7 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
           <SummaryCard label={t("pergolaRequest.carriers")} value={String(specs.carrierCount)} />
           <SummaryCard label={t("pergolaRequest.spacingLabel")} value={`~${mmToCm(specs.spacingMm)} cm`} />
           <SummaryCard label={t("pergolaRequest.lighting")} value={
-            config.lighting === "none" ? t("pergolaRequest.lightingNone") :
-            config.lighting === "white" ? t("pergolaRequest.lightingWhite") : "RGB"
+            config.lighting === "none" ? t("pergolaRequest.lightingNone") : config.lighting?.toUpperCase()
           } />
           {config.pergolaType === "fixed" && (
             <SummaryCard label={t("pergolaRequest.roofFillMode")} value={config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")} />
@@ -119,7 +118,7 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting }: Props) =>
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatsLabel")}</span><span className="font-medium text-gray-700">{count}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatSizeLabel")}</span><span className="font-medium text-gray-700">{cc.slatSize === "20x40" ? "20×40 mm" : "20×70 mm"}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatGap")}</span><span className="font-medium text-gray-700">{cc.slatGapCm} cm</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.lighting")}</span><span className="font-medium text-gray-700">{cc.lightingEnabled ? `${cc.lighting === "rgb" ? "RGB" : t("pergolaRequest.lightingWhite")} — ${cc.lightingLength / 100} cm` : t("pergolaRequest.lightingNone")}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.lighting")}</span><span className="font-medium text-gray-700">{cc.lightingEnabled ? cc.lighting?.toUpperCase() : t("pergolaRequest.lightingNone")}</span></div>
                   </div>
                 </div>
               );

@@ -1,5 +1,5 @@
 import type { DrawingConfig } from "@/types/pergola";
-import { mmToCm } from "@/types/pergola";
+import { mmToCm, lightingColor } from "@/types/pergola";
 import { calcPostPositions } from "@/lib/pergolaRules";
 import { usePergolaEditor, type SelectedElement } from "@/stores/usePergolaEditor";
 
@@ -127,7 +127,7 @@ export const PergolaFrontView = ({ config }: Props) => {
             {/* Light */}
             {lit && (
               <circle cx={ox + x} cy={groundY - heightMm - beamH - 30} r={22}
-                fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 3} />
+                fill={lightingColor(lighting)} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 3} />
             )}
             {/* Label */}
             {(isSel || isHov) && (

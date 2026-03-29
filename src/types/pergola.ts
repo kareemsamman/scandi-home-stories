@@ -1,5 +1,6 @@
 export type MountType = 'wall' | 'freestanding';
-export type LightingChoice = 'none' | 'white' | 'rgb';
+/** Lighting color temperature: 3000K warm, 4000K neutral, 6000K cool */
+export type LightingChoice = 'none' | '3000k' | '4000k' | '6000k';
 export type LightingPosition = 'none' | 'all_posts' | 'selected_posts' | 'no_posts';
 export type LightingFixture = 'none' | 'spotlight' | 'led_strip' | 'rgb_strip' | 'mixed';
 export type ModuleClassification = 'single' | 'double' | 'triple' | 'custom';
@@ -64,9 +65,12 @@ export type SlatSizeId = typeof SLAT_SIZES[number]['id'];
 /** Slat available lengths in mm */
 export const SLAT_LENGTHS = [3000, 4000, 6000] as const;
 
-/** Lighting strip lengths */
-export const LIGHTING_LENGTHS = [3000, 4000, 6000] as const;
-export type LightingLength = typeof LIGHTING_LENGTHS[number];
+/** Lighting color temperature options */
+export const LIGHTING_TEMPS = [
+  { id: '3000k' as const, label: '3000K', name_he: 'חם', name_ar: 'دافئ', color: '#FFD27F' },
+  { id: '4000k' as const, label: '4000K', name_he: 'ניטרלי', name_ar: 'محايد', color: '#FFF4E0' },
+  { id: '6000k' as const, label: '6000K', name_he: 'קר', name_ar: 'بارد', color: '#F0F4FF' },
+] as const;
 
 /** What the customer fills in the form — dimensions in cm */
 export interface PergolaFormInput {
@@ -81,7 +85,6 @@ export interface PergolaFormInput {
   lightingPosition: LightingPosition;
   lightingFixture: LightingFixture;
   lightingRoof: boolean;
-  lightingLength: LightingLength; // 3000, 4000, 6000mm
   lightingPosts: number[]; // indices of posts with lights (for selected_posts)
   // Roof fill mode (fixed pergola only)
   roofFillMode: RoofFillMode;
@@ -190,9 +193,8 @@ export interface CarrierConfig {
   slatSize: SlatSizeId;
   slatGapCm: number;
   slatColor: string;
-  lighting: LightingChoice; // 'none' | 'white' | 'rgb'
+  lighting: LightingChoice; // 'none' | '3000k' | '4000k' | '6000k'
   lightingEnabled: boolean;
-  lightingLength: LightingLength;
 }
 
 export function defaultCarrierConfig(global: {
@@ -200,7 +202,6 @@ export function defaultCarrierConfig(global: {
   slatGapCm?: number;
   slatColor?: string;
   lighting?: LightingChoice;
-  lightingLength?: LightingLength;
 }): CarrierConfig {
   return {
     slatSize: global.slatSize || "20x70",
@@ -208,11 +209,18 @@ export function defaultCarrierConfig(global: {
     slatColor: global.slatColor || "#383E42",
     lighting: global.lighting || "none",
     lightingEnabled: (global.lighting || "none") !== "none",
-    lightingLength: global.lightingLength || 3000,
   };
 }
 
 // ── Helpers ──
+
+/** Get the visual color for a lighting temperature */
+export function lightingColor(choice: LightingChoice): string {
+  if (choice === '3000k') return '#FFD27F';
+  if (choice === '4000k') return '#FFF4E0';
+  if (choice === '6000k') return '#F0F4FF';
+  return '#FDE68A'; // fallback
+}
 
 export function cmToMm(cm: number): number {
   return Math.round(cm * 10);

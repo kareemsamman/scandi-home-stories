@@ -3,8 +3,8 @@ import { useLocale } from "@/i18n/useLocale";
 import { usePergolaEditor, canAddPost, canRemovePost, canTogglePostLight } from "@/stores/usePergolaEditor";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_LENGTHS } from "@/types/pergola";
-import type { LightingChoice, LightingLength, SantafChoice, SlatSizeId } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
+import type { LightingChoice, SantafChoice, SlatSizeId } from "@/types/pergola";
 import { calcPostCount } from "@/lib/pergolaRules";
 
 export const PergolaElementEditor = () => {
@@ -65,8 +65,11 @@ export const PergolaElementEditor = () => {
           ) : (
             <div className="flex gap-2">
               <ToggleBtn active={!hasLight} onClick={() => { if (hasLight) toggleLight(); }} label="ללא" />
-              <ToggleBtn active={hasLight && lighting === "white"} onClick={() => { if (!hasLight) toggleLight(); if (lighting !== "white") setConfig({ lighting: "white" }); }} label="לבנה" dot="bg-yellow-200" />
-              <ToggleBtn active={hasLight && lighting === "rgb"} onClick={() => { if (!hasLight) toggleLight(); if (lighting !== "rgb") setConfig({ lighting: "rgb" }); }} label="RGB" dot="bg-gradient-to-r from-red-400 via-green-400 to-blue-400" />
+              {LIGHTING_TEMPS.map((lt) => (
+                <ToggleBtn key={lt.id} active={hasLight && lighting === lt.id}
+                  onClick={() => { if (!hasLight) toggleLight(); if (lighting !== lt.id) setConfig({ lighting: lt.id as LightingChoice }); }}
+                  label={lt.label} dot={`bg-[${lt.color}]`} />
+              ))}
             </div>
           )}
         </div>
@@ -209,26 +212,14 @@ export const PergolaElementEditor = () => {
           <Label>תאורה בנשא</Label>
           <div className="flex gap-1.5">
             <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(secIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
-            <ToggleBtn active={cc.lightingEnabled && cc.lighting === "white"}
-              onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: "white" })} label="לבנה" dot="bg-yellow-200" />
-            <ToggleBtn active={cc.lightingEnabled && cc.lighting === "rgb"}
-              onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: "rgb" })} label="RGB" dot="bg-gradient-to-r from-red-400 via-green-400 to-blue-400" />
+            {LIGHTING_TEMPS.map((lt) => (
+              <ToggleBtn key={lt.id} active={cc.lightingEnabled && cc.lighting === lt.id}
+                onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
+            ))}
           </div>
-          {cc.lightingEnabled && (
-            <>
-              <Label>אורך פס תאורה</Label>
-              <div className="flex gap-1.5">
-                {LIGHTING_LENGTHS.map((len) => (
-                  <ToggleBtn key={len} active={(cc.lightingLength || 3000) === len}
-                    onClick={() => setCarrierConfig(secIdx, { lightingLength: len as LightingLength })}
-                    label={`${len / 100} cm`} />
-                ))}
-              </div>
-            </>
-          )}
         </div>
 
-        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ{cc.lightingEnabled ? ` &middot; תאורה ${cc.lighting === "rgb" ? "RGB" : "לבנה"} ${cc.lightingLength / 100} cm` : ""}</p>
+        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ{cc.lightingEnabled ? ` &middot; ${cc.lighting}` : ""}</p>
       </Panel>
     );
   }

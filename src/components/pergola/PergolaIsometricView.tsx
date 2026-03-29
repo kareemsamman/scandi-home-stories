@@ -1,4 +1,5 @@
 import type { DrawingConfig } from "@/types/pergola";
+import { lightingColor } from "@/types/pergola";
 import { calcPostPositions, calcCarrierPositions } from "@/lib/pergolaRules";
 import { usePergolaEditor, type SelectedElement } from "@/stores/usePergolaEditor";
 
@@ -104,7 +105,7 @@ export const PergolaIsometricView = ({ config }: Props) => {
             {/* Light */}
             {lit && (() => {
               const [cx, cy] = toIso(x, 0, heightMm + 80);
-              return <circle cx={cx} cy={cy} r={16} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
+              return <circle cx={cx} cy={cy} r={16} fill={lightingColor(lighting)} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
             })()}
           </g>
         );
@@ -131,7 +132,7 @@ export const PergolaIsometricView = ({ config }: Props) => {
               stroke={isSel ? "#2563EB" : (frameColor || "#383838")} strokeWidth={isSel ? sw * 2.5 : sw * 2} />
             {lit && (() => {
               const [cx, cy] = toIso(x, lengthMm, heightMm + 80);
-              return <circle cx={cx} cy={cy} r={16} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
+              return <circle cx={cx} cy={cy} r={16} fill={lightingColor(lighting)} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
             })()}
           </g>
         );
@@ -176,7 +177,7 @@ export const PergolaIsometricView = ({ config }: Props) => {
         carrierPositions.slice(0, -1).map((y, i) => {
           const midY = (y + (carrierPositions[i + 1] ?? y)) / 2;
           const [cx, cy] = toIso(widthMm / 2, midY, heightMm);
-          return <circle key={`lt-${i}`} cx={cx} cy={cy} r={Math.max(12, widthMm * 0.005)} fill={lighting === "rgb" ? "#E879F9" : "#FEF3C7"} stroke="#666" strokeWidth={2} opacity={0.8} />;
+          return <circle key={`lt-${i}`} cx={cx} cy={cy} r={Math.max(12, widthMm * 0.005)} fill={lightingColor(lighting)} stroke="#666" strokeWidth={2} opacity={0.8} />;
         })}
 
       {/* Ground frame */}

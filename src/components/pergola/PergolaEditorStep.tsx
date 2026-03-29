@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_LENGTHS } from "@/types/pergola";
-import type { DrawingConfig, LightingChoice, LightingLength, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
+import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
 import { calcSlatCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
@@ -95,7 +95,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             active={config.lighting !== "none"}
             onClick={() => {
               if (config.lighting === "none") {
-                setConfig({ lighting: "white", lightingPosition: "all_posts", lightingFixture: "led_strip" });
+                setConfig({ lighting: "3000k", lightingPosition: "all_posts", lightingFixture: "led_strip" });
               } else {
                 setConfig({ lighting: "none", lightingPosition: "none", lightingFixture: "none", lightingRoof: false, lightingPosts: [] });
               }
@@ -175,42 +175,21 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               onChange={(v) => setConfig({ heightCm: v })} min={150} max={500} step={10} suffix="cm" />
           </SideCard>
 
-          {/* Lighting — post lights (global) */}
+          {/* Lighting — color temperature (global) */}
           {config.lighting !== "none" && (
-            <SideCard title={t("pergolaRequest.lightingPosts")} icon="💡">
+            <SideCard title={t("pergolaRequest.lighting")} icon="💡">
               <div className="flex gap-1.5">
-                {(["white", "rgb"] as const).map((lt) => (
-                  <button key={lt} onClick={() => setConfig({ lighting: lt as LightingChoice })}
+                {LIGHTING_TEMPS.map((lt) => (
+                  <button key={lt.id} onClick={() => setConfig({ lighting: lt.id as LightingChoice })}
                     className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
-                      config.lighting === lt ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
+                      config.lighting === lt.id ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                     }`}>
-                    {lt === "white" ? t("pergolaRequest.lightingWhite") : "RGB"}
+                    <span className="w-3 h-3 rounded-full inline-block mb-0.5" style={{ backgroundColor: lt.color }} />
+                    <span className="block text-[10px]">{lt.label}</span>
                   </button>
                 ))}
               </div>
-              <div className="mt-2">
-                <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.lightingLengthLabel")}</label>
-                <div className="flex gap-1">
-                  {LIGHTING_LENGTHS.map((len) => (
-                    <button key={len} onClick={() => setConfig({ lightingLength: len as LightingLength })}
-                      className={`flex-1 py-1.5 rounded-md text-[10px] font-medium border-2 transition-all ${
-                        (config.lightingLength || 3000) === len ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
-                      }`}>{len / 100} cm</button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs mt-2">
-                <span className="text-gray-400">{t("pergolaRequest.lightingRoof")}</span>
-                <button
-                  onClick={() => setConfig({ lightingRoof: !config.lightingRoof })}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-                    config.lightingRoof ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {config.lightingRoof ? t("pergolaRequest.yes") : t("pergolaRequest.no")}
-                </button>
-              </div>
-              <p className="text-[9px] text-gray-300 mt-1">{t("pergolaRequest.lightingPerCarrierHint")}</p>
+              <p className="text-[9px] text-gray-300 mt-1.5">{t("pergolaRequest.lightingPerCarrierHint")}</p>
             </SideCard>
           )}
 
