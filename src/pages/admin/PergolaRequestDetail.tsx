@@ -98,7 +98,12 @@ const AdminPergolaRequestDetail = () => {
   };
 
   const handleSave = async () => {
-    const updates: Record<string, any> = { id: req.id, status, admin_notes: adminNotes };
+    const updates: Record<string, any> = {
+      id: req.id,
+      status,
+      admin_notes: adminNotes,
+      quoted_price: quotedPrice ? Number(quotedPrice) : null,
+    };
     if (editingSpecs) {
       updates.admin_modified_config = { front_post_count: editedFrontPosts, back_post_count: editedBackPosts };
       updates.front_post_count = editedFrontPosts;
@@ -111,6 +116,27 @@ const AdminPergolaRequestDetail = () => {
       setEditingSpecs(false);
     } catch {
       toast({ title: "שגיאה", description: "לא ניתן לעדכן", variant: "destructive" });
+    }
+  };
+
+  const handleSendResponse = async () => {
+    // Save first
+    await handleSave();
+    setSendingSms(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-pergola-sms", {
+        body: {
+          action: "notify_customer",
+          request_id: req.id,
+          site_origin: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast({ title: "ההודעה נשלחה ללקוח" });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן לשלוח הודעה", variant: "destructive" });
+    } finally {
+      setSendingSms(false);
     }
   };
 
