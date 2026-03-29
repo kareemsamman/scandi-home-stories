@@ -34,6 +34,8 @@ export interface SmsMessages {
   not_approved: { he: string; ar: string };
   cancelled: { he: string; ar: string };
   share_cart: string;
+  pergola_admin_new: { he: string; ar: string };
+  pergola_customer_response: { he: string; ar: string };
 }
 
 const DEFAULT_BANK: BankSettings = {
