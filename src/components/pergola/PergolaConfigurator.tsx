@@ -31,9 +31,11 @@ export const PergolaConfigurator = () => {
     setStep("editor");
   };
 
-  // Capture current SVG view as image
+  // Capture current SVG view as image (target the pergola drawing, not zoom icons)
   const captureCurrentView = async (): Promise<string | undefined> => {
-    const svgEl = document.querySelector("#pergola-preview-svg svg") as SVGSVGElement | null;
+    const container = document.querySelector("#pergola-drawing-area");
+    if (!container) return undefined;
+    const svgEl = container.querySelector("svg") as SVGSVGElement | null;
     if (!svgEl) return undefined;
     try { return await svgToImage(svgEl); } catch { return undefined; }
   };
@@ -167,8 +169,9 @@ export const PergolaConfigurator = () => {
 
       setGeneratedPdfUrl(pdfUrl);
       setStep("success");
-    } catch (err) {
-      console.error("Submit error:", err);
+    } catch (err: any) {
+      const msg = err?.message || err?.error?.message || JSON.stringify(err);
+      console.error("Submit error:", msg, err);
       toast({
         title: locale === "ar" ? "خطأ" : "שגיאה",
         description: locale === "ar" ? "حدث خطأ. حاول مرة أخرى." : "אירעה שגיאה. נסו שוב.",

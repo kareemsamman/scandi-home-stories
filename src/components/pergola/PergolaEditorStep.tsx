@@ -140,7 +140,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             </div>
 
             {/* Zoomable SVG container */}
-            <div className="flex items-center justify-center min-h-[460px]" style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.2s ease" }}>
+            <div id="pergola-drawing-area" className="flex items-center justify-center min-h-[460px]" style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.2s ease" }}>
               {activeView === "isometric" && <PergolaIsometricView config={drawingConfig} />}
               {activeView === "top" && <PergolaTopView config={drawingConfig} />}
               {activeView === "front" && <PergolaFrontView config={drawingConfig} />}
