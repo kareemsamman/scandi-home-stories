@@ -53,6 +53,7 @@ const AdminPergolaRequestDetail = () => {
   if (req && !inited) {
     setStatus(req.status);
     setAdminNotes(req.admin_notes || "");
+    setQuotedPrice(req.quoted_price != null ? String(req.quoted_price) : "");
     setEditedFrontPosts(req.front_post_count);
     setEditedBackPosts(req.back_post_count);
     setEditLightingPosts(req.lighting_posts || []);
