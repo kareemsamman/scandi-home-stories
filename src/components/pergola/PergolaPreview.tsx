@@ -1,15 +1,19 @@
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
+import { usePergolaEditor } from "@/stores/usePergolaEditor";
 import { useLocale } from "@/i18n/useLocale";
 import { cmToMm } from "@/types/pergola";
 import type { DrawingConfig } from "@/types/pergola";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
 import { PergolaIsometricView } from "./PergolaIsometricView";
+import { PergolaElementEditor } from "./PergolaElementEditor";
+import { MousePointerClick } from "lucide-react";
 
 const VIEWS = ["top", "front", "isometric"] as const;
 
 export const PergolaPreview = () => {
   const { config, specs, activeView, setActiveView } = usePergolaConfigurator();
+  const { selected } = usePergolaEditor();
   const { t } = useLocale();
 
   if (!specs) return null;
@@ -56,12 +60,23 @@ export const PergolaPreview = () => {
         ))}
       </div>
 
+      {/* Interactive hint */}
+      {!selected && (
+        <div className="flex items-center gap-1.5 text-xs text-gray-400 px-1">
+          <MousePointerClick className="w-3.5 h-3.5" />
+          <span>{t("pergolaRequest.clickToEdit")}</span>
+        </div>
+      )}
+
       {/* View area */}
       <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 min-h-[340px] flex items-center justify-center" id="pergola-preview-svg">
         {activeView === "top" && <PergolaTopView config={drawingConfig} />}
         {activeView === "front" && <PergolaFrontView config={drawingConfig} />}
         {activeView === "isometric" && <PergolaIsometricView config={drawingConfig} />}
       </div>
+
+      {/* Element editor panel — shows when something is selected */}
+      <PergolaElementEditor />
     </div>
   );
 };

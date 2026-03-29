@@ -1,5 +1,6 @@
 import type { DrawingConfig } from "@/types/pergola";
 import { calcPostPositions, calcCarrierPositions } from "@/lib/pergolaRules";
+import { usePergolaEditor, type SelectedElement } from "@/stores/usePergolaEditor";
 
 interface Props { config: DrawingConfig }
 
@@ -12,6 +13,8 @@ function toIso(x: number, y: number, z: number): [number, number] {
 
 export const PergolaIsometricView = ({ config }: Props) => {
   const { widthMm, lengthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, santaf, santafColor, specs, frameColor, roofColor } = config;
+  const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
+
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
   const carrierPositions = calcCarrierPositions(lengthMm, specs.carrierCount);
 
@@ -43,37 +46,95 @@ export const PergolaIsometricView = ({ config }: Props) => {
     return false;
   };
 
+  const isSelected = (el: SelectedElement) => selected?.type === el.type && selected?.index === el.index;
+  const isHovered = (el: SelectedElement) => hoverElement?.type === el.type && hoverElement?.index === el.index;
+  const handleClick = (el: SelectedElement) => (e: React.MouseEvent) => { e.stopPropagation(); select(isSelected(el) ? null : el); };
+  const handleHover = (el: SelectedElement | null) => () => setHoverElement(el);
+
   return (
-    <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full" style={{ maxHeight: 460 }}>
-      {/* Santaf overlay on roof */}
-      {santaf === "with" && (
-        <path d={roofPath} fill={santafColor || "#B22222"} fillOpacity={0.2} stroke={santafColor || "#B22222"} strokeWidth={sw * 0.5} />
-      )}
+    <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full cursor-default" style={{ maxHeight: 460 }}
+      onClick={() => select(null)}>
 
-      {/* Roof surface */}
-      <path d={roofPath} fill={roofColor || "#C0C0C0"} fillOpacity={0.2} stroke={frameColor || "#383838"} strokeWidth={sw * 1.5} />
+      {/* Santaf overlay — clickable */}
+      {santaf === "with" && (() => {
+        const el: SelectedElement = { type: "santaf", index: -1 };
+        const isSel = isSelected(el);
+        return (
+          <path d={roofPath} fill={santafColor || "#B22222"} fillOpacity={0.2}
+            stroke={isSel ? "#2563EB" : (santafColor || "#B22222")} strokeWidth={isSel ? sw * 2 : sw * 0.5}
+            className="cursor-pointer"
+            onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
+        );
+      })()}
 
-      {/* Front posts */}
-      {postPositions.map((x, i) => (
-        <g key={`fp-${i}`}>
-          {isoLine(x, 0, 0, x, 0, heightMm, frameColor || "#383838", sw * 2, `fp-l-${i}`)}
-          {hasPostLight(i) && (() => {
-            const [cx, cy] = toIso(x, 0, heightMm + 80);
-            return <circle cx={cx} cy={cy} r={14} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke="#666" strokeWidth={2} />;
-          })()}
-        </g>
-      ))}
+      {/* Roof surface — clickable */}
+      {(() => {
+        const el: SelectedElement = { type: "roof", index: -1 };
+        const isSel = isSelected(el);
+        return (
+          <path d={roofPath} fill={roofColor || "#C0C0C0"} fillOpacity={0.2}
+            stroke={isSel ? "#2563EB" : (frameColor || "#383838")} strokeWidth={isSel ? sw * 2 : sw * 1.5}
+            className="cursor-pointer"
+            onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
+        );
+      })()}
 
-      {/* Back posts (freestanding) */}
-      {mountType === "freestanding" && postPositions.map((x, i) => (
-        <g key={`bp-${i}`}>
-          {isoLine(x, lengthMm, 0, x, lengthMm, heightMm, frameColor || "#383838", sw * 2, `bp-l-${i}`)}
-          {hasPostLight(i + specs.frontPostCount) && (() => {
-            const [cx, cy] = toIso(x, lengthMm, heightMm + 80);
-            return <circle cx={cx} cy={cy} r={14} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke="#666" strokeWidth={2} />;
-          })()}
-        </g>
-      ))}
+      {/* Front posts — clickable */}
+      {postPositions.map((x, i) => {
+        const el: SelectedElement = { type: "front_post", index: i };
+        const [bx, by] = toIso(x, 0, 0);
+        const [tx, ty] = toIso(x, 0, heightMm);
+        const isSel = isSelected(el);
+        const isHov = isHovered(el);
+        const lit = hasPostLight(i);
+        return (
+          <g key={`fp-${i}`} className="cursor-pointer"
+            onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
+            {/* Hit target circle */}
+            <circle cx={(bx + tx) / 2} cy={(by + ty) / 2} r={sw * 8} fill="transparent" />
+            {/* Selection indicator */}
+            {(isSel || isHov) && (
+              <circle cx={bx} cy={by} r={sw * 4} fill="none"
+                stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={3} strokeDasharray={isSel ? undefined : "8 4"} />
+            )}
+            {/* Post line */}
+            <line x1={bx} y1={by} x2={tx} y2={ty}
+              stroke={isSel ? "#2563EB" : (frameColor || "#383838")} strokeWidth={isSel ? sw * 2.5 : sw * 2} />
+            {/* Light */}
+            {lit && (() => {
+              const [cx, cy] = toIso(x, 0, heightMm + 80);
+              return <circle cx={cx} cy={cy} r={16} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
+            })()}
+          </g>
+        );
+      })}
+
+      {/* Back posts — clickable (freestanding) */}
+      {mountType === "freestanding" && postPositions.map((x, i) => {
+        const el: SelectedElement = { type: "back_post", index: i };
+        const [bx, by] = toIso(x, lengthMm, 0);
+        const [tx, ty] = toIso(x, lengthMm, heightMm);
+        const isSel = isSelected(el);
+        const isHov = isHovered(el);
+        const globalIdx = i + specs.frontPostCount;
+        const lit = hasPostLight(globalIdx);
+        return (
+          <g key={`bp-${i}`} className="cursor-pointer"
+            onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
+            <circle cx={(bx + tx) / 2} cy={(by + ty) / 2} r={sw * 8} fill="transparent" />
+            {(isSel || isHov) && (
+              <circle cx={bx} cy={by} r={sw * 4} fill="none"
+                stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={3} strokeDasharray={isSel ? undefined : "8 4"} />
+            )}
+            <line x1={bx} y1={by} x2={tx} y2={ty}
+              stroke={isSel ? "#2563EB" : (frameColor || "#383838")} strokeWidth={isSel ? sw * 2.5 : sw * 2} />
+            {lit && (() => {
+              const [cx, cy] = toIso(x, lengthMm, heightMm + 80);
+              return <circle cx={cx} cy={cy} r={16} fill={lighting === "rgb" ? "#E040FB" : "#FDE68A"} stroke={isSel ? "#2563EB" : "#666"} strokeWidth={isSel ? 4 : 2} />;
+            })()}
+          </g>
+        );
+      })}
 
       {/* Wall lines */}
       {mountType === "wall" && <>

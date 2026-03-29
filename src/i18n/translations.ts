@@ -557,6 +557,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       maxLength: 'עומק מקסימלי 1000 ס"מ',
       yes: 'כן',
       no: 'לא',
+      clickToEdit: 'לחצו על רכיב בשרטוט לעריכה',
     },
   },
   ar: {
@@ -1109,6 +1110,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       maxLength: 'الحد الأقصى للعمق 1000 سم',
       yes: 'نعم',
       no: 'لا',
+      clickToEdit: 'انقر على عنصر في الرسم للتعديل',
     },
     notFound: {
       title: 'الصفحة غير موجودة',
