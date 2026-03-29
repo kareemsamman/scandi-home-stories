@@ -306,13 +306,34 @@ const AdminPergolaRequestDetail = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-gray-600">הערות פנימיות</Label>
-                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={4} placeholder="הערות לשימוש פנימי בלבד..." />
+                <Label className="text-sm text-gray-600">מחיר מוצע (₪)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  placeholder="הכנס מחיר..."
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-600">הערות ללקוח</Label>
+                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={4} placeholder="הערות שיוצגו ללקוח..." />
               </div>
               <button onClick={handleSave} disabled={updateRequest.isPending}
                 className="w-full bg-gray-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50">
                 {updateRequest.isPending ? "שומר..." : "שמור שינויים"}
               </button>
+              <button onClick={handleSendResponse} disabled={sendingSms || updateRequest.isPending}
+                className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {sendingSms ? <><Loader2 className="w-4 h-4 animate-spin" /> שולח...</> : <><Send className="w-4 h-4" /> שלח תשובה ללקוח</>}
+              </button>
+              {req.admin_response_sent_at && (
+                <p className="text-xs text-gray-400 text-center">
+                  תשובה אחרונה נשלחה: {new Date(req.admin_response_sent_at).toLocaleDateString("he-IL")} {new Date(req.admin_response_sent_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              )}
             </div>
           </Card>
         </div>
