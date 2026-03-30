@@ -623,7 +623,7 @@ const AdminInventory = () => {
         <div className="space-y-3">
           {filtered.map((product: any) => {
             const dbItems = inventoryMap.get(product.id) || [];
-            const invItems = dbItems.length > 0 ? dbItems : deriveRows(product);
+            const invItems = mergeInventory(product, dbItems);
             const pName = (transMap as Map<string, string>).get(product.id) || product.name;
             const hasLow = isProductLow(product);
             const { colorMap, simpleItem } = groupByColor(invItems, product);
