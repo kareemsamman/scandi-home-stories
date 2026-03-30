@@ -20,6 +20,7 @@ import { loadAllRecords } from "@/utils/cityStreetApi";
 import { useBankSettings, useSmsSettings, useAdminOrderSettings, useVatSettings } from "@/hooks/useAppSettings";
 import { calculateVat } from "@/lib/vat";
 import { FreeShippingBar } from "@/components/FreeShippingBar";
+import { TranzilaPayment } from "@/components/TranzilaPayment";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 import { SEOHead } from '@/components/SEOHead';
@@ -818,110 +819,90 @@ const Checkout = () => {
             {t("payment.backToForm")}
           </button>
 
-          {/* Payment instructions */}
+          {/* Payment title */}
           <div className="text-center mb-8">
             <h1 className="text-xl font-bold text-foreground mb-3">{t("payment.title")}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-              {t("payment.instructions")}
+              {locale === "ar" ? "أدخل بيانات الدفع لإتمام الطلب" : "הזינו פרטי תשלום להשלמת ההזמנה"}
             </p>
           </div>
 
-          {/* Bank details card */}
-          <div className="bg-white rounded-xl border border-border p-6 mb-8">
-            <div className="flex flex-col items-center mb-5">
-              <div className="w-14 h-14 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-                <Building2 className="w-7 h-7 text-foreground" />
-              </div>
-              <h2 className="text-base font-bold text-foreground">{t("payment.bankDetailsTitle")}</h2>
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: t("payment.bankName"), value: bankSettings?.bank_name || "בנק הפועלים" },
-                { label: t("payment.accountName"), value: bankSettings?.account_name || 'א.מ.ג. פרגולה בע"מ' },
-                { label: t("payment.accountNumber"), value: bankSettings?.account_number || "696962" },
-                { label: t("payment.branchNumber"), value: bankSettings?.branch_number || "696" },
-                { label: t("payment.bankCode"), value: bankSettings?.bank_code || "12" },
-              ].map((row) => (
-                <div key={row.label} className="flex justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-semibold text-foreground">{row.value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="flex justify-between text-base font-bold">
-                <span>{t("payment.amountToPay")}</span>
-                <span>{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
+          {/* Tranzila Payment iframe */}
+          <TranzilaPayment
+            amount={totalAfterDiscount}
+            orderNumber={orderNumber}
+            customerEmail={form.email}
+            customerPhone={form.phone}
+            onSuccess={async (result) => {
+              setIsSubmittingReceipt(true);
+              try {
+                // Create order with payment confirmed
+                const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
+                const { data: orderResult, error: orderFnErr } = await supabase.functions.invoke("create-order", {
+                  body: {
+                    orderNumber,
+                    notes: form.note || undefined,
+                    firstName: form.firstName,
+                    lastName: form.lastName,
+                    email: form.email || undefined,
+                    phone: form.phone,
+                    city: addressState.city,
+                    address: addressState.street,
+                    house_number: addressState.houseNumber,
+                    apartment: addressState.apartment || undefined,
+                    locale,
+                    origin: window.location.origin,
+                    shippingCost,
+                    discountCode: appliedCoupon?.coupon.code,
+                    payment_status: "paid",
+                    transaction_id: result.transactionId,
+                    items: items.map((item) => {
+                      const colorId = item.options?.color?.id;
+                      const sizeLabel = item.options?.size;
+                      const sizeId = item.product.type === "contractor"
+                        ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
+                        : undefined;
+                      return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId };
+                    }),
+                  },
+                });
+                if (orderFnErr) throw orderFnErr;
 
-          {/* Upload receipt section */}
-          <div className="bg-white rounded-xl border border-border p-6 mb-6">
-            <h3 className="text-base font-bold text-foreground mb-4">{t("payment.uploadTitle")}</h3>
+                clearCart();
+                if (appliedCoupon) clearCoupon();
 
-            {/* Drop zone */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-muted-foreground transition-colors"
-            >
-              <Upload className="w-8 h-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                {t("payment.dropText")}
-              </p>
-              <p className="text-xs text-muted-foreground/60">JPG, PNG, PDF · {locale === "ar" ? "حتى 10MB لكل ملف" : "עד 10MB לכל קובץ"}</p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files)}
-            />
-
-            {/* Uploaded previews */}
-            {uploadedFiles.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
-                {uploadedFiles.map((uf, idx) => (
-                  <div key={idx} className="relative group">
-                    {uf.preview ? (
-                      <img src={uf.preview} alt="" className="w-full aspect-square rounded-lg object-cover border border-border" />
-                    ) : (
-                      <div className="w-full aspect-square rounded-lg border border-border bg-muted/20 flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">PDF</span>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => removeFile(idx)}
-                      className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-          </div>
-
-          {/* Submit receipt button */}
-          <button
-            onClick={handleSubmitReceipt}
-            disabled={uploadedFiles.length === 0 || isSubmittingReceipt}
-            className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmittingReceipt ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <LockIcon />
-                {t("payment.submitReceipt")}
-              </>
-            )}
-          </button>
+                navigate(localePath("/checkout/thank-you"), {
+                  state: {
+                    orderNumber,
+                    total: orderResult?.total ?? totalAfterDiscount,
+                    date: orderDate,
+                    orderId: orderResult?.orderId,
+                    phone: form.phone,
+                    isGuest: !user,
+                    firstName: form.firstName,
+                    lastName: form.lastName,
+                    email: form.email,
+                  },
+                });
+              } catch (err) {
+                console.error("Order creation after payment failed:", err);
+                toast({
+                  title: locale === "ar" ? "خطأ" : "שגיאה",
+                  description: locale === "ar" ? "تم الدفع بنجاح لكن حدث خطأ في إنشاء الطلب. سنتواصل معك." : "התשלום בוצע אך אירעה שגיאה ביצירת ההזמנה. ניצור קשר.",
+                  variant: "destructive",
+                });
+              } finally {
+                setIsSubmittingReceipt(false);
+              }
+            }}
+            onError={(error) => {
+              toast({
+                title: locale === "ar" ? "فشل الدفع" : "התשלום נכשל",
+                description: error,
+                variant: "destructive",
+              });
+            }}
+          />
         </motion.main>
         </PaymentStepLoader>
       </div>

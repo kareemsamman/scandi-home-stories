@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const {
       orderNumber, notes, firstName, lastName, email, phone,
-      city, address, house_number, apartment, receiptUrl, locale,
+      city, address, house_number, apartment, receiptUrl, locale, transaction_id,
       origin, shippingCost,
       marketingOptIn, discountCode,
       payment_status: rawPaymentStatus,
@@ -281,6 +281,7 @@ Deno.serve(async (req) => {
         house_number: (house_number && typeof house_number === "string") ? house_number.slice(0, 50) : null,
         apartment: (apartment && typeof apartment === "string") ? apartment.slice(0, 100) : null,
         receipt_url: (receiptUrl && typeof receiptUrl === "string") ? receiptUrl.slice(0, 2000) : null,
+        transaction_id: (transaction_id && typeof transaction_id === "string") ? transaction_id.slice(0, 200) : null,
         payment_status: paymentStatus,
         locale: locale === "ar" ? "ar" : "he",
         marketing_opt_in: !!marketingOptIn,
