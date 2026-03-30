@@ -10,7 +10,7 @@ interface AdminLanguageContextType {
 const Ctx = createContext<AdminLanguageContextType>({ locale: "he", setLocale: () => {} });
 
 export const AdminLanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocale] = useState<AdminLocale>("he");
+  const [locale, setLocale] = useState<AdminLocale>("ar");
   return <Ctx.Provider value={{ locale, setLocale }}>{children}</Ctx.Provider>;
 };
 

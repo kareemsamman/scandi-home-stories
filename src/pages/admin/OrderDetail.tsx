@@ -772,6 +772,12 @@ const AdminOrderDetail = () => {
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 text-base">{item.product_id && productNameMap.get(item.product_id)?.[orderLocale] || item.product_name}</p>
+                {item.product_id && productNameMap.get(item.product_id) && (() => {
+                  const names = productNameMap.get(item.product_id!)!;
+                  const otherLocale = orderLocale === "ar" ? "he" : "ar";
+                  const otherName = names[otherLocale];
+                  return otherName ? <p className="text-xs text-gray-400 mt-0.5" dir={otherLocale === "ar" ? "rtl" : "rtl"}>{otherName}</p> : null;
+                })()}
                 {item.product_id && (
                   isAdmin ? (
                     <button

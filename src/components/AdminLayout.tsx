@@ -187,7 +187,7 @@ const AdminLayoutInner = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir={location.pathname.startsWith("/admin/orders") || location.pathname.startsWith("/admin/inventory") ? "rtl" : undefined}>
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto" dir="rtl">
           <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>}>
             <Outlet />
           </Suspense>
