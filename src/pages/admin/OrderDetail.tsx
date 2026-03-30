@@ -853,10 +853,10 @@ const AdminOrderDetail = () => {
               </span>
             </div>
           )}
-          {Number(order.vat_amount || 0) > 0 && (
+          {Number((order as any).vat_amount || 0) > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">ض.ق.م ({order.vat_rate || 18}%)</span>
-              <span className="font-medium text-gray-900">₪{Number(order.vat_amount).toLocaleString()}</span>
+              <span className="text-gray-500">ض.ق.م ({(order as any).vat_rate || 18}%)</span>
+              <span className="font-medium text-gray-900">₪{Number((order as any).vat_amount).toLocaleString()}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">
