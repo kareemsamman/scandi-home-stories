@@ -19,16 +19,16 @@ import { AddressFields, AddressState } from "@/components/AddressFields";
 
 /* ── Status config ── */
 const STATUSES = [
-  { value: "waiting_approval", label: "מחכה אישור", color: "bg-amber-100 text-amber-800 border-amber-200", dot: "bg-amber-500" },
-  { value: "in_process",       label: "בתהליך",     color: "bg-blue-100 text-blue-800 border-blue-200",   dot: "bg-blue-500" },
-  { value: "in_delivery",      label: "יצא למשלוח", color: "bg-purple-100 text-purple-800 border-purple-200", dot: "bg-purple-500" },
-  { value: "not_approved",     label: "לא אושרה",   color: "bg-red-100 text-red-800 border-red-200",     dot: "bg-red-500" },
-  { value: "cancelled",        label: "בוטלה",      color: "bg-gray-100 text-gray-600 border-gray-200",  dot: "bg-gray-400" },
+  { value: "waiting_approval", label: "بانتظار الموافقة", color: "bg-amber-100 text-amber-800 border-amber-200", dot: "bg-amber-500" },
+  { value: "in_process",       label: "قيد المعالجة",     color: "bg-blue-100 text-blue-800 border-blue-200",   dot: "bg-blue-500" },
+  { value: "in_delivery",      label: "خرج للتوصيل", color: "bg-purple-100 text-purple-800 border-purple-200", dot: "bg-purple-500" },
+  { value: "not_approved",     label: "لم تتم الموافقة",   color: "bg-red-100 text-red-800 border-red-200",     dot: "bg-red-500" },
+  { value: "cancelled",        label: "ملغاة",      color: "bg-gray-100 text-gray-600 border-gray-200",  dot: "bg-gray-400" },
 ];
 
 const getStatus = (s: string) =>
   STATUSES.find(x => x.value === s) ?? {
-    label: s === "pending" ? "ממתין" : s === "confirmed" ? "אושרה" : s === "shipped" ? "נשלחה" : s === "delivered" ? "נמסרה" : s,
+    label: s === "pending" ? "معلّق" : s === "confirmed" ? "مؤكد" : s === "shipped" ? "تم الشحن" : s === "delivered" ? "تم التسليم" : s,
     color: "bg-gray-100 text-gray-600 border-gray-200",
     dot: "bg-gray-400",
     value: s,
@@ -117,7 +117,7 @@ const AdminOrderDetail = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["order", orderId] });
-      toast({ title: "סטטוס עודכן" });
+      toast({ title: "تم تحديث الحالة" });
     },
   });
 
@@ -140,10 +140,10 @@ const AdminOrderDetail = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["admin_inventory"] });
-      toast({ title: "ההזמנה נמחקה והמלאי שוחזר" });
+      toast({ title: "تم حذف الطلب واستعادة المخزون" });
       navigate("/admin/orders");
     },
-    onError: () => toast({ title: "מחיקה נכשלה", variant: "destructive" }),
+    onError: () => toast({ title: "فشل الحذف", variant: "destructive" }),
   });
 
   const markAsPaid = useMutation({
@@ -154,9 +154,9 @@ const AdminOrderDetail = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["order", orderId] });
-      toast({ title: "✅ ההזמנה סומנה כשולמה" });
+      toast({ title: "✅ تم تحديد الطلب كمدفوع" });
     },
-    onError: () => toast({ title: "עדכון נכשל", variant: "destructive" }),
+    onError: () => toast({ title: "فشل التحديث", variant: "destructive" }),
   });
 
   const sendPaymentLink = useMutation({
@@ -176,9 +176,9 @@ const AdminOrderDetail = () => {
       navigator.clipboard.writeText(link).catch(() => {});
       setPaymentLinkCopied(true);
       setTimeout(() => setPaymentLinkCopied(false), 3000);
-      toast({ title: "קישור נשלח ב-SMS ✅", description: "הקישור הועתק ללוח" });
+      toast({ title: "تم إرسال الرابط عبر SMS ✅", description: "הקישור הועתק ללוח" });
     },
-    onError: () => toast({ title: "שליחה נכשלה", variant: "destructive" }),
+    onError: () => toast({ title: "فشل الإرسال", variant: "destructive" }),
   });
 
   const copyPaymentLink = () => {
@@ -187,7 +187,7 @@ const AdminOrderDetail = () => {
     navigator.clipboard.writeText(link);
     setPaymentLinkCopied(true);
     setTimeout(() => setPaymentLinkCopied(false), 3000);
-    toast({ title: "הקישור הועתק ✅" });
+    toast({ title: "تم نسخ الرابط ✅" });
   };
 
   const updateAddress = useMutation({
@@ -199,9 +199,9 @@ const AdminOrderDetail = () => {
       qc.invalidateQueries({ queryKey: ["order", orderId] });
       qc.invalidateQueries({ queryKey: ["orders"] });
       setEditingAddress(false);
-      toast({ title: "כתובת עודכנה" });
+      toast({ title: "تم تحديث العنوان" });
     },
-    onError: () => toast({ title: "עדכון נכשל", variant: "destructive" }),
+    onError: () => toast({ title: "فشل التحديث", variant: "destructive" }),
   });
 
   const handlePrint = () => {
@@ -223,11 +223,11 @@ const AdminOrderDetail = () => {
       discount: "خصم", grandTotal: "المجموع الكلي", notes: "ملاحظات",
       custom: "مخصص", thankYou: "شكراً لطلبك",
     } : {
-      order: "הזמנה", date: "תאריך", customer: "לקוח", shipping: "כתובת למשלוח",
-      phone: "טלפון", email: "אימייל", items: "פריטים", product: "מוצר",
-      color: "צבע", size: "אורך", qty: "כמות", price: "מחיר", total: "סה\"כ",
-      subtotal: "סכום ביניים", shippingCost: "משלוח", free: "חינם",
-      discount: "הנחה", grandTotal: "סה\"כ לתשלום", notes: "הערות",
+      order: "הזמנה", date: "תאריך", customer: "العميل", shipping: "عنوان الشحن",
+      phone: "טלפון", email: "אימייל", items: "المنتجات", product: "מוצר",
+      color: "اللون", size: "الطول", qty: "כמות", price: "מחיר", total: "סה\"כ",
+      subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
+      discount: "خصم", grandTotal: "סה\"כ לתשלום", notes: "ملاحظات",
       custom: "מותאם", thankYou: "תודה על הזמנתך",
     };
 
@@ -351,7 +351,7 @@ const AdminOrderDetail = () => {
 </html>`;
 
     const win = window.open("", "_blank", "width=900,height=700");
-    if (!win) { toast({ title: "אנא אפשר חלונות קופצים", variant: "destructive" }); return; }
+    if (!win) { toast({ title: "يرجى السماح بالنوافذ المنبثقة", variant: "destructive" }); return; }
     win.document.write(html);
     win.document.close();
   };
@@ -394,7 +394,7 @@ const AdminOrderDetail = () => {
         order_number: order.order_number || "",
         phone: order.phone || "",
         total: Number(order.total || 0).toLocaleString(),
-        shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : (oLocale === "ar" ? "مجاني" : "חינם"),
+        shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : (oLocale === "ar" ? "مجاني" : "مجاني"),
         items: itemsList,
         invoice_link: invoiceLink,
       }
@@ -404,7 +404,7 @@ const AdminOrderDetail = () => {
     const ok = await sendSms(order.phone, message);
     setSendingSms(false);
     toast({
-      title: ok ? `SMS נשלח ל-${order.phone}` : "SMS נכשל (סטטוס נשמר)",
+      title: ok ? `تم إرسال SMS إلى ${order.phone}` : "فشل SMS (تم حفظ الحالة)",
       variant: ok ? "default" : "destructive",
     });
   };
@@ -423,9 +423,9 @@ const AdminOrderDetail = () => {
     return (
       <div className="text-center py-20">
         <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-        <p className="text-gray-400 font-medium">הזמנה לא נמצאה</p>
+        <p className="text-gray-400 font-medium">الطلب غير موجود</p>
         <button onClick={() => navigate("/admin/orders")} className="mt-3 text-sm text-blue-500 hover:underline">
-          חזרה להזמנות
+          العودة للطلبات
         </button>
       </div>
     );
@@ -452,11 +452,11 @@ const AdminOrderDetail = () => {
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 shrink-0"
             >
               <ArrowRight className="w-4 h-4" />
-              חזרה
+              العودة
             </button>
             {sendingSms && (
               <span className="flex items-center gap-1.5 text-xs text-blue-500 animate-pulse font-medium">
-                <MessageSquare className="w-3.5 h-3.5" /> שולח SMS…
+                <MessageSquare className="w-3.5 h-3.5" /> جارٍ إرسال SMS...
               </span>
             )}
           </div>
@@ -476,12 +476,12 @@ const AdminOrderDetail = () => {
             </span>
             {isAdmin && (order.payment_status || "paid") === "unpaid" && (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
-                💳 טרם שולם
+                💳 لم يُدفع
               </span>
             )}
             {isAdmin && (order.payment_status || "paid") === "paid" && (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
-                ✅ שולם
+                ✅ مدفوع
               </span>
             )}
           </div>
@@ -490,7 +490,7 @@ const AdminOrderDetail = () => {
         {/* Status selector */}
         <div className="px-4 sm:px-5 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">סטטוס הזמנה</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">حالة الطلب</span>
             <Select value={order.status} onValueChange={handleStatusChange} disabled={updateStatus.isPending}>
               <SelectTrigger className={`h-9 px-3 text-sm font-semibold border rounded-xl gap-2 w-auto min-w-[160px] ${st.color}`}>
                 <span className="flex items-center gap-2">
@@ -506,7 +506,7 @@ const AdminOrderDetail = () => {
                       <span className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
                         {s.label}
-                        {workerBlocked && <span className="text-[10px] text-gray-400 ms-1">— אדמין בלבד</span>}
+                        {workerBlocked && <span className="text-[10px] text-gray-400 ms-1">— مدير فقط</span>}
                       </span>
                     </SelectItem>
                   );
@@ -517,7 +517,7 @@ const AdminOrderDetail = () => {
           {isWorker && !isAdmin && (
             <p className="text-[10px] text-amber-600 flex items-center gap-1 mt-2">
               <AlertTriangle className="w-3 h-3" />
-              {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא למשלוח"' : 'שינוי זמין רק כשהסטטוס "בתהליך"'}
+              {order.status === "in_process" ? 'ניתן לשנות רק ל"יצא לالشحن"' : 'التغيير متاح فقط عندما تكون الحالة "قيد المعالجة"'}
             </p>
           )}
         </div>
@@ -535,7 +535,7 @@ const AdminOrderDetail = () => {
                   className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-green-700 hover:text-green-900 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors disabled:opacity-50"
                 >
                   {markAsPaid.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 shrink-0" />}
-                  סמן כשולם
+                  סמן כمدفوع
                 </button>
                 <button
                   onClick={() => sendPaymentLink.mutate({ id: order.id, phone: order.phone })}
@@ -543,7 +543,7 @@ const AdminOrderDetail = () => {
                   className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
                 >
                   {sendPaymentLink.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5 shrink-0" />}
-                  קישור תשלום
+                  رابط الدفع
                 </button>
                 {order.payment_token && (
                   <button
@@ -551,7 +551,7 @@ const AdminOrderDetail = () => {
                     className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors col-span-2 sm:col-span-1"
                   >
                     {paymentLinkCopied ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <ExternalLink className="w-3.5 h-3.5 shrink-0" />}
-                    {paymentLinkCopied ? "הועתק!" : "העתק קישור תשלום"}
+                    {paymentLinkCopied ? "تم النسخ!" : "העתק رابط الدفع"}
                   </button>
                 )}
               </>
@@ -563,7 +563,7 @@ const AdminOrderDetail = () => {
               className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
             >
               <Printer className="w-4 h-4 shrink-0" />
-              הדפסה
+              طباعة
             </button>
 
             {/* Send invoice */}
@@ -577,13 +577,13 @@ const AdminOrderDetail = () => {
                 setSendingSms(true);
                 const ok = await sendSms(order.phone, msg);
                 setSendingSms(false);
-                toast({ title: ok ? `חשבונית נשלחה ב-SMS ל-${order.phone}` : "שליחה נכשלה", variant: ok ? "default" : "destructive" });
+                toast({ title: ok ? `חשבונית נשלחה ב-SMS ל-${order.phone}` : "فشل الإرسال", variant: ok ? "default" : "destructive" });
               }}
               disabled={sendingSms}
               className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
             >
               <Send className="w-4 h-4 shrink-0" />
-              חשבונית SMS
+              فاتورة SMS
             </button>
 
             {/* Delete — admin only, full width on mobile */}
@@ -593,7 +593,7 @@ const AdminOrderDetail = () => {
                 className="flex items-center justify-center gap-1.5 h-10 px-3 text-xs sm:text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors col-span-2 sm:col-span-1 sm:ms-auto"
               >
                 <Trash2 className="w-4 h-4 shrink-0" />
-                מחק הזמנה
+                حذف الطلب
               </button>
             )}
           </div>
@@ -635,13 +635,13 @@ const AdminOrderDetail = () => {
 
       {/* ── Customer + Address ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Section title="לקוח" icon={User}>
+        <Section title="العميل" icon={User}>
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-semibold text-gray-900">{order.first_name} {order.last_name}</p>
               {order.user_id ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
-                  ✓ משויך לחשבון
+                  ✓ مرتبط بحساب
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
@@ -651,12 +651,12 @@ const AdminOrderDetail = () => {
             </div>
             <a href={`mailto:${order.email}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Mail className="w-3.5 h-3.5 text-gray-400" />{order.email}</a>
             <a href={`tel:${order.phone}`} className="text-gray-500 text-sm flex items-center gap-2 hover:text-blue-600 transition-colors"><Phone className="w-3.5 h-3.5 text-gray-400" />{order.phone}</a>
-            {order.locale && <p className="text-gray-400 text-xs pt-1">שפה: {order.locale.toUpperCase()}</p>}
+            {order.locale && <p className="text-gray-400 text-xs pt-1">اللغة: {order.locale.toUpperCase()}</p>}
           </div>
         </Section>
 
         <Section
-          title="כתובת למשלוח"
+          title="عنوان الشحن"
           icon={MapPin}
           actions={
             editingAddress ? (
@@ -683,7 +683,7 @@ const AdminOrderDetail = () => {
                 }}
                 className="flex items-center gap-1 h-7 px-2.5 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors"
               >
-                <Pencil className="w-3 h-3" /> ערוך
+                <Pencil className="w-3 h-3" /> تعديل
               </button>
             )
           }
@@ -715,13 +715,13 @@ const AdminOrderDetail = () => {
 
       {/* ── Receipts ── */}
       {!isWorker && (
-        <Section title={`קבלות${receipts.length > 0 ? ` (${receipts.length})` : ""}`} icon={Receipt}>
+        <Section title={`الإيصالات${receipts.length > 0 ? ` (${receipts.length})` : ""}`} icon={Receipt}>
           {receipts.length === 0 ? (
             <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
               <div>
-                <p className="font-semibold text-amber-800 text-sm">לא הועלתה קבלה</p>
-                <p className="text-xs text-amber-600 mt-0.5">הלקוח לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
+                <p className="font-semibold text-amber-800 text-sm">لم يتم رفع إيصال</p>
+                <p className="text-xs text-amber-600 mt-0.5">הالعميل לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
               </div>
             </div>
           ) : resolvingUrls ? (
@@ -759,7 +759,7 @@ const AdminOrderDetail = () => {
       )}
 
       {/* ── Items ── */}
-      <Section title="פריטים" icon={Package}>
+      <Section title="المنتجات" icon={Package}>
         <div className="rounded-xl border border-gray-100 overflow-hidden">
           {(order.order_items || []).map((item: DbOrderItem, idx: number) => (
             <div key={item.id} className={`flex items-center gap-3 px-3 sm:px-4 py-3 sm:py-4 ${idx > 0 ? "border-t border-gray-100" : ""}`}>
@@ -804,7 +804,7 @@ const AdminOrderDetail = () => {
                     const isCustom = standardColors.length > 0 && !isStandardColor;
                     return (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-gray-400">{orderLocale === "ar" ? "اللون" : "צבע"}:</span>
+                        <span className="text-xs text-gray-400">{orderLocale === "ar" ? "اللون" : "اللون"}:</span>
                         <span className="inline-flex items-center gap-1 text-xs text-gray-700 font-medium">
                           {item.color_hex && (
                             <span className="w-3.5 h-3.5 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: item.color_hex }} />
@@ -819,7 +819,7 @@ const AdminOrderDetail = () => {
                   })()}
                   {item.size && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-400">{orderLocale === "ar" ? "الطول" : "אורך"}:</span>
+                      <span className="text-xs text-gray-400">{orderLocale === "ar" ? "الطول" : "الطول"}:</span>
                       <span className="text-xs text-gray-700 font-medium">{item.size}</span>
                     </div>
                   )}
@@ -828,7 +828,7 @@ const AdminOrderDetail = () => {
               <div className="text-end shrink-0 space-y-0.5">
                 <p className="text-sm text-gray-400">×{item.quantity}</p>
                 <p className="font-bold text-gray-900 text-base">₪{(item.price * item.quantity).toLocaleString()}</p>
-                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} {orderLocale === "ar" ? "للقطعة" : "ליח'"}</p>
+                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} {orderLocale === "ar" ? "للقطعة" : "للقطعة"}</p>
               </div>
             </div>
           ))}
@@ -836,24 +836,24 @@ const AdminOrderDetail = () => {
       </Section>
 
       {/* ── Financial summary ── */}
-      <Section title="סיכום פיננסי" icon={Tag}>
+      <Section title="الملخص المالي" icon={Tag}>
         <div className="space-y-2.5">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">סכום ביניים</span>
+            <span className="text-gray-500">المجموع الفرعي</span>
             <span className="font-medium text-gray-900">₪{itemsTotal.toLocaleString()}</span>
           </div>
           {order.discount_code && (
             <div className="flex justify-between text-sm">
-              <span className="text-green-700">קוד הנחה ({order.discount_code})</span>
+              <span className="text-green-700">קוד خصم ({order.discount_code})</span>
               <span className="font-semibold text-green-700">
-                {Number(order.discount_amount || 0) === 0 ? "שילוח חינם" : `-₪${Number(order.discount_amount || 0).toLocaleString()}`}
+                {Number(order.discount_amount || 0) === 0 ? "שילוח مجاني" : `-₪${Number(order.discount_amount || 0).toLocaleString()}`}
               </span>
             </div>
           )}
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">משלוח</span>
+            <span className="text-gray-500">الشحن</span>
             {shippingCost === 0
-              ? <span className="font-medium text-green-600">חינם</span>
+              ? <span className="font-medium text-green-600">مجاني</span>
               : <span className="font-medium text-gray-900">₪{shippingCost.toLocaleString()}</span>
             }
           </div>

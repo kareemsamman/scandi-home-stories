@@ -36,6 +36,7 @@ const deriveRows = (product: any): any[] => {
 
   if (product.type === "contractor" && colors.length > 0 && sizes.length > 0) {
     const rows: any[] = [];
+    const seen = new Set<string>();
     for (const color of colors) {
       const cId = color.tax_id || color.id;
       const lengths: string[] = Array.isArray(color.lengths) ? color.lengths : [];
@@ -43,7 +44,11 @@ const deriveRows = (product: any): any[] => {
         ? sizes.filter((s: any) => lengths.includes(s.tax_id || s.id))
         : sizes;
       for (const size of relevant) {
-        rows.push(phantom(`combo:${cId}|${size.tax_id || size.id}`));
+        const sId = size.tax_id || size.id;
+        const key = `${cId}|${sId}`;
+        if (seen.has(key)) continue; // skip duplicates
+        seen.add(key);
+        rows.push(phantom(`combo:${cId}|${sId}`));
       }
     }
     return rows;
