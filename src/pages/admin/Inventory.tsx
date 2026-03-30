@@ -59,6 +59,15 @@ const deriveRows = (product: any): any[] => {
   return [phantom("")];
 };
 
+/* ── Merge DB rows with expected phantoms, discard stale DB entries ── */
+const mergeInventory = (product: any, dbItems: any[]): any[] => {
+  const expected = deriveRows(product);
+  if (expected.length === 0) return dbItems.length > 0 ? dbItems : expected;
+  const dbMap = new Map<string, any>();
+  for (const row of dbItems) dbMap.set(row.variation_key ?? "", row);
+  return expected.map(phantom => dbMap.get(phantom.variation_key) ?? phantom);
+};
+
 /* ── Group inv rows by color ── */
 const groupByColor = (invItems: any[], product: any) => {
   const colors = (product.colors || []) as any[];
