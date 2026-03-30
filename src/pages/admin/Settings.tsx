@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { adjustInventory } from "@/hooks/useOrders";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
 import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
   useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
-  useAdminOrderSettings, useWhatsappSettings,
+  useAdminOrderSettings, useWhatsappSettings, useVatSettings, type VatSettings, DEFAULT_VAT_SETTINGS,
   DEFAULT_SMS_MESSAGES,
   type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings, type WhatsappSettings,
 } from "@/hooks/useAppSettings";
@@ -30,7 +30,7 @@ const STATUS_KEYS = [
   { key: "pergola_customer_response", label: "🏗 פרגולה — תשובה ללקוח" },
 ];
 
-type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp";
+type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp" | "vat";
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
@@ -71,6 +71,12 @@ const AdminSettings = () => {
   const saveAdminOrders = useSaveSetting("admin_orders");
   const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
   useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
+
+  /* VAT */
+  const { data: dbVat } = useVatSettings();
+  const saveVat = useSaveSetting("vat");
+  const [vat, setVat] = useState<VatSettings>(DEFAULT_VAT_SETTINGS);
+  useEffect(() => { if (dbVat) setVat(dbVat); }, [dbVat]);
 
   /* WhatsApp */
   const { data: dbWhatsapp } = useWhatsappSettings();
@@ -148,13 +154,14 @@ const AdminSettings = () => {
       else if (tab === "messages" && msgs) await saveMsgs.mutateAsync(msgs);
       else if (tab === "orders") await saveAdminOrders.mutateAsync(adminOrders);
       else if (tab === "whatsapp") await saveWhatsapp.mutateAsync(whatsapp);
+      else if (tab === "vat") await saveVat.mutateAsync(vat);
       toast({ title: "Saved successfully" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   };
 
-  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending || saveWhatsapp.isPending;
+  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending || saveWhatsapp.isPending || saveVat.isPending;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
@@ -165,6 +172,7 @@ const AdminSettings = () => {
     { id: "roles", label: "Roles", icon: <Shield className="w-4 h-4" /> },
     { id: "orders", label: "Orders", icon: <ShoppingCart className="w-4 h-4" /> },
     { id: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="w-4 h-4" /> },
+    { id: "vat", label: "VAT / מע\"מ", icon: <Percent className="w-4 h-4" /> },
   ];
 
   const SaveBtn = ({ tab }: { tab: Tab }) => (
@@ -520,6 +528,46 @@ const AdminSettings = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── VAT ── */}
+      {activeTab === "vat" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+          <div>
+            <h2 className="text-base font-semibold">VAT Settings / מע"מ</h2>
+            <p className="text-xs text-gray-400 mt-1">ضريبة القيمة المضافة — تُضاف فوق سعر المنتج في السلة والدفع والفاتورة</p>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">تفعيل الضريبة</p>
+              <p className="text-xs text-gray-400 mt-0.5">عند التفعيل، يتم إضافة الضريبة على المجموع الفرعي بعد الخصم</p>
+            </div>
+            <button
+              onClick={() => setVat(p => ({ ...p, enabled: !p.enabled }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${vat.enabled ? "bg-gray-900" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${vat.enabled ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {vat.enabled && (
+            <Field label="نسبة الضريبة (%)">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={vat.rate}
+                onChange={e => setVat(p => ({ ...p, rate: Number(e.target.value) }))}
+                className="w-32 h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+              />
+              <p className="text-xs text-gray-400 mt-1">مثال: 18 = 18% ضريبة القيمة المضافة</p>
+            </Field>
+          )}
+
+          <SaveBtn tab="vat" />
         </div>
       )}
 

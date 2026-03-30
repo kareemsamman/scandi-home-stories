@@ -10,7 +10,8 @@ const calcShipping = (order: any): number => {
   const itemsTotal = (order.order_items || []).reduce(
     (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
   );
-  return Math.max(0, Number(order.total) - itemsTotal + Number(order.discount_amount || 0));
+  const vatAmt = Number(order.vat_amount || 0);
+  return Math.max(0, Number(order.total) - itemsTotal + Number(order.discount_amount || 0) - vatAmt);
 };
 
 const InvoicePage = () => {
@@ -56,7 +57,7 @@ const InvoicePage = () => {
     items: "المنتجات", product: "المنتج", color: "اللون", size: "الحجم",
     qty: "الكمية", unitPrice: "سعر الوحدة", total: "الإجمالي",
     subtotal: "المجموع الفرعي", shippingLabel: "الشحن", free: "مجاني",
-    discount: "خصم", grandTotal: "المجموع الكلي", notes: "ملاحظات",
+    discount: "خصم", vat: "ض.ق.م", grandTotal: "المجموع الكلي", notes: "ملاحظات",
     custom: "مخصص", print: "طباعة", notFound: "الفاتورة غير موجودة",
     loginRequired: "يجب تسجيل الدخول لعرض الفاتورة", loginBtn: "تسجيل الدخول",
   } : {
@@ -65,7 +66,7 @@ const InvoicePage = () => {
     items: "פריטים", product: "מוצר", color: "צבע", size: "אורך",
     qty: "כמות", unitPrice: "מחיר ליחידה", total: "סה\"כ",
     subtotal: "סכום ביניים", shippingLabel: "משלוח", free: "חינם",
-    discount: "הנחה", grandTotal: "סה\"כ לתשלום", notes: "הערות",
+    discount: "הנחה", vat: "מע\"מ", grandTotal: "סה\"כ לתשלום", notes: "הערות",
     custom: "מותאם", print: "הדפסה", notFound: "חשבונית לא נמצאה",
     loginRequired: "יש להתחבר כדי לצפות בחשבונית", loginBtn: "התחברות",
   };
@@ -196,6 +197,12 @@ const InvoicePage = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">{t.discount} ({order.discount_code})</span>
                   <span className="font-semibold text-green-700">-₪{Number(order.discount_amount || 0).toLocaleString()}</span>
+                </div>
+              )}
+              {Number(order.vat_amount || 0) > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">{t.vat} ({order.vat_rate || 18}%)</span>
+                  <span className="font-medium">₪{Number(order.vat_amount).toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">

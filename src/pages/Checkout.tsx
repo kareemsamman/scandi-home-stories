@@ -17,7 +17,8 @@ import { CouponInput } from "@/components/CouponInput";
 import { SendCartModal } from "@/components/SendCartModal";
 import { AddressFields, AddressState, emptyAddress } from "@/components/AddressFields";
 import { loadAllRecords } from "@/utils/cityStreetApi";
-import { useBankSettings, useSmsSettings, useAdminOrderSettings } from "@/hooks/useAppSettings";
+import { useBankSettings, useSmsSettings, useAdminOrderSettings, useVatSettings } from "@/hooks/useAppSettings";
+import { calculateVat } from "@/lib/vat";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 import { SEOHead } from '@/components/SEOHead';
@@ -249,7 +250,11 @@ const Checkout = () => {
   const isFreeShipping = !adminOrderEnabled && (subtotal - discountAmount >= shipping.threshold);
   const hasFreeShippingCoupon = appliedCoupon?.coupon.type === "free_shipping";
   const shippingCost = isFreeShipping || !selectedZone || hasFreeShippingCoupon ? 0 : shipping.zones[selectedZone];
-  const totalAfterDiscount = Math.max(0, subtotal - discountAmount) + shippingCost;
+  const { data: vatSettings } = useVatSettings();
+  const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const vatAmount = calculateVat(discountedSubtotal, vatConfig);
+  const totalAfterDiscount = discountedSubtotal + vatAmount + shippingCost;
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSkeleton(false), 1000);
@@ -721,6 +726,12 @@ const Checkout = () => {
             <span className="font-semibold text-green-700">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
           </div>
         )}
+        {vatConfig.enabled && vatAmount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("cart.vatLabel")} ({vatConfig.rate}%)</span>
+            <span className="font-medium">{t("common.currency")}{vatAmount.toLocaleString()}</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.shipping")}</span>
           <span className={`font-medium ${shippingCost === 0 && selectedZone ? "text-green-600" : ""}`}>
@@ -737,6 +748,7 @@ const Checkout = () => {
           <span>{t("cart.total")}</span>
           <span>{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
         </div>
+        {vatConfig.enabled && <p className="text-[11px] text-muted-foreground mt-0.5">{t("cart.includesVat")}</p>}
       </div>
     </>
   );

@@ -48,12 +48,12 @@ const resolveReceiptUrl = async (raw: string): Promise<string> => {
 };
 
 const calcShipping = (order: any): number => {
-  // Use stored shipping_cost if available, otherwise derive from total
   if (order.shipping_cost != null) return Number(order.shipping_cost);
   const itemsTotal = (order.order_items || []).reduce(
     (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
   );
-  return Math.max(0, Number(order.total) - itemsTotal + Number(order.discount_amount || 0));
+  const vatAmt = Number(order.vat_amount || 0);
+  return Math.max(0, Number(order.total) - itemsTotal + Number(order.discount_amount || 0) - vatAmt);
 };
 
 /* ── Section card ── */
@@ -220,14 +220,14 @@ const AdminOrderDetail = () => {
       phone: "هاتف", email: "بريد إلكتروني", items: "المنتجات", product: "المنتج",
       color: "اللون", size: "الحجم", qty: "الكمية", price: "السعر", total: "الإجمالي",
       subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
-      discount: "خصم", grandTotal: "المجموع الكلي", notes: "ملاحظات",
+      discount: "خصم", vat: "ض.ق.م", grandTotal: "المجموع الكلي", notes: "ملاحظات",
       custom: "مخصص", thankYou: "شكراً لطلبك",
     } : {
       order: "הזמנה", date: "תאריך", customer: "العميل", shipping: "عنوان الشحن",
       phone: "טלפון", email: "אימייל", items: "المنتجات", product: "מוצר",
       color: "اللون", size: "الطول", qty: "כמות", price: "מחיר", total: "סה\"כ",
       subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
-      discount: "خصم", grandTotal: "סה\"כ לתשלום", notes: "ملاحظات",
+      discount: "خصم", vat: "ض.ق.م", grandTotal: "סה\"כ לתשלום", notes: "ملاحظات",
       custom: "מותאם", thankYou: "תודה על הזמנתך",
     };
 
@@ -336,6 +336,7 @@ const AdminOrderDetail = () => {
     <div class="totals">
       <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
       ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
+      ${Number(order.vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${order.vat_rate || 18}%)</span><span>₪${Number(order.vat_amount).toLocaleString()}</span></div>` : ""}
       <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
       <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
     </div>
@@ -850,6 +851,12 @@ const AdminOrderDetail = () => {
               </span>
             </div>
           )}
+          {Number(order.vat_amount || 0) > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">ض.ق.م ({order.vat_rate || 18}%)</span>
+              <span className="font-medium text-gray-900">₪{Number(order.vat_amount).toLocaleString()}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">الشحن</span>
             {shippingCost === 0
@@ -858,7 +865,7 @@ const AdminOrderDetail = () => {
             }
           </div>
           <div className="flex justify-between font-bold pt-2.5 border-t border-gray-100">
-            <span className="text-gray-900">סה"כ</span>
+            <span className="text-gray-900">الإجمالي</span>
             <span className="text-gray-900 text-lg">₪{Number(order.total).toLocaleString()}</span>
           </div>
         </div>

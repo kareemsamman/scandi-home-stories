@@ -242,7 +242,25 @@ Deno.serve(async (req) => {
     }
 
     const shippingAmount = Math.max(0, Number(shippingCost) || 0);
-    const finalTotal = Math.max(0, serverTotal - discountAmount) + shippingAmount;
+
+    // --- VAT calculation ---
+    let vatRate = 0;
+    let vatAmount = 0;
+    try {
+      const { data: vatRow } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "vat")
+        .single();
+      const vatConfig = (vatRow?.value as any) ?? { enabled: true, rate: 18 };
+      if (vatConfig.enabled && Number(vatConfig.rate) > 0) {
+        vatRate = Number(vatConfig.rate);
+        const discountedSubtotal = Math.max(0, serverTotal - discountAmount);
+        vatAmount = Math.round(discountedSubtotal * vatRate) / 100;
+      }
+    } catch { /* VAT settings not found, skip */ }
+
+    const finalTotal = Math.max(0, serverTotal - discountAmount) + vatAmount + shippingAmount;
 
     // --- Insert order ---
     const { data: newOrder, error: orderErr } = await supabaseAdmin
@@ -269,6 +287,8 @@ Deno.serve(async (req) => {
         discount_code: discountCode || null,
         discount_amount: discountAmount,
         shipping_cost: shippingAmount,
+        vat_amount: vatAmount,
+        vat_rate: vatRate > 0 ? vatRate : null,
       })
       .select()
       .single();
@@ -491,6 +511,8 @@ Deno.serve(async (req) => {
       orderNumber: newOrder.order_number,
       total: finalTotal,
       discountAmount,
+      vatAmount,
+      vatRate,
     });
   } catch (err: any) {
     console.error("create-order error:", err);

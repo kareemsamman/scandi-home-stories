@@ -175,6 +175,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       remove: 'הסרה',
       estimateShipping: 'חישוב עלות משלוח',
       taxNote: 'מיסים יחושבו בתשלום',
+      vatLabel: 'מע"מ',
+      includesVat: 'כולל מע"מ',
     },
     checkout: {
       title: 'השלמת הזמנה',
@@ -757,6 +759,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       remove: 'إزالة',
       estimateShipping: 'حساب تكلفة الشحن',
       taxNote: 'الضرائب تُحسب عند الدفع',
+      vatLabel: 'ض.ق.م',
+      includesVat: 'شامل ضريبة القيمة المضافة',
     },
     checkout: {
       title: 'إتمام الطلب',

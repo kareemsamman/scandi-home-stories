@@ -128,6 +128,20 @@ export const useWhatsappSettings = () =>
     staleTime: 1000 * 60 * 5,
   });
 
+export interface VatSettings {
+  enabled: boolean;
+  rate: number;
+}
+
+export const DEFAULT_VAT_SETTINGS: VatSettings = { enabled: true, rate: 18 };
+
+export const useVatSettings = () =>
+  useQuery<VatSettings>({
+    queryKey: ["app_settings", "vat"],
+    queryFn: async () => (await fetchSetting("vat")) ?? DEFAULT_VAT_SETTINGS,
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useSaveSetting = (key: string) => {
   const qc = useQueryClient();
   return useMutation({

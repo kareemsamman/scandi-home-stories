@@ -13,6 +13,8 @@ import { CouponInput } from "@/components/CouponInput";
 import { useCouponStore } from "@/hooks/useCoupons";
 import { useCartInventory } from "@/hooks/useCartInventory";
 import { SEOHead } from '@/components/SEOHead';
+import { useVatSettings } from "@/hooks/useAppSettings";
+import { calculateVat } from "@/lib/vat";
 
 /* ── Lock icon for checkout button ── */
 const LockIcon = () => (
@@ -34,7 +36,11 @@ const Cart = () => {
   const { getStockMax } = useCartInventory(items);
   const { applied: appliedCoupon } = useCouponStore();
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
-  const total = Math.max(0, subtotal - discountAmount);
+  const { data: vatSettings } = useVatSettings();
+  const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const vatAmount = calculateVat(discountedSubtotal, vatConfig);
+  const total = discountedSubtotal + vatAmount;
   const [shippingOpen, setShippingOpen] = useState(false);
 
   /* ── Empty state ── */
@@ -187,6 +193,12 @@ const Cart = () => {
                       <span className="font-semibold">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
+                  {vatConfig.enabled && vatAmount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("cart.vatLabel")} ({vatConfig.rate}%)</span>
+                      <span className="font-medium">{t("common.currency")}{vatAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.shipping")}</span>
                     <span className="font-medium">{t("cart.complimentary")}</span>
@@ -198,7 +210,7 @@ const Cart = () => {
                     <span>{t("cart.total")}</span>
                     <span>{t("common.currency")}{total.toLocaleString()}</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">{t("cart.taxNote")}</p>
+                  {vatConfig.enabled && <p className="text-[11px] text-muted-foreground mt-1">{t("cart.includesVat")}</p>}
                 </div>
 
                 <Link

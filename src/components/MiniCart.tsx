@@ -8,6 +8,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { QuantitySelector } from "./QuantitySelector";
 import { QuickBuyModal } from "./QuickBuyModal";
 import { Product } from "@/data/products";
+import { useVatSettings } from "@/hooks/useAppSettings";
+import { calculateVat } from "@/lib/vat";
 import { useShopData } from "@/hooks/useShopData";
 import { cn } from "@/lib/utils";
 import { useCartInventory } from "@/hooks/useCartInventory";
@@ -218,11 +220,7 @@ export const MiniCart = () => {
       </div>
 
       <div className="border-t border-border px-6 pt-4 pb-4 space-y-3 bg-background">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">{t("cart.total")}</span>
-          <span className="text-sm font-semibold">{t("common.currency")}{subtotal.toLocaleString()}</span>
-        </div>
-        <p className="text-[11px] text-muted-foreground">{t("miniCart.taxNote")}</p>
+        <MiniCartVatSummary subtotal={subtotal} t={t} />
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
@@ -285,3 +283,29 @@ export const MiniCart = () => {
     </>
   );
 };
+
+function MiniCartVatSummary({ subtotal, t }: { subtotal: number; t: (k: string) => any }) {
+  const { data: vatSettings } = useVatSettings();
+  const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
+  const vatAmount = calculateVat(subtotal, vatConfig);
+  const total = subtotal + vatAmount;
+
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">{t("cart.subtotal")}</span>
+        <span className="text-xs text-muted-foreground">{t("common.currency")}{subtotal.toLocaleString()}</span>
+      </div>
+      {vatConfig.enabled && vatAmount > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">{t("cart.vatLabel")} ({vatConfig.rate}%)</span>
+          <span className="text-xs text-muted-foreground">{t("common.currency")}{vatAmount.toLocaleString()}</span>
+        </div>
+      )}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold">{t("cart.total")}</span>
+        <span className="text-sm font-semibold">{t("common.currency")}{total.toLocaleString()}</span>
+      </div>
+    </>
+  );
+}
