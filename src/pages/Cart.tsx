@@ -15,6 +15,8 @@ import { useCartInventory } from "@/hooks/useCartInventory";
 import { SEOHead } from '@/components/SEOHead';
 import { useVatSettings } from "@/hooks/useAppSettings";
 import { calculateVat } from "@/lib/vat";
+import { FreeShippingBar } from "@/components/FreeShippingBar";
+import { useShippingSettings } from "@/hooks/useShippingSettings";
 
 /* ── Lock icon for checkout button ── */
 const LockIcon = () => (
@@ -180,6 +182,8 @@ const Cart = () => {
               <div className="rounded-xl border border-border bg-muted/30 p-6 lg:sticky lg:top-28 space-y-5">
                 <h2 className="text-lg font-bold">{t("cart.orderSummary")}</h2>
 
+                <CartFreeShippingBar subtotal={discountedSubtotal} />
+
                 <CouponInput />
 
                 <div className="space-y-3 text-sm">
@@ -235,5 +239,11 @@ const Cart = () => {
     </Layout>
   );
 };
+
+function CartFreeShippingBar({ subtotal }: { subtotal: number }) {
+  const { data: shipping } = useShippingSettings();
+  if (!shipping) return null;
+  return <FreeShippingBar subtotal={subtotal} threshold={shipping.threshold} />;
+}
 
 export default Cart;

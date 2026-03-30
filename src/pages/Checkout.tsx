@@ -19,6 +19,7 @@ import { AddressFields, AddressState, emptyAddress } from "@/components/AddressF
 import { loadAllRecords } from "@/utils/cityStreetApi";
 import { useBankSettings, useSmsSettings, useAdminOrderSettings, useVatSettings } from "@/hooks/useAppSettings";
 import { calculateVat } from "@/lib/vat";
+import { FreeShippingBar } from "@/components/FreeShippingBar";
 import { supabase } from "@/integrations/supabase/client";
 import logoWhite from "@/assets/logo-white.png";
 import { SEOHead } from '@/components/SEOHead';
@@ -246,8 +247,8 @@ const Checkout = () => {
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Admin order creation ignores the auto-free threshold — only explicit free shipping coupon applies
-  const isFreeShipping = !adminOrderEnabled && (subtotal - discountAmount >= shipping.threshold);
+  // Free shipping when subtotal (before VAT) exceeds threshold
+  const isFreeShipping = (subtotal - discountAmount) >= shipping.threshold;
   const hasFreeShippingCoupon = appliedCoupon?.coupon.type === "free_shipping";
   const shippingCost = isFreeShipping || !selectedZone || hasFreeShippingCoupon ? 0 : shipping.zones[selectedZone];
   const { data: vatSettings } = useVatSettings();
@@ -715,6 +716,9 @@ const Checkout = () => {
         ))}
       </div>
       {discountBlockJSX}
+      <div className="mb-3">
+        <FreeShippingBar subtotal={discountedSubtotal} threshold={shipping.threshold} />
+      </div>
       <div className="space-y-3 pt-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("cart.subtotal")}</span>

@@ -10,6 +10,8 @@ import { QuickBuyModal } from "./QuickBuyModal";
 import { Product } from "@/data/products";
 import { useVatSettings } from "@/hooks/useAppSettings";
 import { calculateVat } from "@/lib/vat";
+import { FreeShippingBar } from "./FreeShippingBar";
+import { useShippingSettings } from "@/hooks/useShippingSettings";
 import { useShopData } from "@/hooks/useShopData";
 import { cn } from "@/lib/utils";
 import { useCartInventory } from "@/hooks/useCartInventory";
@@ -220,6 +222,7 @@ export const MiniCart = () => {
       </div>
 
       <div className="border-t border-border px-6 pt-4 pb-4 space-y-3 bg-background">
+        <FreeShippingBarWrapper subtotal={subtotal} />
         <MiniCartVatSummary subtotal={subtotal} t={t} />
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
@@ -308,4 +311,10 @@ function MiniCartVatSummary({ subtotal, t }: { subtotal: number; t: (k: string) 
       </div>
     </>
   );
+}
+
+function FreeShippingBarWrapper({ subtotal }: { subtotal: number }) {
+  const { data: shipping } = useShippingSettings();
+  if (!shipping) return null;
+  return <FreeShippingBar subtotal={subtotal} threshold={shipping.threshold} />;
 }

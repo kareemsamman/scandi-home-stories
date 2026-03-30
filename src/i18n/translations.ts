@@ -177,6 +177,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       taxNote: 'מיסים יחושבו בתשלום',
       vatLabel: 'מע"מ',
       includesVat: 'כולל מע"מ',
+      freeShippingUnlocked: 'משלוח חינם!',
+      freeShippingRemaining: 'עוד {amount} למשלוח חינם',
     },
     checkout: {
       title: 'השלמת הזמנה',
@@ -761,6 +763,8 @@ export const translations: Record<Locale, Record<string, any>> = {
       taxNote: 'الضرائب تُحسب عند الدفع',
       vatLabel: 'ض.ق.م',
       includesVat: 'شامل ضريبة القيمة المضافة',
+      freeShippingUnlocked: 'شحن مجاني!',
+      freeShippingRemaining: 'باقي {amount} للشحن المجاني',
     },
     checkout: {
       title: 'إتمام الطلب',
