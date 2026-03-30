@@ -532,7 +532,7 @@ const Checkout = () => {
     if (uploadedFiles.length === 0) return;
     setIsSubmittingReceipt(true);
 
-    const orderNumber = generateOrderNumber();
+    const onumber = orderNumber;
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
 
     // Upload receipt files via server-side edge function
