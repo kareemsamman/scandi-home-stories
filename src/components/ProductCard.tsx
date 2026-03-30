@@ -68,8 +68,8 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             <div className="relative aspect-square overflow-hidden bg-muted">
               <img src={product.images[0]} alt={product.name[locale]} className={cn("w-full h-full object-cover transition-all duration-500 group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
               {isOutOfStock && (
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
+                <div className="absolute inset-0 flex items-end justify-center pb-14">
+                  <span className="px-3 py-1.5 bg-white/95 text-gray-700 text-xs font-bold rounded-full shadow-sm border border-gray-200">
                     {locale === "ar" ? "نفد من المخزون" : "אזל מהמלאי"}
                   </span>
                 </div>
@@ -86,9 +86,14 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
-                <div className="flex gap-1">
-                  {contractor.colorGroups[0].colors.slice(0, 5).map((color) => (<span key={color.id} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: color.hex }} title={color.name[locale]} />))}
-                  {contractor.colorGroups[0].colors.length > 5 && (<span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 5}</span>)}
+                <div className="flex gap-1.5">
+                  {contractor.colorGroups[0].colors.slice(0, 4).map((color) => (
+                    <div key={color.id} className="flex flex-col items-center gap-0.5">
+                      <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
+                      <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
+                    </div>
+                  ))}
+                  {contractor.colorGroups[0].colors.length > 4 && (<span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 4}</span>)}
                 </div>
               </div>
             )}
@@ -116,8 +121,8 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             <img src={product.images[0]} alt={product.name[locale]} className={cn("w-full h-full object-cover transition-all duration-500", hasSecondImage ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105", isOutOfStock && "opacity-60")} loading="lazy" />
             {hasSecondImage && !isOutOfStock && (<img src={product.images[1]} alt="" className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:scale-100" />)}
             {isOutOfStock && (
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <span className="px-3 py-1.5 bg-white/90 text-gray-800 text-xs font-bold rounded-full shadow-sm">
+              <div className="absolute inset-0 flex items-end justify-center pb-14">
+                <span className="px-3 py-1.5 bg-white/95 text-gray-700 text-xs font-bold rounded-full shadow-sm border border-gray-200">
                   {locale === "ar" ? "نفد من المخزون" : "אזל מהמלאי"}
                 </span>
               </div>
@@ -137,8 +142,13 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             <div className="pt-0.5">
               <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
               <div className="flex gap-1.5">
-                {retail.colors.slice(0, 5).map((color) => (<span key={color.id} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: color.hex }} title={color.name[locale]} />))}
-                {retail.colors.length > 5 && (<span className="text-[10px] text-muted-foreground self-center">+{retail.colors.length - 5}</span>)}
+                {retail.colors.slice(0, 4).map((color) => (
+                  <div key={color.id} className="flex flex-col items-center gap-0.5">
+                    <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
+                    <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
+                  </div>
+                ))}
+                {retail.colors.length > 4 && (<span className="text-[10px] text-muted-foreground self-center">+{retail.colors.length - 4}</span>)}
               </div>
             </div>
           )}

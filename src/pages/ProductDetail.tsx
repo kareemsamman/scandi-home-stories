@@ -237,27 +237,29 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
               {product.colors.length > 0 && (
                 <div className="mb-5">
                   <span className="text-sm font-medium text-foreground block mb-2">{t("contractor.color")}: <span className="text-muted-foreground font-normal">{selectedColor?.name[locale]}</span></span>
-                  <div className="flex flex-wrap gap-2.5">
+                  <div className="flex flex-wrap gap-3">
                     {product.colors.map((color) => {
                       const colorStock = getColorStock(color.id);
                       const colorOos = colorStock === 0;
                       const isActive = selectedColor?.id === color.id;
                       return (
-                        <button
-                          key={color.id}
-                          onClick={() => { if (!colorOos) { setSelectedColor(color); setQuantity(1); } }}
-                          className={cn("relative w-10 h-10 rounded-xl border-2 transition-all",
-                            isActive
-                              ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
-                              : colorOos
-                              ? "border-border/60 opacity-50 cursor-not-allowed"
-                              : "border-border/60 hover:border-foreground/40 hover:scale-105"
-                          )}
-                          style={{ backgroundColor: color.hex }}
-                          title={color.name[locale]}
-                        >
-                          {colorOos && <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden"><div className="w-full h-px bg-red-400 rotate-[-45deg]" /></div>}
-                        </button>
+                        <div key={color.id} className="flex flex-col items-center gap-1">
+                          <button
+                            onClick={() => { if (!colorOos) { setSelectedColor(color); setQuantity(1); } }}
+                            className={cn("relative w-10 h-10 rounded-xl border-2 transition-all",
+                              isActive
+                                ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
+                                : colorOos
+                                ? "border-border/60 opacity-50 cursor-not-allowed"
+                                : "border-border/60 hover:border-foreground/40 hover:scale-105"
+                            )}
+                            style={{ backgroundColor: color.hex }}
+                            title={color.name[locale]}
+                          >
+                            {colorOos && <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden"><div className="w-full h-px bg-red-400 rotate-[-45deg]" /></div>}
+                          </button>
+                          <span className="text-[9px] text-muted-foreground leading-none max-w-[44px] truncate text-center">{color.name[locale]}</span>
+                        </div>
                       );
                     })}
                   </div>
@@ -541,21 +543,23 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                       <button onClick={() => { setIsCustomColor(false); setSelectedColor(null); }} className="text-xs text-muted-foreground hover:text-foreground underline">{t("contractor.cancel")}</button>
                     </div>
                   )}
-                  <div className={cn("flex gap-2.5 flex-wrap", isCustomColor && "opacity-40 pointer-events-none")}>
+                  <div className={cn("flex gap-3 flex-wrap", isCustomColor && "opacity-40 pointer-events-none")}>
                     {standardColors.map((color) => {
                       const isActive = !isCustomColor && (selectedColor?.id === color.id || (!selectedColor && color.id === standardColors[0].id));
                       return (
-                        <button
-                          key={color.id}
-                          onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setIsCustomColor(false); }}
-                          className={cn("w-10 h-10 rounded-xl border-2 transition-all",
-                            isActive
-                              ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
-                              : "border-border/60 hover:border-foreground/40 hover:scale-105"
-                          )}
-                          style={{ backgroundColor: color.hex }}
-                          title={color.name[locale]}
-                        />
+                        <div key={color.id} className="flex flex-col items-center gap-1">
+                          <button
+                            onClick={() => { setSelectedColor({ id: color.id, name: color.name[locale], hex: color.hex }); setIsCustomColor(false); }}
+                            className={cn("w-10 h-10 rounded-xl border-2 transition-all",
+                              isActive
+                                ? "border-foreground ring-2 ring-foreground/25 ring-offset-1 scale-105 shadow-sm"
+                                : "border-border/60 hover:border-foreground/40 hover:scale-105"
+                            )}
+                            style={{ backgroundColor: color.hex }}
+                            title={color.name[locale]}
+                          />
+                          <span className="text-[9px] text-muted-foreground leading-none max-w-[44px] truncate text-center">{color.name[locale]}</span>
+                        </div>
                       );
                     })}
                   </div>
