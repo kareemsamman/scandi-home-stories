@@ -59,6 +59,15 @@ const deriveRows = (product: any): any[] => {
   return [phantom("")];
 };
 
+/* ── Merge DB rows with expected phantoms, discard stale DB entries ── */
+const mergeInventory = (product: any, dbItems: any[]): any[] => {
+  const expected = deriveRows(product);
+  if (expected.length === 0) return dbItems.length > 0 ? dbItems : expected;
+  const dbMap = new Map<string, any>();
+  for (const row of dbItems) dbMap.set(row.variation_key ?? "", row);
+  return expected.map(phantom => dbMap.get(phantom.variation_key) ?? phantom);
+};
+
 /* ── Group inv rows by color ── */
 const groupByColor = (invItems: any[], product: any) => {
   const colors = (product.colors || []) as any[];
@@ -515,7 +524,8 @@ const AdminInventory = () => {
   /* ── Filter ── */
   const isProductLow = (product: any) => {
     const dbItems = inventoryMap.get(product.id) || [];
-    return dbItems.some((inv: any) => {
+    const merged = mergeInventory(product, dbItems);
+    return merged.some((inv: any) => {
       const k = `${inv.product_id}-${inv.variation_key}`;
       const qty = localQty[k] ?? inv.stock_quantity;
       const thr = localThreshold[k] ?? inv.low_stock_threshold;
@@ -613,7 +623,7 @@ const AdminInventory = () => {
         <div className="space-y-3">
           {filtered.map((product: any) => {
             const dbItems = inventoryMap.get(product.id) || [];
-            const invItems = dbItems.length > 0 ? dbItems : deriveRows(product);
+            const invItems = mergeInventory(product, dbItems);
             const pName = (transMap as Map<string, string>).get(product.id) || product.name;
             const hasLow = isProductLow(product);
             const { colorMap, simpleItem } = groupByColor(invItems, product);
