@@ -230,6 +230,7 @@ const Checkout = () => {
 
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
+  const [orderNumber, setOrderNumber] = useState(() => generateOrderNumber());
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [isPayLater, setIsPayLater] = useState(false);
@@ -403,7 +404,7 @@ const Checkout = () => {
     setAddrTouched({ city: true, street: true, houseNumber: true });
     if (Object.keys(errs).length > 0) return;
     setIsPayLater(true);
-    const orderNumber = generateOrderNumber();
+    // orderNumber comes from state
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
     try {
       const { data: orderResult, error: orderFnErr } = await supabase.functions.invoke("create-order", {
@@ -531,7 +532,7 @@ const Checkout = () => {
     if (uploadedFiles.length === 0) return;
     setIsSubmittingReceipt(true);
 
-    const orderNumber = generateOrderNumber();
+    // orderNumber comes from state
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
 
     // Upload receipt files via server-side edge function
@@ -869,7 +870,7 @@ const Checkout = () => {
                 if (orderFnErr) throw orderFnErr;
 
                 clearCart();
-                if (appliedCoupon) clearCoupon();
+                if (appliedCoupon) removeCoupon();
 
                 navigate(localePath("/checkout/thank-you"), {
                   state: {

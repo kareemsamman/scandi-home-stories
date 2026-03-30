@@ -511,8 +511,11 @@ export type Database = {
           shipping_cost: number | null
           status: string
           total: number
+          transaction_id: string | null
           updated_at: string | null
           user_id: string | null
+          vat_amount: number | null
+          vat_rate: number | null
         }
         Insert: {
           address?: string
@@ -537,8 +540,11 @@ export type Database = {
           shipping_cost?: number | null
           status?: string
           total?: number
+          transaction_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+          vat_amount?: number | null
+          vat_rate?: number | null
         }
         Update: {
           address?: string
@@ -563,8 +569,11 @@ export type Database = {
           shipping_cost?: number | null
           status?: string
           total?: number
+          transaction_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+          vat_amount?: number | null
+          vat_rate?: number | null
         }
         Relationships: []
       }
