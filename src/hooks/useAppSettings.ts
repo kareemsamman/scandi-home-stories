@@ -142,6 +142,29 @@ export const useVatSettings = () =>
     staleTime: 1000 * 60 * 5,
   });
 
+export interface TranzilaSettings {
+  terminal_name: string;
+  app_key: string;
+  secret_key: string;
+  terminal_password: string;
+  enabled: boolean;
+}
+
+export const DEFAULT_TRANZILA: TranzilaSettings = {
+  terminal_name: "",
+  app_key: "",
+  secret_key: "",
+  terminal_password: "",
+  enabled: false,
+};
+
+export const useTranzilaSettings = () =>
+  useQuery<TranzilaSettings>({
+    queryKey: ["app_settings", "tranzila"],
+    queryFn: async () => (await fetchSetting("tranzila")) ?? DEFAULT_TRANZILA,
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useSaveSetting = (key: string) => {
   const qc = useQueryClient();
   return useMutation({

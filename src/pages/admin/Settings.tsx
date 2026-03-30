@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle, Percent } from "lucide-react";
+import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle, Percent, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { adjustInventory } from "@/hooks/useOrders";
 import { useShippingSettings, useSaveShippingSettings, DEFAULT_SHIPPING } from "@/hooks/useShippingSettings";
@@ -7,6 +7,7 @@ import type { ShippingSettings } from "@/hooks/useShippingSettings";
 import {
   useBankSettings, useSmsSettings, useSmsMessages, useSaveSetting, sendSms,
   useAdminOrderSettings, useWhatsappSettings, useVatSettings, type VatSettings, DEFAULT_VAT_SETTINGS,
+  useTranzilaSettings, type TranzilaSettings, DEFAULT_TRANZILA,
   DEFAULT_SMS_MESSAGES,
   type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings, type WhatsappSettings,
 } from "@/hooks/useAppSettings";
@@ -30,7 +31,7 @@ const STATUS_KEYS = [
   { key: "pergola_customer_response", label: "🏗 פרגולה — תשובה ללקוח" },
 ];
 
-type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp" | "vat";
+type Tab = "shipping" | "bank" | "sms" | "messages" | "general" | "roles" | "orders" | "whatsapp" | "vat" | "tranzila";
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
@@ -71,6 +72,12 @@ const AdminSettings = () => {
   const saveAdminOrders = useSaveSetting("admin_orders");
   const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
   useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
+
+  /* Tranzila */
+  const { data: dbTranzila } = useTranzilaSettings();
+  const saveTranzila = useSaveSetting("tranzila");
+  const [tranzila, setTranzila] = useState<TranzilaSettings>(DEFAULT_TRANZILA);
+  useEffect(() => { if (dbTranzila) setTranzila(dbTranzila); }, [dbTranzila]);
 
   /* VAT */
   const { data: dbVat } = useVatSettings();
@@ -155,13 +162,14 @@ const AdminSettings = () => {
       else if (tab === "orders") await saveAdminOrders.mutateAsync(adminOrders);
       else if (tab === "whatsapp") await saveWhatsapp.mutateAsync(whatsapp);
       else if (tab === "vat") await saveVat.mutateAsync(vat);
+      else if (tab === "tranzila") await saveTranzila.mutateAsync(tranzila);
       toast({ title: "Saved successfully" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   };
 
-  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending || saveWhatsapp.isPending || saveVat.isPending;
+  const isPending = saveShipping.isPending || saveBank.isPending || saveSms.isPending || saveMsgs.isPending || saveAdminOrders.isPending || saveWhatsapp.isPending || saveVat.isPending || saveTranzila.isPending;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
@@ -173,6 +181,7 @@ const AdminSettings = () => {
     { id: "orders", label: "Orders", icon: <ShoppingCart className="w-4 h-4" /> },
     { id: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="w-4 h-4" /> },
     { id: "vat", label: "VAT / מע\"מ", icon: <Percent className="w-4 h-4" /> },
+    { id: "tranzila", label: "Tranzila", icon: <CreditCard className="w-4 h-4" /> },
   ];
 
   const SaveBtn = ({ tab }: { tab: Tab }) => (
@@ -568,6 +577,61 @@ const AdminSettings = () => {
           )}
 
           <SaveBtn tab="vat" />
+        </div>
+      )}
+
+      {/* ── Tranzila ── */}
+      {activeTab === "tranzila" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">Tranzila Payment Gateway</h2>
+              <p className="text-xs text-gray-400 mt-0.5">بوابة الدفع عبر بطاقات الائتمان والتحويل البنكي</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">تفعيل Tranzila</p>
+              <p className="text-xs text-gray-400 mt-0.5">عند التفعيل، يتم عرض نموذج الدفع في صفحة الدفع</p>
+            </div>
+            <button
+              onClick={() => setTranzila(p => ({ ...p, enabled: !p.enabled }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${tranzila.enabled ? "bg-blue-600" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${tranzila.enabled ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          <Field label="Terminal Name (اسم المحطة)">
+            <TInput value={tranzila.terminal_name} onChange={v => setTranzila(p => ({ ...p, terminal_name: v }))} placeholder="your_terminal" />
+          </Field>
+
+          <Field label="Terminal Password (كلمة مرور المحطة)">
+            <TInput value={tranzila.terminal_password} onChange={v => setTranzila(p => ({ ...p, terminal_password: v }))} placeholder="••••••" />
+          </Field>
+
+          <Field label="App Key (مفتاح التطبيق)">
+            <TInput value={tranzila.app_key} onChange={v => setTranzila(p => ({ ...p, app_key: v }))} placeholder="app_key_..." />
+          </Field>
+
+          <Field label="Secret Key (المفتاح السري)">
+            <TInput value={tranzila.secret_key} onChange={v => setTranzila(p => ({ ...p, secret_key: v }))} placeholder="secret_..." />
+          </Field>
+
+          {tranzila.terminal_name && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+              <span>iframe URL:</span>
+              <span className="font-mono text-blue-600 break-all">
+                https://direct.tranzila.com/{tranzila.terminal_name}/iframenew.php
+              </span>
+            </div>
+          )}
+
+          <SaveBtn tab="tranzila" />
         </div>
       )}
 
