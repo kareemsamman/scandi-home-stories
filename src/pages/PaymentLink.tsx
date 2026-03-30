@@ -16,6 +16,7 @@ interface OrderData {
   first_name: string;
   last_name: string;
   phone: string;
+  email: string;
   total: number;
   payment_status: string;
   payment_token: string | null;

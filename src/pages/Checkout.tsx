@@ -870,7 +870,7 @@ const Checkout = () => {
                 if (orderFnErr) throw orderFnErr;
 
                 clearCart();
-                if (appliedCoupon) clearCoupon();
+                if (appliedCoupon) removeCoupon();
 
                 navigate(localePath("/checkout/thank-you"), {
                   state: {
