@@ -336,7 +336,7 @@ const AdminOrderDetail = () => {
     <div class="totals">
       <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
       ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
-      ${Number(order.vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${order.vat_rate || 18}%)</span><span>₪${Number(order.vat_amount).toLocaleString()}</span></div>` : ""}
+      ${Number((order as any).vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${(order as any).vat_rate || 18}%)</span><span>₪${Number((order as any).vat_amount).toLocaleString()}</span></div>` : ""}
       <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
       <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
     </div>
