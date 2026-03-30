@@ -1112,20 +1112,19 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Payment Method */}
+                {/* Payment Method — Tranzila */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.paymentMethod")}</h2>
                   <div className="rounded-xl border-2 border-foreground bg-white p-4 flex items-start gap-4">
-                    {/* Bank icon */}
-                    <div className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
                       <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                        <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold">{t("checkout.bankTransfer")}</p>
-                        {/* Selected indicator */}
+                        <p className="text-sm font-bold">{locale === "ar" ? "بطاقة ائتمان" : "כרטיס אשראי"}</p>
                         <span className="flex items-center gap-1 text-[11px] font-semibold text-foreground bg-foreground/8 border border-foreground/20 rounded-full px-2 py-0.5">
                           <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M2 6l3 3 5-5" />
@@ -1133,7 +1132,9 @@ const Checkout = () => {
                           {t("checkout.selected") || "נבחר"}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{t("checkout.bankTransferNote")}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {locale === "ar" ? "الدفع الآمن عبر بطاقة الائتمان — Visa, Mastercard, Isracard" : "תשלום מאובטח בכרטיס אשראי — Visa, Mastercard, Isracard"}
+                      </p>
                     </div>
                   </div>
                 </div>

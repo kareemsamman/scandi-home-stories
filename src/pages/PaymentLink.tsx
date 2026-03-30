@@ -6,6 +6,7 @@ import { useBankSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { SEOHead } from "@/components/SEOHead";
 import logoWhite from "@/assets/logo-white.png";
+import { TranzilaPayment } from "@/components/TranzilaPayment";
 
 const db = supabase as any;
 
@@ -199,75 +200,33 @@ const PaymentLink = () => {
           </div>
         </div>
 
-        {/* Bank details */}
-        {bankSettings && (
-          <div className="bg-white rounded-xl border border-border p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-gray-900 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">{ar ? "حوّل إلى الحساب البنكي" : "העבר לחשבון הבנק"}</p>
-                <p className="text-xs text-gray-400">{ar ? "يرجى ذكر رقم الطلب في التحويل" : "יש לציין מספר הזמנה בהעברה"}</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {bankFields.filter(f => f.value).map(f => (
-                <div key={f.label} className="flex justify-between text-sm border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                  <span className="text-gray-400">{f.label}</span>
-                  <span className="font-semibold text-gray-900">{f.value}</span>
-                </div>
-              ))}
-              <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-400">{ar ? "رقم الطلب" : "מספר הזמנה"}</span>
-                <span className="font-bold text-gray-900">#{order!.order_number}</span>
-              </div>
-            </div>
-          </div>
+        {/* Tranzila Payment */}
+        <TranzilaPayment
+          amount={Number(order!.total)}
+          orderNumber={order!.order_number}
+          customerEmail={order!.email}
+          customerPhone={order!.phone}
+          onSuccess={async (result) => {
+            try {
+              // Update order payment status
+              const { error } = await (supabase as any)
+                .from("orders")
+                .update({ payment_status: "paid", transaction_id: result.transactionId })
+                .eq("id", order!.id);
+              if (error) throw error;
+              // Show success state
+              window.location.reload();
+            } catch (err) {
+              console.error("Payment update failed:", err);
+            }
+          }}
+          onError={(error) => {
+            setUploadError(error);
+          }}
+        />
+        {uploadError && (
+          <p className="text-sm text-red-600 text-center font-medium">{uploadError}</p>
         )}
-
-        {/* Receipt upload */}
-        <div className="bg-white rounded-xl border border-border p-5 space-y-4">
-          <p className="text-sm font-bold text-gray-900">{ar ? "ارفع إيصال التحويل" : "העלה אישור העברה"}</p>
-          <p className="text-xs text-gray-400">{ar ? "بعد إجراء التحويل، ارفع لقطة شاشة أو ملف PDF للإيصال" : "לאחר ביצוע ההעברה, העלה צילום מסך או קובץ PDF של האישור"}</p>
-
-          <div
-            onDragOver={e => e.preventDefault()}
-            onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
-          >
-            <Upload className="w-7 h-7 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">{ar ? "اضغط لرفع ملف أو اسحبه هنا" : "לחץ להעלאת קובץ או גרור לכאן"}</p>
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF · {ar ? "حتى 10MB" : "עד 10MB"}</p>
-            <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
-          </div>
-
-          {files.length > 0 && (
-            <div className="space-y-2">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                  {f.preview ? <img src={f.preview} className="w-10 h-10 rounded object-cover" alt="" /> : <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">PDF</div>}
-                  <span className="flex-1 text-xs text-gray-600 truncate">{f.file.name}</span>
-                  <button onClick={() => setFiles(p => p.filter((_, j) => j !== i))} className="text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {uploadError && (
-            <p className="text-sm text-red-600 text-center font-medium">{uploadError}</p>
-          )}
-          <button
-            onClick={handleSubmit}
-            disabled={files.length === 0 || uploading}
-            className="w-full h-12 flex items-center justify-center gap-2 text-sm font-bold bg-gray-900 text-white rounded-[1.875rem] hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : (ar ? "✅ إرسال إيصال الدفع" : "✅ שלח אישור תשלום")}
-          </button>
-        </div>
       </main>
     </div>
   );
