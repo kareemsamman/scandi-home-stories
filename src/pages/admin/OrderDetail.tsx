@@ -336,7 +336,7 @@ const AdminOrderDetail = () => {
     <div class="totals">
       <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
       ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
-      ${Number(order.vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${order.vat_rate || 18}%)</span><span>₪${Number(order.vat_amount).toLocaleString()}</span></div>` : ""}
+      ${Number((order as any).vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${(order as any).vat_rate || 18}%)</span><span>₪${Number((order as any).vat_amount).toLocaleString()}</span></div>` : ""}
       <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
       <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
     </div>
@@ -396,7 +396,7 @@ const AdminOrderDetail = () => {
         phone: order.phone || "",
         total: Number(order.total || 0).toLocaleString(),
         subtotal: itemsTotal.toLocaleString(),
-        vat: Number(order.vat_amount || 0).toLocaleString(),
+        vat: Number((order as any).vat_amount || 0).toLocaleString(),
         shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : (oLocale === "ar" ? "مجاني" : "مجاني"),
         items: itemsList,
         invoice_link: invoiceLink,
@@ -853,10 +853,10 @@ const AdminOrderDetail = () => {
               </span>
             </div>
           )}
-          {Number(order.vat_amount || 0) > 0 && (
+          {Number((order as any).vat_amount || 0) > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">ض.ق.م ({order.vat_rate || 18}%)</span>
-              <span className="font-medium text-gray-900">₪{Number(order.vat_amount).toLocaleString()}</span>
+              <span className="text-gray-500">ض.ق.م ({(order as any).vat_rate || 18}%)</span>
+              <span className="font-medium text-gray-900">₪{Number((order as any).vat_amount).toLocaleString()}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">
