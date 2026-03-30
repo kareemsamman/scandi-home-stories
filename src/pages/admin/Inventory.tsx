@@ -524,7 +524,8 @@ const AdminInventory = () => {
   /* ── Filter ── */
   const isProductLow = (product: any) => {
     const dbItems = inventoryMap.get(product.id) || [];
-    return dbItems.some((inv: any) => {
+    const merged = mergeInventory(product, dbItems);
+    return merged.some((inv: any) => {
       const k = `${inv.product_id}-${inv.variation_key}`;
       const qty = localQty[k] ?? inv.stock_quantity;
       const thr = localThreshold[k] ?? inv.low_stock_threshold;
