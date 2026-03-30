@@ -53,6 +53,8 @@ const OrderDetail = () => {
             total: Number(o.total),
             discountAmount: Number(o.discount_amount || 0),
             shippingCost: Number(o.shipping_cost || 0),
+            vatAmount: Number(o.vat_amount || 0),
+            vatRate: o.vat_rate ? Number(o.vat_rate) : 0,
             status: o.status,
             notes: o.notes || undefined,
             receiptUrl: o.receipt_url || undefined,
@@ -225,7 +227,8 @@ const OrderDetail = () => {
 
   // Compute financials
   const itemsSubtotal = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shippingCost = order.shippingCost ?? Math.max(0, order.total - itemsSubtotal + order.discountAmount);
+  const vatAmount = order.vatAmount || 0;
+  const shippingCost = order.shippingCost ?? Math.max(0, order.total - itemsSubtotal + order.discountAmount - vatAmount);
   const st = statusStyle(order.status);
 
   return (
@@ -370,6 +373,12 @@ const OrderDetail = () => {
                   <span className="font-semibold text-green-700">-{t("common.currency")}{order.discountAmount.toLocaleString()}</span>
                 </div>
               )}
+              {vatAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{t("cart.vatLabel")} ({order.vatRate || 18}%)</span>
+                  <span className="font-medium">{t("common.currency")}{vatAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("cart.shipping")}</span>
                 {shippingCost === 0
@@ -381,6 +390,7 @@ const OrderDetail = () => {
                 <span>{t("cart.total")}</span>
                 <span className="text-base">{t("common.currency")}{order.total.toLocaleString()}</span>
               </div>
+              {vatAmount > 0 && <p className="text-[10px] text-muted-foreground">{t("cart.includesVat")}</p>}
             </div>
           </div>
         </div>

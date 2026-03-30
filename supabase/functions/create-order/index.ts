@@ -481,6 +481,8 @@ Deno.serve(async (req) => {
           order_number: orderNumber,
           phone: phone,
           total: finalTotal.toLocaleString(),
+          subtotal: Math.max(0, serverTotal - discountAmount).toLocaleString(),
+          vat: vatAmount.toLocaleString(),
           items: itemsList,
           shipping: shippingLabel,
           order_link: orderLink,

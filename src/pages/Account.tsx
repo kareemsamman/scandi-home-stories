@@ -262,9 +262,10 @@ const OrdersTab = () => {
     <div className="space-y-4">
       {orders.map((order) => {
         const itemsSum = (order.items || []).reduce((s, i) => s + i.price * i.quantity, 0);
+        const vatAmt = (order as any).vatAmount || 0;
         const shippingDisplay = order.shippingCost > 0
           ? order.shippingCost
-          : Math.max(0, order.total - itemsSum - (order.discountAmount || 0));
+          : Math.max(0, order.total - itemsSum - (order.discountAmount || 0) - vatAmt);
         return (
         <Link
           key={order.id}
@@ -314,6 +315,14 @@ const OrdersTab = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* VAT row */}
+          {vatAmt > 0 && (
+            <div className="flex items-center justify-between px-5 py-2 border-t border-border/60">
+              <span className="text-xs text-muted-foreground">{t("cart.vatLabel")} ({(order as any).vatRate || 18}%)</span>
+              <span className="text-xs font-medium text-foreground">{t("common.currency")}{vatAmt.toLocaleString()}</span>
             </div>
           )}
 

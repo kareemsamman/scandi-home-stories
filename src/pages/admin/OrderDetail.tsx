@@ -395,6 +395,8 @@ const AdminOrderDetail = () => {
         order_number: order.order_number || "",
         phone: order.phone || "",
         total: Number(order.total || 0).toLocaleString(),
+        subtotal: itemsTotal.toLocaleString(),
+        vat: Number(order.vat_amount || 0).toLocaleString(),
         shipping: shippingCost > 0 ? `₪${shippingCost.toLocaleString()}` : (oLocale === "ar" ? "مجاني" : "مجاني"),
         items: itemsList,
         invoice_link: invoiceLink,

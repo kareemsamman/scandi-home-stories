@@ -35,6 +35,8 @@ export interface Order {
   total: number;
   discountAmount: number;
   shippingCost: number;
+  vatAmount: number;
+  vatRate: number;
   status: OrderStatus;
   items: OrderItem[];
   notes?: string;
@@ -118,6 +120,8 @@ export const useOrders = () => {
         total: Number(o.total),
         discountAmount: Number(o.discount_amount || 0),
         shippingCost: Number(o.shipping_cost || 0),
+        vatAmount: Number(o.vat_amount || 0),
+        vatRate: o.vat_rate ? Number(o.vat_rate) : 0,
         status: o.status as OrderStatus,
         notes: o.notes || undefined,
         receiptUrl: o.receipt_url || undefined,
