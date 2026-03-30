@@ -196,14 +196,14 @@ const AdminSettings = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
-      <div className="border-b border-gray-200 overflow-x-auto">
-        <div className="flex gap-1 min-w-max">
+      <div className="border-b border-gray-200">
+        <div className="flex flex-wrap gap-1">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
                 activeTab === tab.id ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}>
-              {tab.icon}{tab.label}
+              {tab.icon}<span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
