@@ -404,7 +404,7 @@ const Checkout = () => {
     setAddrTouched({ city: true, street: true, houseNumber: true });
     if (Object.keys(errs).length > 0) return;
     setIsPayLater(true);
-    const onumber = orderNumber;
+    // orderNumber comes from state
     const orderDate = new Date().toLocaleDateString(locale === "he" ? "he-IL" : "ar-SA");
     try {
       const { data: orderResult, error: orderFnErr } = await supabase.functions.invoke("create-order", {
