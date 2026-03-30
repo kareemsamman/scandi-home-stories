@@ -1,46 +1,42 @@
 
 
-## Issues Found
+## Problem
 
-### 1. "Low stock only" filter broken
-`isProductLow()` (line 516) only checks DB inventory rows. Products with **no** DB rows use phantom rows (qty=0), but those aren't checked — so products that are truly at zero stock are invisible to the filter.
+Two issues on the checkout page:
 
-### 2. Duplicate length rows per color
-Line 616: `dbItems.length > 0 ? dbItems : deriveRows(product)` — if **any** DB inventory rows exist for a product, ALL DB rows are shown. If the DB contains stale rows for lengths no longer configured on the product, they appear as extra unexplained rows. The fix is to merge DB rows with the expected phantom rows, using DB data where available and filtering out stale keys.
+1. **Blank page / crash when entering payment step**: The `TranzilaPayment` component has an early `return` (line 23-31) **before** the `useEffect` hook (line 50). This violates React's rules of hooks — hooks must always be called in the same order. When Tranzila settings aren't loaded yet or are disabled, the early return skips the `useEffect`, causing "Rendered more hooks than during the previous render" and a blank screen.
 
----
+2. **Privacy checkbox**: The checkbox **does** exist in the code (line 1155-1164). The user sees a blank page because of the crash above, which prevents the form from rendering properly on re-renders.
 
-## Plan
+## Fix
 
-### File: `src/pages/admin/Inventory.tsx`
+### File: `src/components/TranzilaPayment.tsx`
 
-**Fix 1 — `isProductLow` must also consider phantom rows**
+Move the `useEffect` hook **before** the early return so hooks are always called in the same order regardless of settings state.
 
-Update `isProductLow` (line 516) to check the same merged set of rows that the UI renders, not just DB rows. Products with no inventory at all (qty=0 phantoms) should count as low.
+```tsx
+export const TranzilaPayment = ({ ... }: Props) => {
+  const { data: settings } = useTranzilaSettings();
+  const { t, locale } = useLocale();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
 
-**Fix 2 — Merge DB + phantom rows, discard stale DB entries**
+  // Move useEffect BEFORE any early returns
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => { ... };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onSuccess, onError]);
 
-Replace the simple `dbItems.length > 0 ? dbItems : deriveRows(product)` logic (line 616) with a merge function used in both rendering and filtering:
-1. Generate expected phantom rows from the product's current color/length config
-2. For each expected row, use the matching DB row if it exists (match on `variation_key`)
-3. Discard DB rows whose `variation_key` doesn't match any current product configuration
+  // NOW the early return is safe
+  if (!settings?.enabled || !settings.terminal_name) {
+    return ( <div>...</div> );
+  }
 
-This ensures:
-- Only configured lengths appear per color
-- DB stock values are preserved
-- Stale/orphaned inventory rows are hidden
-- The low-stock filter works correctly on the merged set
-
-### Technical Detail
-
-```
-mergeInventory(product, dbItems):
-  expected = deriveRows(product)        // phantoms for current config
-  dbMap = Map(dbItems by variation_key)
-  return expected.map(phantom =>
-    dbMap.get(phantom.variation_key) || phantom
-  )
+  // Rest of component...
+};
 ```
 
-Both `isProductLow` and the render loop will call `mergeInventory()` so they use the same data.
+Single file change. The privacy checkbox requires no changes — it's already present and will render correctly once the crash is fixed.
 
