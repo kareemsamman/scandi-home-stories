@@ -230,7 +230,7 @@ const Checkout = () => {
 
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
-  const [orderNumber, setOrderNumber] = useState(() => generateOrderNumber());
+  const [orderNumber] = useState(() => generateOrderNumber());
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [isPayLater, setIsPayLater] = useState(false);
