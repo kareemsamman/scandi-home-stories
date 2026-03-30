@@ -533,10 +533,9 @@ const AdminInventory = () => {
     });
   };
 
-  const filtered = products.filter((p: any) => {
+  const matchesSearchAndCategory = (p: any) => {
     const pName = (transMap as Map<string, string>).get(p.id) || p.name || "";
     if (search && !pName.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
-    if (showLowOnly && !isProductLow(p)) return false;
     if (categoryFilters.length > 0) {
       const matches = categoryFilters.some(filterId => {
         const isParent = parentCats.find((c: any) => c.id === filterId);
@@ -549,9 +548,12 @@ const AdminInventory = () => {
       if (!matches) return false;
     }
     return true;
-  });
+  };
 
-  const totalLow = products.filter(isProductLow).length;
+  const baseFiltered = products.filter(matchesSearchAndCategory);
+  const filtered = showLowOnly ? baseFiltered.filter(isProductLow) : baseFiltered;
+
+  const totalLow = baseFiltered.filter(isProductLow).length;
 
   const sharedQtyProps = { saveStock, savingKeys, savedKeys, localQty, setLocalQty, localThreshold, setLocalThreshold };
 
