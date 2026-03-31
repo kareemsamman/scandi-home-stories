@@ -314,6 +314,7 @@ const Checkout = () => {
 
   // Load shared cart from ?cart=TOKEN (admin sent cart to customer)
   const { apply: applyCoupon } = useCouponStore();
+  const [isSharedCart, setIsSharedCart] = useState(false);
   useEffect(() => {
     const token = searchParams.get("cart");
     if (!token) return;
@@ -325,7 +326,14 @@ const Checkout = () => {
         if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
           setItems(data.cart_items);
         }
-        if (data.coupon_code) {
+
+        // If admin set a manual discount, apply it and remove any coupon
+        const sharedAdminDiscount = Number(data.admin_discount) || 0;
+        if (sharedAdminDiscount > 0) {
+          setAdminDiscount(sharedAdminDiscount);
+          removeCoupon(); // remove any existing coupon
+          setIsSharedCart(true);
+        } else if (data.coupon_code) {
           const cartForValidation = (data.cart_items as any[]).map((i: any) => ({
             product: { id: i.product.id, price: i.product.price, collection: i.product.collection },
             quantity: i.quantity,
