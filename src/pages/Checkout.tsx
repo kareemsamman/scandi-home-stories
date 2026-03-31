@@ -232,6 +232,7 @@ const Checkout = () => {
   const [step, setStep] = useState<"form" | "payment">("form");
   const [orderNumber] = useState(generateOrderNumber);
   const [payMethod, setPayMethod] = useState<"credit_card" | "bit" | "apple_pay" | "google_pay" | "bank_transfer">("credit_card");
+  const [adminDiscount, setAdminDiscount] = useState(0); // manual admin discount in ₪
   // Device detection for Apple Pay / Google Pay
   const isAppleDevice = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
   const isAndroid = /Android/.test(navigator.userAgent);
@@ -254,12 +255,13 @@ const Checkout = () => {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Free shipping when subtotal (before VAT) exceeds threshold
-  const isFreeShipping = (subtotal - discountAmount) >= shipping.threshold;
+  const isFreeShipping = (subtotal - discountAmount - adminDiscount) >= shipping.threshold;
   const hasFreeShippingCoupon = appliedCoupon?.coupon.type === "free_shipping";
   const shippingCost = isFreeShipping || !selectedZone || hasFreeShippingCoupon ? 0 : shipping.zones[selectedZone];
   const { data: vatSettings } = useVatSettings();
   const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
-  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const totalDiscount = discountAmount + adminDiscount;
+  const discountedSubtotal = Math.max(0, subtotal - totalDiscount);
   const vatAmount = calculateVat(discountedSubtotal, vatConfig);
   const totalAfterDiscount = discountedSubtotal + vatAmount + shippingCost;
 
@@ -427,6 +429,7 @@ const Checkout = () => {
           origin: window.location.origin,
           shippingCost,
           discountCode: appliedCoupon?.coupon.code,
+          adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
           payment_status: "unpaid",
           items: items.map((item) => {
             const colorId = item.options?.color?.id;
@@ -616,6 +619,7 @@ const Checkout = () => {
           shippingCost,
           marketingOptIn: emailMarketing,
           discountCode: appliedCoupon?.coupon.code,
+          adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
           items: items.map((item) => {
             const colorId = item.options?.color?.id;
             const sizeLabel = item.options?.size;
@@ -734,6 +738,28 @@ const Checkout = () => {
           <div className="flex justify-between text-sm">
             <span className="text-green-700 font-medium">{t("checkout.discountAppliedLabel")} ({appliedCoupon?.coupon.code})</span>
             <span className="font-semibold text-green-700">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
+          </div>
+        )}
+        {/* Admin manual discount */}
+        {adminOrderEnabled && (
+          <div className="flex items-center justify-between text-sm bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <span className="text-amber-800 font-medium text-xs">הנחה ידנית ₪</span>
+            <input
+              type="number"
+              min={0}
+              max={subtotal}
+              step={1}
+              value={adminDiscount || ""}
+              onChange={(e) => setAdminDiscount(Math.max(0, Math.min(subtotal, Number(e.target.value) || 0)))}
+              placeholder="0"
+              className="w-24 h-7 px-2 text-sm text-end font-bold text-amber-800 bg-white border border-amber-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-400"
+            />
+          </div>
+        )}
+        {adminDiscount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-amber-700 font-medium">הנחה ידנית</span>
+            <span className="font-semibold text-amber-700">-{t("common.currency")}{adminDiscount.toLocaleString()}</span>
           </div>
         )}
         {vatConfig.enabled && vatAmount > 0 && (
@@ -919,6 +945,7 @@ const Checkout = () => {
                     origin: window.location.origin,
                     shippingCost,
                     discountCode: appliedCoupon?.coupon.code,
+                    adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
                     payment_status: "paid",
                     transaction_id: result.transactionId,
                     items: items.map((item) => {

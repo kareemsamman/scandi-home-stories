@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const {
       orderNumber, notes, firstName, lastName, email, phone,
       city, address, house_number, apartment, receiptUrl, locale, transaction_id,
-      origin, shippingCost,
+      origin, shippingCost, adminDiscount,
       marketingOptIn, discountCode,
       payment_status: rawPaymentStatus,
       items, // Array of { productId, quantity, size?, color?, colorId?, sizeId? }
@@ -242,6 +242,8 @@ Deno.serve(async (req) => {
     }
 
     const shippingAmount = Math.max(0, Number(shippingCost) || 0);
+    const adminDiscountAmount = Math.max(0, Number(adminDiscount) || 0);
+    const totalDiscount = discountAmount + adminDiscountAmount;
 
     // --- VAT calculation ---
     let vatRate = 0;
@@ -255,12 +257,12 @@ Deno.serve(async (req) => {
       const vatConfig = (vatRow?.value as any) ?? { enabled: true, rate: 18 };
       if (vatConfig.enabled && Number(vatConfig.rate) > 0) {
         vatRate = Number(vatConfig.rate);
-        const discountedSubtotal = Math.max(0, serverTotal - discountAmount);
+        const discountedSubtotal = Math.max(0, serverTotal - totalDiscount);
         vatAmount = Math.round(discountedSubtotal * vatRate) / 100;
       }
     } catch { /* VAT settings not found, skip */ }
 
-    const finalTotal = Math.max(0, serverTotal - discountAmount) + vatAmount + shippingAmount;
+    const finalTotal = Math.max(0, serverTotal - totalDiscount) + vatAmount + shippingAmount;
 
     // --- Insert order ---
     const { data: newOrder, error: orderErr } = await supabaseAdmin
@@ -286,7 +288,7 @@ Deno.serve(async (req) => {
         locale: locale === "ar" ? "ar" : "he",
         marketing_opt_in: !!marketingOptIn,
         discount_code: discountCode || null,
-        discount_amount: discountAmount,
+        discount_amount: totalDiscount,
         shipping_cost: shippingAmount,
         vat_amount: vatAmount,
         vat_rate: vatRate > 0 ? vatRate : null,
@@ -482,7 +484,7 @@ Deno.serve(async (req) => {
           order_number: orderNumber,
           phone: phone,
           total: finalTotal.toLocaleString(),
-          subtotal: Math.max(0, serverTotal - discountAmount).toLocaleString(),
+          subtotal: Math.max(0, serverTotal - totalDiscount).toLocaleString(),
           vat: vatAmount.toLocaleString(),
           items: itemsList,
           shipping: shippingLabel,
