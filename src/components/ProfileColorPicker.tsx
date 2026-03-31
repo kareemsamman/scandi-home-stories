@@ -58,10 +58,10 @@ export const ProfileColorPopup = () => {
   // Auto-open popup only once per session if no color selected
   const [autoShown, setAutoShown] = useState(false);
   useEffect(() => {
-    if (!enabled || selectedColor || standardColors.length === 0 || autoShown) return;
+    if (!enabled || hasChosen || standardColors.length === 0 || autoShown) return;
     const timer = setTimeout(() => { setOpen(true); setAutoShown(true); }, 800);
     return () => clearTimeout(timer);
-  }, [enabled, selectedColor, standardColors.length, autoShown]);
+  }, [enabled, hasChosen, standardColors.length, autoShown]);
 
   const getColorName = (color: any) => {
     if (isAr) return color.label_ar || color.name_ar || color.name?.ar || color.label_he || color.name_he || color.name?.he || color.name || "";
