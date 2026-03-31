@@ -50,8 +50,8 @@ export const ProfileColorPopup = () => {
   const isAr = locale === "ar";
   const enabled = settings?.enabled !== false;
 
-  // Get the first (standard) color group
-  const standardColors = colorGroups?.[0]?.colors || [];
+  // Get standard colors from the color taxonomy (admin/attributes)
+  const standardColors = colorGroups || [];
 
   useEffect(() => {
     if (!enabled || selectedColor || standardColors.length === 0) return;
