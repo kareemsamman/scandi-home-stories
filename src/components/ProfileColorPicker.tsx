@@ -60,11 +60,16 @@ export const ProfileColorPopup = () => {
     return () => clearTimeout(timer);
   }, [enabled, selectedColor, standardColors.length]);
 
+  const getColorName = (color: any) => {
+    if (isAr) return color.label_ar || color.name_ar || color.name?.ar || color.label_he || color.name_he || color.name?.he || color.name || "";
+    return color.label_he || color.name_he || color.name?.he || color.label_ar || color.name_ar || color.name?.ar || color.name || "";
+  };
+
   const handleSelect = (color: any) => {
     setColor({
       id: color.id || color.tax_id,
       hex: color.hex,
-      name: isAr ? (color.label_ar || color.label_he) : (color.label_he || color.label_ar),
+      name: getColorName(color),
     });
     setOpen(false);
   };
@@ -124,7 +129,7 @@ export const ProfileColorPopup = () => {
                         style={{ backgroundColor: color.hex }}
                       />
                       <span className="text-xs font-semibold text-gray-700">
-                        {isAr ? (color.label_ar || color.label_he) : (color.label_he || color.label_ar)}
+                        {getColorName(color)}
                       </span>
                     </button>
                   ))}
