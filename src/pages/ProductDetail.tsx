@@ -135,6 +135,14 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [lightboxStart, setLightboxStart] = useState(0);
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
   const [quantity, setQuantity] = useState(1);
+  const profileColor = useProfileColor((s) => s.selectedColor);
+
+  // Auto-apply profile color on mount
+  useEffect(() => {
+    if (!profileColor || !product.colors.length) return;
+    const match = product.colors.find(c => c.id === profileColor.id);
+    if (match) setSelectedColor(match);
+  }, [profileColor?.id]);
   const [isAdding, setIsAdding] = useState(false);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
