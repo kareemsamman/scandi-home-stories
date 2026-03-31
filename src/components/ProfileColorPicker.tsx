@@ -13,6 +13,7 @@ const db = supabase as any;
 // ── Global store for selected profile color ──
 interface ProfileColorState {
   selectedColor: { id: string; hex: string; name: string } | null;
+  hasChosen: boolean;
   setColor: (c: { id: string; hex: string; name: string } | null) => void;
   clearColor: () => void;
 }
@@ -21,8 +22,9 @@ export const useProfileColor = create<ProfileColorState>()(
   persist(
     (set) => ({
       selectedColor: null,
-      setColor: (c) => set({ selectedColor: c }),
-      clearColor: () => set({ selectedColor: null }),
+      hasChosen: false,
+      setColor: (c) => set({ selectedColor: c, hasChosen: true }),
+      clearColor: () => set({ selectedColor: null, hasChosen: true }),
     }),
     { name: "amg-profile-color" }
   )
@@ -44,7 +46,7 @@ export const ProfileColorPopup = () => {
   const { locale } = useLocale();
   const { data: colorGroups } = useColorTaxonomy();
   const { data: settings } = useProfileColorSettings();
-  const { selectedColor, setColor, clearColor } = useProfileColor();
+  const { selectedColor, hasChosen, setColor, clearColor } = useProfileColor();
   const [open, setOpen] = useState(false);
 
   const isAr = locale === "ar";
@@ -56,10 +58,10 @@ export const ProfileColorPopup = () => {
   // Auto-open popup only once per session if no color selected
   const [autoShown, setAutoShown] = useState(false);
   useEffect(() => {
-    if (!enabled || selectedColor || standardColors.length === 0 || autoShown) return;
+    if (!enabled || hasChosen || standardColors.length === 0 || autoShown) return;
     const timer = setTimeout(() => { setOpen(true); setAutoShown(true); }, 800);
     return () => clearTimeout(timer);
-  }, [enabled, selectedColor, standardColors.length, autoShown]);
+  }, [enabled, hasChosen, standardColors.length, autoShown]);
 
   const getColorName = (color: any) => {
     if (isAr) return color.label_ar || color.name_ar || color.name?.ar || color.label_he || color.name_he || color.name?.he || color.name || "";
