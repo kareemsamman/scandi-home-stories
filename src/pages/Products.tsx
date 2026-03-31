@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
+import { ProfileColorPopup } from "@/components/ProfileColorPicker";
 
 interface FilterState {
   search: string;
@@ -205,6 +206,7 @@ const Products = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
+      {isProfilesCollection && <ProfileColorPopup />}
       {/* Hero */}
       <section className="relative h-[28vh] md:h-[40vh] overflow-hidden">
         <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />

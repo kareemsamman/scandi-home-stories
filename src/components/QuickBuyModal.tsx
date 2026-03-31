@@ -10,6 +10,7 @@ import { QuantitySelector } from "./QuantitySelector";
 import { CustomColorModal } from "./CustomColorModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfileColor } from "./ProfileColorPicker";
 
 interface QuickBuyModalProps {
   product: Product | null;
@@ -22,6 +23,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const { addItem, items: cartItems } = useCart();
   const qc = useQueryClient();
   const isMobile = useIsMobile();
+  const profileColor = useProfileColor((s) => s.selectedColor);
   const [selectedColor, setSelectedColor] = useState<{ id: string; name: string; hex: string; prices?: Record<string, number> } | null>(null);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -78,6 +80,15 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     });
     setSelectedSize(firstInStock?.label[locale] || availableSizes[0]?.label[locale] || null);
   }, [selectedColor?.id, availableSizes.length, inventory.length]);
+
+  // Auto-apply profile color when modal opens
+  useEffect(() => {
+    if (!open || !profileColor || selectedColor) return;
+    const match = standardColors.find((c: any) => c.id === profileColor.id || c.tax_id === profileColor.id);
+    if (match) {
+      setSelectedColor({ id: match.id || match.tax_id, name: profileColor.name, hex: match.hex });
+    }
+  }, [open, profileColor, standardColors.length]);
 
   // Dynamic price
   const currentPrice = useMemo(() => {

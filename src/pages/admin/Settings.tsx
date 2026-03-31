@@ -73,6 +73,14 @@ const AdminSettings = () => {
   const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
   useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
 
+  /* Profile Color Picker */
+  const saveProfileColor = useSaveSetting("profile_color_picker");
+  const [profileColorEnabled, setProfileColorEnabled] = useState(true);
+  useEffect(() => {
+    (supabase as any).from("app_settings").select("value").eq("key", "profile_color_picker").single()
+      .then(({ data }: any) => { if (data?.value) setProfileColorEnabled(data.value.enabled !== false); });
+  }, []);
+
   /* Tranzila */
   const { data: dbTranzila } = useTranzilaSettings();
   const saveTranzila = useSaveSetting("tranzila");
@@ -162,6 +170,9 @@ const AdminSettings = () => {
       else if (tab === "orders") await saveAdminOrders.mutateAsync(adminOrders);
       else if (tab === "whatsapp") await saveWhatsapp.mutateAsync(whatsapp);
       else if (tab === "vat") await saveVat.mutateAsync(vat);
+      else if (tab === "general") {
+        await saveProfileColor.mutateAsync({ enabled: profileColorEnabled });
+      }
       else if (tab === "tranzila") await saveTranzila.mutateAsync(tranzila);
       toast({ title: "Saved successfully" });
     } catch {
@@ -423,6 +434,24 @@ const AdminSettings = () => {
               <div><p className="text-sm font-medium">Arabic</p><p className="text-xs text-gray-400">ar</p></div>
             </div>
           </div>
+
+          {/* Profile Color Picker */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Profile Color Picker</p>
+                <p className="text-xs text-gray-400 mt-0.5">نافذة اختيار اللون عند دخول صفحة البروفيلات</p>
+              </div>
+              <button
+                onClick={() => setProfileColorEnabled(!profileColorEnabled)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${profileColorEnabled ? "bg-gray-900" : "bg-gray-300"}`}
+              >
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${profileColorEnabled ? "left-[22px]" : "left-0.5"}`} />
+              </button>
+            </div>
+          </div>
+
+          <SaveBtn tab="general" />
         </div>
       )}
 
