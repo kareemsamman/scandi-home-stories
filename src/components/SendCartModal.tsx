@@ -65,6 +65,7 @@ export const SendCartModal = ({ open, onClose, adminDiscount = 0 }: Props) => {
           cart_items: items,
           coupon_code: appliedCoupon?.coupon.code ?? null,
           created_by: user.id,
+          admin_discount: adminDiscount > 0 ? adminDiscount : 0,
         })
         .select("token")
         .single();
