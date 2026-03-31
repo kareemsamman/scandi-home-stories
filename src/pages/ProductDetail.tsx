@@ -454,8 +454,18 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const effectiveMax = isOutOfStock ? 0 : isCustomColor ? 9999 : Math.max(0, currentStock - cartQty);
   const cartFull = !isCustomColor && currentStock > 0 && effectiveMax === 0;
 
+  const profileColor = useProfileColor((s) => s.selectedColor);
+
   useEffect(() => {
     if (!selectedColor && standardColors.length > 0) {
+      // Check if profile color matches a standard color
+      if (profileColor) {
+        const match = standardColors.find(c => c.id === profileColor.id);
+        if (match) {
+          setSelectedColor({ id: match.id, name: match.name[locale], hex: match.hex });
+          return;
+        }
+      }
       setSelectedColor({ id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex });
     }
   }, []);
