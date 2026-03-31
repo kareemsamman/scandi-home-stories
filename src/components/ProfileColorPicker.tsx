@@ -81,7 +81,7 @@ export const ProfileColorPopup = () => {
     <>
       {/* Popup */}
       <AnimatePresence>
-        {open && !selectedColor && (
+        {open && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
