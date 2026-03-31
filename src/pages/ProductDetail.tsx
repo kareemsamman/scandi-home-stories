@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead, getProductSchema, getBreadcrumbSchema, getOrganizationSchema } from "@/components/SEOHead";
+import { useProfileColor } from "@/components/ProfileColorPicker";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
@@ -134,6 +135,14 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [lightboxStart, setLightboxStart] = useState(0);
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
   const [quantity, setQuantity] = useState(1);
+  const profileColor = useProfileColor((s) => s.selectedColor);
+
+  // Auto-apply profile color on mount
+  useEffect(() => {
+    if (!profileColor || !product.colors.length) return;
+    const match = product.colors.find(c => c.id === profileColor.id);
+    if (match) setSelectedColor(match);
+  }, [profileColor?.id]);
   const [isAdding, setIsAdding] = useState(false);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
@@ -445,8 +454,18 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const effectiveMax = isOutOfStock ? 0 : isCustomColor ? 9999 : Math.max(0, currentStock - cartQty);
   const cartFull = !isCustomColor && currentStock > 0 && effectiveMax === 0;
 
+  const profileColor = useProfileColor((s) => s.selectedColor);
+
   useEffect(() => {
     if (!selectedColor && standardColors.length > 0) {
+      // Check if profile color matches a standard color
+      if (profileColor) {
+        const match = standardColors.find(c => c.id === profileColor.id);
+        if (match) {
+          setSelectedColor({ id: match.id, name: match.name[locale], hex: match.hex });
+          return;
+        }
+      }
       setSelectedColor({ id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex });
     }
   }, []);
