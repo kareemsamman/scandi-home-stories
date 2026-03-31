@@ -991,6 +991,7 @@ export type Database = {
       }
       shared_carts: {
         Row: {
+          admin_discount: number | null
           cart_items: Json
           coupon_code: string | null
           created_at: string | null
@@ -999,6 +1000,7 @@ export type Database = {
           token: string
         }
         Insert: {
+          admin_discount?: number | null
           cart_items: Json
           coupon_code?: string | null
           created_at?: string | null
@@ -1007,6 +1009,7 @@ export type Database = {
           token?: string
         }
         Update: {
+          admin_discount?: number | null
           cart_items?: Json
           coupon_code?: string | null
           created_at?: string | null

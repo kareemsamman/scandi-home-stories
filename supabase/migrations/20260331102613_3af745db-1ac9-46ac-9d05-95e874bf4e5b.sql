@@ -1,0 +1,1 @@
+ALTER TABLE public.shared_carts ADD COLUMN admin_discount numeric DEFAULT 0;
