@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Loader2, CheckCircle2, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useCouponStore } from "@/hooks/useCoupons";
 import { useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
+import { useAuth } from "@/hooks/useAuth";
 
 const db = supabase as any;
 
@@ -18,6 +19,7 @@ interface Props {
 
 export const SendCartModal = ({ open, onClose }: Props) => {
   const { locale, localePath } = useLocale();
+  const { user } = useAuth();
   const items = useCart((s) => s.items);
   const { applied: appliedCoupon } = useCouponStore();
   const { data: smsMessages } = useSmsMessages();
@@ -28,11 +30,29 @@ export const SendCartModal = ({ open, onClose }: Props) => {
 
   const isRtl = locale === "he" || locale === "ar";
 
+  const texts = useMemo(
+    () => ({
+      missingSession: locale === "ar" ? "يجب تسجيل الدخول كمدير لإرسال الرسالة." : "צריך להיות מחובר כאדמין כדי לשלוח SMS.",
+      saveCartFailed: locale === "ar" ? "נכשלה שמירת السلة للمشاركة." : "שמירת העגלה לשיתוף נכשלה.",
+      smsDisabled: locale === "ar" ? "إرسال الرسائل القصيرة معطّل في الإعدادات." : "שליחת ה-SMS כבויה בהגדרות.",
+      unauthorized: locale === "ar" ? "انتهت جلسة المدير أو لا توجد صلاحية للإرسال." : "פג תוקף ההתחברות של האדמין או שאין הרשאה לשלוח.",
+      genericSendFailed: locale === "ar" ? "فشل إرسال الرسالة القصيرة." : "שליחת ה-SMS נכשלה.",
+    }),
+    [locale]
+  );
+
   const normalizePhone = (p: string) => p.replace(/[\s\-]/g, "");
   const isValid = PHONE_RX.test(normalizePhone(phone));
 
   const handleSend = async () => {
     if (!isValid || status === "sending") return;
+
+    if (!user?.id) {
+      setErrorMsg(texts.missingSession);
+      setStatus("error");
+      return;
+    }
+
     setStatus("sending");
     setErrorMsg("");
 
@@ -43,11 +63,12 @@ export const SendCartModal = ({ open, onClose }: Props) => {
         .insert({
           cart_items: items,
           coupon_code: appliedCoupon?.coupon.code ?? null,
+          created_by: user.id,
         })
         .select("token")
         .single();
 
-      if (error) throw error;
+      if (error) throw new Error(texts.saveCartFailed);
 
       const token: string = data.token;
 
@@ -63,13 +84,17 @@ export const SendCartModal = ({ open, onClose }: Props) => {
       const message = formatSms(template, { link });
 
       // 4. Send SMS
-      const sent = await sendSms(normalizePhone(phone), message);
-      if (!sent) throw new Error("SMS send failed");
+      const result = await sendSms(normalizePhone(phone), message);
+      if (!result.success) {
+        if (result.code === "SMS_DISABLED") throw new Error(texts.smsDisabled);
+        if (result.code === "UNAUTHORIZED" || result.code === "FORBIDDEN") throw new Error(texts.unauthorized);
+        throw new Error(result.error || texts.genericSendFailed);
+      }
 
       setStatus("done");
     } catch (e: any) {
       console.error(e);
-      setErrorMsg("שגיאה בשליחה. בדוק את הגדרות ה-SMS.");
+      setErrorMsg(e?.message || texts.genericSendFailed);
       setStatus("error");
     }
   };
@@ -100,7 +125,6 @@ export const SendCartModal = ({ open, onClose }: Props) => {
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
-            dir={isRtl ? "rtl" : "ltr"}
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">

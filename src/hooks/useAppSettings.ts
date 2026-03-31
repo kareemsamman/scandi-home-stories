@@ -179,18 +179,45 @@ export const useSaveSetting = (key: string) => {
 };
 
 /* ── SMS sending via edge function ── */
-export const sendSms = async (phone: string, message: string): Promise<boolean> => {
+type SendSmsResult = {
+  success: boolean;
+  code?: "UNAUTHORIZED" | "FORBIDDEN" | "SMS_DISABLED" | "BAD_REQUEST" | "UNKNOWN";
+  error?: string;
+};
+
+export const sendSms = async (phone: string, message: string): Promise<SendSmsResult> => {
   try {
     // Normalize Israeli phone to international format
     const normalized = phone.replace(/[\s\-]/g, "");
     const intlPhone = normalized.startsWith("0") ? "972" + normalized.slice(1) : normalized;
 
-    const { error } = await supabase.functions.invoke("send-sms", {
+    const { data, error } = await supabase.functions.invoke("send-sms", {
       body: { phone: intlPhone, message },
     });
-    return !error;
-  } catch {
-    return false;
+
+    if (error) {
+      const status = (error as { context?: { status?: number } }).context?.status;
+      if (status === 401) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+      if (status === 403) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+      if (status === 400) return { success: false, code: "BAD_REQUEST", error: "Invalid SMS request" };
+      return { success: false, code: "UNKNOWN", error: error.message };
+    }
+
+    if (data?.reason === "SMS disabled") {
+      return { success: false, code: "SMS_DISABLED", error: "SMS disabled" };
+    }
+
+    if (data?.success === false) {
+      return { success: false, code: "UNKNOWN", error: typeof data?.result === "string" ? data.result : "SMS send failed" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      code: "UNKNOWN",
+      error: error instanceof Error ? error.message : "SMS send failed",
+    };
   }
 };
 
