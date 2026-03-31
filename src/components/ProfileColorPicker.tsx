@@ -53,12 +53,13 @@ export const ProfileColorPopup = () => {
   // Get standard colors from the color taxonomy (admin/attributes)
   const standardColors = colorGroups || [];
 
+  // Auto-open popup only once per session if no color selected
+  const [autoShown, setAutoShown] = useState(false);
   useEffect(() => {
-    if (!enabled || selectedColor || standardColors.length === 0) return;
-    // Show popup after short delay if no color selected
-    const timer = setTimeout(() => setOpen(true), 800);
+    if (!enabled || selectedColor || standardColors.length === 0 || autoShown) return;
+    const timer = setTimeout(() => { setOpen(true); setAutoShown(true); }, 800);
     return () => clearTimeout(timer);
-  }, [enabled, selectedColor, standardColors.length]);
+  }, [enabled, selectedColor, standardColors.length, autoShown]);
 
   const getColorName = (color: any) => {
     if (isAr) return color.label_ar || color.name_ar || color.name?.ar || color.label_he || color.name_he || color.name?.he || color.name || "";
@@ -148,30 +149,40 @@ export const ProfileColorPopup = () => {
         )}
       </AnimatePresence>
 
-      {/* Sticky color indicator — compact circle above WhatsApp, expands on hover / always on mobile */}
-      {selectedColor && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-[14rem] left-6 z-[49] group"
+      {/* Sticky color indicator — always visible on profiles page */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="fixed bottom-[14rem] left-6 z-[49] group"
+      >
+        <button
+          onClick={() => setOpen(true)}
+          className="relative flex items-center bg-white rounded-full shadow-lg border border-gray-200 transition-all duration-300 overflow-hidden
+            h-12 w-12 sm:hover:w-auto sm:hover:pe-4 sm:hover:ps-1
+            max-sm:w-auto max-sm:pe-4 max-sm:ps-1"
         >
-          <button
-            onClick={() => { setColor(null); setOpen(true); }}
-            className="relative flex items-center bg-white rounded-full shadow-lg border border-gray-200 transition-all duration-300 overflow-hidden
-              h-12 w-12 sm:hover:w-auto sm:hover:pe-4 sm:hover:ps-1
-              max-sm:w-auto max-sm:pe-4 max-sm:ps-1"
-          >
+          {selectedColor ? (
             <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm shrink-0 m-1" style={{ backgroundColor: selectedColor.hex }} />
-            {/* Text — hidden on desktop until hover, always visible on mobile */}
-            <div className="whitespace-nowrap overflow-hidden transition-all duration-300
-              sm:max-w-0 sm:opacity-0 sm:group-hover:max-w-[10rem] sm:group-hover:opacity-100 sm:group-hover:ms-1
-              max-sm:max-w-[10rem] max-sm:opacity-100 max-sm:ms-1">
-              <p className="text-[10px] text-gray-400 leading-none">{isAr ? "اللون المختار" : "צבע נבחר"}</p>
-              <p className="text-xs font-bold text-gray-800 leading-tight">{selectedColor.name}</p>
+          ) : (
+            <div className="w-10 h-10 rounded-full border-2 border-gray-200 bg-gray-100 flex items-center justify-center shrink-0 m-1">
+              <Palette className="w-5 h-5 text-gray-400" />
             </div>
-          </button>
-        </motion.div>
-      )}
+          )}
+          {/* Text — hidden on desktop until hover, always visible on mobile */}
+          <div className="whitespace-nowrap overflow-hidden transition-all duration-300
+            sm:max-w-0 sm:opacity-0 sm:group-hover:max-w-[10rem] sm:group-hover:opacity-100 sm:group-hover:ms-1
+            max-sm:max-w-[10rem] max-sm:opacity-100 max-sm:ms-1">
+            {selectedColor ? (
+              <>
+                <p className="text-[10px] text-gray-400 leading-none">{isAr ? "اللون المختار" : "צבע נבחר"}</p>
+                <p className="text-xs font-bold text-gray-800 leading-tight">{selectedColor.name}</p>
+              </>
+            ) : (
+              <p className="text-xs font-semibold text-gray-500 leading-tight">{isAr ? "اختر لونًا" : "בחר צבע"}</p>
+            )}
+          </div>
+        </button>
+      </motion.div>
     </>
   );
 };
