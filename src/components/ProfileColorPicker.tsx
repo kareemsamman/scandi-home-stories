@@ -13,6 +13,7 @@ const db = supabase as any;
 // ── Global store for selected profile color ──
 interface ProfileColorState {
   selectedColor: { id: string; hex: string; name: string } | null;
+  hasChosen: boolean;
   setColor: (c: { id: string; hex: string; name: string } | null) => void;
   clearColor: () => void;
 }
@@ -21,8 +22,9 @@ export const useProfileColor = create<ProfileColorState>()(
   persist(
     (set) => ({
       selectedColor: null,
-      setColor: (c) => set({ selectedColor: c }),
-      clearColor: () => set({ selectedColor: null }),
+      hasChosen: false,
+      setColor: (c) => set({ selectedColor: c, hasChosen: true }),
+      clearColor: () => set({ selectedColor: null, hasChosen: true }),
     }),
     { name: "amg-profile-color" }
   )
