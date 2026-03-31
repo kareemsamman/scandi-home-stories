@@ -8,6 +8,12 @@ import { useSmsMessages, sendSms, formatSms } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { useAuth } from "@/hooks/useAuth";
 
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  adminDiscount?: number;
+}
+
 const db = supabase as any;
 
 const PHONE_RX = /^05[0-9]{8}$/;
