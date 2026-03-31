@@ -1,42 +1,42 @@
 
 
-## Problem
+## Redesign: Premium Welcome Popup
 
-Two issues on the checkout page:
+### Current Problem
+The popup looks generic — small card-style layout with separate image area and text below. No visual impact.
 
-1. **Blank page / crash when entering payment step**: The `TranzilaPayment` component has an early `return` (line 23-31) **before** the `useEffect` hook (line 50). This violates React's rules of hooks — hooks must always be called in the same order. When Tranzila settings aren't loaded yet or are disabled, the early return skips the `useEffect`, causing "Rendered more hooks than during the previous render" and a blank screen.
+### New Design
 
-2. **Privacy checkbox**: The checkbox **does** exist in the code (line 1155-1164). The user sees a blank page because of the crash above, which prevents the form from rendering properly on re-renders.
+**Popup**: Larger (`max-w-4xl`), full-bleed image cards with dark gradient overlay and text/button rendered directly on the image. Each card is a tall, cinematic tile (`aspect-[3/4]` on mobile, `aspect-[2/3]` on desktop) — similar to premium editorial hero grids.
 
-## Fix
+**Layout**:
+- Header text (title + subtitle) centered above the cards, white on white background
+- 3 cards side-by-side on desktop, stacked on mobile
+- Each card is a full-image tile with a dark-to-transparent gradient overlay from bottom
+- Category title in bold white, positioned at the bottom of the image
+- CTA button as a frosted-glass pill on the image
+- On hover: image zooms slightly, overlay lightens, button shifts up
+- Staggered entrance animation for each card (delay per index)
 
-### File: `src/components/TranzilaPayment.tsx`
+**Admin — Image Upload**:
+- Add a file upload button (camera/upload icon) next to the existing URL input for each card
+- Upload to `site-media` bucket under `popup/` prefix (same pattern as Categories, About pages)
+- After upload, auto-fill the image URL field
+- Keep the URL input as fallback for external URLs
 
-Move the `useEffect` hook **before** the early return so hooks are always called in the same order regardless of settings state.
+### Files to Change
 
-```tsx
-export const TranzilaPayment = ({ ... }: Props) => {
-  const { data: settings } = useTranzilaSettings();
-  const { t, locale } = useLocale();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+**1. `src/components/WelcomePopup.tsx`** — Full redesign
+- Increase popup to `max-w-4xl`
+- Cards become full-bleed image tiles with gradient overlay
+- Title + subtitle rendered as a minimal header section
+- Text and CTA button positioned absolutely over each card image
+- Staggered card entrance with framer-motion
+- Fallback gradient background when no image is set
 
-  // Move useEffect BEFORE any early returns
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => { ... };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [onSuccess, onError]);
-
-  // NOW the early return is safe
-  if (!settings?.enabled || !settings.terminal_name) {
-    return ( <div>...</div> );
-  }
-
-  // Rest of component...
-};
-```
-
-Single file change. The privacy checkbox requires no changes — it's already present and will render correctly once the crash is fixed.
+**2. `src/pages/admin/WelcomePopup.tsx`** — Add image upload
+- Add upload handler using `supabase.storage.from("site-media").upload("popup/...")`
+- Add an upload button (with ImageIcon) next to each card's image URL input
+- On file select → upload → set the public URL into card.image
+- Show larger image preview thumbnail (48x48 instead of 32x32)
 
