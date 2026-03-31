@@ -148,25 +148,27 @@ export const ProfileColorPopup = () => {
         )}
       </AnimatePresence>
 
-      {/* Sticky color indicator button — only when color is selected */}
+      {/* Sticky color indicator — compact circle above WhatsApp, expands on hover / always on mobile */}
       {selectedColor && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-24 start-4 z-[100]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed bottom-[11.5rem] start-6 z-[49] group"
         >
           <button
             onClick={() => { setColor(null); setOpen(true); }}
-            className="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 pl-2 pr-4 py-2 hover:shadow-xl transition-all group"
+            className="relative flex items-center bg-white rounded-full shadow-lg border border-gray-200 transition-all duration-300 overflow-hidden
+              h-12 w-12 sm:hover:w-auto sm:hover:pe-4 sm:hover:ps-1
+              max-sm:w-auto max-sm:pe-4 max-sm:ps-1"
           >
-            <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm shrink-0" style={{ backgroundColor: selectedColor.hex }} />
-            <div className="text-start">
+            <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm shrink-0 m-1" style={{ backgroundColor: selectedColor.hex }} />
+            {/* Text — hidden on desktop until hover, always visible on mobile */}
+            <div className="whitespace-nowrap overflow-hidden transition-all duration-300
+              sm:max-w-0 sm:opacity-0 sm:group-hover:max-w-[10rem] sm:group-hover:opacity-100 sm:group-hover:ms-1
+              max-sm:max-w-[10rem] max-sm:opacity-100 max-sm:ms-1">
               <p className="text-[10px] text-gray-400 leading-none">{isAr ? "اللون المختار" : "צבע נבחר"}</p>
               <p className="text-xs font-bold text-gray-800 leading-tight">{selectedColor.name}</p>
             </div>
-            <span className="text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors ms-1">
-              {isAr ? "تغيير" : "שנה"}
-            </span>
           </button>
         </motion.div>
       )}
