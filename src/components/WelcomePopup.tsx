@@ -123,8 +123,8 @@ export const WelcomePopup = () => {
             {/* Cards grid — horizontal scroll on mobile, grid on desktop */}
             <div className="px-3 pb-4 sm:px-4 sm:pb-5">
               {/* Mobile: horizontal scroll */}
-              <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pb-2 sm:hidden scrollbar-hide"
-                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pb-2 sm:hidden -mx-3 px-3"
+                   style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
                 {config.cards.map((card, i) => {
                   const imgSrc = card.image || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
                   return (
@@ -133,8 +133,7 @@ export const WelcomePopup = () => {
                       initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.15 + i * 0.1, duration: 0.45, ease: "easeOut" }}
-                      className="flex-shrink-0 snap-center"
-                      style={{ width: "calc(100vw - 64px)", maxWidth: "280px" }}
+                      className="flex-shrink-0 snap-center w-[75%] min-w-[220px]"
                     >
                       <Link
                         to={localePath(card.link)}
