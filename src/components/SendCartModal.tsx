@@ -18,12 +18,7 @@ const db = supabase as any;
 
 const PHONE_RX = /^05[0-9]{8}$/;
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
-}
-
-export const SendCartModal = ({ open, onClose }: Props) => {
+export const SendCartModal = ({ open, onClose, adminDiscount = 0 }: Props) => {
   const { locale, localePath } = useLocale();
   const { user } = useAuth();
   const items = useCart((s) => s.items);
