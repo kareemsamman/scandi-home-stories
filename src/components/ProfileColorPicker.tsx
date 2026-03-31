@@ -42,7 +42,7 @@ const useProfileColorSettings = () =>
 // ── Popup Component ──
 export const ProfileColorPopup = () => {
   const { locale } = useLocale();
-  const { data: colorGroups } = useColorGroups();
+  const { data: colorGroups } = useColorTaxonomy();
   const { data: settings } = useProfileColorSettings();
   const { selectedColor, setColor } = useProfileColor();
   const [open, setOpen] = useState(false);
