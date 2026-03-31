@@ -1004,7 +1004,7 @@ const Checkout = () => {
   /* ---------- FORM STEP ---------- */
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
-      <SendCartModal open={showSendCartModal} onClose={() => setShowSendCartModal(false)} />
+      <SendCartModal open={showSendCartModal} onClose={() => setShowSendCartModal(false)} adminDiscount={adminDiscount} />
 
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
