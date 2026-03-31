@@ -231,7 +231,10 @@ const Checkout = () => {
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
   const [orderNumber] = useState(generateOrderNumber);
-  const [payMethod, setPayMethod] = useState<"credit_card" | "bit" | "apple_pay" | "google_pay">("credit_card");
+  const [payMethod, setPayMethod] = useState<"credit_card" | "bit" | "apple_pay" | "google_pay" | "bank_transfer">("credit_card");
+  // Device detection for Apple Pay / Google Pay
+  const isAppleDevice = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
+  const isAndroid = /Android/.test(navigator.userAgent);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [isPayLater, setIsPayLater] = useState(false);
@@ -825,12 +828,71 @@ const Checkout = () => {
           <div className="text-center mb-8">
             <h1 className="text-xl font-bold text-foreground mb-3">{t("payment.title")}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-              {locale === "ar" ? "أدخل بيانات الدفع لإتمام الطلب" : "הזינו פרטי תשלום להשלמת ההזמנה"}
+              {payMethod === "bank_transfer"
+                ? (locale === "ar" ? "قم بتحويل المبلغ ثم ارفع إيصال التحويل" : "העבירו את הסכום והעלו אישור העברה")
+                : (locale === "ar" ? "أدخل بيانات الدفع لإتمام الطلب" : "הזינו פרטי תשלום להשלמת ההזמנה")}
             </p>
           </div>
 
-          {/* Tranzila Payment iframe */}
-          <TranzilaPayment
+          {/* Bank Transfer Flow */}
+          {payMethod === "bank_transfer" && (
+            <>
+              <div className="bg-white rounded-xl border border-border p-6 mb-6">
+                <div className="flex flex-col items-center mb-5">
+                  <div className="w-14 h-14 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                    <Building2 className="w-7 h-7 text-foreground" />
+                  </div>
+                  <h2 className="text-base font-bold text-foreground">{t("payment.bankDetailsTitle")}</h2>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: t("payment.bankName"), value: bankSettings?.bank_name || "" },
+                    { label: t("payment.accountName"), value: bankSettings?.account_name || "" },
+                    { label: t("payment.accountNumber"), value: bankSettings?.account_number || "" },
+                    { label: t("payment.branchNumber"), value: bankSettings?.branch_number || "" },
+                    { label: t("payment.bankCode"), value: bankSettings?.bank_code || "" },
+                  ].filter(r => r.value).map((row) => (
+                    <div key={row.label} className="flex justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-semibold text-foreground">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex justify-between text-base font-bold">
+                    <span>{t("payment.amountToPay")}</span>
+                    <span>{t("common.currency")}{totalAfterDiscount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-border p-6 mb-6">
+                <h3 className="text-base font-bold text-foreground mb-4">{t("payment.uploadTitle")}</h3>
+                <div onClick={() => fileInputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}
+                  className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-muted-foreground transition-colors">
+                  <Upload className="w-8 h-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground text-center">{t("payment.dropText")}</p>
+                </div>
+                <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className="hidden" onChange={(e) => handleFileSelect(e.target.files)} />
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {uploadedFiles.map((uf, idx) => (
+                      <div key={idx} className="relative group">
+                        {uf.preview ? <img src={uf.preview} alt="" className="w-full aspect-square rounded-lg object-cover border border-border" /> : <div className="w-full aspect-square rounded-lg border border-border bg-muted/20 flex items-center justify-center"><span className="text-xs">PDF</span></div>}
+                        <button onClick={() => removeFile(idx)} className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={handleSubmitReceipt} disabled={uploadedFiles.length === 0 || isSubmittingReceipt}
+                className="w-full h-14 flex items-center justify-center gap-2 text-sm font-bold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {isSubmittingReceipt ? <Loader2 className="w-5 h-5 animate-spin" /> : <><LockIcon />{t("payment.submitReceipt")}</>}
+              </button>
+            </>
+          )}
+
+          {/* Tranzila Payment iframe — credit card, Bit, Apple Pay, Google Pay */}
+          {payMethod !== "bank_transfer" && <TranzilaPayment
             amount={totalAfterDiscount}
             orderNumber={orderNumber}
             customerEmail={form.email}
@@ -905,7 +967,7 @@ const Checkout = () => {
                 variant: "destructive",
               });
             }}
-          />
+          />}
         </motion.main>
         </PaymentStepLoader>
       </div>
@@ -1137,24 +1199,37 @@ const Checkout = () => {
                       desc={locale === "ar" ? "الدفع عبر تطبيق Bit" : "תשלום דרך אפליקציית Bit"}
                       color="bg-[#00C4B3]"
                     />
-                    {/* Apple Pay */}
+                    {/* Apple Pay — only on Apple devices */}
+                    {isAppleDevice && (
+                      <PayMethodBtn
+                        active={payMethod === "apple_pay"}
+                        onClick={() => setPayMethod("apple_pay")}
+                        icon={<svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C4.24 16.7 4.89 10.33 8.7 10.12c1.14.05 1.94.63 2.6.67.99-.2 1.96-.77 3.01-.7 1.28.1 2.25.6 2.88 1.5-2.64 1.58-2.01 5.04.36 6.01-.47 1.24-.68 1.8-1.5 2.68zM12.05 10.07c-.14-2.24 1.74-4.2 3.95-4.38.29 2.6-2.34 4.53-3.95 4.38z"/></svg>}
+                        title="Apple Pay"
+                        desc={locale === "ar" ? "الدفع عبر Apple Pay" : "תשלום עם Apple Pay"}
+                        color="bg-black"
+                      />
+                    )}
+                    {/* Google Pay — only on Android devices */}
+                    {isAndroid && (
+                      <PayMethodBtn
+                        active={payMethod === "google_pay"}
+                        onClick={() => setPayMethod("google_pay")}
+                        icon={<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none"><path d="M12.24 10.28V14.1h5.35c-.24 1.42-.89 2.62-1.88 3.43l3.04 2.36c1.77-1.64 2.8-4.05 2.8-6.91 0-.67-.06-1.31-.17-1.93H12.24z" fill="#4285F4"/><path d="M5.27 14.29l-.68.51-2.4 1.87C3.94 19.65 7.7 21.58 12 21.58c2.7 0 4.96-.89 6.62-2.42l-3.04-2.36c-.89.6-2.04.96-3.58.96-2.75 0-5.08-1.86-5.91-4.35l-.82.88z" fill="#34A853"/><path d="M2.19 6.81C1.44 8.29 1 9.97 1 11.79s.44 3.5 1.19 4.98l3.09-2.38c-.19-.56-.3-1.16-.3-1.79s.11-1.23.3-1.79L2.19 6.81z" fill="#FBBC05"/><path d="M12 5.38c1.55 0 2.94.53 4.04 1.58l3.01-3.01C17.04 2.15 14.7 1 12 1 7.7 1 3.94 2.93 2.19 5.91l3.09 2.38C6.11 6.3 8.44 5.38 12 5.38z" fill="#EA4335"/></svg>}
+                        title="Google Pay"
+                        desc={locale === "ar" ? "الدفع عبر Google Pay" : "תשלום عם Google Pay"}
+                        color="bg-white border-2 border-gray-200"
+                        dark
+                      />
+                    )}
+                    {/* Bank Transfer */}
                     <PayMethodBtn
-                      active={payMethod === "apple_pay"}
-                      onClick={() => setPayMethod("apple_pay")}
-                      icon={<svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C4.24 16.7 4.89 10.33 8.7 10.12c1.14.05 1.94.63 2.6.67.99-.2 1.96-.77 3.01-.7 1.28.1 2.25.6 2.88 1.5-2.64 1.58-2.01 5.04.36 6.01-.47 1.24-.68 1.8-1.5 2.68zM12.05 10.07c-.14-2.24 1.74-4.2 3.95-4.38.29 2.6-2.34 4.53-3.95 4.38z"/></svg>}
-                      title="Apple Pay"
-                      desc={locale === "ar" ? "الدفع عبر Apple Pay" : "תשלום עם Apple Pay"}
-                      color="bg-black"
-                    />
-                    {/* Google Pay */}
-                    <PayMethodBtn
-                      active={payMethod === "google_pay"}
-                      onClick={() => setPayMethod("google_pay")}
-                      icon={<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none"><path d="M12.24 10.28V14.1h5.35c-.24 1.42-.89 2.62-1.88 3.43l3.04 2.36c1.77-1.64 2.8-4.05 2.8-6.91 0-.67-.06-1.31-.17-1.93H12.24z" fill="#4285F4"/><path d="M5.27 14.29l-.68.51-2.4 1.87C3.94 19.65 7.7 21.58 12 21.58c2.7 0 4.96-.89 6.62-2.42l-3.04-2.36c-.89.6-2.04.96-3.58.96-2.75 0-5.08-1.86-5.91-4.35l-.82.88z" fill="#34A853"/><path d="M2.19 6.81C1.44 8.29 1 9.97 1 11.79s.44 3.5 1.19 4.98l3.09-2.38c-.19-.56-.3-1.16-.3-1.79s.11-1.23.3-1.79L2.19 6.81z" fill="#FBBC05"/><path d="M12 5.38c1.55 0 2.94.53 4.04 1.58l3.01-3.01C17.04 2.15 14.7 1 12 1 7.7 1 3.94 2.93 2.19 5.91l3.09 2.38C6.11 6.3 8.44 5.38 12 5.38z" fill="#EA4335"/></svg>}
-                      title="Google Pay"
-                      desc={locale === "ar" ? "الدفع عبر Google Pay" : "תשלום עם Google Pay"}
-                      color="bg-white border-2 border-gray-200"
-                      dark
+                      active={payMethod === "bank_transfer"}
+                      onClick={() => setPayMethod("bank_transfer")}
+                      icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" /></svg>}
+                      title={locale === "ar" ? "تحويل بنكي" : "העברה בנקאית"}
+                      desc={locale === "ar" ? "تحويل عبر حساب البنك" : "העברה דרך חשבון בנק"}
+                      color="bg-gray-700"
                     />
                   </div>
                 </div>

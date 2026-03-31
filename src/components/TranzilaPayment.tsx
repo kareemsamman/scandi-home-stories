@@ -3,7 +3,7 @@ import { useTranzilaSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { CreditCard, Loader2, AlertCircle, Lock } from "lucide-react";
 
-export type PaymentMethodType = "credit_card" | "bit" | "apple_pay" | "google_pay";
+export type PaymentMethodType = "credit_card" | "bit" | "apple_pay" | "google_pay" | "bank_transfer";
 
 interface Props {
   amount: number;
@@ -72,6 +72,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     bit: "&bit=1",
     apple_pay: "&applepay=1",
     google_pay: "&googlepay=1",
+    bank_transfer: "",
   };
 
   const iframeUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php?` +
