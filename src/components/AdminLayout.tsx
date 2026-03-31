@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Package, FileText,
   Image, Settings, LogOut, ChevronLeft, ChevronRight, Menu,
   Grid3X3, BarChart3, Home, Layout, Tag, Ticket, Mail, Loader2,
-  PencilRuler,
+  PencilRuler, Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -35,6 +35,7 @@ const navItems: NavItem[] = [
   { label: "Legal Pages", icon: FileText, path: "/admin/legal", roles: ["admin"] },
   { label: "404 Page", icon: FileText, path: "/admin/404-page", roles: ["admin"] },
   { label: "Users", icon: Users, path: "/admin/users", roles: ["admin"] },
+  { label: "Welcome Popup", icon: Sparkles, path: "/admin/welcome-popup", roles: ["admin"] },
   { label: "Settings", icon: Settings, path: "/admin/settings", roles: ["admin"] },
 ];
 

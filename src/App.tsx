@@ -72,6 +72,7 @@ const AdminCoupons = lazyRetry(() => import("./pages/admin/Coupons"));
 const AdminMarketing = lazyRetry(() => import("./pages/admin/Marketing"));
 const AdminLegalPages = lazyRetry(() => import("./pages/admin/LegalPages"));
 const AdminNotFoundPage = lazyRetry(() => import("./pages/admin/NotFoundPage"));
+const AdminWelcomePopup = lazyRetry(() => import("./pages/admin/WelcomePopup"));
 const AdminPergolaRequests = lazyRetry(() => import("./pages/admin/PergolaRequests"));
 const AdminPergolaRequestDetail = lazyRetry(() => import("./pages/admin/PergolaRequestDetail"));
 
@@ -155,6 +156,7 @@ const App = () => (
                 <Route path="marketing" element={<AdminMarketing />} />
                 <Route path="legal" element={<AdminLegalPages />} />
                 <Route path="404-page" element={<AdminNotFoundPage />} />
+                <Route path="welcome-popup" element={<AdminWelcomePopup />} />
                 <Route path="pergola-requests" element={<AdminPergolaRequests />} />
                 <Route path="pergola-requests/:requestId" element={<AdminPergolaRequestDetail />} />
               </Route>

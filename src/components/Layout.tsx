@@ -5,6 +5,7 @@ import { SiteFooter } from "./SiteFooter";
 import { AnnouncementBar } from "./AnnouncementBar";
 import { MiniCart } from "./MiniCart";
 import { AdminTopBar } from "./AdminTopBar";
+import { WelcomePopup } from "./WelcomePopup";
 
 interface LayoutProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const Layout = ({ children }: LayoutProps) => {
       </motion.main>
       <SiteFooter />
       <MiniCart />
+      <WelcomePopup />
     </div>
   );
 };
