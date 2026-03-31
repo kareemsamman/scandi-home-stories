@@ -6,7 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
+import fallbackPergola from "@/assets/popup-pergola.jpg";
+import fallbackProfiles from "@/assets/popup-profiles.jpg";
+import fallbackSantaf from "@/assets/popup-santaf.jpg";
+
 const db = supabase as any;
+
+const FALLBACK_IMAGES = [fallbackPergola, fallbackProfiles, fallbackSantaf];
 
 interface PopupCard {
   title_he: string;
@@ -35,30 +41,9 @@ const DEFAULT_POPUP: PopupSettings = {
   subtitle_he: "מה תרצו לראות?",
   subtitle_ar: "ماذا تريد أن ترى؟",
   cards: [
-    {
-      title_he: "קניית פרגולות",
-      title_ar: "شراء عرائش",
-      button_he: "צפו בקולקציה",
-      button_ar: "تصفح المجموعة",
-      image: "",
-      link: "/shop",
-    },
-    {
-      title_he: "קניית פרופילים",
-      title_ar: "شراء بروفيلات",
-      button_he: "לפרופילים",
-      button_ar: "تصفح البروفيلات",
-      image: "",
-      link: "/shop",
-    },
-    {
-      title_he: "קניית סנטף",
-      title_ar: "شراء سنطاف",
-      button_he: "לסנטף",
-      button_ar: "تصفح السنطاف",
-      image: "",
-      link: "/shop",
-    },
+    { title_he: "קניית פרגולות", title_ar: "شراء عرائش", button_he: "צפו בקולקציה", button_ar: "تصفح المجموعة", image: "", link: "/shop" },
+    { title_he: "קניית פרופילים", title_ar: "شراء بروفيلات", button_he: "לפרופילים", button_ar: "تصفح البروفيلات", image: "", link: "/shop" },
+    { title_he: "קניית סנטף", title_ar: "شراء سنطاف", button_he: "לסנטף", button_ar: "تصفح السنطاف", image: "", link: "/shop" },
   ],
   delay_seconds: 2,
   show_once: true,
@@ -83,18 +68,14 @@ export const WelcomePopup = () => {
 
   useEffect(() => {
     if (!config.enabled) return;
-
-    // Check if already shown
     if (config.show_once) {
       const shown = sessionStorage.getItem("amg_popup_shown");
       if (shown) return;
     }
-
     const timer = setTimeout(() => {
       setOpen(true);
       if (config.show_once) sessionStorage.setItem("amg_popup_shown", "1");
     }, (config.delay_seconds || 2) * 1000);
-
     return () => clearTimeout(timer);
   }, [config.enabled, config.delay_seconds, config.show_once]);
 
@@ -111,70 +92,79 @@ export const WelcomePopup = () => {
           className="fixed inset-0 z-[500] flex items-center justify-center p-4"
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
 
           {/* Popup */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            initial={{ opacity: 0, scale: 0.92, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden"
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden"
           >
-            {/* Close button */}
+            {/* Close */}
             <button
               onClick={close}
-              className="absolute top-4 end-4 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-white transition-all shadow-sm"
+              className="absolute top-3 end-3 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white/90 hover:bg-black/60 transition-all"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Header */}
-            <div className="px-8 pt-8 pb-4 text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="px-6 pt-6 pb-3 text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                 {isAr ? config.title_ar : config.title_he}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-muted-foreground mt-1">
                 {isAr ? config.subtitle_ar : config.subtitle_he}
               </p>
             </div>
 
-            {/* Cards */}
-            <div className="px-6 pb-8">
-              <div className={`grid gap-4 ${config.cards.length === 3 ? "grid-cols-1 sm:grid-cols-3" : config.cards.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                {config.cards.map((card, i) => (
-                  <Link
-                    key={i}
-                    to={localePath(card.link)}
-                    onClick={close}
-                    className="group relative rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all"
-                  >
-                    {/* Image */}
-                    <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
-                      {card.image ? (
+            {/* Cards grid */}
+            <div className="px-4 pb-5">
+              <div className={`grid gap-3 ${
+                config.cards.length === 3 ? "grid-cols-1 sm:grid-cols-3" :
+                config.cards.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+                "grid-cols-1 max-w-sm mx-auto"
+              }`}>
+                {config.cards.map((card, i) => {
+                  const imgSrc = card.image || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 + i * 0.1, duration: 0.45, ease: "easeOut" }}
+                    >
+                      <Link
+                        to={localePath(card.link)}
+                        onClick={close}
+                        className="group relative block rounded-xl overflow-hidden aspect-[3/4] sm:aspect-[2/3]"
+                      >
+                        {/* Image */}
                         <img
-                          src={card.image}
+                          src={imgSrc}
                           alt={isAr ? card.title_ar : card.title_he}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
                         />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <span className="text-3xl opacity-30">🏗️</span>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Text */}
-                    <div className="p-4 text-center">
-                      <h3 className="text-sm font-bold text-gray-900 mb-2">
-                        {isAr ? card.title_ar : card.title_he}
-                      </h3>
-                      <span className="inline-block px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-full group-hover:bg-gray-700 transition-colors">
-                        {isAr ? card.button_ar : card.button_he}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 group-hover:from-black/60" />
+
+                        {/* Content */}
+                        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col items-center text-center gap-2.5">
+                          <h3 className="text-white text-base sm:text-lg font-bold leading-tight drop-shadow-lg">
+                            {isAr ? card.title_ar : card.title_he}
+                          </h3>
+                          <span className="inline-block px-5 py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-semibold rounded-full transition-all duration-300 group-hover:bg-white/30 group-hover:-translate-y-0.5">
+                            {isAr ? card.button_ar : card.button_he}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
