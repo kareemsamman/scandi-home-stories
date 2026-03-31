@@ -703,7 +703,7 @@ const Checkout = () => {
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
   /* ---------- discount block ---------- */
-  const discountBlockJSX = (
+  const discountBlockJSX = isSharedCart && adminDiscount > 0 ? null : (
     <div className="py-4">
       <CouponInput />
     </div>
