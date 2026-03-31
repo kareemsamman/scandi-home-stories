@@ -764,7 +764,13 @@ const Checkout = () => {
             />
           </div>
         )}
-        {adminDiscount > 0 && (
+        {adminDiscount > 0 && !adminOrderEnabled && (
+          <div className="flex justify-between text-sm">
+            <span className="text-amber-700 font-medium">{locale === "ar" ? "خصم إداري" : "הנחת מנהל"}</span>
+            <span className="font-semibold text-amber-700">-{t("common.currency")}{adminDiscount.toLocaleString()}</span>
+          </div>
+        )}
+        {adminDiscount > 0 && adminOrderEnabled && (
           <div className="flex justify-between text-sm">
             <span className="text-amber-700 font-medium">הנחה ידנית</span>
             <span className="font-semibold text-amber-700">-{t("common.currency")}{adminDiscount.toLocaleString()}</span>
