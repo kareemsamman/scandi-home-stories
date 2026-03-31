@@ -53,12 +53,13 @@ export const ProfileColorPopup = () => {
   // Get standard colors from the color taxonomy (admin/attributes)
   const standardColors = colorGroups || [];
 
+  // Auto-open popup only once per session if no color selected
+  const [autoShown, setAutoShown] = useState(false);
   useEffect(() => {
-    if (!enabled || selectedColor || standardColors.length === 0) return;
-    // Show popup after short delay if no color selected
-    const timer = setTimeout(() => setOpen(true), 800);
+    if (!enabled || selectedColor || standardColors.length === 0 || autoShown) return;
+    const timer = setTimeout(() => { setOpen(true); setAutoShown(true); }, 800);
     return () => clearTimeout(timer);
-  }, [enabled, selectedColor, standardColors.length]);
+  }, [enabled, selectedColor, standardColors.length, autoShown]);
 
   const getColorName = (color: any) => {
     if (isAr) return color.label_ar || color.name_ar || color.name?.ar || color.label_he || color.name_he || color.name?.he || color.name || "";
