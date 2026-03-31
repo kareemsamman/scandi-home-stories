@@ -46,7 +46,7 @@ export const ProfileColorPopup = () => {
   const { locale } = useLocale();
   const { data: colorGroups } = useColorTaxonomy();
   const { data: settings } = useProfileColorSettings();
-  const { selectedColor, setColor, clearColor } = useProfileColor();
+  const { selectedColor, hasChosen, setColor, clearColor } = useProfileColor();
   const [open, setOpen] = useState(false);
 
   const isAr = locale === "ar";
