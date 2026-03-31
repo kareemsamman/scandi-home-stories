@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Loader2, Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Upload } from "lucide-react";
 
 const db = supabase as any;
 
@@ -173,56 +173,113 @@ const AdminWelcomePopup = () => {
         </div>
 
         {settings.cards.map((card, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-500">بطاقة {i + 1}</span>
-              {settings.cards.length > 1 && (
-                <button onClick={() => removeCard(i)} className="text-red-400 hover:text-red-600">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="عنوان (عبري)">
-                <input value={card.title_he} onChange={e => updateCard(i, "title_he", e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
-              </Field>
-              <Field label="عنوان (عربي)">
-                <input value={card.title_ar} onChange={e => updateCard(i, "title_ar", e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
-              </Field>
-              <Field label="نص الزر (عبري)">
-                <input value={card.button_he} onChange={e => updateCard(i, "button_he", e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
-              </Field>
-              <Field label="نص الزر (عربي)">
-                <input value={card.button_ar} onChange={e => updateCard(i, "button_ar", e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
-              </Field>
-            </div>
-
-            <Field label="رابط الصفحة (مثال: /shop أو /shop?collection=fixed)">
-              <input value={card.link} onChange={e => updateCard(i, "link", e.target.value)}
-                className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs font-mono" dir="ltr" />
-            </Field>
-
-            <Field label="رابط الصورة (URL)">
-              <div className="flex gap-2">
-                <input value={card.image} onChange={e => updateCard(i, "image", e.target.value)}
-                  className="flex-1 h-8 px-3 rounded-lg border border-gray-200 text-xs font-mono" dir="ltr"
-                  placeholder="https://..." />
-                {card.image && (
-                  <img src={card.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-gray-200" />
-                )}
-              </div>
-            </Field>
-          </div>
+          <CardEditor
+            key={i}
+            card={card}
+            index={i}
+            total={settings.cards.length}
+            onUpdate={updateCard}
+            onRemove={removeCard}
+          />
         ))}
       </div>
     </div>
   );
 };
+
+/* ── Card Editor with image upload ── */
+
+function CardEditor({
+  card, index, total, onUpdate, onRemove,
+}: {
+  card: PopupCard;
+  index: number;
+  total: number;
+  onUpdate: (i: number, field: keyof PopupCard, value: string) => void;
+  onRemove: (i: number) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `popup/card-${index}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("site-media").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("site-media").getPublicUrl(path);
+      onUpdate(index, "image", urlData.publicUrl);
+      toast({ title: "تم رفع الصورة" });
+    } catch {
+      toast({ title: "فشل رفع الصورة", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-gray-500">بطاقة {index + 1}</span>
+        {total > 1 && (
+          <button onClick={() => onRemove(index)} className="text-red-400 hover:text-red-600">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="عنوان (عبري)">
+          <input value={card.title_he} onChange={e => onUpdate(index, "title_he", e.target.value)}
+            className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
+        </Field>
+        <Field label="عنوان (عربي)">
+          <input value={card.title_ar} onChange={e => onUpdate(index, "title_ar", e.target.value)}
+            className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
+        </Field>
+        <Field label="نص الزر (عبري)">
+          <input value={card.button_he} onChange={e => onUpdate(index, "button_he", e.target.value)}
+            className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
+        </Field>
+        <Field label="نص الزر (عربي)">
+          <input value={card.button_ar} onChange={e => onUpdate(index, "button_ar", e.target.value)}
+            className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs" dir="rtl" />
+        </Field>
+      </div>
+
+      <Field label="رابط الصفحة (مثال: /shop أو /shop?collection=fixed)">
+        <input value={card.link} onChange={e => onUpdate(index, "link", e.target.value)}
+          className="w-full h-8 px-3 rounded-lg border border-gray-200 text-xs font-mono" dir="ltr" />
+      </Field>
+
+      <Field label="صورة البطاقة">
+        <div className="flex gap-2 items-center">
+          <input value={card.image} onChange={e => onUpdate(index, "image", e.target.value)}
+            className="flex-1 h-8 px-3 rounded-lg border border-gray-200 text-xs font-mono" dir="ltr"
+            placeholder="https://... أو ارفع صورة" />
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="h-8 px-3 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            رفع
+          </button>
+          {card.image && (
+            <img src={card.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0" />
+          )}
+        </div>
+      </Field>
+    </div>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
