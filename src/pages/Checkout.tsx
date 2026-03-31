@@ -314,6 +314,7 @@ const Checkout = () => {
 
   // Load shared cart from ?cart=TOKEN (admin sent cart to customer)
   const { apply: applyCoupon } = useCouponStore();
+  const [isSharedCart, setIsSharedCart] = useState(false);
   useEffect(() => {
     const token = searchParams.get("cart");
     if (!token) return;
@@ -325,7 +326,14 @@ const Checkout = () => {
         if (Array.isArray(data.cart_items) && data.cart_items.length > 0) {
           setItems(data.cart_items);
         }
-        if (data.coupon_code) {
+
+        // If admin set a manual discount, apply it and remove any coupon
+        const sharedAdminDiscount = Number(data.admin_discount) || 0;
+        if (sharedAdminDiscount > 0) {
+          setAdminDiscount(sharedAdminDiscount);
+          removeCoupon(); // remove any existing coupon
+          setIsSharedCart(true);
+        } else if (data.coupon_code) {
           const cartForValidation = (data.cart_items as any[]).map((i: any) => ({
             product: { id: i.product.id, price: i.product.price, collection: i.product.collection },
             quantity: i.quantity,
@@ -695,7 +703,7 @@ const Checkout = () => {
   const fieldError = (name: keyof FormErrors) => touched[name] ? errors[name] : undefined;
 
   /* ---------- discount block ---------- */
-  const discountBlockJSX = (
+  const discountBlockJSX = isSharedCart && adminDiscount > 0 ? null : (
     <div className="py-4">
       <CouponInput />
     </div>
@@ -756,7 +764,13 @@ const Checkout = () => {
             />
           </div>
         )}
-        {adminDiscount > 0 && (
+        {adminDiscount > 0 && !adminOrderEnabled && (
+          <div className="flex justify-between text-sm">
+            <span className="text-amber-700 font-medium">{locale === "ar" ? "خصم إداري" : "הנחת מנהל"}</span>
+            <span className="font-semibold text-amber-700">-{t("common.currency")}{adminDiscount.toLocaleString()}</span>
+          </div>
+        )}
+        {adminDiscount > 0 && adminOrderEnabled && (
           <div className="flex justify-between text-sm">
             <span className="text-amber-700 font-medium">הנחה ידנית</span>
             <span className="font-semibold text-amber-700">-{t("common.currency")}{adminDiscount.toLocaleString()}</span>
@@ -1004,7 +1018,7 @@ const Checkout = () => {
   /* ---------- FORM STEP ---------- */
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>
-      <SendCartModal open={showSendCartModal} onClose={() => setShowSendCartModal(false)} />
+      <SendCartModal open={showSendCartModal} onClose={() => setShowSendCartModal(false)} adminDiscount={adminDiscount} />
 
       <header className="sticky top-0 z-30" style={{ backgroundColor: "rgb(242,242,242)", borderBottom: "1px solid rgb(210,210,210)" }}>
         <div className="max-w-[1200px] mx-auto flex items-center justify-between px-6 md:px-10" style={{ height: 76 }}>
