@@ -231,6 +231,7 @@ const Checkout = () => {
   // Payment step state
   const [step, setStep] = useState<"form" | "payment">("form");
   const [orderNumber] = useState(generateOrderNumber);
+  const [payMethod, setPayMethod] = useState<"credit_card" | "bit" | "apple_pay" | "google_pay">("credit_card");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [isPayLater, setIsPayLater] = useState(false);
@@ -834,6 +835,7 @@ const Checkout = () => {
             orderNumber={orderNumber}
             customerEmail={form.email}
             customerPhone={form.phone}
+            paymentMethod={payMethod}
             onSuccess={async (result) => {
               setIsSubmittingReceipt(true);
               try {
@@ -1113,30 +1115,47 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Payment Method — Tranzila */}
+                {/* Payment Methods */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.paymentMethod")}</h2>
-                  <div className="rounded-xl border-2 border-foreground bg-white p-4 flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                        <line x1="1" y1="10" x2="23" y2="10" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold">{locale === "ar" ? "بطاقة ائتمان" : "כרטיס אשראי"}</p>
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-foreground bg-foreground/8 border border-foreground/20 rounded-full px-2 py-0.5">
-                          <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 6l3 3 5-5" />
-                          </svg>
-                          {t("checkout.selected") || "נבחר"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {locale === "ar" ? "الدفع الآمن عبر بطاقة الائتمان — Visa, Mastercard, Isracard" : "תשלום מאובטח בכרטיס אשראי — Visa, Mastercard, Isracard"}
-                      </p>
-                    </div>
+                  <div className="space-y-2">
+                    {/* Credit Card */}
+                    <PayMethodBtn
+                      active={payMethod === "credit_card"}
+                      onClick={() => setPayMethod("credit_card")}
+                      icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>}
+                      title={locale === "ar" ? "بطاقة ائتمان" : "כרטיס אשראי"}
+                      desc="Visa · Mastercard · Isracard · Amex"
+                      color="bg-blue-600"
+                    />
+                    {/* Bit */}
+                    <PayMethodBtn
+                      active={payMethod === "bit"}
+                      onClick={() => setPayMethod("bit")}
+                      icon={<span className="text-sm font-black">bit</span>}
+                      title="Bit"
+                      desc={locale === "ar" ? "الدفع عبر تطبيق Bit" : "תשלום דרך אפליקציית Bit"}
+                      color="bg-[#00C4B3]"
+                    />
+                    {/* Apple Pay */}
+                    <PayMethodBtn
+                      active={payMethod === "apple_pay"}
+                      onClick={() => setPayMethod("apple_pay")}
+                      icon={<svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C4.24 16.7 4.89 10.33 8.7 10.12c1.14.05 1.94.63 2.6.67.99-.2 1.96-.77 3.01-.7 1.28.1 2.25.6 2.88 1.5-2.64 1.58-2.01 5.04.36 6.01-.47 1.24-.68 1.8-1.5 2.68zM12.05 10.07c-.14-2.24 1.74-4.2 3.95-4.38.29 2.6-2.34 4.53-3.95 4.38z"/></svg>}
+                      title="Apple Pay"
+                      desc={locale === "ar" ? "الدفع عبر Apple Pay" : "תשלום עם Apple Pay"}
+                      color="bg-black"
+                    />
+                    {/* Google Pay */}
+                    <PayMethodBtn
+                      active={payMethod === "google_pay"}
+                      onClick={() => setPayMethod("google_pay")}
+                      icon={<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none"><path d="M12.24 10.28V14.1h5.35c-.24 1.42-.89 2.62-1.88 3.43l3.04 2.36c1.77-1.64 2.8-4.05 2.8-6.91 0-.67-.06-1.31-.17-1.93H12.24z" fill="#4285F4"/><path d="M5.27 14.29l-.68.51-2.4 1.87C3.94 19.65 7.7 21.58 12 21.58c2.7 0 4.96-.89 6.62-2.42l-3.04-2.36c-.89.6-2.04.96-3.58.96-2.75 0-5.08-1.86-5.91-4.35l-.82.88z" fill="#34A853"/><path d="M2.19 6.81C1.44 8.29 1 9.97 1 11.79s.44 3.5 1.19 4.98l3.09-2.38c-.19-.56-.3-1.16-.3-1.79s.11-1.23.3-1.79L2.19 6.81z" fill="#FBBC05"/><path d="M12 5.38c1.55 0 2.94.53 4.04 1.58l3.01-3.01C17.04 2.15 14.7 1 12 1 7.7 1 3.94 2.93 2.19 5.91l3.09 2.38C6.11 6.3 8.44 5.38 12 5.38z" fill="#EA4335"/></svg>}
+                      title="Google Pay"
+                      desc={locale === "ar" ? "الدفع عبر Google Pay" : "תשלום עם Google Pay"}
+                      color="bg-white border-2 border-gray-200"
+                      dark
+                    />
                   </div>
                 </div>
 
@@ -1206,5 +1225,31 @@ const Checkout = () => {
     </div>
   );
 };
+
+function PayMethodBtn({ active, onClick, icon, title, desc, color, dark }: {
+  active: boolean; onClick: () => void; icon: React.ReactNode; title: string; desc: string; color: string; dark?: boolean;
+}) {
+  return (
+    <button onClick={onClick} className={`w-full rounded-xl border-2 p-3.5 flex items-center gap-3.5 transition-all text-start ${
+      active ? "border-foreground bg-white shadow-sm" : "border-border/60 bg-white/60 hover:border-border"
+    }`}>
+      <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center shrink-0 ${dark ? "text-gray-700" : "text-white"}`}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">{title}</p>
+        <p className="text-[11px] text-muted-foreground">{desc}</p>
+      </div>
+      {active && (
+        <div className="w-5 h-5 rounded-full bg-foreground flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 6l3 3 5-5" />
+          </svg>
+        </div>
+      )}
+      {!active && <div className="w-5 h-5 rounded-full border-2 border-border shrink-0" />}
+    </button>
+  );
+}
 
 export default Checkout;
