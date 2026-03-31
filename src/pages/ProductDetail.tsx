@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead, getProductSchema, getBreadcrumbSchema, getOrganizationSchema } from "@/components/SEOHead";
+import { useProfileColor } from "@/components/ProfileColorPicker";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
