@@ -153,7 +153,7 @@ export const ProfileColorPopup = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-[11.5rem] left-6 z-[49] group"
+          className="fixed bottom-[14rem] left-6 z-[49] group"
         >
           <button
             onClick={() => { setColor(null); setOpen(true); }}
