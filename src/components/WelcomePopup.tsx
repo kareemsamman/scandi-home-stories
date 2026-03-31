@@ -100,7 +100,7 @@ export const WelcomePopup = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden"
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
           >
             {/* Close */}
             <button
@@ -111,20 +111,61 @@ export const WelcomePopup = () => {
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-6 pb-3 text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+            <div className="px-5 pt-5 pb-2 sm:px-6 sm:pt-6 sm:pb-3 text-center">
+              <h2 className="text-lg sm:text-2xl font-bold text-foreground">
                 {isAr ? config.title_ar : config.title_he}
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                 {isAr ? config.subtitle_ar : config.subtitle_he}
               </p>
             </div>
 
-            {/* Cards grid */}
-            <div className="px-4 pb-5">
-              <div className={`grid gap-3 ${
-                config.cards.length === 3 ? "grid-cols-1 sm:grid-cols-3" :
-                config.cards.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+            {/* Cards grid — horizontal scroll on mobile, grid on desktop */}
+            <div className="px-3 pb-4 sm:px-4 sm:pb-5">
+              {/* Mobile: horizontal scroll */}
+              <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pb-2 sm:hidden scrollbar-hide"
+                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                {config.cards.map((card, i) => {
+                  const imgSrc = card.image || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.15 + i * 0.1, duration: 0.45, ease: "easeOut" }}
+                      className="flex-shrink-0 snap-center"
+                      style={{ width: "calc(100vw - 64px)", maxWidth: "280px" }}
+                    >
+                      <Link
+                        to={localePath(card.link)}
+                        onClick={close}
+                        className="group relative block rounded-xl overflow-hidden aspect-[4/5]"
+                      >
+                        <img
+                          src={imgSrc}
+                          alt={isAr ? card.title_ar : card.title_he}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-3.5 flex flex-col items-center text-center gap-2">
+                          <h3 className="text-white text-sm font-bold leading-tight drop-shadow-lg">
+                            {isAr ? card.title_ar : card.title_he}
+                          </h3>
+                          <span className="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-semibold rounded-full">
+                            {isAr ? card.button_ar : card.button_he}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: grid */}
+              <div className={`hidden sm:grid gap-3 ${
+                config.cards.length === 3 ? "grid-cols-3" :
+                config.cards.length === 2 ? "grid-cols-2" :
                 "grid-cols-1 max-w-sm mx-auto"
               }`}>
                 {config.cards.map((card, i) => {
@@ -139,22 +180,17 @@ export const WelcomePopup = () => {
                       <Link
                         to={localePath(card.link)}
                         onClick={close}
-                        className="group relative block rounded-xl overflow-hidden aspect-[3/4] sm:aspect-[2/3]"
+                        className="group relative block rounded-xl overflow-hidden aspect-[2/3]"
                       >
-                        {/* Image */}
                         <img
                           src={imgSrc}
                           alt={isAr ? card.title_ar : card.title_he}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           loading="lazy"
                         />
-
-                        {/* Gradient overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 group-hover:from-black/60" />
-
-                        {/* Content */}
-                        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col items-center text-center gap-2.5">
-                          <h3 className="text-white text-base sm:text-lg font-bold leading-tight drop-shadow-lg">
+                        <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col items-center text-center gap-2.5">
+                          <h3 className="text-white text-lg font-bold leading-tight drop-shadow-lg">
                             {isAr ? card.title_ar : card.title_he}
                           </h3>
                           <span className="inline-block px-5 py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-semibold rounded-full transition-all duration-300 group-hover:bg-white/30 group-hover:-translate-y-0.5">
