@@ -86,7 +86,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     if (!open || !profileColor || selectedColor) return;
     const match = standardColors.find((c: any) => c.id === profileColor.id || c.tax_id === profileColor.id);
     if (match) {
-      setSelectedColor({ id: match.id || match.tax_id, name: profileColor.name, hex: match.hex });
+      setSelectedColor({ id: match.id || (match as any).tax_id, name: profileColor.name, hex: match.hex });
     }
   }, [open, profileColor, standardColors.length]);
 

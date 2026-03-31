@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Palette, Check } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
-import { useColorGroups } from "@/hooks/useDbData";
+import { useColorTaxonomy } from "@/hooks/useProductTaxonomy";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
