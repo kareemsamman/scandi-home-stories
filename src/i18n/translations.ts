@@ -536,7 +536,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       frontPosts: 'עמודים קדמיים',
       backPosts: 'עמודים אחוריים',
       profileRafter: 'פרופיל רפטר',
-      profileCarrierPost: 'פרופיל עמוד נשא',
+      profileCarrierPost: 'פרופיל עמוד קורת חלוקה',
       profileFabricMaster: 'פרופיל בד ראשי',
       preview: 'תצוגה מקדימה',
       topView: 'מבט עליון',
