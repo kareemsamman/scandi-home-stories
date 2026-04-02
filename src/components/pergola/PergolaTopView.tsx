@@ -13,7 +13,8 @@ export const PergolaTopView = ({ config }: Props) => {
   const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
-  const carrierPositions = calcCarrierPositions(lengthMm, specs.carrierCount);
+  // Carriers are vertical lines distributed along the WIDTH axis
+  const carrierPositions = calcCarrierPositions(widthMm, specs.carrierCount);
 
   const vw = widthMm + PAD * 2;
   const vh = lengthMm + PAD * 2;
