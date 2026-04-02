@@ -159,11 +159,16 @@ export function getSlatProfileHeight(slatSize: string): number {
   return 70;
 }
 
+/** Frame deduction: 9cm (90mm) total for frame profiles on both sides */
+const FRAME_DEDUCTION_MM = 90;
+
 export function calcSlatCount(widthMm: number, gapMm: number, slatSize?: string): number {
   if (gapMm <= 0) return 0;
-  const slatW = getSlatProfileWidth(slatSize || "20x70");
-  const totalUnit = slatW + gapMm;
-  return Math.max(2, Math.floor(widthMm / totalUnit));
+  const usableWidth = widthMm - FRAME_DEDUCTION_MM;
+  if (usableWidth <= 0) return 0;
+  const slatH = getSlatProfileHeight(slatSize || "20x70");
+  const totalUnit = slatH + gapMm;
+  return Math.max(2, Math.floor(usableWidth / totalUnit));
 }
 
 export function calcSlatGapFromCount(widthMm: number, count: number, slatSize?: string): number {
