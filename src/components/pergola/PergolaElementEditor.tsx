@@ -192,9 +192,9 @@ export const PergolaElementEditor = () => {
         {/* Slat size */}
         <Label>גודל פרופיל שלב</Label>
         <div className="flex gap-1.5 mb-2">
-          {SLAT_SIZES.map((s) => (
+           {SLAT_SIZES.map((s) => (
             <ToggleBtn key={s.id} active={cc.slatSize === s.id}
-              onClick={() => setCarrierConfig(secIdx, { slatSize: s.id as SlatSizeId, slatCount: 0 })} label={s.label} />
+              onClick={() => setCarrierConfig(secIdx, { slatSize: s.id as SlatSizeId })} label={s.label} />
           ))}
         </div>
 
