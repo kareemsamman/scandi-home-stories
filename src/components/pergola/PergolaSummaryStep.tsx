@@ -102,23 +102,22 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
 
       </div>
 
-      {/* Parts section */}
       {/* Per-carrier details */}
       {config.pergolaType === "fixed" && config.roofFillMode === "slats" && carrierConfigs.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-lg font-bold text-gray-900">{t("pergolaRequest.slatsPerCarrier")}</h3>
           <div className="grid sm:grid-cols-2 gap-3">
             {carrierConfigs.map((cc, i) => {
-              const count = calcSlatCount(cmToMm(Number(config.widthCm) || 400), cc.slatGapCm * 10, cc.slatSize);
+              const count = calcSlatCount(cmToMm(Number(config.lengthCm) || 400), cc.slatGapCm * 10, cc.slatSize);
               return (
                 <div key={i} className="bg-white rounded-xl border border-gray-100 p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-800">נשא {i + 1}</span>
+                    <span className="text-sm font-semibold text-gray-800">חלוקה {i + 1}</span>
                     <span className="w-5 h-5 rounded border border-gray-200" style={{ backgroundColor: cc.slatColor }} />
                   </div>
                   <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatsLabel")}</span><span className="font-medium text-gray-700">{count}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatSizeLabel")}</span><span className="font-medium text-gray-700">{cc.slatSize === "20x40" ? "20×40 mm" : "20×70 mm"}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatSizeLabel")}</span><span className="font-medium text-gray-700">{cc.slatSize === "20x40" ? "20×40 mm" : cc.slatSize === "20x100" ? "20×100 mm" : "20×70 mm"}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.slatGap")}</span><span className="font-medium text-gray-700">{cc.slatGapCm} cm</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">{t("pergolaRequest.lighting")}</span><span className="font-medium text-gray-700">{cc.lightingEnabled ? cc.lighting?.toUpperCase() : t("pergolaRequest.lightingNone")}</span></div>
                   </div>
