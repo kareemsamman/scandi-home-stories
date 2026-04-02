@@ -1093,7 +1093,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       colors: 'الألوان',
       frameColor: 'لون الإطار',
       roofColor: 'لون السقف / القماش',
-      spacing: 'المسافة بين الحوامل',
+      spacing: 'المسافة بين قوارص التقسيم',
       spacingAutomatic: 'تلقائي',
       spacingDense: 'كثيف',
       spacingStandard: 'عادي',
