@@ -160,13 +160,16 @@ export const PergolaElementEditor = () => {
   if (selected.type === "carrier") {
     const secIdx = selected.index;
     const { carrierConfigs, setCarrierConfig } = usePergolaConfigurator.getState();
-    const cc = carrierConfigs[secIdx];
+    const sectionCount = carrierConfigs.length;
+    const logicalIdx = Math.max(0, Math.min(sectionCount - 1, sectionCount - 1 - secIdx));
+    const displayNum = logicalIdx + 1;
+    const cc = carrierConfigs[logicalIdx];
     const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
 
     if (!isFixedSlats || !cc) {
       // Fallback: just show spacing controls if not fixed slats
       return (
-        <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1}`}>
+        <Panel onClose={close} title={`חלוקה ${displayNum}`}>
           <Label>מרווח בין קורות חלוקה</Label>
           <div className="grid grid-cols-2 gap-1.5">
             {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
@@ -184,7 +187,7 @@ export const PergolaElementEditor = () => {
     const secSlatCount = autoSlatCount;
 
     return (
-      <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1} — ${secSlatCount} שלבים`}>
+      <Panel onClose={close} title={`חלוקה ${displayNum} — ${secSlatCount} שלבים`}>
         {/* Slat count — auto-calculated, read-only */}
         <Label>כמות שלבים</Label>
         <p className="text-sm font-medium text-gray-700 mb-2">{secSlatCount}</p>
@@ -194,7 +197,7 @@ export const PergolaElementEditor = () => {
         <div className="flex gap-1.5 mb-2">
            {SLAT_SIZES.map((s) => (
             <ToggleBtn key={s.id} active={cc.slatSize === s.id}
-              onClick={() => setCarrierConfig(secIdx, { slatSize: s.id as SlatSizeId })} label={s.label} />
+              onClick={() => setCarrierConfig(logicalIdx, { slatSize: s.id as SlatSizeId })} label={s.label} />
           ))}
         </div>
 
@@ -203,23 +206,23 @@ export const PergolaElementEditor = () => {
         <div className="flex gap-1.5 mb-2">
           {gapPresets.map((g) => (
             <ToggleBtn key={g} active={cc.slatGapCm === g}
-              onClick={() => setCarrierConfig(secIdx, { slatGapCm: g })} label={`${g}`} />
+              onClick={() => setCarrierConfig(logicalIdx, { slatGapCm: g })} label={`${g}`} />
           ))}
         </div>
 
         {/* Color */}
         <Label>צבע שלבים</Label>
         <ColorPicker value={cc.slatColor} colors={SLAT_COLORS} locale={locale}
-          onChange={(hex) => setCarrierConfig(secIdx, { slatColor: hex })} />
+          onChange={(hex) => setCarrierConfig(logicalIdx, { slatColor: hex })} />
 
         {/* Lighting */}
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <Label>תאורה בקורת חלוקה</Label>
+          <Label>תאורה בחלוקה</Label>
           <div className="flex gap-1.5">
-            <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(secIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
+            <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
             {LIGHTING_TEMPS.map((lt) => (
               <ToggleBtn key={lt.id} active={cc.lightingEnabled && cc.lighting === lt.id}
-                onClick={() => setCarrierConfig(secIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
+                onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
             ))}
           </div>
         </div>

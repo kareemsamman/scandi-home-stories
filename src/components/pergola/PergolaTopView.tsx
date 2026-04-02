@@ -165,7 +165,7 @@ export const PergolaTopView = ({ config }: Props) => {
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
                   fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
-                  קורת חלוקה {displayNum} — {secSlatCount} שלבים
+                  חלוקה {displayNum} — {secSlatCount} שלבים
                 </text>
               )}
             </g>

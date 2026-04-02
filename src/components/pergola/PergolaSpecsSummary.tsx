@@ -79,7 +79,7 @@ export const PergolaSpecsSummary = () => {
           <div className="space-y-1">
             {carrierConfigs.map((cc, i) => {
               const count = calcSlatCount(lengthMm, cc.slatGapCm * 10, cc.slatSize);
-              const displayNum = carrierConfigs.length - i;
+              const displayNum = i + 1;
               return (
                 <div key={i} className="flex items-center justify-between text-[11px]">
                   <span className="text-gray-400 flex items-center gap-1.5">
