@@ -1111,7 +1111,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       moduleDouble: 'مزدوجة',
       moduleTriple: 'ثلاثية',
       moduleCustom: 'يتطلب مراجعة',
-      carriers: 'الحوامل',
+      carriers: 'قوارص التقسيم',
       posts: 'الأعمدة',
       frontPosts: 'أعمدة أمامية',
       backPosts: 'أعمدة خلفية',
