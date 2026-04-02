@@ -335,7 +335,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                   <>
                     <SpecRow label={`${t("pergolaRequest.slatsLabel")} (${t("pergolaRequest.summaryTitle")})`} value={String(totalSlats)} />
                      {perSec.map((c, i) => {
-                      const displayNum = perSec.length - i;
+                      const displayNum = i + 1;
                       return (
                         <div key={i} className="flex justify-between text-[10px]">
                           <span className="text-gray-300 flex items-center gap-1">
