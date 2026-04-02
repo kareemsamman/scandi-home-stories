@@ -31,7 +31,7 @@ export const PergolaPartsSection = () => {
   if (!specs) return null;
 
   const pergolaType = config.pergolaType || "fixed";
-  const visibleParts = PARTS.filter((p) => p.showFor.includes(pergolaType as any));
+  const visibleParts = pergolaType === "fixed" ? PARTS_FIXED : PARTS_PVC;
 
   return (
     <div className="space-y-4">
