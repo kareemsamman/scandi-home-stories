@@ -119,10 +119,11 @@ export const PergolaTopView = ({ config }: Props) => {
           const x2 = carrierPositions[secIdx + 1];
           const secW = x2 - x1;
 
-          // Slats run horizontally (across the section width), distributed along the length axis
-          const autoCount = Math.max(1, Math.floor((lengthMm - secGapMm) / (slatH + secGapMm)));
-          const secSlatCount = (cc?.slatCount && cc.slatCount > 0) ? cc.slatCount : autoCount;
-          const actualGap = secSlatCount > 0 ? (lengthMm - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
+          // Slats run horizontally, counted along length (אורך) with 90mm frame deduction
+          const usableLength = lengthMm - 90; // FRAME_DEDUCTION_MM
+          const autoCount = Math.max(1, Math.floor(usableLength / (slatH + secGapMm)));
+          const secSlatCount = autoCount;
+          const actualGap = secSlatCount > 0 ? (usableLength - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
 
           const el: SelectedElement = { type: "carrier", index: secIdx };
           const isSel = isSelected(el);
