@@ -247,7 +247,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                     <label className="text-[10px] text-gray-400">{t("pergolaRequest.slatSizeLabel")}</label>
                     <div className="flex gap-1 mt-0.5">
                       {SLAT_SIZES.map((s) => (
-                        <button key={s.id} onClick={() => setConfig({ slatSize: s.id as any, slatCount: 0 })}
+                        <button key={s.id} onClick={() => setConfig({ slatSize: s.id as any })}
                           className={`flex-1 py-1 rounded-md text-[9px] font-medium border-2 transition-all ${
                             (config.slatSize || "20x70") === s.id ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                           }`}>{s.label}</button>
