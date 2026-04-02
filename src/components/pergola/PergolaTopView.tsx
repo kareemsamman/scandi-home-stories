@@ -51,6 +51,17 @@ export const PergolaTopView = ({ config }: Props) => {
     <svg viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full cursor-default" style={{ maxHeight: 460 }}
       onClick={() => select(null)}>
 
+      {/* SVG filters for shadows and glows */}
+      <defs>
+        <filter id="slatShadow" x="-2%" y="-2%" width="104%" height="110%">
+          <feDropShadow dx="0" dy={Math.max(3, sw * 0.4)} stdDeviation={Math.max(2, sw * 0.3)} floodColor="#000" floodOpacity="0.12" />
+        </filter>
+        <filter id="selectionGlow" x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
       {/* Santaf overlay — clickable */}
       {santaf === "with" && (
         <rect x={ox} y={oy} width={widthMm} height={lengthMm}
@@ -69,9 +80,9 @@ export const PergolaTopView = ({ config }: Props) => {
         onMouseEnter={handleHover({ type: "roof", index: -1 })}
         onMouseLeave={handleHover(null)} />
 
-      {/* Frame outline — clickable */}
+      {/* Frame outline — thicker, prominent */}
       <rect x={ox} y={oy} width={widthMm} height={lengthMm}
-        fill="none" stroke={selStroke({ type: "frame", index: -1 }) || frameColor || "#383838"} strokeWidth={sw * 1.5} rx={4}
+        fill="none" stroke={selStroke({ type: "frame", index: -1 }) || frameColor || "#383838"} strokeWidth={sw * 2.5} rx={6}
         className="cursor-pointer"
         onClick={handleClick({ type: "frame", index: -1 })}
         onMouseEnter={handleHover({ type: "frame", index: -1 })}
@@ -90,17 +101,21 @@ export const PergolaTopView = ({ config }: Props) => {
           return acc;
         }, []).map((xOff, i) => (
           <line key={`mod-${i}`} x1={ox + xOff} y1={oy} x2={ox + xOff} y2={oy + lengthMm}
-            stroke={frameColor || "#383838"} strokeWidth={sw} strokeDasharray="50 25" />
+            stroke="#D1D5DB" strokeWidth={sw * 0.4} strokeDasharray="30 20" opacity={0.5} />
         ))}
 
-      {/* Carriers — vertical lines along width, clickable */}
+      {/* Carriers (קורות חלוקה) — structural beams, thicker than slats, lighter color */}
       {carrierPositions.map((x, i) => (
         <g key={`car-${i}`}>
-          <line x1={ox + x} y1={oy + 20} x2={ox + x} y2={oy + lengthMm - 20}
-            stroke={selStroke({ type: "carrier", index: i }) || "#9CA3AF"} strokeWidth={isSelected({ type: "carrier", index: i }) ? sw * 1.2 : sw * 0.6} />
-          {/* Invisible wider hit target */}
-          <line x1={ox + x} y1={oy + 20} x2={ox + x} y2={oy + lengthMm - 20}
-            stroke="transparent" strokeWidth={sw * 3}
+          {/* Beam shadow */}
+          <line x1={ox + x + 2} y1={oy + 15} x2={ox + x + 2} y2={oy + lengthMm - 15}
+            stroke="#000" strokeWidth={sw * 1.8} opacity={0.06} />
+          {/* Beam body — thicker, structural look */}
+          <line x1={ox + x} y1={oy + 10} x2={ox + x} y2={oy + lengthMm - 10}
+            stroke={selStroke({ type: "carrier", index: i }) || "#B0B8C1"} strokeWidth={sw * 1.5} strokeLinecap="round" />
+          {/* Hit target */}
+          <line x1={ox + x} y1={oy + 10} x2={ox + x} y2={oy + lengthMm - 10}
+            stroke="transparent" strokeWidth={sw * 4}
             className="cursor-pointer"
             onClick={handleClick({ type: "carrier", index: i })}
             onMouseEnter={handleHover({ type: "carrier", index: i })}
@@ -143,28 +158,35 @@ export const PergolaTopView = ({ config }: Props) => {
               onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
               {/* Hit target */}
               <rect x={ox + x1} y={oy} width={secW} height={lengthMm} fill="transparent" />
-              {/* Selection highlight */}
+              {/* Selection — soft glow instead of harsh border */}
               {(isSel || isHov) && (
-                <rect x={ox + x1 + 3} y={oy + 3} width={secW - 6} height={lengthMm - 6}
-                  fill={isSel ? "#2563EB" : "#93C5FD"} fillOpacity={0.06}
-                  stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={4} rx={4}
-                  strokeDasharray={isSel ? undefined : "12 6"} />
+                <rect x={ox + x1 + 2} y={oy + 2} width={secW - 4} height={lengthMm - 4}
+                  fill={isSel ? "#3B82F6" : "#93C5FD"} fillOpacity={isSel ? 0.08 : 0.04}
+                  stroke={isSel ? "#3B82F6" : "#93C5FD"} strokeWidth={3} rx={6}
+                  opacity={0.7} filter="url(#selectionGlow)" />
               )}
-              {/* Slats — horizontal bars within each vertical section */}
+              {/* Slats — horizontal bars with shadow and alternating depth */}
               {Array.from({ length: secSlatCount }, (_, i) => {
                 const yPos = actualGap + i * (slatH + actualGap);
+                // Alternating subtle tone for depth
+                const toneShift = i % 2 === 0 ? 0 : 0.06;
                 return (
-                  <rect key={`slat-${secIdx}-${i}`}
-                    x={ox + x1 + 6} y={oy + yPos} width={secW - 12} height={slatH}
-                    fill={secColor} fillOpacity={0.8} rx={1} />
+                  <g key={`slat-${secIdx}-${i}`}>
+                    {/* Shadow under each slat */}
+                    <rect x={ox + x1 + 7} y={oy + yPos + 2} width={secW - 14} height={slatH}
+                      fill="#000" fillOpacity={0.08} rx={2} />
+                    {/* Slat body */}
+                    <rect x={ox + x1 + 6} y={oy + yPos} width={secW - 12} height={slatH}
+                      fill={secColor} fillOpacity={0.85 - toneShift} rx={2} />
+                  </g>
                 );
               })}
-              {/* Section label on hover/select */}
+              {/* Section label on hover/select — subtle */}
               {(isSel || isHov) && (
                 <text x={ox + x1 + secW / 2} y={oy + lengthMm / 2}
                   textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
-                  fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
+                  fontSize={fontSize * 0.45} fill={isSel ? "#3B82F6" : "#6B7280"}
+                  fontFamily="sans-serif" fontWeight="600" opacity={0.7}>
                   חלוקה {displayNum} — {secSlatCount} שלבים
                 </text>
               )}

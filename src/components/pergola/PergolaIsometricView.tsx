@@ -60,6 +60,22 @@ export const PergolaIsometricView = ({ config }: Props) => {
     <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full cursor-default" style={{ maxHeight: 460 }}
       onClick={() => select(null)}>
 
+      {/* Ground shadow — anchors the pergola visually */}
+      {(() => {
+        const gPts = [
+          toIso(-widthMm * 0.02, widthMm * 0.05, 0),
+          toIso(widthMm * 1.02, widthMm * 0.05, 0),
+          toIso(widthMm * 1.02, lengthMm * 1.02, 0),
+          toIso(-widthMm * 0.02, lengthMm * 1.02, 0),
+        ];
+        return (
+          <polygon
+            points={gPts.map(p => `${p[0]},${p[1]}`).join(" ")}
+            fill="#000" fillOpacity={0.04}
+          />
+        );
+      })()}
+
       {/* Santaf overlay — clickable */}
       {santaf === "with" && (() => {
         const el: SelectedElement = { type: "santaf", index: -1 };
@@ -148,15 +164,15 @@ export const PergolaIsometricView = ({ config }: Props) => {
         {isoLine(0, lengthMm, heightMm * 1.08, widthMm, lengthMm, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-t")}
       </>}
 
-      {/* Top frame edges */}
-      {isoLine(0, 0, heightMm, widthMm, 0, heightMm, frameColor || "#383838", sw * 1.5, "tf")}
-      {isoLine(0, lengthMm, heightMm, widthMm, lengthMm, heightMm, frameColor || "#383838", sw * 1.5, "tb")}
-      {isoLine(0, 0, heightMm, 0, lengthMm, heightMm, frameColor || "#383838", sw * 1.5, "tl")}
-      {isoLine(widthMm, 0, heightMm, widthMm, lengthMm, heightMm, frameColor || "#383838", sw * 1.5, "tr")}
+      {/* Top frame edges — thicker, prominent */}
+      {isoLine(0, 0, heightMm, widthMm, 0, heightMm, frameColor || "#383838", sw * 2.5, "tf")}
+      {isoLine(0, lengthMm, heightMm, widthMm, lengthMm, heightMm, frameColor || "#383838", sw * 2.5, "tb")}
+      {isoLine(0, 0, heightMm, 0, lengthMm, heightMm, frameColor || "#383838", sw * 2.5, "tl")}
+      {isoLine(widthMm, 0, heightMm, widthMm, lengthMm, heightMm, frameColor || "#383838", sw * 2.5, "tr")}
 
-      {/* Carriers — vertical lines along width at X positions, spanning the full length (Y axis) */}
+      {/* Carriers (קורות חלוקה) — structural beams, lighter but thicker */}
       {carrierPositions.map((x, i) =>
-        isoLine(x, 0, heightMm, x, lengthMm, heightMm, "#9CA3AF", sw * 0.7, `car-${i}`, "25 12")
+        isoLine(x, 0, heightMm, x, lengthMm, heightMm, "#C0C7CF", sw * 1.2, `car-${i}`)
       )}
 
       {/* Internal slats (fixed pergola, slat mode) — HORIZONTAL bars spanning width, distributed along length */}
@@ -198,11 +214,11 @@ export const PergolaIsometricView = ({ config }: Props) => {
           return <circle key={`lt-${i}`} cx={cx} cy={cy} r={Math.max(12, widthMm * 0.005)} fill={lightingColor(lighting)} stroke="#666" strokeWidth={2} opacity={0.8} />;
         })}
 
-      {/* Ground frame */}
-      {isoLine(0, 0, 0, widthMm, 0, 0, "#D1D5DB", sw * 0.6, "bf", "18 10")}
-      {isoLine(0, lengthMm, 0, widthMm, lengthMm, 0, "#D1D5DB", sw * 0.6, "bb", "18 10")}
-      {isoLine(0, 0, 0, 0, lengthMm, 0, "#D1D5DB", sw * 0.6, "bl", "18 10")}
-      {isoLine(widthMm, 0, 0, widthMm, lengthMm, 0, "#D1D5DB", sw * 0.6, "br", "18 10")}
+      {/* Ground frame — very subtle */}
+      {isoLine(0, 0, 0, widthMm, 0, 0, "#E5E7EB", sw * 0.4, "bf", "12 8")}
+      {isoLine(0, lengthMm, 0, widthMm, lengthMm, 0, "#E5E7EB", sw * 0.4, "bb", "12 8")}
+      {isoLine(0, 0, 0, 0, lengthMm, 0, "#E5E7EB", sw * 0.4, "bl", "12 8")}
+      {isoLine(widthMm, 0, 0, widthMm, lengthMm, 0, "#E5E7EB", sw * 0.4, "br", "12 8")}
     </svg>
   );
 };

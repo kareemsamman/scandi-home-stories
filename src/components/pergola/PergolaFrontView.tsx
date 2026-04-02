@@ -72,15 +72,21 @@ export const PergolaFrontView = ({ config }: Props) => {
         );
       })()}
 
-      {/* Top beam — frame click target */}
+      {/* Top beam — frame, with drop shadow */}
       {(() => {
         const el: SelectedElement = { type: "frame", index: -1 };
         const isSel = isSelected(el);
         return (
-          <rect x={ox} y={groundY - heightMm - beamH} width={widthMm} height={beamH}
-            fill={frameColor || "#383838"} stroke={isSel ? "#2563EB" : "#1F2937"} strokeWidth={isSel ? 6 : sw} rx={3}
-            className="cursor-pointer"
-            onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
+          <>
+            {/* Beam shadow */}
+            <rect x={ox + 4} y={groundY - heightMm - beamH + 5} width={widthMm} height={beamH}
+              fill="#000" fillOpacity={0.08} rx={4} />
+            {/* Beam body */}
+            <rect x={ox} y={groundY - heightMm - beamH} width={widthMm} height={beamH}
+              fill={frameColor || "#383838"} stroke={isSel ? "#3B82F6" : "#1F2937"} strokeWidth={isSel ? 5 : sw * 1.2} rx={4}
+              className="cursor-pointer"
+              onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
+          </>
         );
       })()}
 
