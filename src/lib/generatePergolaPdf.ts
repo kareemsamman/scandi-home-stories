@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { PergolaSpecs } from "@/types/pergola";
+import { calcSlatCount, getSlatProfileHeight } from "./pergolaRules";
 
 export interface PdfInput {
   customerName: string;
@@ -29,7 +30,7 @@ export interface PdfInput {
 
 export interface PdfImageEntry {
   data: string;
-  ratio: number; // width / height
+  ratio: number;
 }
 
 export interface PdfImages {
@@ -38,15 +39,11 @@ export interface PdfImages {
   front?: PdfImageEntry;
 }
 
-const TYPE_EN: Record<string, string> = { fixed: "Fixed Pergola", pvc: "PVC Pergola" };
-const MOUNT_EN: Record<string, string> = { wall: "Wall-Mounted", freestanding: "Freestanding" };
-const MODULE_EN: Record<string, string> = { single: "Single Module", double: "Double Module", triple: "Triple Module", custom: "Custom Review" };
-
 export interface CapturedImage {
-  data: string; // base64 PNG
+  data: string;
   width: number;
   height: number;
-  ratio: number; // width / height
+  ratio: number;
 }
 
 export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
@@ -55,7 +52,6 @@ export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
 }
 
 export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<CapturedImage> {
-  // Clone the SVG and set explicit pixel dimensions for high-res capture
   const clone = svgEl.cloneNode(true) as SVGSVGElement;
   const vb = svgEl.getAttribute("viewBox");
   let vbW = 1000, vbH = 1000;
@@ -64,8 +60,6 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
     if (parts.length >= 4) { vbW = parts[2]; vbH = parts[3]; }
   }
   const ratio = vbW / vbH;
-
-  // Render at moderate resolution for small PDF (~1-2MB total)
   const renderW = 900;
   const renderH = Math.round(renderW / ratio);
   clone.setAttribute("width", String(renderW));
@@ -94,222 +88,398 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
   });
 }
 
+// ── Locale labels ──
+const LABELS = {
+  he: {
+    title: "א.מ.ג פרגולות בע״מ",
+    subtitle: "בקשת הצעת מחיר",
+    ltd: "פרגולות מעוצבות",
+    date: "תאריך",
+    customerDetails: "פרטי לקוח",
+    name: "שם",
+    phone: "טלפון",
+    email: "אימייל",
+    pergolaConfig: "פרטי הפרגולה",
+    type: "סוג פרגולה",
+    mount: "סוג התקנה",
+    installationLabel: "התקנה",
+    module: "מודול",
+    dimensions: "מידות",
+    width: "רוחב",
+    length: "אורך",
+    height: "גובה",
+    structure: "מבנה",
+    frontPosts: "עמודים קדמיים",
+    backPosts: "עמודים אחוריים",
+    carriers: "קורות חלוקה",
+    spacing: "מרווח",
+    roof: "גג / מילוי",
+    fillMode: "מצב מילוי גג",
+    slats: "שלבים / פרופילים",
+    santafOnly: "גג סנטף",
+    slatCount: "כמות שלבים",
+    slatGap: "מרווח בין שלבים",
+    santaf: "סנטף",
+    included: "כלול",
+    lightingLabel: "תאורה",
+    none: "ללא",
+    colors: "צבעים",
+    frameColor: "צבע מסגרת",
+    roofColor: "צבע גג / בד",
+    slatColor: "צבע שלבים",
+    santafColor: "צבע סנטף",
+    slatsPerCarrier: "שלבים לכל חלוקה",
+    carrier: "חלוקה",
+    slatProfile: "פרופיל שלב",
+    gap: "מרווח",
+    light: "תאורה",
+    notesLabel: "הערות",
+    drawingsTitle: "שרטוטים טכניים",
+    isometric: "מבט איזומטרי",
+    topView: "מבט עליון",
+    frontView: "מבט קדמי",
+    yes: "כן",
+    no: "לא",
+    disclaimer1: "מסמך זה הינו בקשת הצעת מחיר ואינו הצעת מחיר סופית.",
+    disclaimer2: "כל השרטוטים והמפרטים הם ראשוניים ובכפוף לבדיקת אתר.",
+    page: "עמוד",
+    of: "מתוך",
+    fixed: "פרגולה קבועה",
+    pvc: "פרגולת PVC",
+    wall: "צמוד קיר",
+    freestanding: "עצמאית",
+    single: "יחיד",
+    double: "כפול",
+    triple: "משולש",
+    custom: "מותאם",
+    parts: "רכיבים",
+    frame: "מסגרת",
+    division: "חלוקה",
+    slatsComp: "שלבים",
+    post: "עמוד",
+  },
+  ar: {
+    title: "أ.م.ج بيرجولا م.ض",
+    subtitle: "طلب عرض سعر",
+    ltd: "بيرجولات مصممة",
+    date: "التاريخ",
+    customerDetails: "بيانات العميل",
+    name: "الاسم",
+    phone: "الهاتف",
+    email: "البريد",
+    pergolaConfig: "تفاصيل البيرجولا",
+    type: "نوع البيرجولا",
+    mount: "نوع التركيب",
+    installationLabel: "تركيب",
+    module: "وحدة",
+    dimensions: "الأبعاد",
+    width: "العرض",
+    length: "الطول",
+    height: "الارتفاع",
+    structure: "الهيكل",
+    frontPosts: "أعمدة أمامية",
+    backPosts: "أعمدة خلفية",
+    carriers: "قوارص التقسيم",
+    spacing: "المسافة",
+    roof: "السقف / التعبئة",
+    fillMode: "وضع ملء السقف",
+    slats: "شرائح / بروفيلات",
+    santafOnly: "سقف سنطف",
+    slatCount: "عدد الشرائح",
+    slatGap: "مسافة بين الشرائح",
+    santaf: "سنطف",
+    included: "مشمول",
+    lightingLabel: "إضاءة",
+    none: "بدون",
+    colors: "الألوان",
+    frameColor: "لون الإطار",
+    roofColor: "لون السقف / القماش",
+    slatColor: "لون الشرائح",
+    santafColor: "لون السنطف",
+    slatsPerCarrier: "شرائح لكل تقسيم",
+    carrier: "تقسيم",
+    slatProfile: "بروفيل شريحة",
+    gap: "مسافة",
+    light: "إضاءة",
+    notesLabel: "ملاحظات",
+    drawingsTitle: "رسومات تقنية",
+    isometric: "منظور أيزومتري",
+    topView: "منظر علوي",
+    frontView: "منظر أمامي",
+    yes: "نعم",
+    no: "لا",
+    disclaimer1: "هذا المستند طلب عرض سعر وليس عرض سعر نهائي.",
+    disclaimer2: "جميع الرسومات والمواصفات أولية وتخضع لفحص الموقع.",
+    page: "صفحة",
+    of: "من",
+    fixed: "بيرجولا ثابتة",
+    pvc: "بيرجولا PVC",
+    wall: "ملاصق للجدار",
+    freestanding: "مستقلة",
+    single: "مفرد",
+    double: "مزدوج",
+    triple: "ثلاثي",
+    custom: "مخصص",
+    parts: "المكونات",
+    frame: "إطار",
+    division: "تقسيم",
+    slatsComp: "شرائح",
+    post: "عمود",
+  },
+};
+
+/**
+ * Generate the PDF using html2canvas to properly render Hebrew/Arabic text.
+ * We build a hidden HTML element, render it to canvas, then put it into the PDF.
+ */
 export async function generatePergolaPdf(
   input: PdfInput,
   specs: PergolaSpecs,
-  _locale: string,
+  locale: string,
   images: PdfImages,
 ): Promise<string> {
+  const L = locale === "ar" ? LABELS.ar : LABELS.he;
+  const dir = "rtl";
+  const typeMap: Record<string, string> = { fixed: L.fixed, pvc: L.pvc };
+  const mountMap: Record<string, string> = { wall: L.wall, freestanding: L.freestanding };
+  const moduleMap: Record<string, string> = { single: L.single, double: L.double, triple: L.triple, custom: L.custom };
+
+  // Build HTML content for page 1
+  const dateStr = new Date().toLocaleDateString(locale === "ar" ? "ar-SA" : "he-IL");
+  const refNum = `REF-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+
+  // Slat calculation using lengthMm
+  const lengthMm = input.lengthCm * 10;
+
+  let carrierHtml = "";
+  if (input.roofFillMode === "slats" && input.carrierConfigs && input.carrierConfigs.length > 0) {
+    carrierHtml = `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:8px;">${L.slatsPerCarrier}</h3>`;
+    input.carrierConfigs.forEach((cc, i) => {
+      const slatH = getSlatProfileHeight(cc.slatSize);
+      const gapMm = cc.slatGapCm * 10;
+      const usable = lengthMm - 90;
+      const count = Math.max(1, Math.floor(usable / (slatH + gapMm)));
+      const lightTxt = cc.lightingEnabled ? cc.lighting.toUpperCase() : L.none;
+      carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee;">
+        <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;"></span>
+        <span style="font-weight:600;">${L.carrier} ${i + 1}</span>
+        <span style="color:#666;">${count} ${L.slatsComp} · ${cc.slatSize} · ${L.gap} ${cc.slatGapCm} cm · ${L.light}: ${lightTxt}</span>
+      </div>`;
+    });
+    carrierHtml += `</div>`;
+  }
+
+  // Parts for fixed pergola
+  let partsHtml = "";
+  if (input.pergolaType === "fixed") {
+    partsHtml = `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:8px;">${L.parts}</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.frame}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.division}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.slatsComp}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.post}</span>
+      </div></div>`;
+  }
+
+  const notesHtml = input.notes?.trim() ? `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:4px;">${L.notesLabel}</h3><p style="font-size:11px;color:#555;line-height:1.6;">${input.notes.trim()}</p></div>` : "";
+
+  const row = (label: string, value: string, colorHex?: string) => {
+    const colorSwatch = colorHex ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${colorHex};border:1px solid #ccc;vertical-align:middle;margin-inline-end:4px;"></span>` : "";
+    return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f0;">
+      <span style="color:#888;font-size:11px;">${label}</span>
+      <span style="font-size:12px;font-weight:600;color:#222;">${colorSwatch}${value}</span>
+    </div>`;
+  };
+
+  const section = (title: string, content: string) => `
+    <div style="margin-top:16px;">
+      <div style="background:#f8f8f8;padding:4px 8px;border-radius:4px;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:bold;color:#333;">${title}</span>
+      </div>
+      ${content}
+    </div>`;
+
+  const page1Html = `
+    <div style="direction:${dir};font-family:'Heebo','Cairo','Assistant',sans-serif;width:700px;padding:24px;background:white;">
+      <!-- Header -->
+      <div style="background:#0f0f0f;color:white;padding:20px;border-radius:8px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:28px;font-weight:bold;letter-spacing:2px;">A.M.G  PERGOLA</div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">${L.subtitle}</div>
+        <div style="font-size:9px;color:#666;margin-top:2px;">L T D</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-bottom:12px;">
+        <span>${L.date}: ${dateStr}</span><span>${refNum}</span>
+      </div>
+
+      ${input.customerName ? section(L.customerDetails,
+        row(L.name, input.customerName) +
+        row(L.phone, input.customerPhone) +
+        (input.customerEmail ? row(L.email, input.customerEmail) : "")
+      ) : ""}
+
+      ${section(L.pergolaConfig,
+        row(L.type, typeMap[input.pergolaType] || input.pergolaType) +
+        row(L.mount, mountMap[input.mountType] || input.mountType) +
+        row(L.installationLabel, input.installation ? L.yes : L.no) +
+        row(L.module, moduleMap[specs.moduleClassification] || specs.moduleClassification)
+      )}
+
+      ${section(L.dimensions,
+        row(L.width, `${input.widthCm} cm`) +
+        row(L.length, `${input.lengthCm} cm`) +
+        (input.heightCm ? row(L.height, `${input.heightCm} cm`) : "")
+      )}
+
+      ${section(L.structure,
+        row(L.frontPosts, String(specs.frontPostCount)) +
+        (specs.backPostCount > 0 ? row(L.backPosts, String(specs.backPostCount)) : "") +
+        row(L.carriers, String(specs.carrierCount)) +
+        row(L.spacing, `~${(specs.spacingMm / 10).toFixed(1)} cm`)
+      )}
+
+      ${section(L.roof,
+        (input.roofFillMode === "slats"
+          ? row(L.fillMode, L.slats) + row(L.slatCount, String(specs.slatCount)) + row(L.slatGap, `${input.slatGapCm || 3} cm`)
+          : row(L.fillMode, L.santafOnly)) +
+        (input.santaf === "with" ? row(L.santaf, L.included) : "") +
+        row(L.lightingLabel, input.lighting === "none" ? L.none : input.lighting.toUpperCase())
+      )}
+
+      ${section(L.colors,
+        row(L.frameColor, input.frameColor, input.frameColor) +
+        row(L.roofColor, input.roofColor, input.roofColor) +
+        (input.slatColor && input.roofFillMode === "slats" ? row(L.slatColor, input.slatColor, input.slatColor) : "") +
+        (input.santaf === "with" && input.santafColor ? row(L.santafColor, input.santafColor, input.santafColor) : "")
+      )}
+
+      ${carrierHtml}
+      ${partsHtml}
+      ${notesHtml}
+
+      <!-- Footer -->
+      <div style="margin-top:24px;border-top:1px solid #eee;padding-top:8px;text-align:center;font-size:8px;color:#aaa;line-height:1.8;">
+        <div>A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il</div>
+        <div>${L.disclaimer1}</div>
+        <div>${L.disclaimer2}</div>
+      </div>
+    </div>`;
+
+  // Render HTML to canvas
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.top = "-9999px";
+  container.style.left = "-9999px";
+  container.innerHTML = page1Html;
+  document.body.appendChild(container);
+
+  // Dynamic import html2canvas
+  const { default: html2canvas } = await import("html2canvas" as any).catch(() => ({ default: null }));
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const W = 210;
   const H = 297;
-  const m = 15;
+  const m = 10;
   const cw = W - m * 2;
-  let y = m;
 
-  // ── Helpers ──
-  const txt = (s: string, x: number, yy: number, size = 9, color: [number, number, number] = [30, 30, 30], bold = false, align = "left") => {
-    doc.setFontSize(size);
-    doc.setTextColor(...color);
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(s, x, yy, { align: align as any });
-  };
-  const sep = () => { doc.setDrawColor(235, 235, 235); doc.line(m, y, W - m, y); y += 6; };
-  const row = (label: string, value: string) => {
-    txt(label, m + 2, y, 8, [120, 120, 120]);
-    txt(value, m + 65, y, 9, [30, 30, 30], true);
-    y += 5.5;
-  };
-  const drawSwatch = (label: string, hex: string) => {
-    txt(label, m + 2, y, 8, [120, 120, 120]);
+  if (html2canvas) {
     try {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      doc.setFillColor(r, g, b);
-      doc.roundedRect(m + 65, y - 3.5, 14, 5, 1, 1, "F");
-      doc.setDrawColor(200, 200, 200);
-      doc.roundedRect(m + 65, y - 3.5, 14, 5, 1, 1, "S");
-    } catch { /* skip */ }
-    txt(hex, m + 82, y, 7, [150, 150, 150]);
-    y += 5.5;
-  };
-  const sectionTitle = (title: string) => {
-    doc.setFillColor(248, 248, 248);
-    doc.rect(m, y - 4, cw, 8, "F");
-    txt(title, m + 3, y, 10, [50, 50, 50], true);
-    y += 8;
-  };
+      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const imgW = cw;
+      const imgH = (canvas.height * imgW) / canvas.width;
 
-  // ════════════════════════════════════════════
-  // PAGE 1: Header + Specs
-  // ════════════════════════════════════════════
+      let heightLeft = imgH;
+      let position = 0;
 
-  // Black header
-  doc.setFillColor(15, 15, 15);
-  doc.rect(0, 0, W, 36, "F");
-  txt("A.M.G  PERGOLA", W / 2, 15, 24, [255, 255, 255], true, "center");
-  txt("CONFIGURATION REQUEST", W / 2, 23, 9, [160, 160, 160], false, "center");
-  txt("L T D", W / 2, 30, 7, [100, 100, 100], false, "center");
+      doc.addImage(imgData, "JPEG", m, m + position, imgW, imgH);
+      heightLeft -= (H - m * 2);
 
-  y = 44;
-
-  // Date + Ref
-  const dateStr = new Date().toLocaleDateString("en-GB");
-  const refNum = `REF-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-  txt(`Date: ${dateStr}`, m, y, 8, [140, 140, 140]);
-  txt(refNum, W - m, y, 8, [140, 140, 140], false, "right");
-  y += 8;
-
-  // ── Customer ──
-  if (input.customerName) {
-    sectionTitle("CUSTOMER DETAILS");
-    row("Name", input.customerName);
-    row("Phone", input.customerPhone);
-    if (input.customerEmail) row("Email", input.customerEmail);
-    y += 2; sep();
-  }
-
-  // ── Pergola ──
-  sectionTitle("PERGOLA CONFIGURATION");
-  row("Type", TYPE_EN[input.pergolaType] || input.pergolaType);
-  row("Mount", MOUNT_EN[input.mountType] || input.mountType);
-  row("Installation", input.installation ? "Yes" : "No");
-  row("Module", MODULE_EN[specs.moduleClassification] || specs.moduleClassification);
-  y += 2; sep();
-
-  // ── Dimensions ──
-  sectionTitle("DIMENSIONS");
-  row("Width", `${input.widthCm} cm`);
-  row("Depth / Projection", `${input.lengthCm} cm`);
-  if (input.heightCm) row("Height", `${input.heightCm} cm`);
-  y += 2; sep();
-
-  // ── Structure ──
-  sectionTitle("STRUCTURE");
-  row("Front Posts", String(specs.frontPostCount));
-  if (specs.backPostCount > 0) row("Back Posts", String(specs.backPostCount));
-  row("Carriers", String(specs.carrierCount));
-  row("Carrier Spacing", `~${(specs.spacingMm / 10).toFixed(1)} cm`);
-  y += 2; sep();
-
-  // ── Roof ──
-  sectionTitle("ROOF / FILL");
-  if (input.roofFillMode === "slats") {
-    row("Fill Mode", "Internal Slats / Profiles");
-    row("Slat Count", String(specs.slatCount));
-    row("Slat Gap", `${input.slatGapCm || 3} cm`);
+      while (heightLeft > 0) {
+        position -= (H - m * 2);
+        doc.addPage();
+        doc.addImage(imgData, "JPEG", m, m + position, imgW, imgH);
+        heightLeft -= (H - m * 2);
+      }
+    } catch (e) {
+      console.warn("html2canvas failed, using fallback", e);
+      // Fallback: simple text
+      doc.setFontSize(14);
+      doc.text("A.M.G PERGOLA - Configuration Request", W / 2, 20, { align: "center" });
+    }
   } else {
-    row("Fill Mode", "Santaf Roof");
-  }
-  if (input.santaf === "with") row("Santaf", "Included");
-  row("Lighting", input.lighting === "none" ? "None" : input.lighting.toUpperCase());
-  y += 2; sep();
-
-  // ── Colors ──
-  sectionTitle("COLORS");
-  drawSwatch("Frame", input.frameColor);
-  drawSwatch("Roof / Fabric", input.roofColor);
-  if (input.slatColor && input.roofFillMode === "slats") drawSwatch("Slat Profiles", input.slatColor);
-  if (input.santaf === "with" && input.santafColor) drawSwatch("Santaf", input.santafColor);
-
-  // ── Per-carrier slat details ──
-  if (input.roofFillMode === "slats" && input.carrierConfigs && input.carrierConfigs.length > 0) {
-    y += 2; sep();
-    sectionTitle("SLATS PER CARRIER");
-    input.carrierConfigs.forEach((cc, i) => {
-      const slatW = 20; // mm face
-      const gapMm = cc.slatGapCm * 10;
-      const count = Math.max(1, Math.floor(((input.widthCm * 10) - gapMm) / (slatW + gapMm)));
-      const lightTxt = cc.lightingEnabled ? ` | Light: ${cc.lighting.toUpperCase()}` : "";
-      row(`Carrier ${i + 1}`, `${count} slats | ${cc.slatSize} | Gap: ${cc.slatGapCm}cm${lightTxt}`);
-      // Color swatch
-      try {
-        const r = parseInt(cc.slatColor.slice(1, 3), 16);
-        const g = parseInt(cc.slatColor.slice(3, 5), 16);
-        const b = parseInt(cc.slatColor.slice(5, 7), 16);
-        doc.setFillColor(r, g, b);
-        doc.roundedRect(m + 65 + 100, y - 8, 10, 4, 1, 1, "F");
-      } catch { /* skip */ }
-    });
+    // Fallback without html2canvas
+    doc.setFontSize(14);
+    doc.text("A.M.G PERGOLA - Configuration Request", W / 2, 20, { align: "center" });
   }
 
-  // ── Notes ──
-  if (input.notes?.trim()) {
-    y += 3; sep();
-    sectionTitle("NOTES");
-    const lines = doc.splitTextToSize(input.notes.trim(), cw - 4);
-    doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
-    doc.text(lines, m + 2, y);
-    y += lines.length * 3.5;
-  }
+  document.body.removeChild(container);
 
-  // ════════════════════════════════════════════
-  // PAGE 2+: Drawings (auto-height based on aspect ratio)
-  // ════════════════════════════════════════════
+  // ── Page 2+: Drawings ──
   const viewEntries: [string, PdfImageEntry | undefined][] = [
-    ["ISOMETRIC VIEW", images.isometric],
-    ["TOP VIEW", images.top],
-    ["FRONT VIEW", images.front],
+    [L.isometric, images.isometric],
+    [L.topView, images.top],
+    [L.frontView, images.front],
   ];
   const availableViews = viewEntries.filter(([, img]) => img) as [string, PdfImageEntry][];
 
   if (availableViews.length > 0) {
     doc.addPage();
-    y = m;
+    let y = m;
 
-    // Header
+    // Header for drawings page
     doc.setFillColor(15, 15, 15);
     doc.rect(0, 0, W, 22, "F");
-    txt("TECHNICAL DRAWINGS", W / 2, 14, 14, [255, 255, 255], true, "center");
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(L.drawingsTitle, W / 2, 14, { align: "center" });
     y = 30;
 
     for (const [label, entry] of availableViews) {
-      // Fit image proportionally within page width
       const maxImgW = cw - 8;
-      const maxImgH = 130; // max height per image on page
+      const maxImgH = 130;
       let imgW = maxImgW;
       let imgH = imgW / entry.ratio;
       if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * entry.ratio; }
       const frameW = imgW + 8;
       const frameH = imgH + 8;
-      const frameX = m + (cw - frameW) / 2; // center the frame
+      const frameX = m + (cw - frameW) / 2;
 
       if (y + frameH + 14 > H - 30) {
         doc.addPage();
         y = m;
       }
 
-      // Label
-      txt(label, W / 2, y, 9, [80, 80, 80], true, "center");
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      doc.setFont("helvetica", "bold");
+      doc.text(label, W / 2, y, { align: "center" });
       y += 5;
 
-      // Frame — centered
       doc.setDrawColor(230, 230, 230);
       doc.setFillColor(252, 252, 252);
       doc.roundedRect(frameX, y, frameW, frameH, 2, 2, "FD");
-
-      // Image — proportional, centered in frame
       doc.addImage(entry.data, "JPEG", frameX + 4, y + 4, imgW, imgH);
       y += frameH + 10;
     }
   }
 
-  // ════════════════════════════════════════════
   // Footer on every page
-  // ════════════════════════════════════════════
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
-    // Footer line
     doc.setDrawColor(230, 230, 230);
-    doc.line(m, H - 22, W - m, H - 22);
-    // Footer text
-    doc.setFontSize(6); doc.setTextColor(160, 160, 160); doc.setFont("helvetica", "normal");
-    doc.text("A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il", W / 2, H - 17, { align: "center" });
-    doc.text("This document is a configuration request, not a final quotation.", W / 2, H - 13, { align: "center" });
-    doc.text("All drawings and specifications are preliminary and subject to site inspection.", W / 2, H - 9, { align: "center" });
-    doc.text(`Page ${p} of ${totalPages}`, W / 2, H - 5, { align: "center" });
+    doc.line(m, H - 15, W - m, H - 15);
+    doc.setFontSize(6);
+    doc.setTextColor(160, 160, 160);
+    doc.setFont("helvetica", "normal");
+    doc.text("A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il", W / 2, H - 10, { align: "center" });
+    doc.text(`${L.page} ${p} ${L.of} ${totalPages}`, W / 2, H - 5, { align: "center" });
   }
 
   return doc.output("datauristring");
