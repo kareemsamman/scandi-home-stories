@@ -34,7 +34,7 @@ export const PergolaSpecsSummary = () => {
   if (isFixedSlats && carrierConfigs.length > 0) {
     let totalSlats = 0;
     carrierConfigs.forEach((cc) => {
-      totalSlats += calcSlatCount(widthMm, cc.slatGapCm * 10, cc.slatSize);
+      totalSlats += calcSlatCount(lengthMm, cc.slatGapCm * 10, cc.slatSize);
     });
     rows.push([t("pergolaRequest.slatsLabel"), String(totalSlats)]);
   } else if (isFixedSlats) {
