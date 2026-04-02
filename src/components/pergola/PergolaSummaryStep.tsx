@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
-import { mmToCm, cmToMm } from "@/types/pergola";
+import { mmToCm, cmToMm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS } from "@/types/pergola";
 import { calcSlatCount } from "@/lib/pergolaRules";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
