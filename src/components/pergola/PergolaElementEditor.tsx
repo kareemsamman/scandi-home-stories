@@ -247,7 +247,7 @@ export const PergolaElementEditor = () => {
             <Label>גודל פרופיל שלב</Label>
             <div className="flex gap-1.5 mb-3">
               {SLAT_SIZES.map((s) => (
-                <ToggleBtn key={s.id} active={(config.slatSize || "20x70") === s.id} onClick={() => setConfig({ slatSize: s.id as SlatSizeId, slatCount: 0 })} label={s.label} />
+                <ToggleBtn key={s.id} active={(config.slatSize || "20x70") === s.id} onClick={() => setConfig({ slatSize: s.id as SlatSizeId })} label={s.label} />
               ))}
             </div>
             <Label>מרווח בין שלבים (ס"מ)</Label>
