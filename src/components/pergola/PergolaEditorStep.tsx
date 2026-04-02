@@ -323,13 +323,11 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 const sections = Math.max(1, specs.carrierCount - 1);
                 let totalSlats = 0;
                 const perSec: number[] = [];
-                for (let i = 0; i < sections; i++) {
-                  const cc = carrierConfigs[i];
-                const lengthMm = cmToMm(Number(config.lengthCm) || 400);
+                const lengthMm2 = cmToMm(Number(config.lengthCm) || 400);
                 for (let i = 0; i < sections; i++) {
                   const cc = carrierConfigs[i];
                   const gapMm = (cc?.slatGapCm || Number(config.slatGapCm) || 3) * 10;
-                  const count = calcSlatCount(lengthMm, gapMm, cc?.slatSize || config.slatSize as string);
+                  const count = calcSlatCount(lengthMm2, gapMm, cc?.slatSize || config.slatSize as string);
                   totalSlats += count;
                   perSec.push(count);
                 }
