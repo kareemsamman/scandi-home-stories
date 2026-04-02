@@ -279,12 +279,14 @@ export const PergolaTopView = ({ config }: Props) => {
         {mmToCm(lengthMm)} cm
       </text>
 
+      {/* Spacing indicator between first two carriers (horizontal) */}
       {specs.carrierCount > 1 && carrierPositions.length >= 2 && (
         <>
-          <line x1={ox - 180} y1={oy + carrierPositions[0]} x2={ox - 180} y2={oy + carrierPositions[1]} stroke="#9CA3AF" strokeWidth={3} />
-          <text x={ox - 200} y={oy + (carrierPositions[0] + carrierPositions[1]) / 2}
-            textAnchor="middle" fontSize={fontSize * 0.7} fill="#9CA3AF" fontFamily="sans-serif"
-            transform={`rotate(-90, ${ox - 200}, ${oy + (carrierPositions[0] + carrierPositions[1]) / 2})`}>
+          <line x1={ox + carrierPositions[0]} y1={oy - 150} x2={ox + carrierPositions[1]} y2={oy - 150} stroke="#9CA3AF" strokeWidth={3} />
+          <line x1={ox + carrierPositions[0]} y1={oy - 170} x2={ox + carrierPositions[0]} y2={oy - 130} stroke="#9CA3AF" strokeWidth={3} />
+          <line x1={ox + carrierPositions[1]} y1={oy - 170} x2={ox + carrierPositions[1]} y2={oy - 130} stroke="#9CA3AF" strokeWidth={3} />
+          <text x={ox + (carrierPositions[0] + carrierPositions[1]) / 2} y={oy - 160}
+            textAnchor="middle" fontSize={fontSize * 0.6} fill="#9CA3AF" fontFamily="sans-serif">
             ~{mmToCm(specs.spacingMm)} cm
           </text>
         </>
