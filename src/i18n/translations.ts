@@ -1116,7 +1116,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       frontPosts: 'أعمدة أمامية',
       backPosts: 'أعمدة خلفية',
       profileRafter: 'بروفيل رافتر',
-      profileCarrierPost: 'بروفيل عمود حامل',
+      profileCarrierPost: 'بروفيل عمود قارص تقسيم',
       profileFabricMaster: 'بروفيل قماش رئيسي',
       preview: 'معاينة',
       topView: 'منظر علوي',
