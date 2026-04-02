@@ -531,7 +531,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       moduleDouble: 'כפול',
       moduleTriple: 'משולש',
       moduleCustom: 'דורש בדיקה',
-      carriers: 'נשאים',
+      carriers: 'קורות חלוקה',
       posts: 'עמודים',
       frontPosts: 'עמודים קדמיים',
       backPosts: 'עמודים אחוריים',
