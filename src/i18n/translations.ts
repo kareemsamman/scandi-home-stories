@@ -1059,7 +1059,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       pageSubtitle: 'املأ التفاصيل واحصل على عرض سعر مخصص',
       dimensions: 'الأبعاد',
       width: 'العرض (سم)',
-      length: 'العمق / الإسقاط (سم)',
+      length: 'الطول (سم)',
       height: 'الارتفاع (سم) - اختياري',
       configuration: 'الإعدادات',
       pergolaType: 'نوع العرسية',
