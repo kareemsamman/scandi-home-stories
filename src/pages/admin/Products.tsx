@@ -77,9 +77,13 @@ const AdminProducts = () => {
         db.from("product_translations").select("*").eq("product_id", product.id),
         db.from("inventory").select("*").eq("product_id", product.id),
       ]);
-      const { id, created_at, updated_at, ...fields } = product;
+      const { id, created_at, updated_at, content_html_he, content_html_ar, ...fields } = product;
+      // Remove any non-schema fields that come from joined/computed data
+      const cleanFields = { ...fields };
+      delete cleanFields.content_html_he;
+      delete cleanFields.content_html_ar;
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: `${cleanFields.slug}-copy`, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
