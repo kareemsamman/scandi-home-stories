@@ -57,6 +57,7 @@ export const PergolaElementEditor = () => {
 
     return (
       <Panel onClose={close} title={isFront ? `עמוד קדמי ${idx + 1}` : `עמוד אחורי ${idx + 1}`}>
+
         {/* Lighting toggle */}
         <div className="space-y-2">
           <Label>תאורה בעמוד</Label>
