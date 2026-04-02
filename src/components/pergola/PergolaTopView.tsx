@@ -119,8 +119,8 @@ export const PergolaTopView = ({ config }: Props) => {
           const secH = y2 - y1;
 
           // Slats run horizontally (across the width), distributed along the section height (length axis)
-          const totalUnit = slatH + secGapMm;
-          const secSlatCount = Math.max(1, Math.floor((secH - secGapMm) / totalUnit));
+          const autoCount = Math.max(1, Math.floor((secH - secGapMm) / (slatH + secGapMm)));
+          const secSlatCount = (cc?.slatCount && cc.slatCount > 0) ? cc.slatCount : autoCount;
           // Distribute evenly along the section height
           const actualGap = secSlatCount > 0 ? (secH - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
 
