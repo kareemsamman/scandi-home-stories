@@ -236,7 +236,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                   <label className="text-[10px] text-gray-400">{t("pergolaRequest.slatGap")}</label>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((g) => (
-                      <button key={g} onClick={() => setConfig({ slatGapCm: g, slatCount: 0 })}
+                      <button key={g} onClick={() => setConfig({ slatGapCm: g })}
                         className={`flex-1 py-1.5 rounded-md text-[10px] font-medium border-2 transition-all ${
                           Number(config.slatGapCm) === g ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                         }`}>{g} cm</button>
