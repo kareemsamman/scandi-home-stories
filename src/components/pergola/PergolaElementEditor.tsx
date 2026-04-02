@@ -179,40 +179,15 @@ export const PergolaElementEditor = () => {
     }
 
     const gapPresets = [1, 2, 3, 4];
-    const secWidthMm = cmToMm(Number(config.widthCm) || 400);
-    const autoSlatCount = calcSlatCount(secWidthMm, cc.slatGapCm * 10, cc.slatSize);
-    const secSlatCount = cc.slatCount > 0 ? cc.slatCount : autoSlatCount;
+    const secLengthMm = cmToMm(Number(config.lengthCm) || 400);
+    const autoSlatCount = calcSlatCount(secLengthMm, cc.slatGapCm * 10, cc.slatSize);
+    const secSlatCount = autoSlatCount;
 
     return (
       <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1} — ${secSlatCount} שלבים`}>
-        {/* Slat count — manual input */}
+        {/* Slat count — auto-calculated, read-only */}
         <Label>כמות שלבים</Label>
-        <div className="flex items-center gap-2 mb-2">
-          <button
-            onClick={() => setCarrierConfig(secIdx, { slatCount: Math.max(1, secSlatCount - 1) })}
-            className="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-lg font-bold"
-          >−</button>
-          <input
-            type="number"
-            min={1}
-            max={200}
-            value={secSlatCount}
-            onChange={(e) => {
-              const v = parseInt(e.target.value);
-              if (v > 0) setCarrierConfig(secIdx, { slatCount: v });
-            }}
-            className="w-16 h-8 text-center border border-gray-200 rounded-lg text-sm font-medium"
-            dir="ltr"
-          />
-          <button
-            onClick={() => setCarrierConfig(secIdx, { slatCount: secSlatCount + 1 })}
-            className="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-lg font-bold"
-          >+</button>
-          <button
-            onClick={() => setCarrierConfig(secIdx, { slatCount: 0 })}
-            className={`px-2 h-8 rounded-lg text-[10px] font-medium transition-all ${cc.slatCount === 0 ? 'bg-gray-900 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-          >אוטומטי ({autoSlatCount})</button>
-        </div>
+        <p className="text-sm font-medium text-gray-700 mb-2">{secSlatCount}</p>
 
         {/* Slat size */}
         <Label>גודל פרופיל שלב</Label>
