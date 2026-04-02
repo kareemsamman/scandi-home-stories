@@ -1160,7 +1160,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       globalApplyHint: 'التغيير هنا ينطبق على جميع قوارص التقسيم. انقر على قارص محدد في الرسم للتخصيص',
       lightingPosts: 'إضاءة الأعمدة',
       lightingLengthLabel: 'طول شريط الإضاءة',
-      lightingPerCarrierHint: 'انقر على حامل في الرسم لاختيار إضاءة لكل حامل بشكل منفصل',
+      lightingPerCarrierHint: 'انقر على قارص تقسيم في الرسم لاختيار إضاءة لكل قارص بشكل منفصل',
       phoneMustBe10: 'يجب أن يتكون رقم الهاتف من 10 أرقام',
       downloadPdf: 'تحميل PDF',
       downloadPdfTitle: 'ملخص الطلب جاهز',
