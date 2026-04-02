@@ -206,11 +206,6 @@ const AdminProducts = () => {
         </Select>
       </div>
 
-      {!isDragEnabled && (
-        <p className="text-xs text-gray-400 flex items-center gap-1">
-          <GripVertical className="w-3 h-3" /> Clear filters to enable drag reordering
-        </p>
-      )}
 
       {isLoading ? <p className="text-gray-400">Loading...</p> : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
