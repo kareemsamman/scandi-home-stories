@@ -100,7 +100,7 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         partial.widthCm !== undefined;
 
       let carrierConfigs = state.carrierConfigs;
-      if (specs && (globalChanged || specs.carrierCount !== state.specs?.carrierCount)) {
+      if (specs && (globalChanged || carrierCountChanged || specs.carrierCount !== state.specs?.carrierCount)) {
         if (globalChanged) {
           // Apply new global to all carriers
           const globalDef = defaultCarrierConfig({
