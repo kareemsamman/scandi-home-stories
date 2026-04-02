@@ -56,16 +56,14 @@ export function calcSpacing(lengthMm: number, carrierCount: number, spacingMode:
 
 // ── Adjusted carrier count for spacing mode ──
 
-export function adjustedCarrierCount(lengthMm: number, spacingMode: SpacingMode): number {
-  const baseCount = calcCarrierCount(lengthMm);
+export function adjustedCarrierCount(widthMm: number, spacingMode: SpacingMode): number {
+  const baseCount = calcCarrierCount(widthMm);
   if (spacingMode === "automatic" || spacingMode === "standard") return baseCount;
   if (spacingMode === "dense") {
-    // Increase carriers for denser spacing
     return Math.max(baseCount, Math.round(baseCount * 1.3));
   }
   if (spacingMode === "wide") {
-    // Decrease carriers for wider spacing
-    return Math.max(3, Math.round(baseCount * 0.75));
+    return Math.max(1, Math.round(baseCount * 0.75));
   }
   return baseCount;
 }
