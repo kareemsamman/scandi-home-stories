@@ -127,12 +127,29 @@ const AdminProducts = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const ids = orderedIds ?? allProducts.map((p: any) => p.id);
-    const oldIdx = ids.indexOf(active.id as string);
-    const newIdx = ids.indexOf(over.id as string);
-    const newIds = arrayMove(ids, oldIdx, newIdx);
-    setOrderedIds(newIds);
-    saveOrder.mutate(newIds);
+    
+    // Work with the full product list to preserve relative order
+    const fullIds = orderedIds ?? allProducts.map((p: any) => p.id);
+    const filteredIds = filtered.map((p: any) => p.id);
+    
+    const oldFilteredIdx = filteredIds.indexOf(active.id as string);
+    const newFilteredIdx = filteredIds.indexOf(over.id as string);
+    if (oldFilteredIdx === -1 || newFilteredIdx === -1) return;
+    
+    // Reorder within filtered list
+    const newFilteredIds = arrayMove(filteredIds, oldFilteredIdx, newFilteredIdx);
+    
+    // Rebuild full list: replace filtered items in their positions with new order
+    const newFullIds = [...fullIds];
+    let filterIdx = 0;
+    for (let i = 0; i < newFullIds.length; i++) {
+      if (filteredIds.includes(newFullIds[i])) {
+        newFullIds[i] = newFilteredIds[filterIdx++];
+      }
+    }
+    
+    setOrderedIds(newFullIds);
+    saveOrder.mutate(newFullIds);
   };
 
   const filtered = allProducts.filter((p: any) => {
@@ -144,8 +161,7 @@ const AdminProducts = () => {
     return true;
   });
 
-  // Only allow drag when no filters are active (so order is clear)
-  const isDragEnabled = !search && filterCat === "all" && filterSubCat === "all" && filterStatus === "all";
+  const isDragEnabled = true;
 
   return (
     <div className="space-y-6">
