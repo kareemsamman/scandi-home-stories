@@ -222,13 +222,21 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
   );
 };
 
+function getColorName(hex: string | undefined, locale: string): string {
+  if (!hex) return "";
+  const allColors = [...STANDARD_COLORS, ...SLAT_COLORS, ...SANTAF_COLORS];
+  const match = allColors.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
+  if (match) return locale === "ar" ? match.name_ar : match.name_he;
+  return hex;
+}
+
 function SummaryCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
       <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
       <p className="text-sm font-semibold text-gray-800 mt-0.5 flex items-center gap-2">
         {color && <span className="w-4 h-4 rounded border border-gray-200 shrink-0" style={{ backgroundColor: color }} />}
-        {!color && value}
+        {value}
       </p>
     </div>
   );
