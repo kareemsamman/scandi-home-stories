@@ -60,7 +60,7 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
     if (parts.length >= 4) { vbW = parts[2]; vbH = parts[3]; }
   }
   const ratio = vbW / vbH;
-  const renderW = 900;
+  const renderW = 1200;
   const renderH = Math.round(renderW / ratio);
   clone.setAttribute("width", String(renderW));
   clone.setAttribute("height", String(renderH));
@@ -79,7 +79,7 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
       ctx.fillStyle = "#FAFAFA";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, renderW, renderH);
-      const data = canvas.toDataURL("image/jpeg", 0.6);
+      const data = canvas.toDataURL("image/jpeg", 0.75);
       URL.revokeObjectURL(url);
       resolve({ data, width: renderW, height: renderH, ratio });
     };
@@ -135,7 +135,7 @@ const LABELS = {
     light: "תאורה",
     notesLabel: "הערות",
     drawingsTitle: "שרטוטים טכניים",
-    isometric: "מבט איזומטרי",
+    isometric: "תלת מימד",
     topView: "מבט עליון",
     frontView: "מבט קדמי",
     yes: "כן",
@@ -203,7 +203,7 @@ const LABELS = {
     light: "إضاءة",
     notesLabel: "ملاحظات",
     drawingsTitle: "رسومات تقنية",
-    isometric: "منظور أيزومتري",
+    isometric: "تلت أبعاد",
     topView: "منظر علوي",
     frontView: "منظر أمامي",
     yes: "نعم",
@@ -230,7 +230,6 @@ const LABELS = {
 
 /**
  * Generate the PDF using html2canvas to properly render Hebrew/Arabic text.
- * We build a hidden HTML element, render it to canvas, then put it into the PDF.
  */
 export async function generatePergolaPdf(
   input: PdfInput,
@@ -240,11 +239,11 @@ export async function generatePergolaPdf(
 ): Promise<string> {
   const L = locale === "ar" ? LABELS.ar : LABELS.he;
   const dir = "rtl";
+  const fontFamily = locale === "ar" ? "'Cairo','Tajawal','Arial',sans-serif" : "'Heebo','Assistant','Arial',sans-serif";
   const typeMap: Record<string, string> = { fixed: L.fixed, pvc: L.pvc };
   const mountMap: Record<string, string> = { wall: L.wall, freestanding: L.freestanding };
   const moduleMap: Record<string, string> = { single: L.single, double: L.double, triple: L.triple, custom: L.custom };
 
-  // Build HTML content for page 1
   const dateStr = new Date().toLocaleDateString(locale === "ar" ? "ar-SA" : "he-IL");
   const refNum = `REF-${Date.now().toString(36).toUpperCase().slice(-6)}`;
 
@@ -260,10 +259,10 @@ export async function generatePergolaPdf(
       const usable = lengthMm - 90;
       const count = Math.max(1, Math.floor(usable / (slatH + gapMm)));
       const lightTxt = cc.lightingEnabled ? cc.lighting.toUpperCase() : L.none;
-      carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee;">
-        <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;"></span>
-        <span style="font-weight:600;">${L.carrier} ${i + 1}</span>
-        <span style="color:#666;">${count} ${L.slatsComp} · ${cc.slatSize} · ${L.gap} ${cc.slatGapCm} cm · ${L.light}: ${lightTxt}</span>
+      carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;">
+        <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;flex-shrink:0;"></span>
+        <span style="font-weight:600;font-size:13px;">${L.carrier} ${i + 1}</span>
+        <span style="color:#555;font-size:12px;">${count} ${L.slatsComp} · ${cc.slatSize} · ${L.gap} ${cc.slatGapCm} cm · ${L.light}: ${lightTxt}</span>
       </div>`;
     });
     carrierHtml += `</div>`;
@@ -274,40 +273,40 @@ export async function generatePergolaPdf(
   if (input.pergolaType === "fixed") {
     partsHtml = `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:8px;">${L.parts}</h3>
       <div style="display:flex;gap:16px;flex-wrap:wrap;">
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.frame}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.division}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.slatsComp}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:12px;">${L.post}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.frame}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.division}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.slatsComp}</span>
+        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.post}</span>
       </div></div>`;
   }
 
-  const notesHtml = input.notes?.trim() ? `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:4px;">${L.notesLabel}</h3><p style="font-size:11px;color:#555;line-height:1.6;">${input.notes.trim()}</p></div>` : "";
+  const notesHtml = input.notes?.trim() ? `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:4px;">${L.notesLabel}</h3><p style="font-size:12px;color:#555;line-height:1.6;">${input.notes.trim()}</p></div>` : "";
 
   const row = (label: string, value: string, colorHex?: string) => {
     const colorSwatch = colorHex ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${colorHex};border:1px solid #ccc;vertical-align:middle;margin-inline-end:4px;"></span>` : "";
-    return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f0;">
-      <span style="color:#888;font-size:11px;">${label}</span>
-      <span style="font-size:12px;font-weight:600;color:#222;">${colorSwatch}${value}</span>
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;">
+      <span style="color:#666;font-size:13px;">${label}</span>
+      <span style="font-size:13px;font-weight:600;color:#222;">${colorSwatch}${value}</span>
     </div>`;
   };
 
   const section = (title: string, content: string) => `
     <div style="margin-top:16px;">
-      <div style="background:#f8f8f8;padding:4px 8px;border-radius:4px;margin-bottom:6px;">
-        <span style="font-size:13px;font-weight:bold;color:#333;">${title}</span>
+      <div style="background:#f8f8f8;padding:6px 10px;border-radius:4px;margin-bottom:6px;">
+        <span style="font-size:14px;font-weight:bold;color:#333;">${title}</span>
       </div>
       ${content}
     </div>`;
 
   const page1Html = `
-    <div style="direction:${dir};font-family:'Heebo','Cairo','Assistant',sans-serif;width:700px;padding:24px;background:white;">
+    <div style="direction:${dir};font-family:${fontFamily};width:700px;padding:28px;background:white;color:#222;line-height:1.5;">
       <!-- Header -->
-      <div style="background:#0f0f0f;color:white;padding:20px;border-radius:8px;text-align:center;margin-bottom:16px;">
-        <div style="font-size:28px;font-weight:bold;letter-spacing:2px;">A.M.G  PERGOLA</div>
-        <div style="font-size:11px;color:#aaa;margin-top:4px;">${L.subtitle}</div>
+      <div style="background:#0f0f0f;color:white;padding:22px;border-radius:8px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:28px;font-weight:bold;letter-spacing:2px;font-family:Arial,sans-serif;">A.M.G  PERGOLA</div>
+        <div style="font-size:12px;color:#bbb;margin-top:4px;">${L.subtitle}</div>
         <div style="font-size:9px;color:#666;margin-top:2px;">L T D</div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;margin-bottom:12px;">
         <span>${L.date}: ${dateStr}</span><span>${refNum}</span>
       </div>
 
@@ -357,8 +356,8 @@ export async function generatePergolaPdf(
       ${notesHtml}
 
       <!-- Footer -->
-      <div style="margin-top:24px;border-top:1px solid #eee;padding-top:8px;text-align:center;font-size:8px;color:#aaa;line-height:1.8;">
-        <div>A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il</div>
+      <div style="margin-top:24px;border-top:1px solid #eee;padding-top:8px;text-align:center;font-size:9px;color:#aaa;line-height:1.8;">
+        <div style="font-family:Arial,sans-serif;">A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il</div>
         <div>${L.disclaimer1}</div>
         <div>${L.disclaimer2}</div>
       </div>
@@ -369,8 +368,14 @@ export async function generatePergolaPdf(
   container.style.position = "fixed";
   container.style.top = "-9999px";
   container.style.left = "-9999px";
+  container.style.zIndex = "-9999";
   container.innerHTML = page1Html;
   document.body.appendChild(container);
+
+  // Wait for fonts to load
+  try {
+    await document.fonts.ready;
+  } catch { /* continue */ }
 
   // Dynamic import html2canvas
   const { default: html2canvas } = await import("html2canvas" as any).catch(() => ({ default: null }));
@@ -384,12 +389,13 @@ export async function generatePergolaPdf(
   if (html2canvas) {
     try {
       const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-        scale: 2,
+        scale: 2.5,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        allowTaint: true,
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const imgData = canvas.toDataURL("image/jpeg", 0.9);
       const imgW = cw;
       const imgH = (canvas.height * imgW) / canvas.width;
 
@@ -407,19 +413,17 @@ export async function generatePergolaPdf(
       }
     } catch (e) {
       console.warn("html2canvas failed, using fallback", e);
-      // Fallback: simple text
       doc.setFontSize(14);
       doc.text("A.M.G PERGOLA - Configuration Request", W / 2, 20, { align: "center" });
     }
   } else {
-    // Fallback without html2canvas
     doc.setFontSize(14);
     doc.text("A.M.G PERGOLA - Configuration Request", W / 2, 20, { align: "center" });
   }
 
   document.body.removeChild(container);
 
-  // ── Page 2+: Drawings ──
+  // ── Drawings pages: one image per page for clarity ──
   const viewEntries: [string, PdfImageEntry | undefined][] = [
     [L.isometric, images.isometric],
     [L.topView, images.top],
@@ -427,46 +431,31 @@ export async function generatePergolaPdf(
   ];
   const availableViews = viewEntries.filter(([, img]) => img) as [string, PdfImageEntry][];
 
-  if (availableViews.length > 0) {
+  for (const [label, entry] of availableViews) {
     doc.addPage();
     let y = m;
 
-    // Header for drawings page
+    // Dark header bar
     doc.setFillColor(15, 15, 15);
     doc.rect(0, 0, W, 22, "F");
     doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.text(L.drawingsTitle, W / 2, 14, { align: "center" });
+    doc.text(label, W / 2, 14, { align: "center" });
     y = 30;
 
-    for (const [label, entry] of availableViews) {
-      const maxImgW = cw - 8;
-      const maxImgH = 130;
-      let imgW = maxImgW;
-      let imgH = imgW / entry.ratio;
-      if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * entry.ratio; }
-      const frameW = imgW + 8;
-      const frameH = imgH + 8;
-      const frameX = m + (cw - frameW) / 2;
+    // Image — fill most of the page
+    const maxImgW = cw - 4;
+    const maxImgH = H - y - 30;
+    let imgW = maxImgW;
+    let imgH = imgW / entry.ratio;
+    if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * entry.ratio; }
+    const imgX = m + (cw - imgW) / 2;
 
-      if (y + frameH + 14 > H - 30) {
-        doc.addPage();
-        y = m;
-      }
-
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-      doc.setFont("helvetica", "bold");
-      doc.text(label, W / 2, y, { align: "center" });
-      y += 5;
-
-      doc.setDrawColor(230, 230, 230);
-      doc.setFillColor(252, 252, 252);
-      doc.roundedRect(frameX, y, frameW, frameH, 2, 2, "FD");
-      doc.addImage(entry.data, "JPEG", frameX + 4, y + 4, imgW, imgH);
-      y += frameH + 10;
-    }
+    doc.setDrawColor(230, 230, 230);
+    doc.setFillColor(252, 252, 252);
+    doc.roundedRect(imgX - 2, y - 2, imgW + 4, imgH + 4, 2, 2, "FD");
+    doc.addImage(entry.data, "JPEG", imgX, y, imgW, imgH);
   }
 
   // Footer on every page
