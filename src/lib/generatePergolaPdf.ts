@@ -1,6 +1,15 @@
 import { jsPDF } from "jspdf";
 import type { PergolaSpecs } from "@/types/pergola";
+import { STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS } from "@/types/pergola";
 import { calcSlatCount, getSlatProfileHeight } from "./pergolaRules";
+
+function getColorLabel(hex: string | undefined, locale: string): string {
+  if (!hex) return hex || "";
+  const allColors = [...STANDARD_COLORS, ...SLAT_COLORS, ...SANTAF_COLORS];
+  const match = allColors.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
+  if (match) return locale === "ar" ? match.name_ar : match.name_he;
+  return hex;
+}
 
 export interface PdfInput {
   customerName: string;
@@ -259,9 +268,10 @@ export async function generatePergolaPdf(
       const usable = lengthMm - 90;
       const count = Math.max(1, Math.floor(usable / (slatH + gapMm)));
       const lightTxt = cc.lightingEnabled ? cc.lighting.toUpperCase() : L.none;
+      const displayNum = input.carrierConfigs!.length - i;
       carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;">
         <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;flex-shrink:0;"></span>
-        <span style="font-weight:600;font-size:13px;">${L.carrier} ${i + 1}</span>
+        <span style="font-weight:600;font-size:13px;">${L.carrier} ${displayNum}</span>
         <span style="color:#555;font-size:12px;">${count} ${L.slatsComp} · ${cc.slatSize} · ${L.gap} ${cc.slatGapCm} cm · ${L.light}: ${lightTxt}</span>
       </div>`;
     });
@@ -345,10 +355,10 @@ export async function generatePergolaPdf(
       )}
 
       ${section(L.colors,
-        row(L.frameColor, input.frameColor, input.frameColor) +
-        row(L.roofColor, input.roofColor, input.roofColor) +
-        (input.slatColor && input.roofFillMode === "slats" ? row(L.slatColor, input.slatColor, input.slatColor) : "") +
-        (input.santaf === "with" && input.santafColor ? row(L.santafColor, input.santafColor, input.santafColor) : "")
+        row(L.frameColor, getColorLabel(input.frameColor, locale), input.frameColor) +
+        row(L.roofColor, getColorLabel(input.roofColor, locale), input.roofColor) +
+        (input.slatColor && input.roofFillMode === "slats" ? row(L.slatColor, getColorLabel(input.slatColor, locale), input.slatColor) : "") +
+        (input.santaf === "with" && input.santafColor ? row(L.santafColor, getColorLabel(input.santafColor, locale), input.santafColor) : "")
       )}
 
       ${carrierHtml}
@@ -423,7 +433,7 @@ export async function generatePergolaPdf(
 
   document.body.removeChild(container);
 
-  // ── Drawings pages: one image per page for clarity ──
+  // ── Drawings pages: render header as html2canvas too for proper Hebrew ──
   const viewEntries: [string, PdfImageEntry | undefined][] = [
     [L.isometric, images.isometric],
     [L.topView, images.top],
@@ -433,16 +443,27 @@ export async function generatePergolaPdf(
 
   for (const [label, entry] of availableViews) {
     doc.addPage();
-    let y = m;
 
-    // Dark header bar
-    doc.setFillColor(15, 15, 15);
-    doc.rect(0, 0, W, 22, "F");
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text(label, W / 2, 14, { align: "center" });
-    y = 30;
+    // Render header bar as html2canvas for proper Hebrew/Arabic text
+    const headerDiv = document.createElement("div");
+    headerDiv.style.position = "fixed";
+    headerDiv.style.top = "-9999px";
+    headerDiv.style.left = "-9999px";
+    headerDiv.style.zIndex = "-9999";
+    headerDiv.innerHTML = `<div style="direction:${dir};font-family:${fontFamily};width:700px;background:#0f0f0f;color:white;padding:14px 20px;text-align:center;font-size:18px;font-weight:bold;">${label}</div>`;
+    document.body.appendChild(headerDiv);
+    try {
+      const headerCanvas = await html2canvas(headerDiv.firstElementChild as HTMLElement, { scale: 2.5, useCORS: true, logging: false, backgroundColor: "#0f0f0f" });
+      const headerImg = headerCanvas.toDataURL("image/jpeg", 0.9);
+      const headerH = (headerCanvas.height * cw) / headerCanvas.width;
+      doc.addImage(headerImg, "JPEG", m, 0, cw, headerH);
+    } catch {
+      doc.setFillColor(15, 15, 15);
+      doc.rect(0, 0, W, 22, "F");
+    }
+    document.body.removeChild(headerDiv);
+
+    let y = 28;
 
     // Image — fill most of the page
     const maxImgW = cw - 4;

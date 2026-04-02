@@ -334,15 +334,18 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 return (
                   <>
                     <SpecRow label={`${t("pergolaRequest.slatsLabel")} (${t("pergolaRequest.summaryTitle")})`} value={String(totalSlats)} />
-                    {perSec.map((c, i) => (
-                      <div key={i} className="flex justify-between text-[10px]">
-                        <span className="text-gray-300 flex items-center gap-1">
-                          {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
-                          חלוקה {i + 1}
-                        </span>
-                        <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
-                      </div>
-                    ))}
+                     {perSec.map((c, i) => {
+                      const displayNum = perSec.length - i;
+                      return (
+                        <div key={i} className="flex justify-between text-[10px]">
+                          <span className="text-gray-300 flex items-center gap-1">
+                            {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
+                            חלוקה {displayNum}
+                          </span>
+                          <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
+                        </div>
+                      );
+                    })}
                   </>
                 );
               })()}
@@ -394,7 +397,8 @@ function MiniInput({ label, value, onChange, min, max, step, suffix }: { label: 
   );
 }
 
-function MiniColorRow({ label, value, onChange, colors }: { label: string; value: string; onChange: (v: string) => void; colors: { id: string; hex: string }[] }) {
+function MiniColorRow({ label, value, onChange, colors }: { label: string; value: string; onChange: (v: string) => void; colors: { id: string; hex: string; name_he?: string; name_ar?: string }[] }) {
+  const selected = colors.find((c) => c.hex.toLowerCase() === value?.toLowerCase());
   return (
     <div>
       <label className="text-[10px] text-gray-400 block mb-1">{label}</label>
@@ -402,9 +406,13 @@ function MiniColorRow({ label, value, onChange, colors }: { label: string; value
         {colors.map((c) => (
           <button key={c.id} onClick={() => onChange(c.hex)}
             className={`w-6 h-6 rounded-md border-2 transition-all ${value === c.hex ? "border-gray-900 scale-110" : "border-gray-200"}`}
-            style={{ backgroundColor: c.hex }} />
+            style={{ backgroundColor: c.hex }}
+            title={(c as any).name_he || c.id} />
         ))}
       </div>
+      {selected && (selected as any).name_he && (
+        <p className="text-[9px] text-gray-500 mt-0.5">{(selected as any).name_he}</p>
+      )}
     </div>
   );
 }

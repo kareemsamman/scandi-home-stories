@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
-import { mmToCm, cmToMm } from "@/types/pergola";
+import { mmToCm, cmToMm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS } from "@/types/pergola";
 import { calcSlatCount } from "@/lib/pergolaRules";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,10 +93,10 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
             <SummaryCard label={t("pergolaRequest.roofFillMode")} value={config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")} />
           )}
           <SummaryCard label={t("pergolaRequest.santafRoofing")} value={config.santaf === "with" ? t("pergolaRequest.santafWith") : t("pergolaRequest.santafWithout")} />
-          <SummaryCard label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} color={config.frameColor} />
-          <SummaryCard label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} color={config.roofColor} />
+          <SummaryCard label={t("pergolaRequest.frameColor")} value={getColorName(config.frameColor || "#383E42", locale)} color={config.frameColor} />
+          <SummaryCard label={t("pergolaRequest.roofColor")} value={getColorName(config.roofColor || "#A5A5A5", locale)} color={config.roofColor} />
           {config.santaf === "with" && config.santafColor && (
-            <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={config.santafColor} color={config.santafColor} />
+            <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={getColorName(config.santafColor, locale)} color={config.santafColor} />
           )}
         </div>
 
@@ -109,8 +109,7 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
           <div className="grid sm:grid-cols-2 gap-3">
             {carrierConfigs.map((cc, i) => {
               const count = calcSlatCount(cmToMm(Number(config.lengthCm) || 400), cc.slatGapCm * 10, cc.slatSize);
-              // RTL numbering: first config = rightmost section = חלוקה 1
-              const displayNum = i + 1;
+              const displayNum = carrierConfigs.length - i;
               return (
                 <div key={i} className="bg-white rounded-xl border border-gray-100 p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -223,13 +222,21 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
   );
 };
 
+function getColorName(hex: string | undefined, locale: string): string {
+  if (!hex) return "";
+  const allColors = [...STANDARD_COLORS, ...SLAT_COLORS, ...SANTAF_COLORS];
+  const match = allColors.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
+  if (match) return locale === "ar" ? match.name_ar : match.name_he;
+  return hex;
+}
+
 function SummaryCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
       <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
       <p className="text-sm font-semibold text-gray-800 mt-0.5 flex items-center gap-2">
         {color && <span className="w-4 h-4 rounded border border-gray-200 shrink-0" style={{ backgroundColor: color }} />}
-        {!color && value}
+        {value}
       </p>
     </div>
   );
