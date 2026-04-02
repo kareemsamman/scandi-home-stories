@@ -28,6 +28,7 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   frameColor: "#383E42",
   roofColor: "#A5A5A5",
   spacingMode: "automatic",
+  carrierCountOverride: 0,
   selectedProfiles: {} as any,
   notes: "",
   customerName: "",
