@@ -325,8 +325,11 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 const perSec: number[] = [];
                 for (let i = 0; i < sections; i++) {
                   const cc = carrierConfigs[i];
+                const lengthMm = cmToMm(Number(config.lengthCm) || 400);
+                for (let i = 0; i < sections; i++) {
+                  const cc = carrierConfigs[i];
                   const gapMm = (cc?.slatGapCm || Number(config.slatGapCm) || 3) * 10;
-                  const count = calcSlatCount(widthMm, gapMm, cc?.slatSize || config.slatSize as string);
+                  const count = calcSlatCount(lengthMm, gapMm, cc?.slatSize || config.slatSize as string);
                   totalSlats += count;
                   perSec.push(count);
                 }
@@ -337,7 +340,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                       <div key={i} className="flex justify-between text-[10px]">
                         <span className="text-gray-300 flex items-center gap-1">
                           {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
-                          נשא {i + 1}
+                          חלוקה {i + 1}
                         </span>
                         <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
                       </div>
