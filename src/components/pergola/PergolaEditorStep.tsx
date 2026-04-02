@@ -236,7 +236,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                   <label className="text-[10px] text-gray-400">{t("pergolaRequest.slatGap")}</label>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((g) => (
-                      <button key={g} onClick={() => setConfig({ slatGapCm: g, slatCount: 0 })}
+                      <button key={g} onClick={() => setConfig({ slatGapCm: g })}
                         className={`flex-1 py-1.5 rounded-md text-[10px] font-medium border-2 transition-all ${
                           Number(config.slatGapCm) === g ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                         }`}>{g} cm</button>
@@ -247,7 +247,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                     <label className="text-[10px] text-gray-400">{t("pergolaRequest.slatSizeLabel")}</label>
                     <div className="flex gap-1 mt-0.5">
                       {SLAT_SIZES.map((s) => (
-                        <button key={s.id} onClick={() => setConfig({ slatSize: s.id as any, slatCount: 0 })}
+                        <button key={s.id} onClick={() => setConfig({ slatSize: s.id as any })}
                           className={`flex-1 py-1 rounded-md text-[9px] font-medium border-2 transition-all ${
                             (config.slatSize || "20x70") === s.id ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                           }`}>{s.label}</button>
@@ -323,10 +323,11 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 const sections = Math.max(1, specs.carrierCount - 1);
                 let totalSlats = 0;
                 const perSec: number[] = [];
+                const lengthMm2 = cmToMm(Number(config.lengthCm) || 400);
                 for (let i = 0; i < sections; i++) {
                   const cc = carrierConfigs[i];
                   const gapMm = (cc?.slatGapCm || Number(config.slatGapCm) || 3) * 10;
-                  const count = calcSlatCount(widthMm, gapMm, cc?.slatSize || config.slatSize as string);
+                  const count = calcSlatCount(lengthMm2, gapMm, cc?.slatSize || config.slatSize as string);
                   totalSlats += count;
                   perSec.push(count);
                 }
@@ -337,7 +338,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                       <div key={i} className="flex justify-between text-[10px]">
                         <span className="text-gray-300 flex items-center gap-1">
                           {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
-                          נשא {i + 1}
+                          חלוקה {i + 1}
                         </span>
                         <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
                       </div>

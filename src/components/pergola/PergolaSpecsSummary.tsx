@@ -18,7 +18,7 @@ export const PergolaSpecsSummary = () => {
   };
   const isCustom = specs.moduleClassification === "custom";
   const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
-  const widthMm = cmToMm(Number(config.widthCm) || 400);
+  const lengthMm = cmToMm(Number(config.lengthCm) || 400);
 
   const rows: [string, string][] = [
     [t("pergolaRequest.moduleType"), moduleLabels[specs.moduleClassification]],
@@ -34,7 +34,7 @@ export const PergolaSpecsSummary = () => {
   if (isFixedSlats && carrierConfigs.length > 0) {
     let totalSlats = 0;
     carrierConfigs.forEach((cc) => {
-      totalSlats += calcSlatCount(widthMm, cc.slatGapCm * 10, cc.slatSize);
+      totalSlats += calcSlatCount(lengthMm, cc.slatGapCm * 10, cc.slatSize);
     });
     rows.push([t("pergolaRequest.slatsLabel"), String(totalSlats)]);
   } else if (isFixedSlats) {
@@ -78,7 +78,7 @@ export const PergolaSpecsSummary = () => {
           </h4>
           <div className="space-y-1">
             {carrierConfigs.map((cc, i) => {
-              const count = calcSlatCount(widthMm, cc.slatGapCm * 10, cc.slatSize);
+              const count = calcSlatCount(lengthMm, cc.slatGapCm * 10, cc.slatSize);
               return (
                 <div key={i} className="flex items-center justify-between text-[11px]">
                   <span className="text-gray-400 flex items-center gap-1.5">
