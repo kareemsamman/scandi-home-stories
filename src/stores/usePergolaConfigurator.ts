@@ -94,6 +94,11 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         partial.slatColor !== undefined ||
         partial.lighting !== undefined;
 
+      const carrierCountChanged =
+        partial.carrierCountOverride !== undefined ||
+        partial.spacingMode !== undefined ||
+        partial.widthCm !== undefined;
+
       let carrierConfigs = state.carrierConfigs;
       if (specs && (globalChanged || specs.carrierCount !== state.specs?.carrierCount)) {
         if (globalChanged) {
