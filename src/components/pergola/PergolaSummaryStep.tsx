@@ -93,10 +93,10 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
             <SummaryCard label={t("pergolaRequest.roofFillMode")} value={config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")} />
           )}
           <SummaryCard label={t("pergolaRequest.santafRoofing")} value={config.santaf === "with" ? t("pergolaRequest.santafWith") : t("pergolaRequest.santafWithout")} />
-          <SummaryCard label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} color={config.frameColor} />
-          <SummaryCard label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} color={config.roofColor} />
+          <SummaryCard label={t("pergolaRequest.frameColor")} value={getColorName(config.frameColor || "#383E42", locale)} color={config.frameColor} />
+          <SummaryCard label={t("pergolaRequest.roofColor")} value={getColorName(config.roofColor || "#A5A5A5", locale)} color={config.roofColor} />
           {config.santaf === "with" && config.santafColor && (
-            <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={config.santafColor} color={config.santafColor} />
+            <SummaryCard label={t("pergolaRequest.santafColorLabel")} value={getColorName(config.santafColor, locale)} color={config.santafColor} />
           )}
         </div>
 
