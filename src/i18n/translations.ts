@@ -479,7 +479,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       pageSubtitle: 'מלאו את הפרטים וקבלו הצעה מותאמת',
       dimensions: 'מידות',
       width: 'רוחב (ס"מ)',
-      length: 'עומק / הטלה (ס"מ)',
+      length: 'אורך (ס"מ)',
       height: 'גובה (ס"מ) - אופציונלי',
       configuration: 'תצורה',
       pergolaType: 'סוג פרגולה',
