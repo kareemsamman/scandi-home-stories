@@ -334,15 +334,18 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 return (
                   <>
                     <SpecRow label={`${t("pergolaRequest.slatsLabel")} (${t("pergolaRequest.summaryTitle")})`} value={String(totalSlats)} />
-                    {perSec.map((c, i) => (
-                      <div key={i} className="flex justify-between text-[10px]">
-                        <span className="text-gray-300 flex items-center gap-1">
-                          {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
-                          חלוקה {i + 1}
-                        </span>
-                        <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
-                      </div>
-                    ))}
+                     {perSec.map((c, i) => {
+                      const displayNum = perSec.length - i;
+                      return (
+                        <div key={i} className="flex justify-between text-[10px]">
+                          <span className="text-gray-300 flex items-center gap-1">
+                            {carrierConfigs[i] && <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: carrierConfigs[i].slatColor }} />}
+                            חלוקה {displayNum}
+                          </span>
+                          <span className="text-gray-500">{c} {t("pergolaRequest.slatsLabel")}</span>
+                        </div>
+                      );
+                    })}
                   </>
                 );
               })()}

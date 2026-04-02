@@ -109,8 +109,7 @@ export const PergolaSummaryStep = ({ onBack, onSubmit, isSubmitting, pdfUrl }: P
           <div className="grid sm:grid-cols-2 gap-3">
             {carrierConfigs.map((cc, i) => {
               const count = calcSlatCount(cmToMm(Number(config.lengthCm) || 400), cc.slatGapCm * 10, cc.slatSize);
-              // RTL numbering: first config = rightmost section = חלוקה 1
-              const displayNum = i + 1;
+              const displayNum = carrierConfigs.length - i;
               return (
                 <div key={i} className="bg-white rounded-xl border border-gray-100 p-4">
                   <div className="flex items-center justify-between mb-2">
