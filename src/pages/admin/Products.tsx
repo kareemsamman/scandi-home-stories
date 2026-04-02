@@ -77,11 +77,18 @@ const AdminProducts = () => {
         db.from("product_translations").select("*").eq("product_id", product.id),
         db.from("inventory").select("*").eq("product_id", product.id),
       ]);
-      const { id, created_at, updated_at, content_html_he, content_html_ar, ...fields } = product;
-      // Remove any non-schema fields that come from joined/computed data
-      const cleanFields = { ...fields };
-      delete cleanFields.content_html_he;
-      delete cleanFields.content_html_ar;
+      // Only pick known DB columns to avoid schema cache errors
+      const validKeys = [
+        'name','slug','type','sku','price','category_id','sub_category_id',
+        'description_he','description_ar','long_description_he','long_description_ar',
+        'length_he','length_ar','materials','dimensions','images','colors','sizes',
+        'is_featured','is_new','sort_order','status','max_quantity',
+        'use_color_groups','custom_colors_enabled','custom_color_groups','custom_color_prices','product_details',
+      ];
+      const cleanFields: Record<string, any> = {};
+      for (const k of validKeys) {
+        if (k in product) cleanFields[k] = product[k];
+      }
       const { data: newProduct, error } = await db.from("products")
         .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: `${cleanFields.slug}-copy`, status: "draft", is_featured: false })
         .select("id").single();
