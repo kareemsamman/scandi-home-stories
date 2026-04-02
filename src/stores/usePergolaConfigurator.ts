@@ -28,6 +28,7 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   frameColor: "#383E42",
   roofColor: "#A5A5A5",
   spacingMode: "automatic",
+  carrierCountOverride: 0,
   selectedProfiles: {} as any,
   notes: "",
   customerName: "",
@@ -47,6 +48,7 @@ function recompute(config: Partial<PergolaFormInput>): PergolaSpecs | null {
     slatGapCm: Number(config.slatGapCm) || 3,
     slatCount: Number(config.slatCount) || undefined,
     slatSize: (config.slatSize as string) || "20x70",
+    carrierCountOverride: Number(config.carrierCountOverride) || 0,
   });
 }
 
@@ -92,8 +94,13 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         partial.slatColor !== undefined ||
         partial.lighting !== undefined;
 
+      const carrierCountChanged =
+        partial.carrierCountOverride !== undefined ||
+        partial.spacingMode !== undefined ||
+        partial.widthCm !== undefined;
+
       let carrierConfigs = state.carrierConfigs;
-      if (specs && (globalChanged || specs.carrierCount !== state.specs?.carrierCount)) {
+      if (specs && (globalChanged || carrierCountChanged || specs.carrierCount !== state.specs?.carrierCount)) {
         if (globalChanged) {
           // Apply new global to all carriers
           const globalDef = defaultCarrierConfig({

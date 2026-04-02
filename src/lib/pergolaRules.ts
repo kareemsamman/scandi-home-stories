@@ -12,18 +12,12 @@ export function classifyModule(widthMm: number): { classification: ModuleClassif
   return { classification: "custom", moduleCount: 0 };
 }
 
-// ── Carrier count by projection/depth (mm) ──
-// Table: 3000→7, 3500→8, ... 10000→21
+// ── Carrier (קורת חלוקה) count by width (mm) ──
+// Default: width_in_meters - 1 (e.g. 7m → 6, 6m → 5, 3m → 2)
 
-export function calcCarrierCount(lengthMm: number): number {
-  if (lengthMm <= 0) return 3;
-  if (lengthMm < 3000) {
-    return Math.max(3, Math.round((lengthMm / 3000) * 7));
-  }
-  if (lengthMm > 10000) {
-    return 21 + Math.ceil((lengthMm - 10000) / 500);
-  }
-  return 7 + Math.ceil((lengthMm - 3000) / 500);
+export function calcCarrierCount(widthMm: number): number {
+  if (widthMm <= 0) return 1;
+  return Math.max(1, Math.floor(widthMm / 1000) - 1);
 }
 
 // ── Post count by width (mm) ──
@@ -62,16 +56,14 @@ export function calcSpacing(lengthMm: number, carrierCount: number, spacingMode:
 
 // ── Adjusted carrier count for spacing mode ──
 
-export function adjustedCarrierCount(lengthMm: number, spacingMode: SpacingMode): number {
-  const baseCount = calcCarrierCount(lengthMm);
+export function adjustedCarrierCount(widthMm: number, spacingMode: SpacingMode): number {
+  const baseCount = calcCarrierCount(widthMm);
   if (spacingMode === "automatic" || spacingMode === "standard") return baseCount;
   if (spacingMode === "dense") {
-    // Increase carriers for denser spacing
     return Math.max(baseCount, Math.round(baseCount * 1.3));
   }
   if (spacingMode === "wide") {
-    // Decrease carriers for wider spacing
-    return Math.max(3, Math.round(baseCount * 0.75));
+    return Math.max(1, Math.round(baseCount * 0.75));
   }
   return baseCount;
 }
@@ -205,12 +197,14 @@ export function computeSpecs(input: {
   slatGapCm?: number;
   slatCount?: number;
   slatSize?: string;
+  carrierCountOverride?: number;
 }): PergolaSpecs {
   const { classification, moduleCount } = classifyModule(input.widthMm);
-  const carrierCount = adjustedCarrierCount(input.lengthMm, input.spacingMode);
+  const autoCarrierCount = adjustedCarrierCount(input.widthMm, input.spacingMode);
+  const carrierCount = (input.carrierCountOverride && input.carrierCountOverride > 0) ? input.carrierCountOverride : autoCarrierCount;
   const { front, back } = calcPostCount(input.widthMm, input.mountType);
   const moduleWidths = calcModuleWidths(input.widthMm, moduleCount);
-  const spacingMm = calcSpacing(input.lengthMm, carrierCount, input.spacingMode);
+  const spacingMm = calcSpacing(input.widthMm, carrierCount, input.spacingMode);
   const profiles = getProfilesForType(input.pergolaType);
 
   // Slat calculations for fixed pergola

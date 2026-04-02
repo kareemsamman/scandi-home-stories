@@ -4,7 +4,7 @@ import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
 import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
 import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
-import { calcSlatCount } from "@/lib/pergolaRules";
+import { calcSlatCount, adjustedCarrierCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
 import { PergolaIsometricView } from "./PergolaIsometricView";
@@ -266,11 +266,33 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             </SideCard>
           )}
 
-          {/* Spacing */}
-          <SideCard title={t("pergolaRequest.spacing")} icon="↔️">
+          {/* קורות חלוקה count + Spacing */}
+          <SideCard title={t("pergolaRequest.carriers")} icon="↔️">
+            {/* Carrier count control */}
+            <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.carriers")}</label>
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={() => setConfig({ carrierCountOverride: Math.max(1, (config.carrierCountOverride || specs.carrierCount) - 1) })}
+                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+              >−</button>
+              <span className="text-sm font-semibold text-gray-800 min-w-[2rem] text-center">{specs.carrierCount}</span>
+              <button
+                onClick={() => setConfig({ carrierCountOverride: (config.carrierCountOverride || specs.carrierCount) + 1 })}
+                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+              >+</button>
+              {(config.carrierCountOverride || 0) > 0 && (
+                <button
+                  onClick={() => setConfig({ carrierCountOverride: 0 })}
+                  className="px-2 py-1 rounded-md text-[9px] font-medium border border-gray-200 text-gray-400 hover:bg-gray-50"
+                >אוטומטי ({adjustedCarrierCount(widthMm, (config.spacingMode || "automatic") as SpacingMode)})</button>
+              )}
+            </div>
+
+            {/* Spacing mode */}
+            <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.spacingLabel")}</label>
             <div className="grid grid-cols-2 gap-1.5">
               {(["automatic", "dense", "standard", "wide"] as const).map((sm) => (
-                <button key={sm} onClick={() => setConfig({ spacingMode: sm as SpacingMode })}
+                <button key={sm} onClick={() => setConfig({ spacingMode: sm as SpacingMode, carrierCountOverride: 0 })}
                   className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
                     config.spacingMode === sm ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
                   }`}>
