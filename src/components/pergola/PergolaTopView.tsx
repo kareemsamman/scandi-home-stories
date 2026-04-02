@@ -44,6 +44,9 @@ export const PergolaTopView = ({ config }: Props) => {
 
   const handleHover = (el: SelectedElement | null) => () => setHoverElement(el);
 
+  // Total number of sections between carriers
+  const totalSections = carrierPositions.length >= 2 ? carrierPositions.length - 1 : 0;
+
   return (
     <svg viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full cursor-default" style={{ maxHeight: 460 }}
       onClick={() => select(null)}>
@@ -106,12 +109,15 @@ export const PergolaTopView = ({ config }: Props) => {
       ))}
 
       {/* Internal slats — per-carrier sections (vertical strips), HORIZONTAL slats within each */}
+      {/* RTL: section numbering starts from the RIGHT (חלוקה 1 = rightmost) */}
       {isFixedSlats && carrierPositions.length >= 2 && (() => {
         const globalColor = slatColor || "#383E42";
         const sections = carrierPositions.length - 1;
 
         return Array.from({ length: sections }, (_, secIdx) => {
-          const cc = carrierConfigs[secIdx];
+          // RTL mapping: visual secIdx 0 is leftmost, but חלוקה 1 is rightmost
+          const rtlIdx = sections - 1 - secIdx; // config index: rightmost = 0
+          const cc = carrierConfigs[rtlIdx];
           const secColor = cc?.slatColor || globalColor;
           const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
           const slatH = cc?.slatSize === "20x40" ? 40 : cc?.slatSize === "20x100" ? 100 : 70;
@@ -128,6 +134,9 @@ export const PergolaTopView = ({ config }: Props) => {
           const el: SelectedElement = { type: "carrier", index: secIdx };
           const isSel = isSelected(el);
           const isHov = isHovered(el);
+
+          // Display number: rightmost = 1, leftmost = sections
+          const displayNum = sections - secIdx;
 
           return (
             <g key={`sec-${secIdx}`} className="cursor-pointer"
@@ -156,7 +165,7 @@ export const PergolaTopView = ({ config }: Props) => {
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
                   fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
-                  קורת חלוקה {secIdx + 1} — {secSlatCount} שלבים
+                  קורת חלוקה {displayNum} — {secSlatCount} שלבים
                 </text>
               )}
             </g>

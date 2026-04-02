@@ -13,12 +13,13 @@ function toIso(x: number, y: number, z: number): [number, number] {
 }
 
 export const PergolaIsometricView = ({ config }: Props) => {
-  const { widthMm, lengthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType } = config;
+  const { widthMm, lengthMm, heightMm, mountType, lighting, lightingPosition, lightingPosts, roofFillMode, santaf, santafColor, slatColor, specs, frameColor, roofColor, pergolaType, carrierConfigs } = config;
   const { selected, select, hoverElement, setHoverElement } = usePergolaEditor();
   const isFixedSlats = pergolaType === "fixed" && roofFillMode === "slats";
 
   const postPositions = calcPostPositions(widthMm, specs.frontPostCount);
-  const carrierPositions = calcCarrierPositions(lengthMm, specs.carrierCount);
+  // Carriers along WIDTH axis (matching top view) — vertical dividers
+  const carrierPositions = calcCarrierPositions(widthMm, specs.carrierCount);
 
   const corners = [
     toIso(0, 0, 0), toIso(widthMm, 0, 0), toIso(0, lengthMm, 0), toIso(widthMm, lengthMm, 0),
@@ -52,6 +53,8 @@ export const PergolaIsometricView = ({ config }: Props) => {
   const isHovered = (el: SelectedElement) => hoverElement?.type === el.type && hoverElement?.index === el.index;
   const handleClick = (el: SelectedElement) => (e: React.MouseEvent) => { e.stopPropagation(); select(isSelected(el) ? null : el); };
   const handleHover = (el: SelectedElement | null) => () => setHoverElement(el);
+
+  const totalSections = carrierPositions.length >= 2 ? carrierPositions.length - 1 : 0;
 
   return (
     <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full cursor-default" style={{ maxHeight: 460 }}
@@ -151,32 +154,47 @@ export const PergolaIsometricView = ({ config }: Props) => {
       {isoLine(0, 0, heightMm, 0, lengthMm, heightMm, frameColor || "#383838", sw * 1.5, "tl")}
       {isoLine(widthMm, 0, heightMm, widthMm, lengthMm, heightMm, frameColor || "#383838", sw * 1.5, "tr")}
 
-      {/* Carriers */}
-      {carrierPositions.map((y, i) =>
-        isoLine(0, y, heightMm, widthMm, y, heightMm, "#9CA3AF", sw * 0.7, `car-${i}`, "25 12")
+      {/* Carriers — vertical lines along width at X positions, spanning the full length (Y axis) */}
+      {carrierPositions.map((x, i) =>
+        isoLine(x, 0, heightMm, x, lengthMm, heightMm, "#9CA3AF", sw * 0.7, `car-${i}`, "25 12")
       )}
 
-      {/* Internal slats (fixed pergola, slat mode) */}
-      {isFixedSlats && specs.slatCount > 0 && (() => {
-        const slatW = specs.slatWidthMm;
-        const totalSlats = specs.slatCount;
-        const gap = specs.slatGapMm;
-        const totalUsed = totalSlats * slatW + (totalSlats + 1) * gap;
-        const startX = (widthMm - totalUsed) / 2 + gap;
-        return Array.from({ length: Math.min(totalSlats, 60) }, (_, i) => {
-          const x = startX + i * (slatW + gap);
-          const [s1x, s1y] = toIso(x + slatW / 2, 0, heightMm);
-          const [s2x, s2y] = toIso(x + slatW / 2, lengthMm, heightMm);
-          return <line key={`slat-${i}`} x1={s1x} y1={s1y} x2={s2x} y2={s2y}
-            stroke={slatColor || "#383838"} strokeWidth={sw * 0.8} opacity={0.65} />;
+      {/* Internal slats (fixed pergola, slat mode) — HORIZONTAL bars spanning width, distributed along length */}
+      {isFixedSlats && totalSections > 0 && (() => {
+        const globalColor = slatColor || "#383E42";
+        // For each section between carriers, draw horizontal slats along the length
+        return Array.from({ length: totalSections }, (_, secIdx) => {
+          const rtlIdx = totalSections - 1 - secIdx;
+          const cc = carrierConfigs[rtlIdx];
+          const secColor = cc?.slatColor || globalColor;
+          const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
+          const slatH = cc?.slatSize === "20x40" ? 40 : cc?.slatSize === "20x100" ? 100 : 70;
+
+          const x1 = carrierPositions[secIdx];
+          const x2 = carrierPositions[secIdx + 1];
+
+          // Slats counted along length (אורך) with 90mm frame deduction
+          const usableLength = lengthMm - 90;
+          const secSlatCount = Math.max(1, Math.floor(usableLength / (slatH + secGapMm)));
+          const actualGap = secSlatCount > 0 ? (usableLength - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
+
+          // Draw horizontal bars at each Y position, spanning from x1 to x2
+          return Array.from({ length: Math.min(secSlatCount, 60) }, (_, i) => {
+            const yPos = actualGap + i * (slatH + actualGap);
+            const yMid = yPos + slatH / 2;
+            const [s1x, s1y] = toIso(x1 + 6, yMid, heightMm);
+            const [s2x, s2y] = toIso(x2 - 6, yMid, heightMm);
+            return <line key={`slat-${secIdx}-${i}`} x1={s1x} y1={s1y} x2={s2x} y2={s2y}
+              stroke={secColor} strokeWidth={sw * 0.8} opacity={0.65} />;
+          });
         });
       })()}
 
       {/* Carrier lights */}
       {lighting !== "none" && lightingPosition !== "no_posts" &&
-        carrierPositions.slice(0, -1).map((y, i) => {
-          const midY = (y + (carrierPositions[i + 1] ?? y)) / 2;
-          const [cx, cy] = toIso(widthMm / 2, midY, heightMm);
+        carrierPositions.slice(0, -1).map((x, i) => {
+          const midX = (x + (carrierPositions[i + 1] ?? x)) / 2;
+          const [cx, cy] = toIso(midX, lengthMm / 2, heightMm);
           return <circle key={`lt-${i}`} cx={cx} cy={cy} r={Math.max(12, widthMm * 0.005)} fill={lightingColor(lighting)} stroke="#666" strokeWidth={2} opacity={0.8} />;
         })}
 
