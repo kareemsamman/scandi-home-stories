@@ -1,42 +1,88 @@
 
 
-## Redesign: Premium Welcome Popup
+## Plan: Pergola Configurator — Terminology, Dimension Swap & Slat Calculation Overhaul
 
-### Current Problem
-The popup looks generic — small card-style layout with separate image area and text below. No visual impact.
+### Summary
+Rename labels (נשאים → קורת חלוקה, רוחב/יציאה → טול/רוחב), add 20×100 slat size option, change the slat calculation formula to account for frame deduction, and restructure the per-carrier (קורת חלוקה) editing flow so each division beam independently configures slat size, gap, color, and lighting.
 
-### New Design
+---
 
-**Popup**: Larger (`max-w-4xl`), full-bleed image cards with dark gradient overlay and text/button rendered directly on the image. Each card is a tall, cinematic tile (`aspect-[3/4]` on mobile, `aspect-[2/3]` on desktop) — similar to premium editorial hero grids.
+### Changes
 
-**Layout**:
-- Header text (title + subtitle) centered above the cards, white on white background
-- 3 cards side-by-side on desktop, stacked on mobile
-- Each card is a full-image tile with a dark-to-transparent gradient overlay from bottom
-- Category title in bold white, positioned at the bottom of the image
-- CTA button as a frosted-glass pill on the image
-- On hover: image zooms slightly, overlay lightens, button shifts up
-- Staggered entrance animation for each card (delay per index)
+#### 1. Translations — rename labels (both HE and AR)
+- **רוחב** → stays as **רוחב** (width) but becomes the shorter dimension
+- **עומק / הטלה** → rename to **אורך** (length) — so the form shows אורך + רוחב instead of רוחב + עומק
+- **נשאים** → **קורות חלוקה** (everywhere: translations, specs summary, SVG labels, element editor)
+- **שלבים לכל נשא** → **שלבים לכל קורת חלוקה**
+- Arabic equivalents updated similarly (الحوامل → قوارص التقسيم, etc.)
 
-**Admin — Image Upload**:
-- Add a file upload button (camera/upload icon) next to the existing URL input for each card
-- Upload to `site-media` bucket under `popup/` prefix (same pattern as Categories, About pages)
-- After upload, auto-fill the image URL field
-- Keep the URL input as fallback for external URLs
+**Files:** `src/i18n/translations.ts`
 
-### Files to Change
+#### 2. Add 20×100 slat size option
+- Add `{ id: '20x100', label: '20 × 100 mm', widthMm: 20, heightMm: 100 }` to `SLAT_SIZES` in `src/types/pergola.ts`
+- Update `SlatSizeId` type
+- Update `getSlatProfileHeight` in `src/lib/pergolaRules.ts` to handle '20x100'
 
-**1. `src/components/WelcomePopup.tsx`** — Full redesign
-- Increase popup to `max-w-4xl`
-- Cards become full-bleed image tiles with gradient overlay
-- Title + subtitle rendered as a minimal header section
-- Text and CTA button positioned absolutely over each card image
-- Staggered card entrance with framer-motion
-- Fallback gradient background when no image is set
+**Files:** `src/types/pergola.ts`, `src/lib/pergolaRules.ts`
 
-**2. `src/pages/admin/WelcomePopup.tsx`** — Add image upload
-- Add upload handler using `supabase.storage.from("site-media").upload("popup/...")`
-- Add an upload button (with ImageIcon) next to each card's image URL input
-- On file select → upload → set the public URL into card.image
-- Show larger image preview thumbnail (48x48 instead of 32x32)
+#### 3. New slat calculation formula
+Current formula doesn't account for frame deduction. New formula:
+
+```text
+FRAME_DEDUCTION = 90mm (9cm total frame)
+usableWidth = widthMm - FRAME_DEDUCTION
+
+slatProfileWidth = 20mm (face width, same for all sizes)
+gapMm = slatGapCm × 10
+
+unitSize = slatProfileWidth + gapMm
+slatCount = floor(usableWidth / unitSize)
+```
+
+Example: width=3000mm, gap=30mm, slat=70mm → usable=2910mm → unit=20+30=50 → 58 slats.
+
+Wait — re-reading the user's message: "70 + 30 = 100, 291/100 = 29". The user means the **height** of the slat profile (70mm) is what counts in the spacing calculation, not the face width (20mm). So the unit = slatHeight + gapMm.
+
+Updated formula:
+```text
+usableWidth = widthMm - 90  (frame deduction)
+slatHeight = getSlatProfileHeight(slatSize)  // 40, 70, or 100
+gapMm = slatGapCm × 10
+unitSize = slatHeight + gapMm
+slatCount = floor(usableWidth / unitSize)
+```
+
+**Files:** `src/lib/pergolaRules.ts` — update `calcSlatCount` and `calcSlatGapFromCount`
+
+#### 4. SVG dimension labels swap
+In the top view SVG, the horizontal dimension currently shows "רוחב" and vertical shows "יציאה/אורך". Swap so:
+- Horizontal (width axis) = **רוחב**
+- Vertical (length/depth axis) = **אורך**
+
+The dimension values already use `widthMm` and `lengthMm` correctly, just the labels in the summary/specs need updating.
+
+**Files:** `src/components/pergola/PergolaTopView.tsx` (label text), `src/components/pergola/PergolaSpecsSummary.tsx`
+
+#### 5. Element editor — rename נשא → קורת חלוקה
+All hardcoded Hebrew strings in `PergolaElementEditor.tsx` (like `נשא ${secIdx + 1}`, `תאורה בנשא`, `מרווח בין נשאים`) will be updated to use `קורת חלוקה` terminology and pulled from translations where possible.
+
+**Files:** `src/components/pergola/PergolaElementEditor.tsx`
+
+#### 6. SVG hover label update
+In `PergolaTopView.tsx`, the section label on hover currently says `נשא {secIdx + 1} — {secSlatCount} שלבים`. Update to `קורת חלוקה {secIdx + 1} — {secSlatCount} שלבים`.
+
+**Files:** `src/components/pergola/PergolaTopView.tsx`
+
+---
+
+### Technical Details
+
+| File | What changes |
+|------|-------------|
+| `src/i18n/translations.ts` | Rename carriers→קורות חלוקה, length label, add new translation keys |
+| `src/types/pergola.ts` | Add 20×100 to SLAT_SIZES |
+| `src/lib/pergolaRules.ts` | New slat formula with 90mm frame deduction, use slatHeight instead of slatWidth for unit calculation |
+| `src/components/pergola/PergolaElementEditor.tsx` | Rename נשא→קורת חלוקה, add 20×100 option (already uses SLAT_SIZES dynamically) |
+| `src/components/pergola/PergolaTopView.tsx` | Update hover labels |
+| `src/components/pergola/PergolaSpecsSummary.tsx` | Update carrier terminology |
 
