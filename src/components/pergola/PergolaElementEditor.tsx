@@ -203,7 +203,7 @@ export const PergolaElementEditor = () => {
         <div className="flex gap-1.5 mb-2">
           {gapPresets.map((g) => (
             <ToggleBtn key={g} active={cc.slatGapCm === g}
-              onClick={() => setCarrierConfig(secIdx, { slatGapCm: g, slatCount: 0 })} label={`${g}`} />
+              onClick={() => setCarrierConfig(secIdx, { slatGapCm: g })} label={`${g}`} />
           ))}
         </div>
 
