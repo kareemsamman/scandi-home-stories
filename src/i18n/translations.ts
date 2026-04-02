@@ -580,7 +580,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       globalApplyHint: 'שינוי כאן חל על כל קורות החלוקה. לחצו על קורת חלוקה ספציפית בשרטוט להתאמה אישית',
       lightingPosts: 'תאורת עמודים',
       lightingLengthLabel: 'אורך פס תאורה',
-      lightingPerCarrierHint: 'לחצו על נשא בשרטוט לבחירת תאורה לכל נשא בנפרד',
+      lightingPerCarrierHint: 'לחצו על קורת חלוקה בשרטוט לבחירת תאורה לכל קורת חלוקה בנפרד',
       phoneMustBe10: 'מספר טלפון חייב להכיל 10 ספרות',
       downloadPdf: 'הורד PDF',
       downloadPdfTitle: 'סיכום הבקשה מוכן',
