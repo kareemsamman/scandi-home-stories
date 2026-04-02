@@ -253,7 +253,7 @@ export const PergolaElementEditor = () => {
             <Label>מרווח בין שלבים (ס"מ)</Label>
             <div className="flex gap-1.5 mb-3">
               {gapPresets.map((g) => (
-                <ToggleBtn key={g} active={currentGap === g} onClick={() => setConfig({ slatGapCm: g, slatCount: 0 })} label={`${g} ס"מ`} />
+                <ToggleBtn key={g} active={currentGap === g} onClick={() => setConfig({ slatGapCm: g })} label={`${g} ס"מ`} />
               ))}
             </div>
             {specs && (
