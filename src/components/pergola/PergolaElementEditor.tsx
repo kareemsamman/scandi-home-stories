@@ -57,6 +57,7 @@ export const PergolaElementEditor = () => {
 
     return (
       <Panel onClose={close} title={isFront ? `עמוד קדמי ${idx + 1}` : `עמוד אחורי ${idx + 1}`}>
+
         {/* Lighting toggle */}
         <div className="space-y-2">
           <Label>תאורה בעמוד</Label>
@@ -165,8 +166,8 @@ export const PergolaElementEditor = () => {
     if (!isFixedSlats || !cc) {
       // Fallback: just show spacing controls if not fixed slats
       return (
-        <Panel onClose={close} title={`נשא ${secIdx + 1}`}>
-          <Label>מרווח בין נשאים</Label>
+        <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1}`}>
+          <Label>מרווח בין קורות חלוקה</Label>
           <div className="grid grid-cols-2 gap-1.5">
             {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
               <ToggleBtn key={m} active={config.spacingMode === m} onClick={() => setConfig({ spacingMode: m })}
@@ -183,7 +184,7 @@ export const PergolaElementEditor = () => {
     const secSlatCount = calcSlatCount(secWidthMm, cc.slatGapCm * 10, cc.slatSize);
 
     return (
-      <Panel onClose={close} title={`נשא ${secIdx + 1} — ${secSlatCount} שלבים`}>
+      <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1} — ${secSlatCount} שלבים`}>
         {/* Slat size */}
         <Label>גודל פרופיל שלב</Label>
         <div className="flex gap-1.5 mb-2">
@@ -209,7 +210,7 @@ export const PergolaElementEditor = () => {
 
         {/* Lighting */}
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <Label>תאורה בנשא</Label>
+          <Label>תאורה בקורת חלוקה</Label>
           <div className="flex gap-1.5">
             <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(secIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
             {LIGHTING_TEMPS.map((lt) => (

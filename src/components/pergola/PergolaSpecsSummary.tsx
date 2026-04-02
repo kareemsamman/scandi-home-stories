@@ -83,10 +83,10 @@ export const PergolaSpecsSummary = () => {
                 <div key={i} className="flex items-center justify-between text-[11px]">
                   <span className="text-gray-400 flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-sm border border-gray-200 shrink-0" style={{ backgroundColor: cc.slatColor }} />
-                    נשא {i + 1}
+                    קורת חלוקה {i + 1}
                   </span>
                   <span className="text-gray-600">
-                    {count} × {cc.slatSize === "20x40" ? "20×40" : "20×70"}
+                    {count} × {cc.slatSize}
                     <span className="text-gray-300 mx-1">&middot;</span>
                     {cc.slatGapCm} cm
                     {cc.lightingEnabled && (

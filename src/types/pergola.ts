@@ -57,8 +57,9 @@ export const SANTAF_COLORS: ColorPreset[] = [
 
 /** Slat profile sizes (width x height in mm) */
 export const SLAT_SIZES = [
-  { id: '20x70', label: '20 × 70 mm', widthMm: 20, heightMm: 70 },
   { id: '20x40', label: '20 × 40 mm', widthMm: 20, heightMm: 40 },
+  { id: '20x70', label: '20 × 70 mm', widthMm: 20, heightMm: 70 },
+  { id: '20x100', label: '20 × 100 mm', widthMm: 20, heightMm: 100 },
 ] as const;
 export type SlatSizeId = typeof SLAT_SIZES[number]['id'];
 

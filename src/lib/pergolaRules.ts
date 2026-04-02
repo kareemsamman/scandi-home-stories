@@ -154,21 +154,29 @@ export function getSlatProfileWidth(slatSize: string): number {
 }
 
 export function getSlatProfileHeight(slatSize: string): number {
-  return slatSize === "20x40" ? 40 : 70;
+  if (slatSize === "20x40") return 40;
+  if (slatSize === "20x100") return 100;
+  return 70;
 }
+
+/** Frame deduction: 9cm (90mm) total for frame profiles on both sides */
+const FRAME_DEDUCTION_MM = 90;
 
 export function calcSlatCount(widthMm: number, gapMm: number, slatSize?: string): number {
   if (gapMm <= 0) return 0;
-  const slatW = getSlatProfileWidth(slatSize || "20x70");
-  const totalUnit = slatW + gapMm;
-  return Math.max(2, Math.floor(widthMm / totalUnit));
+  const usableWidth = widthMm - FRAME_DEDUCTION_MM;
+  if (usableWidth <= 0) return 0;
+  const slatH = getSlatProfileHeight(slatSize || "20x70");
+  const totalUnit = slatH + gapMm;
+  return Math.max(2, Math.floor(usableWidth / totalUnit));
 }
 
 export function calcSlatGapFromCount(widthMm: number, count: number, slatSize?: string): number {
   if (count <= 1) return widthMm;
-  const slatW = getSlatProfileWidth(slatSize || "20x70");
-  const totalSlatWidth = count * slatW;
-  return Math.max(5, Math.round((widthMm - totalSlatWidth) / (count + 1)));
+  const usableWidth = widthMm - FRAME_DEDUCTION_MM;
+  const slatH = getSlatProfileHeight(slatSize || "20x70");
+  const totalSlatHeight = count * slatH;
+  return Math.max(5, Math.round((usableWidth - totalSlatHeight) / (count + 1)));
 }
 
 /** How many slats fit between each pair of carriers (נשאים) */
