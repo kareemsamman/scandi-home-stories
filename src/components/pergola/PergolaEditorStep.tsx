@@ -4,7 +4,7 @@ import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
 import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
 import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
-import { calcSlatCount } from "@/lib/pergolaRules";
+import { calcSlatCount, adjustedCarrierCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
 import { PergolaFrontView } from "./PergolaFrontView";
 import { PergolaIsometricView } from "./PergolaIsometricView";
