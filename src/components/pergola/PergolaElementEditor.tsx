@@ -166,8 +166,8 @@ export const PergolaElementEditor = () => {
     if (!isFixedSlats || !cc) {
       // Fallback: just show spacing controls if not fixed slats
       return (
-        <Panel onClose={close} title={`נשא ${secIdx + 1}`}>
-          <Label>מרווח בין נשאים</Label>
+        <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1}`}>
+          <Label>מרווח בין קורות חלוקה</Label>
           <div className="grid grid-cols-2 gap-1.5">
             {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
               <ToggleBtn key={m} active={config.spacingMode === m} onClick={() => setConfig({ spacingMode: m })}
