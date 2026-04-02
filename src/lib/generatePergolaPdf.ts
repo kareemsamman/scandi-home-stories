@@ -55,6 +55,12 @@ export interface CapturedImage {
   ratio: number;
 }
 
+interface RenderedHtmlImage {
+  data: string;
+  width: number;
+  height: number;
+}
+
 export async function svgToImage(svgEl: SVGSVGElement): Promise<string> {
   const captured = await svgToImageWithSize(svgEl);
   return captured.data;
@@ -95,6 +101,69 @@ export async function svgToImageWithSize(svgEl: SVGSVGElement): Promise<Captured
     img.onerror = reject;
     img.src = url;
   });
+}
+
+async function renderHtmlImage(
+  html: string,
+  html2canvasImpl: ((element: HTMLElement, options?: Record<string, unknown>) => Promise<HTMLCanvasElement>) | null,
+  backgroundColor = "#ffffff",
+): Promise<RenderedHtmlImage | null> {
+  if (!html2canvasImpl) return null;
+
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.top = "-9999px";
+  container.style.left = "-9999px";
+  container.style.zIndex = "-9999";
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    try {
+      await document.fonts.ready;
+    } catch {
+      /* continue */
+    }
+
+    const canvas = await html2canvasImpl(container.firstElementChild as HTMLElement, {
+      scale: 2.5,
+      useCORS: true,
+      logging: false,
+      backgroundColor,
+      allowTaint: true,
+    });
+
+    return {
+      data: canvas.toDataURL("image/jpeg", 0.92),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+function addPaginatedImage(
+  doc: jsPDF,
+  image: RenderedHtmlImage,
+  options: { x: number; y: number; width: number; pageHeight: number; forceNewPage?: boolean },
+) {
+  const { x, y, width, pageHeight, forceNewPage } = options;
+  const imageHeight = (image.height * width) / image.width;
+  let remainingHeight = imageHeight;
+  let offsetY = 0;
+  let firstSlice = true;
+
+  while (remainingHeight > 0) {
+    if ((forceNewPage && firstSlice) || !firstSlice) {
+      doc.addPage();
+    }
+
+    doc.addImage(image.data, "JPEG", x, y + offsetY, width, imageHeight);
+    remainingHeight -= pageHeight;
+    offsetY -= pageHeight;
+    firstSlice = false;
+  }
 }
 
 // ── Locale labels ──
@@ -268,7 +337,7 @@ export async function generatePergolaPdf(
       const usable = lengthMm - 90;
       const count = Math.max(1, Math.floor(usable / (slatH + gapMm)));
       const lightTxt = cc.lightingEnabled ? cc.lighting.toUpperCase() : L.none;
-      const displayNum = input.carrierConfigs!.length - i;
+      const displayNum = i + 1;
       carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;">
         <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;flex-shrink:0;"></span>
         <span style="font-weight:600;font-size:13px;">${L.carrier} ${displayNum}</span>
@@ -281,16 +350,25 @@ export async function generatePergolaPdf(
   // Parts for fixed pergola
   let partsHtml = "";
   if (input.pergolaType === "fixed") {
-    partsHtml = `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:8px;">${L.parts}</h3>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;">
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.frame}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.division}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.slatsComp}</span>
-        <span style="padding:4px 12px;background:#f5f5f5;border-radius:6px;font-size:13px;">${L.post}</span>
-      </div></div>`;
+    partsHtml = `<div style="direction:${dir};font-family:${fontFamily};width:700px;padding:28px;background:white;color:#222;line-height:1.6;">
+      <div style="background:#0f0f0f;color:white;padding:18px 22px;border-radius:8px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:22px;font-weight:700;">${L.parts}</div>
+        <div style="font-size:12px;color:#d1d5db;margin-top:6px;">${typeMap[input.pergolaType] || input.pergolaType}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
+        <div style="padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;text-align:center;font-size:18px;font-weight:700;">${L.frame}</div>
+        <div style="padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;text-align:center;font-size:18px;font-weight:700;">${L.division}</div>
+        <div style="padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;text-align:center;font-size:18px;font-weight:700;">${L.slatsComp}</div>
+        <div style="padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;text-align:center;font-size:18px;font-weight:700;">${L.post}</div>
+      </div>
+    </div>`;
   }
 
   const notesHtml = input.notes?.trim() ? `<div style="margin-top:16px;"><h3 style="font-size:14px;font-weight:bold;color:#333;margin-bottom:4px;">${L.notesLabel}</h3><p style="font-size:12px;color:#555;line-height:1.6;">${input.notes.trim()}</p></div>` : "";
+  const disclaimerHtml = `<div style="margin-top:18px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#888;line-height:1.8;">
+    <div>${L.disclaimer1}</div>
+    <div>${L.disclaimer2}</div>
+  </div>`;
 
   const row = (label: string, value: string, colorHex?: string) => {
     const colorSwatch = colorHex ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${colorHex};border:1px solid #ccc;vertical-align:middle;margin-inline-end:4px;"></span>` : "";
@@ -362,30 +440,9 @@ export async function generatePergolaPdf(
       )}
 
       ${carrierHtml}
-      ${partsHtml}
       ${notesHtml}
-
-      <!-- Footer -->
-      <div style="margin-top:24px;border-top:1px solid #eee;padding-top:8px;text-align:center;font-size:9px;color:#aaa;line-height:1.8;">
-        <div style="font-family:Arial,sans-serif;">A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il</div>
-        <div>${L.disclaimer1}</div>
-        <div>${L.disclaimer2}</div>
-      </div>
+      ${disclaimerHtml}
     </div>`;
-
-  // Render HTML to canvas
-  const container = document.createElement("div");
-  container.style.position = "fixed";
-  container.style.top = "-9999px";
-  container.style.left = "-9999px";
-  container.style.zIndex = "-9999";
-  container.innerHTML = page1Html;
-  document.body.appendChild(container);
-
-  // Wait for fonts to load
-  try {
-    await document.fonts.ready;
-  } catch { /* continue */ }
 
   // Dynamic import html2canvas
   const { default: html2canvas } = await import("html2canvas" as any).catch(() => ({ default: null }));
@@ -395,31 +452,21 @@ export async function generatePergolaPdf(
   const H = 297;
   const m = 10;
   const cw = W - m * 2;
+  const footerReserved = 20;
+  const contentHeight = H - m - footerReserved;
 
   if (html2canvas) {
     try {
-      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        allowTaint: true,
-      });
-      const imgData = canvas.toDataURL("image/jpeg", 0.9);
-      const imgW = cw;
-      const imgH = (canvas.height * imgW) / canvas.width;
+      const mainPageImage = await renderHtmlImage(page1Html, html2canvas, "#ffffff");
+      if (mainPageImage) {
+        addPaginatedImage(doc, mainPageImage, { x: m, y: m, width: cw, pageHeight: contentHeight });
+      }
 
-      let heightLeft = imgH;
-      let position = 0;
-
-      doc.addImage(imgData, "JPEG", m, m + position, imgW, imgH);
-      heightLeft -= (H - m * 2);
-
-      while (heightLeft > 0) {
-        position -= (H - m * 2);
-        doc.addPage();
-        doc.addImage(imgData, "JPEG", m, m + position, imgW, imgH);
-        heightLeft -= (H - m * 2);
+      if (partsHtml) {
+        const partsPageImage = await renderHtmlImage(partsHtml, html2canvas, "#ffffff");
+        if (partsPageImage) {
+          addPaginatedImage(doc, partsPageImage, { x: m, y: m, width: cw, pageHeight: contentHeight, forceNewPage: true });
+        }
       }
     } catch (e) {
       console.warn("html2canvas failed, using fallback", e);
@@ -430,8 +477,6 @@ export async function generatePergolaPdf(
     doc.setFontSize(14);
     doc.text("A.M.G PERGOLA - Configuration Request", W / 2, 20, { align: "center" });
   }
-
-  document.body.removeChild(container);
 
   // ── Drawings pages: render header as html2canvas too for proper Hebrew ──
   const viewEntries: [string, PdfImageEntry | undefined][] = [
@@ -445,29 +490,24 @@ export async function generatePergolaPdf(
     doc.addPage();
 
     // Render header bar as html2canvas for proper Hebrew/Arabic text
-    const headerDiv = document.createElement("div");
-    headerDiv.style.position = "fixed";
-    headerDiv.style.top = "-9999px";
-    headerDiv.style.left = "-9999px";
-    headerDiv.style.zIndex = "-9999";
-    headerDiv.innerHTML = `<div style="direction:${dir};font-family:${fontFamily};width:700px;background:#0f0f0f;color:white;padding:14px 20px;text-align:center;font-size:18px;font-weight:bold;">${label}</div>`;
-    document.body.appendChild(headerDiv);
-    try {
-      const headerCanvas = await html2canvas(headerDiv.firstElementChild as HTMLElement, { scale: 2.5, useCORS: true, logging: false, backgroundColor: "#0f0f0f" });
-      const headerImg = headerCanvas.toDataURL("image/jpeg", 0.9);
-      const headerH = (headerCanvas.height * cw) / headerCanvas.width;
-      doc.addImage(headerImg, "JPEG", m, 0, cw, headerH);
-    } catch {
+    const headerImage = await renderHtmlImage(
+      `<div style="direction:${dir};font-family:${fontFamily};width:700px;background:#0f0f0f;color:white;padding:14px 20px;text-align:center;font-size:18px;font-weight:bold;">${label}</div>`,
+      html2canvas,
+      "#0f0f0f",
+    );
+    if (headerImage) {
+      const headerH = (headerImage.height * cw) / headerImage.width;
+      doc.addImage(headerImage.data, "JPEG", m, 0, cw, headerH);
+    } else {
       doc.setFillColor(15, 15, 15);
       doc.rect(0, 0, W, 22, "F");
     }
-    document.body.removeChild(headerDiv);
 
     let y = 28;
 
     // Image — fill most of the page
     const maxImgW = cw - 4;
-    const maxImgH = H - y - 30;
+    const maxImgH = H - y - footerReserved;
     let imgW = maxImgW;
     let imgH = imgW / entry.ratio;
     if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * entry.ratio; }
@@ -483,13 +523,28 @@ export async function generatePergolaPdf(
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
-    doc.setDrawColor(230, 230, 230);
-    doc.line(m, H - 15, W - m, H - 15);
-    doc.setFontSize(6);
-    doc.setTextColor(160, 160, 160);
-    doc.setFont("helvetica", "normal");
-    doc.text("A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il", W / 2, H - 10, { align: "center" });
-    doc.text(`${L.page} ${p} ${L.of} ${totalPages}`, W / 2, H - 5, { align: "center" });
+    const footerImage = await renderHtmlImage(
+      `<div style="direction:${dir};font-family:${fontFamily};width:700px;padding:0 12px 8px;background:white;color:#9ca3af;font-size:10px;line-height:1.7;text-align:center;">
+        <div style="border-top:1px solid #e5e7eb;padding-top:8px;">
+          <div style="font-family:Arial,sans-serif;">A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il</div>
+          <div>${L.page} ${p} ${L.of} ${totalPages}</div>
+        </div>
+      </div>`,
+      html2canvas,
+      "#ffffff",
+    );
+
+    if (footerImage) {
+      const footerH = (footerImage.height * cw) / footerImage.width;
+      doc.addImage(footerImage.data, "JPEG", m, H - footerH - 2, cw, footerH);
+    } else {
+      doc.setDrawColor(230, 230, 230);
+      doc.line(m, H - 15, W - m, H - 15);
+      doc.setFontSize(6);
+      doc.setTextColor(160, 160, 160);
+      doc.setFont("helvetica", "normal");
+      doc.text("A.M.G PERGOLA LTD  |  052-812-2846  |  mail@amgpergola.co.il", W / 2, H - 10, { align: "center" });
+    }
   }
 
   return doc.output("datauristring");
