@@ -1,6 +1,15 @@
 import { jsPDF } from "jspdf";
 import type { PergolaSpecs } from "@/types/pergola";
+import { STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS } from "@/types/pergola";
 import { calcSlatCount, getSlatProfileHeight } from "./pergolaRules";
+
+function getColorLabel(hex: string | undefined, locale: string): string {
+  if (!hex) return hex || "";
+  const allColors = [...STANDARD_COLORS, ...SLAT_COLORS, ...SANTAF_COLORS];
+  const match = allColors.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
+  if (match) return locale === "ar" ? match.name_ar : match.name_he;
+  return hex;
+}
 
 export interface PdfInput {
   customerName: string;
