@@ -64,11 +64,12 @@ interface BaseProduct {
   productDetails?: { label_he: string; label_ar: string; value_he: string; value_ar: string }[];
 }
 
-// TYPE 1: Retail products (Pergolas) — fixed size, color swatches only
+// TYPE 1: Retail products (Pergolas) — color swatches, optional sizes/lengths
 export interface RetailProduct extends BaseProduct {
   type: "retail";
   dimensions?: string;
   colors: ColorOption[];
+  sizes?: SizeOption[]; // optional: for retail products with length variations
 }
 
 // TYPE 2: Contractor products (Aluminum profiles) — sizes, color groups (standard + RAL + wood)

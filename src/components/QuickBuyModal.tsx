@@ -35,6 +35,8 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const isRetail = product?.type === "retail";
   const isContractor = product?.type === "contractor";
   const contractor = isContractor ? (product as ContractorProduct) : null;
+  const retail = isRetail ? (product as RetailProduct) : null;
+  const retailHasSizes = isRetail && (retail as any)?.sizes?.length > 0;
 
   const standardColors = (isRetail ? (product as RetailProduct)?.colors : contractor?.colorGroups?.[0]?.colors) || [];
   const customColorGroups = contractor?.colorGroups?.slice(1) || [];
@@ -60,6 +62,16 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
 
   // Sizes available for selected color
   const availableSizes = useMemo(() => {
+    // Retail products with sizes
+    if (retailHasSizes) {
+      const sizes = (retail as any).sizes || [];
+      const colorObj = standardColors.find((c: any) => c.id === (selectedColor?.id || standardColors[0]?.id));
+      if ((colorObj as any)?.lengths?.length > 0) {
+        return sizes.filter((s: any) => (colorObj as any).lengths.includes(s.id));
+      }
+      return sizes;
+    }
+    // Contractor products
     if (!contractor) return [];
     if (isCustomColor && selectedColor?.prices) {
       return contractor.sizes.filter(s => selectedColor.prices![s.id] != null && selectedColor.prices![s.id] > 0);
@@ -69,12 +81,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
       return contractor.sizes.filter(s => (colorObj as any).lengths.includes(s.id));
     }
     return contractor.sizes;
-  }, [contractor, isCustomColor, selectedColor?.id, selectedColor?.prices, standardColors]);
+  }, [contractor, retail, retailHasSizes, isCustomColor, selectedColor?.id, selectedColor?.prices, standardColors]);
 
   // Reset size when color changes
   useEffect(() => {
-    if (!contractor) return;
-    const firstInStock = availableSizes.find(s => {
+    if (!contractor && !retailHasSizes) return;
+    const firstInStock = availableSizes.find((s: any) => {
       const cId = selectedColor?.id || standardColors[0]?.id;
       return cId ? getComboStock(cId, s.id) > 0 : true;
     });
@@ -84,7 +96,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   // Auto-apply profile color when modal opens
   useEffect(() => {
     if (!open || !profileColor || selectedColor) return;
-    const match = standardColors.find((c: any) => c.id === profileColor.id || c.tax_id === profileColor.id);
+    const match = standardColors.find((c: any) => c.id === profileColor.id || (c as any).tax_id === profileColor.id);
     if (match) {
       setSelectedColor({ id: match.id || (match as any).tax_id, name: profileColor.name, hex: match.hex });
     }
@@ -329,7 +341,8 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                 )}
 
                 {/* Length selection (contractor) */}
-                {contractor && availableSizes.length > 0 && (
+                {/* Size/Length selector — for both contractor AND retail with sizes */}
+                {(contractor || retailHasSizes) && availableSizes.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-foreground mb-2.5">
                       {t("contractor.size")}:

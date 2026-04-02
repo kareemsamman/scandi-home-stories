@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical, Eye } from "lucide-react";
@@ -40,10 +40,16 @@ const AdminProducts = () => {
   const navigate = useNavigate();
   const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
-  const [search, setSearch] = useState("");
-  const [filterCat, setFilterCat] = useState("all");
-  const [filterSubCat, setFilterSubCat] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [search, setSearch] = useState(() => sessionStorage.getItem("admin_prod_search") || "");
+  const [filterCat, setFilterCat] = useState(() => sessionStorage.getItem("admin_prod_cat") || "all");
+  const [filterSubCat, setFilterSubCat] = useState(() => sessionStorage.getItem("admin_prod_subcat") || "all");
+  const [filterStatus, setFilterStatus] = useState(() => sessionStorage.getItem("admin_prod_status") || "all");
+
+  // Persist filters to sessionStorage
+  useEffect(() => { sessionStorage.setItem("admin_prod_search", search); }, [search]);
+  useEffect(() => { sessionStorage.setItem("admin_prod_cat", filterCat); }, [filterCat]);
+  useEffect(() => { sessionStorage.setItem("admin_prod_subcat", filterSubCat); }, [filterSubCat]);
+  useEffect(() => { sessionStorage.setItem("admin_prod_status", filterStatus); }, [filterStatus]);
   const { data: subCategories = [] } = useSubCategories(filterCat !== "all" ? filterCat : undefined);
   // Local order for drag (all products, unfiltered)
   const [orderedIds, setOrderedIds] = useState<string[] | null>(null);

@@ -142,7 +142,13 @@ export const useShopData = () => {
       } as ContractorProduct;
     }
 
-    // Retail
+    // Retail — include lengths/combo_prices if present (some retail products have sizes)
+    const retailSizes = ((p.sizes as any[]) || []).map((s: any) => ({
+      id: s.tax_id || s.id || s.value || s.label,
+      label: { he: s.label_he || s.value || s.label || "", ar: s.label_ar || s.label_he || s.value || s.label || "" },
+      price: s.price ? Number(s.price) : undefined,
+    }));
+
     return {
       ...base,
       type: "retail" as const,
@@ -151,7 +157,11 @@ export const useShopData = () => {
         id: c.tax_id || c.id || c.hex,
         name: { he: c.label_he || c.name_he || c.name?.he || "", ar: c.label_ar || c.name_ar || c.name?.ar || "" },
         hex: c.hex,
+        lengths: c.lengths || undefined,
+        combo_prices: c.combo_prices || undefined,
       })) as ColorOption[],
+      // Attach sizes for retail products that have them (e.g. profiles with lengths)
+      ...(retailSizes.length > 0 ? { sizes: retailSizes } : {}),
     } as RetailProduct;
   });
 
