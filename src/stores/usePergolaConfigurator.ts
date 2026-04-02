@@ -48,6 +48,7 @@ function recompute(config: Partial<PergolaFormInput>): PergolaSpecs | null {
     slatGapCm: Number(config.slatGapCm) || 3,
     slatCount: Number(config.slatCount) || undefined,
     slatSize: (config.slatSize as string) || "20x70",
+    carrierCountOverride: Number(config.carrierCountOverride) || 0,
   });
 }
 
