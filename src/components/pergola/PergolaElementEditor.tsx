@@ -184,7 +184,7 @@ export const PergolaElementEditor = () => {
     const secSlatCount = calcSlatCount(secWidthMm, cc.slatGapCm * 10, cc.slatSize);
 
     return (
-      <Panel onClose={close} title={`נשא ${secIdx + 1} — ${secSlatCount} שלבים`}>
+      <Panel onClose={close} title={`קורת חלוקה ${secIdx + 1} — ${secSlatCount} שלבים`}>
         {/* Slat size */}
         <Label>גודל פרופיל שלב</Label>
         <div className="flex gap-1.5 mb-2">
