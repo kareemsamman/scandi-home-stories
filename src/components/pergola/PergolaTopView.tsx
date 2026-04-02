@@ -178,12 +178,12 @@ export const PergolaTopView = ({ config }: Props) => {
           onMouseLeave={handleHover(null)} />
       )}
 
-      {/* Carrier lights */}
+      {/* Carrier lights — centered in each vertical section */}
       {lighting !== "none" && lightingPosition !== "no_posts" &&
-        carrierPositions.slice(0, -1).map((y, i) => {
-          const midY = (y + (carrierPositions[i + 1] ?? y)) / 2;
+        carrierPositions.slice(0, -1).map((x, i) => {
+          const midX = (x + (carrierPositions[i + 1] ?? x)) / 2;
           return (
-            <circle key={`clight-${i}`} cx={ox + widthMm / 2} cy={oy + midY}
+            <circle key={`clight-${i}`} cx={ox + midX} cy={oy + lengthMm / 2}
               r={Math.max(22, widthMm * 0.007)}
               fill={lightingColor(lighting)}
               stroke={"#B8860B"} strokeWidth={3} opacity={0.8} />
