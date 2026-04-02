@@ -354,10 +354,10 @@ export async function generatePergolaPdf(
       )}
 
       ${section(L.colors,
-        row(L.frameColor, input.frameColor, input.frameColor) +
-        row(L.roofColor, input.roofColor, input.roofColor) +
-        (input.slatColor && input.roofFillMode === "slats" ? row(L.slatColor, input.slatColor, input.slatColor) : "") +
-        (input.santaf === "with" && input.santafColor ? row(L.santafColor, input.santafColor, input.santafColor) : "")
+        row(L.frameColor, getColorLabel(input.frameColor, locale), input.frameColor) +
+        row(L.roofColor, getColorLabel(input.roofColor, locale), input.roofColor) +
+        (input.slatColor && input.roofFillMode === "slats" ? row(L.slatColor, getColorLabel(input.slatColor, locale), input.slatColor) : "") +
+        (input.santaf === "with" && input.santafColor ? row(L.santafColor, getColorLabel(input.santafColor, locale), input.santafColor) : "")
       )}
 
       ${carrierHtml}
