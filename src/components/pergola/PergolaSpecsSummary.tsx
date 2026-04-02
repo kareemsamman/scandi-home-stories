@@ -18,7 +18,7 @@ export const PergolaSpecsSummary = () => {
   };
   const isCustom = specs.moduleClassification === "custom";
   const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
-  const widthMm = cmToMm(Number(config.widthCm) || 400);
+  const lengthMm = cmToMm(Number(config.lengthCm) || 400);
 
   const rows: [string, string][] = [
     [t("pergolaRequest.moduleType"), moduleLabels[specs.moduleClassification]],
