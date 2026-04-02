@@ -210,7 +210,7 @@ export const PergolaElementEditor = () => {
 
         {/* Lighting */}
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <Label>תאורה בנשא</Label>
+          <Label>תאורה בקורת חלוקה</Label>
           <div className="flex gap-1.5">
             <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(secIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
             {LIGHTING_TEMPS.map((lt) => (

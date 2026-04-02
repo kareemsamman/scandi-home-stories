@@ -173,9 +173,10 @@ export function calcSlatCount(widthMm: number, gapMm: number, slatSize?: string)
 
 export function calcSlatGapFromCount(widthMm: number, count: number, slatSize?: string): number {
   if (count <= 1) return widthMm;
-  const slatW = getSlatProfileWidth(slatSize || "20x70");
-  const totalSlatWidth = count * slatW;
-  return Math.max(5, Math.round((widthMm - totalSlatWidth) / (count + 1)));
+  const usableWidth = widthMm - FRAME_DEDUCTION_MM;
+  const slatH = getSlatProfileHeight(slatSize || "20x70");
+  const totalSlatHeight = count * slatH;
+  return Math.max(5, Math.round((usableWidth - totalSlatHeight) / (count + 1)));
 }
 
 /** How many slats fit between each pair of carriers (נשאים) */
