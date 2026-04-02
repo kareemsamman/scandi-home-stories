@@ -154,7 +154,9 @@ export function getSlatProfileWidth(slatSize: string): number {
 }
 
 export function getSlatProfileHeight(slatSize: string): number {
-  return slatSize === "20x40" ? 40 : 70;
+  if (slatSize === "20x40") return 40;
+  if (slatSize === "20x100") return 100;
+  return 70;
 }
 
 export function calcSlatCount(widthMm: number, gapMm: number, slatSize?: string): number {
