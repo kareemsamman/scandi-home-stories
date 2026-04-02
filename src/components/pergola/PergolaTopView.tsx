@@ -104,7 +104,7 @@ export const PergolaTopView = ({ config }: Props) => {
         </g>
       ))}
 
-      {/* Internal slats — per-carrier sections, each clickable with own color */}
+      {/* Internal slats — per-carrier sections, HORIZONTAL slats spanning width */}
       {isFixedSlats && carrierPositions.length >= 2 && (() => {
         const globalColor = slatColor || "#383E42";
         const sections = carrierPositions.length - 1;
@@ -113,16 +113,16 @@ export const PergolaTopView = ({ config }: Props) => {
           const cc = carrierConfigs[secIdx];
           const secColor = cc?.slatColor || globalColor;
           const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
-          const secSlatW = cc?.slatSize === "20x40" ? 20 : 20; // both 20mm face
+          const slatH = cc?.slatSize === "20x40" ? 40 : cc?.slatSize === "20x100" ? 100 : 70; // profile height = visual thickness of each slat
           const y1 = carrierPositions[secIdx];
           const y2 = carrierPositions[secIdx + 1];
           const secH = y2 - y1;
 
-          // Fill entire width edge-to-edge: start at 0, place slats with gap
-          const totalUnit = secSlatW + secGapMm;
-          const secSlatCount = Math.max(1, Math.floor((widthMm - secGapMm) / totalUnit));
-          // Distribute evenly: recalculate actual gap to fill width perfectly
-          const actualGap = secSlatCount > 0 ? (widthMm - secSlatCount * secSlatW) / (secSlatCount + 1) : secGapMm;
+          // Slats run horizontally (across the width), distributed along the section height (length axis)
+          const totalUnit = slatH + secGapMm;
+          const secSlatCount = Math.max(1, Math.floor((secH - secGapMm) / totalUnit));
+          // Distribute evenly along the section height
+          const actualGap = secSlatCount > 0 ? (secH - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
 
           const el: SelectedElement = { type: "carrier", index: secIdx };
           const isSel = isSelected(el);
@@ -140,12 +140,12 @@ export const PergolaTopView = ({ config }: Props) => {
                   stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={4} rx={4}
                   strokeDasharray={isSel ? undefined : "12 6"} />
               )}
-              {/* Slats — render all, filling entire width */}
+              {/* Slats — horizontal bars spanning width */}
               {Array.from({ length: secSlatCount }, (_, i) => {
-                const x = actualGap + i * (secSlatW + actualGap);
+                const yPos = y1 + actualGap + i * (slatH + actualGap);
                 return (
                   <rect key={`slat-${secIdx}-${i}`}
-                    x={ox + x} y={oy + y1 + 6} width={secSlatW} height={secH - 12}
+                    x={ox + 6} y={oy + yPos} width={widthMm - 12} height={slatH}
                     fill={secColor} fillOpacity={0.8} rx={1} />
                 );
               })}
