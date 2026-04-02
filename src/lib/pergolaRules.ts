@@ -180,9 +180,9 @@ export function slatsPerCarrier(totalSlats: number, carrierCount: number): numbe
 /** Valid gap presets in cm */
 export const SLAT_GAP_PRESETS_CM = [1, 2, 3, 4] as const;
 
-export function getValidSlatRange(widthMm: number): { min: number; max: number } {
-  const maxSlats = calcSlatCount(widthMm, SLAT_GAP_PRESETS_CM[0] * 10);
-  const minSlats = Math.max(2, calcSlatCount(widthMm, SLAT_GAP_PRESETS_CM[SLAT_GAP_PRESETS_CM.length - 1] * 10));
+export function getValidSlatRange(lengthMm: number): { min: number; max: number } {
+  const maxSlats = calcSlatCount(lengthMm, SLAT_GAP_PRESETS_CM[0] * 10);
+  const minSlats = Math.max(2, calcSlatCount(lengthMm, SLAT_GAP_PRESETS_CM[SLAT_GAP_PRESETS_CM.length - 1] * 10));
   return { min: minSlats, max: maxSlats };
 }
 
@@ -207,11 +207,11 @@ export function computeSpecs(input: {
   const spacingMm = calcSpacing(input.widthMm, carrierCount, input.spacingMode);
   const profiles = getProfilesForType(input.pergolaType);
 
-  // Slat calculations for fixed pergola
+  // Slat calculations — slats span the width, counted along the length (אורך/עומק)
   const gapMm = (input.slatGapCm || 3) * 10;
   const ss = input.slatSize || "20x70";
-  const slatCount = input.slatCount || calcSlatCount(input.widthMm, gapMm, ss);
-  const slatGapMm = calcSlatGapFromCount(input.widthMm, slatCount, ss);
+  const slatCount = calcSlatCount(input.lengthMm, gapMm, ss);
+  const slatGapMm = calcSlatGapFromCount(input.lengthMm, slatCount, ss);
 
   return {
     moduleClassification: classification,
