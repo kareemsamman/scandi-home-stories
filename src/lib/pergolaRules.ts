@@ -197,12 +197,14 @@ export function computeSpecs(input: {
   slatGapCm?: number;
   slatCount?: number;
   slatSize?: string;
+  carrierCountOverride?: number;
 }): PergolaSpecs {
   const { classification, moduleCount } = classifyModule(input.widthMm);
-  const carrierCount = adjustedCarrierCount(input.lengthMm, input.spacingMode);
+  const autoCarrierCount = adjustedCarrierCount(input.widthMm, input.spacingMode);
+  const carrierCount = (input.carrierCountOverride && input.carrierCountOverride > 0) ? input.carrierCountOverride : autoCarrierCount;
   const { front, back } = calcPostCount(input.widthMm, input.mountType);
   const moduleWidths = calcModuleWidths(input.widthMm, moduleCount);
-  const spacingMm = calcSpacing(input.lengthMm, carrierCount, input.spacingMode);
+  const spacingMm = calcSpacing(input.widthMm, carrierCount, input.spacingMode);
   const profiles = getProfilesForType(input.pergolaType);
 
   // Slat calculations for fixed pergola

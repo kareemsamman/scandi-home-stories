@@ -102,6 +102,8 @@ export interface PergolaFormInput {
   roofColor: string;
   // Spacing
   spacingMode: SpacingMode;
+  // Division beams (קורות חלוקה)
+  carrierCountOverride: number; // 0 = auto, >0 = manual
   // Profiles
   selectedProfiles: Record<ProfileName, string>; // profile name → preset label
   // Customer
