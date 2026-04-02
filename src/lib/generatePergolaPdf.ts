@@ -268,9 +268,10 @@ export async function generatePergolaPdf(
       const usable = lengthMm - 90;
       const count = Math.max(1, Math.floor(usable / (slatH + gapMm)));
       const lightTxt = cc.lightingEnabled ? cc.lighting.toUpperCase() : L.none;
+      const displayNum = input.carrierConfigs!.length - i;
       carrierHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;">
         <span style="width:16px;height:16px;border-radius:3px;background:${cc.slatColor};display:inline-block;border:1px solid #ccc;flex-shrink:0;"></span>
-        <span style="font-weight:600;font-size:13px;">${L.carrier} ${i + 1}</span>
+        <span style="font-weight:600;font-size:13px;">${L.carrier} ${displayNum}</span>
         <span style="color:#555;font-size:12px;">${count} ${L.slatsComp} · ${cc.slatSize} · ${L.gap} ${cc.slatGapCm} cm · ${L.light}: ${lightTxt}</span>
       </div>`;
     });
