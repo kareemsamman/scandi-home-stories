@@ -90,13 +90,13 @@ export const PergolaTopView = ({ config }: Props) => {
             stroke={frameColor || "#383838"} strokeWidth={sw} strokeDasharray="50 25" />
         ))}
 
-      {/* Carriers — clickable */}
-      {carrierPositions.map((y, i) => (
+      {/* Carriers — vertical lines along width, clickable */}
+      {carrierPositions.map((x, i) => (
         <g key={`car-${i}`}>
-          <line x1={ox + 20} y1={oy + y} x2={ox + widthMm - 20} y2={oy + y}
+          <line x1={ox + x} y1={oy + 20} x2={ox + x} y2={oy + lengthMm - 20}
             stroke={selStroke({ type: "carrier", index: i }) || "#9CA3AF"} strokeWidth={isSelected({ type: "carrier", index: i }) ? sw * 1.2 : sw * 0.6} />
           {/* Invisible wider hit target */}
-          <line x1={ox + 20} y1={oy + y} x2={ox + widthMm - 20} y2={oy + y}
+          <line x1={ox + x} y1={oy + 20} x2={ox + x} y2={oy + lengthMm - 20}
             stroke="transparent" strokeWidth={sw * 3}
             className="cursor-pointer"
             onClick={handleClick({ type: "carrier", index: i })}
@@ -105,7 +105,7 @@ export const PergolaTopView = ({ config }: Props) => {
         </g>
       ))}
 
-      {/* Internal slats — per-carrier sections, HORIZONTAL slats spanning width */}
+      {/* Internal slats — per-carrier sections (vertical strips), HORIZONTAL slats within each */}
       {isFixedSlats && carrierPositions.length >= 2 && (() => {
         const globalColor = slatColor || "#383E42";
         const sections = carrierPositions.length - 1;
@@ -114,16 +114,15 @@ export const PergolaTopView = ({ config }: Props) => {
           const cc = carrierConfigs[secIdx];
           const secColor = cc?.slatColor || globalColor;
           const secGapMm = (cc?.slatGapCm ? cc.slatGapCm * 10 : specs.slatGapMm) || 30;
-          const slatH = cc?.slatSize === "20x40" ? 40 : cc?.slatSize === "20x100" ? 100 : 70; // profile height = visual thickness of each slat
-          const y1 = carrierPositions[secIdx];
-          const y2 = carrierPositions[secIdx + 1];
-          const secH = y2 - y1;
+          const slatH = cc?.slatSize === "20x40" ? 40 : cc?.slatSize === "20x100" ? 100 : 70;
+          const x1 = carrierPositions[secIdx];
+          const x2 = carrierPositions[secIdx + 1];
+          const secW = x2 - x1;
 
-          // Slats run horizontally (across the width), distributed along the section height (length axis)
-          const autoCount = Math.max(1, Math.floor((secH - secGapMm) / (slatH + secGapMm)));
+          // Slats run horizontally (across the section width), distributed along the length axis
+          const autoCount = Math.max(1, Math.floor((lengthMm - secGapMm) / (slatH + secGapMm)));
           const secSlatCount = (cc?.slatCount && cc.slatCount > 0) ? cc.slatCount : autoCount;
-          // Distribute evenly along the section height
-          const actualGap = secSlatCount > 0 ? (secH - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
+          const actualGap = secSlatCount > 0 ? (lengthMm - secSlatCount * slatH) / (secSlatCount + 1) : secGapMm;
 
           const el: SelectedElement = { type: "carrier", index: secIdx };
           const isSel = isSelected(el);
@@ -133,26 +132,26 @@ export const PergolaTopView = ({ config }: Props) => {
             <g key={`sec-${secIdx}`} className="cursor-pointer"
               onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
               {/* Hit target */}
-              <rect x={ox} y={oy + y1} width={widthMm} height={secH} fill="transparent" />
+              <rect x={ox + x1} y={oy} width={secW} height={lengthMm} fill="transparent" />
               {/* Selection highlight */}
               {(isSel || isHov) && (
-                <rect x={ox + 3} y={oy + y1 + 3} width={widthMm - 6} height={secH - 6}
+                <rect x={ox + x1 + 3} y={oy + 3} width={secW - 6} height={lengthMm - 6}
                   fill={isSel ? "#2563EB" : "#93C5FD"} fillOpacity={0.06}
                   stroke={isSel ? "#2563EB" : "#93C5FD"} strokeWidth={4} rx={4}
                   strokeDasharray={isSel ? undefined : "12 6"} />
               )}
-              {/* Slats — horizontal bars spanning width */}
+              {/* Slats — horizontal bars within each vertical section */}
               {Array.from({ length: secSlatCount }, (_, i) => {
-                const yPos = y1 + actualGap + i * (slatH + actualGap);
+                const yPos = actualGap + i * (slatH + actualGap);
                 return (
                   <rect key={`slat-${secIdx}-${i}`}
-                    x={ox + 6} y={oy + yPos} width={widthMm - 12} height={slatH}
+                    x={ox + x1 + 6} y={oy + yPos} width={secW - 12} height={slatH}
                     fill={secColor} fillOpacity={0.8} rx={1} />
                 );
               })}
               {/* Section label on hover/select */}
               {(isSel || isHov) && (
-                <text x={ox + widthMm / 2} y={oy + y1 + secH / 2}
+                <text x={ox + x1 + secW / 2} y={oy + lengthMm / 2}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize * 0.5} fill={isSel ? "#2563EB" : "#6B7280"}
                   fontFamily="sans-serif" fontWeight="700" opacity={0.8}>
