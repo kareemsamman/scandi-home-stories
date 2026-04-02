@@ -192,11 +192,12 @@ export interface DrawingConfig {
   carrierConfigs: CarrierConfig[];
 }
 
-/** Per-carrier section configuration (allows per-נשא customization) */
+/** Per-carrier section configuration (allows per-קורת חלוקה customization) */
 export interface CarrierConfig {
   slatSize: SlatSizeId;
   slatGapCm: number;
   slatColor: string;
+  slatCount: number; // 0 = auto-calculate, >0 = manual
   lighting: LightingChoice; // 'none' | '3000k' | '4000k' | '6000k'
   lightingEnabled: boolean;
 }
@@ -211,6 +212,7 @@ export function defaultCarrierConfig(global: {
     slatSize: global.slatSize || "20x70",
     slatGapCm: global.slatGapCm || 3,
     slatColor: global.slatColor || "#383E42",
+    slatCount: 0,
     lighting: global.lighting || "none",
     lightingEnabled: (global.lighting || "none") !== "none",
   };
