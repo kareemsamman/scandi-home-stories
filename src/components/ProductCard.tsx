@@ -95,10 +95,16 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
                 </div>
               </div>
             )}
-            {lengthRange && (
+            {contractor.sizes.length > 0 && (
               <div className="pt-1">
-                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1"><Ruler className="w-3.5 h-3.5" />{lengthRange}</p>
+                <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {contractor.sizes.map((s) => (
+                    <span key={s.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground">
+                      {s.label[locale]}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
