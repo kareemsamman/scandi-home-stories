@@ -175,6 +175,27 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               onChange={(v) => setConfig({ heightCm: v })} min={150} max={500} step={10} suffix="cm" />
           </SideCard>
 
+          {/* קורות חלוקה — count only, right after dimensions */}
+          <SideCard title={t("pergolaRequest.carriers")} icon="↔️">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfig({ carrierCountOverride: Math.max(1, (config.carrierCountOverride || specs.carrierCount) - 1) })}
+                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+              >−</button>
+              <span className="text-sm font-semibold text-gray-800 min-w-[2rem] text-center">{specs.carrierCount}</span>
+              <button
+                onClick={() => setConfig({ carrierCountOverride: (config.carrierCountOverride || specs.carrierCount) + 1 })}
+                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+              >+</button>
+              {(config.carrierCountOverride || 0) > 0 && (
+                <button
+                  onClick={() => setConfig({ carrierCountOverride: 0 })}
+                  className="px-2 py-1 rounded-md text-[9px] font-medium border border-gray-200 text-gray-400 hover:bg-gray-50"
+                >אוטומטי</button>
+              )}
+            </div>
+          </SideCard>
+
           {/* Lighting — color temperature (global) */}
           {config.lighting !== "none" && (
             <SideCard title={t("pergolaRequest.lighting")} icon="💡">
@@ -266,44 +287,6 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             </SideCard>
           )}
 
-          {/* קורות חלוקה count + Spacing */}
-          <SideCard title={t("pergolaRequest.carriers")} icon="↔️">
-            {/* Carrier count control */}
-            <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.carriers")}</label>
-            <div className="flex items-center gap-2 mb-3">
-              <button
-                onClick={() => setConfig({ carrierCountOverride: Math.max(1, (config.carrierCountOverride || specs.carrierCount) - 1) })}
-                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
-              >−</button>
-              <span className="text-sm font-semibold text-gray-800 min-w-[2rem] text-center">{specs.carrierCount}</span>
-              <button
-                onClick={() => setConfig({ carrierCountOverride: (config.carrierCountOverride || specs.carrierCount) + 1 })}
-                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
-              >+</button>
-              {(config.carrierCountOverride || 0) > 0 && (
-                <button
-                  onClick={() => setConfig({ carrierCountOverride: 0 })}
-                  className="px-2 py-1 rounded-md text-[9px] font-medium border border-gray-200 text-gray-400 hover:bg-gray-50"
-                >אוטומטי ({adjustedCarrierCount(widthMm, (config.spacingMode || "automatic") as SpacingMode)})</button>
-              )}
-            </div>
-
-            {/* Spacing mode */}
-            <label className="text-[10px] text-gray-400 block mb-1">{t("pergolaRequest.spacingLabel")}</label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {(["automatic", "dense", "standard", "wide"] as const).map((sm) => (
-                <button key={sm} onClick={() => setConfig({ spacingMode: sm as SpacingMode, carrierCountOverride: 0 })}
-                  className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
-                    config.spacingMode === sm ? "border-gray-900 bg-gray-50" : "border-gray-100 text-gray-400"
-                  }`}>
-                  {t(`pergolaRequest.spacing${sm.charAt(0).toUpperCase() + sm.slice(1)}`)}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-gray-400 mt-1.5">
-              {specs.carrierCount} {t("pergolaRequest.carriers")} &middot; ~{mmToCm(specs.spacingMm)} cm
-            </p>
-          </SideCard>
 
           {/* Quick specs */}
           <SideCard title={t("pergolaRequest.specs")} icon="📋">
