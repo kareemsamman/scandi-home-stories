@@ -25,6 +25,7 @@ const DEFAULT_CONFIG: PergolaFormInput = {
   slatColor: "#383E42",
   santaf: "without",
   santafColor: "",
+  fabricColor: "#D4C9A8",
   frameColor: "#383E42",
   roofColor: "#A5A5A5",
   spacingMode: "automatic",

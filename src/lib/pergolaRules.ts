@@ -13,11 +13,26 @@ export function classifyModule(widthMm: number): { classification: ModuleClassif
 }
 
 // ── Carrier (קורת חלוקה) count by width (mm) ──
-// Default: width_in_meters - 1 (e.g. 7m → 6, 6m → 5, 3m → 2)
 
+// Fixed pergola: width_in_meters - 1
 export function calcCarrierCount(widthMm: number): number {
   if (widthMm <= 0) return 1;
   return Math.max(1, Math.floor(widthMm / 1000) - 1);
+}
+
+// PVC pergola: specific rules
+// 1-3.5m → 2 carriers (Single), 3.5-7.5m → 3 carriers (Double), 7.5-10m → 3 carriers (Triple)
+export function calcPvcCarrierCount(widthMm: number): number {
+  if (widthMm <= 3500) return 2;
+  return 3; // both double and triple use 3 carriers
+}
+
+// PVC module classification
+export function classifyPvcModule(widthMm: number): { classification: ModuleClassification; moduleCount: number } {
+  if (widthMm <= 3500) return { classification: "single", moduleCount: 1 };
+  if (widthMm <= 7500) return { classification: "double", moduleCount: 2 };
+  if (widthMm <= 10000) return { classification: "triple", moduleCount: 3 };
+  return { classification: "custom", moduleCount: 0 };
 }
 
 // ── Post count by width (mm) ──
@@ -199,8 +214,13 @@ export function computeSpecs(input: {
   slatSize?: string;
   carrierCountOverride?: number;
 }): PergolaSpecs {
-  const { classification, moduleCount } = classifyModule(input.widthMm);
-  const autoCarrierCount = adjustedCarrierCount(input.widthMm, input.spacingMode);
+  const isPvc = input.pergolaType === "pvc";
+  const { classification, moduleCount } = isPvc
+    ? classifyPvcModule(input.widthMm)
+    : classifyModule(input.widthMm);
+  const autoCarrierCount = isPvc
+    ? calcPvcCarrierCount(input.widthMm)
+    : adjustedCarrierCount(input.widthMm, input.spacingMode);
   const carrierCount = (input.carrierCountOverride && input.carrierCountOverride > 0) ? input.carrierCountOverride : autoCarrierCount;
   const { front, back } = calcPostCount(input.widthMm, input.mountType);
   const moduleWidths = calcModuleWidths(input.widthMm, moduleCount);
