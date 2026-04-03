@@ -66,14 +66,6 @@ const AdminLayoutInner = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (loading || !rolesLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
   const isWorkerOnly = roles.includes("worker") && !roles.includes("admin");
 
   const visibleNav = navItems.filter((item) =>
@@ -89,6 +81,14 @@ const AdminLayoutInner = () => {
       navigate("/admin/orders", { replace: true });
     }
   }, [location.pathname, isWorkerOnly, navigate]);
+
+  if (loading || !rolesLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await signOut();
