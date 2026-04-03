@@ -188,46 +188,22 @@ export const PergolaElementEditor = () => {
 
     return (
       <Panel onClose={close} title={`חלוקה ${displayNum} — ${secSlatCount} שלבים`}>
-        {/* Slat count — auto-calculated, read-only */}
-        <Label>כמות שלבים</Label>
-        <p className="text-sm font-medium text-gray-700 mb-2">{secSlatCount}</p>
+        {/* Read-only info */}
+        <div className="text-xs text-gray-500 space-y-1 mb-3">
+          <p>{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ</p>
+        </div>
 
-        {/* Slat size */}
-        <Label>גודל פרופיל שלב</Label>
-        <div className="flex gap-1.5 mb-2">
-           {SLAT_SIZES.map((s) => (
-            <ToggleBtn key={s.id} active={cc.slatSize === s.id}
-              onClick={() => setCarrierConfig(logicalIdx, { slatSize: s.id as SlatSizeId })} label={s.label} />
+        {/* Lighting — only editable per-section */}
+        <Label>תאורה בחלוקה</Label>
+        <div className="flex gap-1.5">
+          <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
+          {LIGHTING_TEMPS.map((lt) => (
+            <ToggleBtn key={lt.id} active={cc.lightingEnabled && cc.lighting === lt.id}
+              onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
           ))}
         </div>
 
-        {/* Gap */}
-        <Label>מרווח בין שלבים (ס"מ)</Label>
-        <div className="flex gap-1.5 mb-2">
-          {gapPresets.map((g) => (
-            <ToggleBtn key={g} active={cc.slatGapCm === g}
-              onClick={() => setCarrierConfig(logicalIdx, { slatGapCm: g })} label={`${g}`} />
-          ))}
-        </div>
-
-        {/* Color */}
-        <Label>צבע שלבים</Label>
-        <ColorPicker value={cc.slatColor} colors={SLAT_COLORS} locale={locale}
-          onChange={(hex) => setCarrierConfig(logicalIdx, { slatColor: hex })} />
-
-        {/* Lighting */}
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <Label>תאורה בחלוקה</Label>
-          <div className="flex gap-1.5">
-            <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
-            {LIGHTING_TEMPS.map((lt) => (
-              <ToggleBtn key={lt.id} active={cc.lightingEnabled && cc.lighting === lt.id}
-                onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
-            ))}
-          </div>
-        </div>
-
-        <p className="text-[10px] text-gray-400 mt-2">{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ{cc.lightingEnabled ? ` &middot; ${cc.lighting}` : ""}</p>
+        <p className="text-[9px] text-gray-300 mt-3">שינוי גודל, מרווח וצבע — מהפאנל השמאלי (חל על כל החלוקות)</p>
       </Panel>
     );
   }
