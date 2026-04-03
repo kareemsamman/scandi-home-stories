@@ -21,10 +21,11 @@ export function calcCarrierCount(widthMm: number): number {
 }
 
 // PVC pergola: specific rules
-// 1-3.5m → 2 carriers (Single), 3.5-7.5m → 3 carriers (Double), 7.5-10m → 3 carriers (Triple)
+// 1-3.5m → 2 carriers (Single), 3.5-7.5m → 3 carriers (Double), 7.5-10m → 4 carriers (Triple)
 export function calcPvcCarrierCount(widthMm: number): number {
   if (widthMm <= 3500) return 2;
-  return 3; // both double and triple use 3 carriers
+  if (widthMm <= 7500) return 3;
+  return 4;
 }
 
 // PVC module classification
