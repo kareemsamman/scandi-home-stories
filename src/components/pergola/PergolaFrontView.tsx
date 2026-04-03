@@ -51,8 +51,8 @@ export const PergolaFrontView = ({ config }: Props) => {
         return (
           <polygon
             points={`${ox},${groundY - heightMm - beamH} ${ox + widthMm},${groundY - heightMm - beamH + slopeOffset} ${ox + widthMm},${groundY - heightMm - beamH + slopeOffset + 50} ${ox},${groundY - heightMm - beamH + 50}`}
-            fill={santafColor || "#B22222"} fillOpacity={0.25}
-            stroke={isSel ? "#2563EB" : (santafColor || "#B22222")} strokeWidth={isSel ? 6 : 3}
+            fill={santafColor || "#7A8B9A"} fillOpacity={0.25}
+            stroke={isSel ? "#2563EB" : (santafColor || "#7A8B9A")} strokeWidth={isSel ? 6 : 3}
             className="cursor-pointer"
             onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)} />
         );

@@ -58,7 +58,7 @@ export const PergolaTopView = ({ config }: Props) => {
       {/* Santaf overlay */}
       {santaf === "with" && (
         <rect x={ox} y={oy} width={widthMm} height={lengthMm}
-          fill={santafColor || "#B22222"} fillOpacity={0.15} rx={8}
+          fill={santafColor || "#7A8B9A"} fillOpacity={0.15} rx={8}
           className="cursor-pointer"
           onClick={handleClick({ type: "santaf", index: -1 })}
           onMouseEnter={handleHover({ type: "santaf", index: -1 })}

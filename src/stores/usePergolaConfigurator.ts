@@ -80,7 +80,11 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
   config: DEFAULT_CONFIG,
   specs: recompute(DEFAULT_CONFIG),
   activeView: "top",
-  carrierConfigs: [],
+  carrierConfigs: (() => {
+    const s = recompute(DEFAULT_CONFIG);
+    if (!s || s.carrierCount <= 1) return [];
+    return buildCarrierConfigs(s.carrierCount, DEFAULT_CONFIG, []);
+  })(),
 
   setConfig: (partial) =>
     set((state) => {
@@ -100,7 +104,9 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         partial.widthCm !== undefined;
 
       let carrierConfigs = state.carrierConfigs;
-      if (specs && (globalChanged || carrierCountChanged || specs.carrierCount !== state.specs?.carrierCount)) {
+      // Initialize carriers if empty, or update when settings change
+      const needsInit = specs && carrierConfigs.length === 0 && specs.carrierCount > 1;
+      if (specs && (needsInit || globalChanged || carrierCountChanged || specs.carrierCount !== state.specs?.carrierCount)) {
         if (globalChanged) {
           // Apply new global to all carriers
           const globalDef = defaultCarrierConfig({

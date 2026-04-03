@@ -129,7 +129,7 @@ export const PergolaElementEditor = () => {
           <>
             <Label>צבע סנטף</Label>
             <ColorPicker
-              value={config.santafColor || "#B22222"}
+              value={config.santafColor || "#7A8B9A"}
               colors={SANTAF_COLORS}
               locale={locale}
               onChange={(hex) => setConfig({ santafColor: hex })}
@@ -272,7 +272,7 @@ export const PergolaElementEditor = () => {
         {config.roofFillMode === "santaf" && (
           <div className="mt-2">
             <Label>צבע סנטף</Label>
-            <ColorPicker value={config.santafColor || "#B22222"} colors={SANTAF_COLORS} locale={locale} onChange={(hex) => setConfig({ santafColor: hex })} />
+            <ColorPicker value={config.santafColor || "#7A8B9A"} colors={SANTAF_COLORS} locale={locale} onChange={(hex) => setConfig({ santafColor: hex })} />
           </div>
         )}
       </Panel>

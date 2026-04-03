@@ -260,7 +260,7 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               )}
               {config.roofFillMode === "santaf" && (
                 <div className="mt-2">
-                  <MiniColorRow label={t("pergolaRequest.santafColorLabel")} value={config.santafColor || "#B22222"} onChange={(v) => setConfig({ santafColor: v })} colors={SANTAF_COLORS} />
+                  <MiniColorRow label={t("pergolaRequest.santafColorLabel")} value={config.santafColor || "#7A8B9A"} onChange={(v) => setConfig({ santafColor: v })} colors={SANTAF_COLORS} />
                 </div>
               )}
             </SideCard>

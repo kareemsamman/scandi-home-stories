@@ -94,8 +94,8 @@ export const PergolaIsometricView = ({ config }: Props) => {
 
       {/* Santaf overlay */}
       {santaf === "with" && (
-        <path d={roofPath} fill={santafColor || "#B22222"} fillOpacity={0.2}
-          stroke={santafColor || "#B22222"} strokeWidth={sw * 0.5}
+        <path d={roofPath} fill={santafColor || "#7A8B9A"} fillOpacity={0.2}
+          stroke={santafColor || "#7A8B9A"} strokeWidth={sw * 0.5}
           className="cursor-pointer"
           onClick={handleClick({ type: "santaf", index: -1 })}
           onMouseEnter={handleHover({ type: "santaf", index: -1 })}
