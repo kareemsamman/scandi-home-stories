@@ -130,6 +130,17 @@ export const PergolaTopView = ({ config }: Props) => {
                 );
               })}
 
+              {/* Lighting indicator strip — shows when section has lighting */}
+              {cc?.lightingEnabled && cc.lighting !== "none" && (() => {
+                const ltColor = cc.lighting === "3000k" ? "#FFD27F" : cc.lighting === "4000k" ? "#FFF4E0" : cc.lighting === "6000k" ? "#F0F4FF" : "#FDE68A";
+                return (
+                  <rect x={ox + x1 + secW * 0.15} y={oy + lengthMm - 45}
+                    width={secW * 0.7} height={18} rx={9}
+                    fill={ltColor} fillOpacity={0.7}
+                    stroke={ltColor} strokeWidth={2} strokeOpacity={0.4} />
+                );
+              })()}
+
               {/* Section label */}
               {(isSel || isHov) && (
                 <text x={ox + x1 + secW / 2} y={oy + lengthMm / 2}

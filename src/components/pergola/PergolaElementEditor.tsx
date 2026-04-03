@@ -193,13 +193,14 @@ export const PergolaElementEditor = () => {
           <p>{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ</p>
         </div>
 
-        {/* Lighting — only editable per-section */}
+        {/* Lighting — only editable per-section, with color dots */}
         <Label>תאורה בחלוקה</Label>
         <div className="flex gap-1.5">
           <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
           {LIGHTING_TEMPS.map((lt) => (
             <ToggleBtn key={lt.id} active={cc.lightingEnabled && cc.lighting === lt.id}
-              onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })} label={lt.label} />
+              onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: true, lighting: lt.id as LightingChoice })}
+              label={lt.label} dotColor={lt.color} />
           ))}
         </div>
 
@@ -278,7 +279,7 @@ function Label({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-medium text-gray-500 mb-1.5">{children}</p>;
 }
 
-function ToggleBtn({ active, onClick, label, dot }: { active: boolean; onClick: () => void; label: string; dot?: string }) {
+function ToggleBtn({ active, onClick, label, dot, dotColor }: { active: boolean; onClick: () => void; label: string; dot?: string; dotColor?: string }) {
   return (
     <button
       onClick={onClick}
@@ -286,7 +287,7 @@ function ToggleBtn({ active, onClick, label, dot }: { active: boolean; onClick: 
         active ? "border-gray-900 bg-gray-50 text-gray-900" : "border-gray-100 text-gray-400 hover:border-gray-200"
       }`}
     >
-      {dot && <span className={`w-2.5 h-2.5 rounded-full ${dot} shrink-0`} />}
+      {(dot || dotColor) && <span className="w-3 h-3 rounded-full shrink-0 border border-gray-200" style={dotColor ? { backgroundColor: dotColor } : undefined} />}
       {label}
     </button>
   );
