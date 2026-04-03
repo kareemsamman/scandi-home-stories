@@ -87,13 +87,12 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
                 <div className="flex gap-1.5">
-                  {contractor.colorGroups[0].colors.slice(0, 4).map((color) => (
+                  {contractor.colorGroups[0].colors.map((color) => (
                     <div key={color.id} className="flex flex-col items-center gap-0.5">
                       <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
                       <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
                     </div>
                   ))}
-                  {contractor.colorGroups[0].colors.length > 4 && (<span className="text-[10px] text-muted-foreground self-center">+{contractor.colorGroups[0].colors.length - 4}</span>)}
                 </div>
               </div>
             )}
@@ -142,13 +141,12 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             <div className="pt-0.5">
               <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
               <div className="flex gap-1.5">
-                {retail.colors.slice(0, 4).map((color) => (
+                {retail.colors.map((color) => (
                   <div key={color.id} className="flex flex-col items-center gap-0.5">
                     <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
                     <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
                   </div>
                 ))}
-                {retail.colors.length > 4 && (<span className="text-[10px] text-muted-foreground self-center">+{retail.colors.length - 4}</span>)}
               </div>
             </div>
           )}

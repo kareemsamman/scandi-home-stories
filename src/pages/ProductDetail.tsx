@@ -134,8 +134,11 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const profileColor = useProfileColor((s) => s.selectedColor);
+  const retailSizes = (product as any).sizes || [];
+  const hasRetailSizes = retailSizes.length > 0;
 
   // Auto-apply profile color on mount
   useEffect(() => {
@@ -143,6 +146,19 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     const match = product.colors.find(c => c.id === profileColor.id);
     if (match) setSelectedColor(match);
   }, [profileColor?.id]);
+
+  // Auto-select first size for retail products with sizes
+  useEffect(() => {
+    if (hasRetailSizes && !selectedSize) {
+      // Filter sizes by color's lengths if available
+      const colorObj = selectedColor as any;
+      const available = (colorObj?.lengths?.length > 0)
+        ? retailSizes.filter((s: any) => colorObj.lengths.includes(s.id))
+        : retailSizes;
+      if (available.length > 0) setSelectedSize(available[0].label[locale]);
+    }
+  }, [selectedColor?.id, hasRetailSizes]);
+
   const [isAdding, setIsAdding] = useState(false);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
@@ -186,6 +202,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     }
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
+    if (selectedSize) options.size = selectedSize;
     await new Promise((r) => setTimeout(r, 300));
     addToCart(product, Math.min(quantity, freshEffective), options);
     setQuantity(1);
@@ -274,6 +291,47 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                   </div>
                 </div>
               )}
+
+              {/* Size/Length selector for retail products with sizes */}
+              {hasRetailSizes && (() => {
+                const colorObj = selectedColor as any;
+                const availRetailSizes = (colorObj?.lengths?.length > 0)
+                  ? retailSizes.filter((s: any) => colorObj.lengths.includes(s.id))
+                  : retailSizes;
+                return availRetailSizes.length > 0 ? (
+                  <div className="mb-5">
+                    <span className="text-sm font-medium text-foreground block mb-2">
+                      {t("contractor.size")}: <span className="text-muted-foreground font-normal">{selectedSize}</span>
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {availRetailSizes.map((size: any) => {
+                        const isActive = selectedSize === size.label[locale];
+                        const sizePrice = (colorObj?.combo_prices as any)?.[size.id];
+                        return (
+                          <button
+                            key={size.id}
+                            onClick={() => { setSelectedSize(size.label[locale]); setQuantity(1); }}
+                            className={cn(
+                              "px-4 py-2.5 rounded-lg border text-sm font-medium transition-all flex flex-col items-center min-w-[56px]",
+                              isActive
+                                ? "border-foreground bg-foreground text-background"
+                                : "border-border hover:border-muted-foreground"
+                            )}
+                          >
+                            <span>{size.label[locale]}</span>
+                            {sizePrice != null && sizePrice > 0 && (
+                              <span className={cn("text-[11px]", isActive ? "opacity-80" : "text-muted-foreground")}>
+                                {t("common.currency")}{sizePrice}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
               {stockWarning && (
                 <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />{stockWarning}
