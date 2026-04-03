@@ -79,29 +79,26 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             </div>
           </Link>
           <div className="p-3 space-y-1.5">
+            {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
             <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
-            <p className="text-[11px] text-muted-foreground">{t("contractor.sku")}: {contractor.sku}</p>
-            {lengthRange && (<p className="text-[11px] text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{lengthRange}</p>)}
             <p className="text-sm font-bold text-foreground">{t("common.currency")}{displayPrice.toLocaleString()}</p>
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
-                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
-                <div className="flex gap-1.5">
+                <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.color")}:</p>
+                <div className="flex gap-2 flex-wrap">
                   {contractor.colorGroups[0].colors.map((color) => (
-                    <div key={color.id} className="flex flex-col items-center gap-0.5">
-                      <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
-                      <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
+                    <div key={color.id} className="flex flex-col items-center gap-1">
+                      <span className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: color.hex }} />
+                      <span className="text-[8px] text-muted-foreground leading-none max-w-[40px] text-center truncate">{color.name[locale]}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {contractor.sizes.length > 0 && (
-              <div className="pt-0.5">
-                <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {contractor.sizes.map((s) => (<span key={s.id} className="px-2 py-1 rounded-md border text-[10px] font-medium flex flex-col items-center leading-tight border-border text-muted-foreground"><span>{s.label[locale]}</span>{s.price && (<span className="text-[9px] text-muted-foreground">{t("common.currency")}{s.price}</span>)}</span>))}
-                </div>
+            {lengthRange && (
+              <div className="pt-1">
+                <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Ruler className="w-3.5 h-3.5" />{lengthRange}</p>
               </div>
             )}
           </div>
@@ -138,16 +135,28 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
           <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
           <p className="text-sm font-bold text-foreground">{t("common.currency")}{product.price.toLocaleString()}</p>
           {retail && retail.colors.length > 0 && (
-            <div className="pt-0.5">
-              <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.color")}:</p>
-              <div className="flex gap-1.5">
+            <div className="pt-1">
+              <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.color")}:</p>
+              <div className="flex gap-2 flex-wrap">
                 {retail.colors.map((color) => (
-                  <div key={color.id} className="flex flex-col items-center gap-0.5">
-                    <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: color.hex }} />
-                    <span className="text-[8px] text-muted-foreground leading-none max-w-[32px] truncate">{color.name[locale]}</span>
+                  <div key={color.id} className="flex flex-col items-center gap-1">
+                    <span className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: color.hex }} />
+                    <span className="text-[8px] text-muted-foreground leading-none max-w-[40px] text-center truncate">{color.name[locale]}</span>
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+          {retail && (retail as any).sizes?.length > 0 && (
+            <div className="pt-1">
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("contractor.size")}:</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Ruler className="w-3.5 h-3.5" />
+                {(retail as any).sizes.length === 1
+                  ? (retail as any).sizes[0].label[locale]
+                  : `${(retail as any).sizes[0].label[locale]}–${(retail as any).sizes[(retail as any).sizes.length - 1].label[locale]}`
+                }
+              </p>
             </div>
           )}
         </div>
