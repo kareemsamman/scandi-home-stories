@@ -60,11 +60,19 @@ const LanguageSwitcher = () => {
 };
 
 const AdminLayoutInner = () => {
-  const { user, profile, roles, signOut } = useAuth();
+  const { user, profile, roles, rolesLoaded, loading, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (loading || !rolesLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   const isWorkerOnly = roles.includes("worker") && !roles.includes("admin");
 
