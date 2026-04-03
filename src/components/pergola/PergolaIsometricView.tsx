@@ -110,11 +110,12 @@ export const PergolaIsometricView = ({ config }: Props) => {
         onMouseEnter={handleHover({ type: "roof", index: -1 })}
         onMouseLeave={handleHover(null)} />
 
-      {/* ── Posts — THICKER, solid fill, with base shadow ── */}
+      {/* ── Front Posts — on the side facing viewer (y=lengthMm for wall-mount, y=0 for freestanding) ── */}
       {postPositions.map((x, i) => {
         const el: SelectedElement = { type: "front_post", index: i };
-        const [bx, by] = toIso(x, 0, 0);
-        const [tx, ty] = toIso(x, 0, heightMm);
+        const postY = mountType === "wall" ? lengthMm : 0; // wall-mount: posts on viewer side
+        const [bx, by] = toIso(x, postY, 0);
+        const [tx, ty] = toIso(x, postY, heightMm);
         const isSel = isSelected(el);
         const isHov = isHovered(el);
         const lit = hasPostLight(i);
@@ -136,14 +137,14 @@ export const PergolaIsometricView = ({ config }: Props) => {
             <line x1={bx} y1={by} x2={tx} y2={ty}
               stroke={fc} strokeWidth={postW * 0.6} strokeLinecap="round" />
             {lit && (() => {
-              const [cx, cy] = toIso(x, 0, heightMm + 80);
+              const [cx, cy] = toIso(x, postY, heightMm + 80);
               return <circle cx={cx} cy={cy} r={14} fill={lightingColor(lighting)} stroke="#555" strokeWidth={2} />;
             })()}
           </g>
         );
       })}
 
-      {/* Back posts (freestanding) */}
+      {/* Back posts (freestanding only — both sides have posts) */}
       {mountType === "freestanding" && postPositions.map((x, i) => {
         const el: SelectedElement = { type: "back_post", index: i };
         const [bx, by] = toIso(x, lengthMm, 0);
@@ -165,11 +166,11 @@ export const PergolaIsometricView = ({ config }: Props) => {
         );
       })}
 
-      {/* Wall */}
+      {/* Wall — at y=0 (far side from viewer) for wall-mounted */}
       {mountType === "wall" && <>
-        {isoLine(0, lengthMm, 0, 0, lengthMm, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-l")}
-        {isoLine(widthMm, lengthMm, 0, widthMm, lengthMm, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-r")}
-        {isoLine(0, lengthMm, heightMm * 1.08, widthMm, lengthMm, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-t")}
+        {isoLine(0, 0, 0, 0, 0, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-l")}
+        {isoLine(widthMm, 0, 0, widthMm, 0, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-r")}
+        {isoLine(0, 0, heightMm * 1.08, widthMm, 0, heightMm * 1.08, "#9CA3AF", sw * 2.5, "wall-t")}
       </>}
 
       {/* ── Frame edges — THICKEST, darkest ── */}
