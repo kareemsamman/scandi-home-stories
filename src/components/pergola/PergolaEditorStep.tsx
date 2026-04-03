@@ -11,7 +11,7 @@ import { PergolaIsometricView } from "./PergolaIsometricView";
 import { PergolaElementEditor } from "./PergolaElementEditor";
 import {
   Columns3, Lightbulb, Mountain, ArrowRight, MousePointerClick,
-  ZoomIn, ZoomOut, RotateCcw,
+  ZoomIn, ZoomOut, RotateCcw, Loader2,
 } from "lucide-react";
 
 const VIEWS = ["isometric", "top", "front"] as const;
@@ -22,10 +22,11 @@ interface Props {
 }
 
 export const PergolaEditorStep = ({ onNext }: Props) => {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { config, specs, activeView, setActiveView, setConfig, carrierConfigs } = usePergolaConfigurator();
   const { selected } = usePergolaEditor();
   const [zoom, setZoom] = useState(1);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const zoomIn = () => setZoom((z) => Math.min(2, +(z + 0.25).toFixed(2)));
   const zoomOut = () => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)));
@@ -111,13 +112,23 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
           />
         </div>
 
-        {/* Next button */}
+        {/* Next button — with loading state while capturing views */}
         <button
-          onClick={onNext}
-          className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-sm shrink-0"
+          onClick={() => { if (isNavigating) return; setIsNavigating(true); onNext(); }}
+          disabled={isNavigating}
+          className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-sm shrink-0 disabled:opacity-70 disabled:cursor-wait"
         >
-          {t("pergolaRequest.nextStep")}
-          <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+          {isNavigating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {locale === "ar" ? "جارٍ التحميل..." : "מכין סיכום..."}
+            </>
+          ) : (
+            <>
+              {t("pergolaRequest.nextStep")}
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+            </>
+          )}
         </button>
       </div>
 
