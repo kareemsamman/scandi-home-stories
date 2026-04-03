@@ -195,14 +195,19 @@ export const PergolaTopView = ({ config }: Props) => {
           onMouseLeave={handleHover(null)} />
       )}
 
-      {/* Carrier lights */}
-      {lighting !== "none" && lightingPosition !== "no_posts" &&
+      {/* Per-section lighting circles — based on each חלוקה's lighting config */}
+      {isFixedSlats && carrierPositions.length >= 2 &&
         carrierPositions.slice(0, -1).map((x, i) => {
+          const sections = carrierPositions.length - 1;
+          const rtlIdx = sections - 1 - i;
+          const cc = carrierConfigs[rtlIdx];
+          if (!cc?.lightingEnabled || cc.lighting === "none") return null;
+          const ltColor = cc.lighting === "3000k" ? "#FFD27F" : cc.lighting === "4000k" ? "#FFF4E0" : cc.lighting === "6000k" ? "#F0F4FF" : "#FDE68A";
           const midX = (x + (carrierPositions[i + 1] ?? x)) / 2;
           return (
             <circle key={`clight-${i}`} cx={ox + midX} cy={oy + lengthMm / 2}
-              r={Math.max(20, widthMm * 0.006)}
-              fill={lightingColor(lighting)} stroke="#B8860B" strokeWidth={2} opacity={0.8} />
+              r={Math.max(22, widthMm * 0.008)}
+              fill={ltColor} stroke="#B8860B" strokeWidth={2.5} opacity={0.9} />
           );
         })}
 
