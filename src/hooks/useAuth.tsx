@@ -35,67 +35,88 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .select("first_name, last_name, phone, avatar_url")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile(data);
+
+    setProfile(data ?? null);
   }, []);
 
   const fetchRoles = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
-      if (data) setRoles(data.map((r) => r.role));
-    } catch {
+
+      if (error) throw error;
+
+      setRoles((data ?? []).map((r) => r.role));
+    } catch (error) {
+      console.error("Failed to load user roles", error);
+      setRoles([]);
       // Even on error, mark roles as loaded so guards don't hang
     }
+
     setRolesLoaded(true);
   }, []);
 
+  const loadUserState = useCallback(async (nextUser: User | null) => {
+    if (!nextUser) {
+      setProfile(null);
+      setRoles([]);
+      setRolesLoaded(true);
+      return;
+    }
+
+    setRolesLoaded(false);
+    await Promise.all([fetchProfile(nextUser.id), fetchRoles(nextUser.id)]);
+  }, [fetchProfile, fetchRoles]);
+
   const refreshProfile = useCallback(async () => {
     if (user) {
+      setRolesLoaded(false);
       await Promise.all([fetchProfile(user.id), fetchRoles(user.id)]);
     }
   }, [user, fetchProfile, fetchRoles]);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, nextSession) => {
+        if (event === "INITIAL_SESSION") return;
 
-        if (event === 'SIGNED_OUT') {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
+        if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
-          setRolesLoaded(false);
-        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          // Use setTimeout to avoid potential deadlock with Supabase client
-          setTimeout(() => {
-            if (session?.user) {
-              fetchProfile(session.user.id);
-              fetchRoles(session.user.id);
-            }
-          }, 0);
+          setRolesLoaded(true);
+          setLoading(false);
+          return;
         }
-        // TOKEN_REFRESHED / INITIAL_SESSION: just update session/user, skip DB queries
-        setLoading(false);
+
+        if (nextSession?.user) {
+          setLoading(true);
+          setTimeout(() => {
+            void loadUserState(nextSession.user).finally(() => setLoading(false));
+          }, 0);
+        } else {
+          setProfile(null);
+          setRoles([]);
+          setRolesLoaded(true);
+          setLoading(false);
+        }
       }
     );
 
-    // THEN get initial session — await roles before clearing loading
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        await Promise.all([fetchProfile(session.user.id), fetchRoles(session.user.id)]);
-      } else {
-        setRolesLoaded(true);
-      }
+
+      await loadUserState(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile, fetchRoles]);
+  }, [loadUserState]);
 
   const signUp = async ({ email, password, firstName, lastName, phone }: {
     email: string; password: string; firstName: string; lastName: string; phone: string;
@@ -128,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setProfile(null);
     setRoles([]);
-    setRolesLoaded(false);
+    setRolesLoaded(true);
     // Clear persisted user-specific data from localStorage
     localStorage.removeItem("amg-addresses");
     localStorage.removeItem("amg-profile");
