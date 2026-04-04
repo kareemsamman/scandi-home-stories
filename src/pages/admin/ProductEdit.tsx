@@ -9,7 +9,7 @@ import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import {
   useColorTaxonomy, useLengthTaxonomy,
   useSaveColorTaxonomy, useSaveLengthTaxonomy,
-  useCustomColorGroups,
+  useCustomColorGroups, useBrandTaxonomy,
   TaxColor, TaxLength,
 } from "@/hooks/useProductTaxonomy";
 import { Button } from "@/components/ui/button";
