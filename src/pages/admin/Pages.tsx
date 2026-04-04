@@ -233,15 +233,27 @@ const PageEditor = ({ page, onBack }: { page: any; onBack: () => void }) => {
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDesc, setSeoDesc] = useState("");
   const [sections, setSections] = useState<any[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevPageLocale = useRef(`${page.id}_${locale}`);
 
-  if (trans && !initialized) {
+  // Reset guard when page or locale changes
+  useEffect(() => {
+    const key = `${page.id}_${locale}`;
+    if (prevPageLocale.current !== key) {
+      hasInitialized.current = false;
+      prevPageLocale.current = key;
+    }
+  }, [page.id, locale]);
+
+  // Populate form state once per page+locale context
+  useEffect(() => {
+    if (!trans || hasInitialized.current) return;
+    hasInitialized.current = true;
     setTitle(trans.title || "");
     setSeoTitle(trans.seo_title || "");
     setSeoDesc(trans.seo_description || "");
     setSections(trans.sections || []);
-    setInitialized(true);
-  }
+  }, [trans, page.id, locale]);
 
   const save = useMutation({
     mutationFn: async () => {

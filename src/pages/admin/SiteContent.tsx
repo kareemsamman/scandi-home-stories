@@ -352,11 +352,19 @@ const AdminSiteContent = () => {
     },
   });
 
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!allContent) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!allContent || hasInitialized.current) return;
+    hasInitialized.current = true;
     setHeaderData(allContent["header"] ?? getSeed(locale, "header"));
     setFooterData(allContent["footer"] ?? getSeed(locale, "footer"));
-    setInitialized(true);
   }, [allContent, locale]);
 
   const saveMutation = useMutation({

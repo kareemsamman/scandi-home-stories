@@ -504,8 +504,17 @@ const AdminHomePage = () => {
     },
   });
 
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!allContent) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!allContent || hasInitialized.current) return;
+    hasInitialized.current = true;
 
     // Load sections order (migrate old format without `type`)
     const rawOrder = allContent["sections_config"] ?? DEFAULT_SECTIONS_ORDER;
@@ -522,7 +531,6 @@ const AdminHomePage = () => {
       newData[s.id] = allContent[s.id] ?? getDefaultSectionData(s.type, locale);
     });
     setSectionsData(newData);
-    setInitialized(true);
   }, [allContent, locale]);
 
   const updateSection = (id: string, data: any) =>

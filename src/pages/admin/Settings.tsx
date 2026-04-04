@@ -152,7 +152,7 @@ const AdminSettings = () => {
   const { data: dbMsgs } = useSmsMessages();
   const saveMsgs = useSaveSetting("sms_messages");
   const [msgs, setMsgs] = useState<SmsMessages | null>(null);
-  useEffect(() => { if (dbMsgs) setMsgs(dbMsgs); }, [dbMsgs]);
+  useEffect(() => { if (dbMsgs && !initializedKeys.current.has("msgs")) { initializedKeys.current.add("msgs"); setMsgs(dbMsgs); } }, [dbMsgs]);
 
   const setMsg = (key: string, locale: "he" | "ar" | "admin", val: string) => {
     setMsgs(prev => {

@@ -174,23 +174,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("amg-orders");
   };
 
+  const isAdmin = roles.includes("admin");
+  const isWorker = roles.includes("worker");
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    session,
+    loading,
+    roles,
+    rolesLoaded,
+    profile,
+    isAdmin,
+    isWorker,
+    signUp,
+    signIn,
+    signOut,
+    refreshProfile,
+  }), [user, session, loading, roles, rolesLoaded, profile, isAdmin, isWorker, signUp, signIn, signOut, refreshProfile]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        roles,
-        rolesLoaded,
-        profile,
-        isAdmin: roles.includes("admin"),
-        isWorker: roles.includes("worker"),
-        signUp,
-        signIn,
-        signOut,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
