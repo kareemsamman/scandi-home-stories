@@ -471,7 +471,8 @@ const AdminHomePage = () => {
   const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
   const [showAddSection, setShowAddSection] = useState(false);
   const addRef = useRef<HTMLDivElement>(null);
 
