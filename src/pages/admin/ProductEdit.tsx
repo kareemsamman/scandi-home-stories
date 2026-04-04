@@ -544,8 +544,10 @@ const ProductEdit = () => {
   const [customColorPrices, setCustomColorPrices] = useState<Record<string, string>>({});
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
 
-  useEffect(() => {
-    hydratedProductIdRef.current = null;
+   useEffect(() => {
+    if (hydratedProductIdRef.current && hydratedProductIdRef.current !== productId) {
+      hydratedProductIdRef.current = null;
+    }
   }, [productId]);
 
   /* ── Populate on load ── */
