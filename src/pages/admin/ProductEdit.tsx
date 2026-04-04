@@ -502,10 +502,11 @@ const ProductEdit = () => {
   const [uploading, setUploading] = useState(false);
 
   /* ── Load product ── */
-  const { data: productData, isLoading } = useQuery({
+   const { data: productData, isLoading } = useQuery({
     queryKey: ["admin_product_edit", productId],
     enabled: !isNew,
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const [{ data: p }, { data: trans }, { data: inv }] = await Promise.all([
         db.from("products").select("*").eq("id", productId).single(),
@@ -543,8 +544,10 @@ const ProductEdit = () => {
   const [customColorPrices, setCustomColorPrices] = useState<Record<string, string>>({});
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
 
-  useEffect(() => {
-    hydratedProductIdRef.current = null;
+   useEffect(() => {
+    if (hydratedProductIdRef.current && hydratedProductIdRef.current !== productId) {
+      hydratedProductIdRef.current = null;
+    }
   }, [productId]);
 
   /* ── Populate on load ── */
