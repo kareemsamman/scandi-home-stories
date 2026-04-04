@@ -104,12 +104,14 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             icon={<Lightbulb className="w-4 h-4" />}
             label={t("pergolaRequest.lighting")}
           />
-          <QuickToggle
-            active={config.santaf === "with"}
-            onClick={() => setConfig({ santaf: config.santaf === "with" ? "without" : "with" as SantafChoice })}
-            icon={<Mountain className="w-4 h-4" />}
-            label={t("pergolaRequest.santafRoofing")}
-          />
+          {config.pergolaType !== "pvc" && (
+            <QuickToggle
+              active={config.santaf === "with"}
+              onClick={() => setConfig({ santaf: config.santaf === "with" ? "without" : "with" as SantafChoice })}
+              icon={<Mountain className="w-4 h-4" />}
+              label={t("pergolaRequest.santafRoofing")}
+            />
+          )}
         </div>
 
         {/* Next button — with loading state while capturing views */}
@@ -229,8 +231,8 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             </SideCard>
           )}
 
-          {/* סנטף (can be added on top of slats for fixed pergola) */}
-          <SideCard title={t("pergolaRequest.santafRoofing")} icon="🏠">
+          {/* סנטף — only for fixed pergola */}
+          {config.pergolaType !== "pvc" && <SideCard title={t("pergolaRequest.santafRoofing")} icon="🏠">
             <div className="flex gap-1.5">
               <button onClick={() => setConfig({ santaf: "without" })}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
@@ -246,17 +248,14 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
                 <MiniColorRow label={t("pergolaRequest.santafColorLabel")} value={config.santafColor || "#7A8B9A"} onChange={(v) => setConfig({ santafColor: v })} colors={SANTAF_COLORS} />
               </div>
             )}
-          </SideCard>
+          </SideCard>}
 
           {/* Colors — RAL for PVC, standard for fixed */}
           <SideCard title={t("pergolaRequest.colors")} icon="🎨">
             {config.pergolaType === "pvc" ? (
               <>
                 <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} onChange={(v) => setConfig({ frameColor: v })} colors={RAL_COLORS} />
-                <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} onChange={(v) => setConfig({ roofColor: v })} colors={RAL_COLORS} />
-                <div className="mt-2 pt-2 border-t border-gray-100">
-                  <MiniColorRow label={locale === "ar" ? "لون القماش (لجميع الأقسام)" : "צבע בד (לכל החלוקות)"} value={config.fabricColor || "#D4C9A8"} onChange={(v) => setConfig({ fabricColor: v })} colors={PVC_FABRIC_COLORS} />
-                </div>
+                <MiniColorRow label={locale === "ar" ? "لون القماش (لجميع الأقسام)" : "צבע בד (לכל החלוקות)"} value={config.fabricColor || "#D4C9A8"} onChange={(v) => setConfig({ fabricColor: v })} colors={PVC_FABRIC_COLORS} />
               </>
             ) : (
               <>

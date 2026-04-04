@@ -265,6 +265,8 @@ export interface CarrierConfig {
   slatGapCm: number;
   slatColor: string;
   fabricColor: string; // PVC fabric color per section
+  subCarrierColor: string; // PVC sub-carrier bar color (RAL or fabric)
+  pvcLightType: 'none' | 'side' | 'full'; // side=left+right spots, full=strip (alternating)
   slatCount: number; // 0 = auto-calculate, >0 = manual
   lighting: LightingChoice; // 'none' | '3000k' | '4000k' | '6000k'
   lightingEnabled: boolean;
@@ -282,6 +284,8 @@ export function defaultCarrierConfig(global: {
     slatGapCm: global.slatGapCm || 3,
     slatColor: global.slatColor || "#383E42",
     fabricColor: global.fabricColor || "#D4C9A8",
+    subCarrierColor: "#383E42",
+    pvcLightType: "none",
     slatCount: 0,
     lighting: global.lighting || "none",
     lightingEnabled: (global.lighting || "none") !== "none",
