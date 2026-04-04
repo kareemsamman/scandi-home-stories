@@ -85,6 +85,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
 
+        if (event === "TOKEN_REFRESHED") {
+          return;
+        }
+
         if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
