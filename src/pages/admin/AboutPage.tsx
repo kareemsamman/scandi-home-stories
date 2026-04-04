@@ -411,7 +411,8 @@ const AdminAboutPage = () => {
   const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
   const [showAddSection, setShowAddSection] = useState(false);
   const addRef = useRef<HTMLDivElement>(null);
 
@@ -442,8 +443,17 @@ const AdminAboutPage = () => {
     },
   });
 
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!allContent) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!allContent || hasInitialized.current) return;
+    hasInitialized.current = true;
     const rawOrder = allContent["about_sections_config"] ?? DEFAULT_ABOUT_SECTIONS_ORDER;
     const order: SectionItem[] = rawOrder.map((s: any) => ({
       id: s.id, type: s.type || s.id, visible: s.visible ?? true,
@@ -454,7 +464,6 @@ const AdminAboutPage = () => {
       newData[s.id] = allContent[s.id] ?? getDefaultSectionData(s.type, locale);
     });
     setSectionsData(newData);
-    setInitialized(true);
   }, [allContent, locale]);
 
   const updateSection = (id: string, data: any) => setSectionsData(prev => ({ ...prev, [id]: data }));
@@ -504,7 +513,7 @@ const AdminAboutPage = () => {
     },
   });
 
-  if (isLoading || !initialized) {
+  if (isLoading || !hasInitialized.current) {
     return <div className="flex items-center justify-center h-64 text-gray-400 gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Loading…</div>;
   }
 

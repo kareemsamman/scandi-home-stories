@@ -498,7 +498,8 @@ const ProductEdit = () => {
   const { data: allLengths = [] } = useLengthTaxonomy();
   const { data: customColorGroupsData = [] } = useCustomColorGroups();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const hydratedProductIdRef = useRef<string | null>(null);
+  const hasInitialized = useRef(false);
+  const prevProductId = useRef(productId);
   const [uploading, setUploading] = useState(false);
 
   /* ── Load product ── */
@@ -544,18 +545,20 @@ const ProductEdit = () => {
   const [customColorPrices, setCustomColorPrices] = useState<Record<string, string>>({});
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
 
-   useEffect(() => {
-    if (hydratedProductIdRef.current && hydratedProductIdRef.current !== productId) {
-      hydratedProductIdRef.current = null;
+  // Reset guard only when productId actually changes
+  useEffect(() => {
+    if (prevProductId.current !== productId) {
+      hasInitialized.current = false;
+      prevProductId.current = productId;
     }
   }, [productId]);
 
   /* ── Populate on load ── */
   useEffect(() => {
-    if (!productData) return;
+    if (!productData || hasInitialized.current) return;
     const { product: p, translations, inventory } = productData;
-    if (!p?.id || hydratedProductIdRef.current === p.id) return;
-    hydratedProductIdRef.current = p.id;
+    if (!p?.id) return;
+    hasInitialized.current = true;
 
     setBase({
       id: p.id, slug: p.slug || "", type: p.type || "retail", price: p.price || 0,

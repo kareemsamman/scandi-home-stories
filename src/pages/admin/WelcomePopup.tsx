@@ -54,7 +54,8 @@ const AdminWelcomePopup = () => {
   });
 
   const [settings, setSettings] = useState<PopupSettings>(DEFAULT);
-  useEffect(() => { if (dbSettings) setSettings(dbSettings); }, [dbSettings]);
+  const hasInitialized = useRef(false);
+  useEffect(() => { if (dbSettings && !hasInitialized.current) { hasInitialized.current = true; setSettings(dbSettings); } }, [dbSettings]);
 
   const saveMutation = useMutation({
     mutationFn: async (value: PopupSettings) => {

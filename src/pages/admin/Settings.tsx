@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle, Percent, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { adjustInventory } from "@/hooks/useOrders";
@@ -48,35 +48,38 @@ const TInput = ({ value, onChange, placeholder }: { value: string; onChange: (v:
 const AdminSettings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("shipping");
+  const initializedKeys = useRef(new Set<string>());
 
   /* Shipping */
   const { data: dbShipping, isLoading: shippingLoading } = useShippingSettings();
   const saveShipping = useSaveShippingSettings();
   const [shipping, setShipping] = useState<ShippingSettings>(DEFAULT_SHIPPING);
-  useEffect(() => { if (dbShipping) setShipping(dbShipping); }, [dbShipping]);
+  useEffect(() => { if (dbShipping && !initializedKeys.current.has("shipping")) { initializedKeys.current.add("shipping"); setShipping(dbShipping); } }, [dbShipping]);
 
   /* Bank */
   const { data: dbBank } = useBankSettings();
   const saveBank = useSaveSetting("bank");
   const [bank, setBank] = useState<BankSettings>({ bank_name: "", account_name: "", account_number: "", branch_number: "", bank_code: "" });
-  useEffect(() => { if (dbBank) setBank(dbBank); }, [dbBank]);
+  useEffect(() => { if (dbBank && !initializedKeys.current.has("bank")) { initializedKeys.current.add("bank"); setBank(dbBank); } }, [dbBank]);
 
   /* SMS credentials */
   const { data: dbSms } = useSmsSettings();
   const saveSms = useSaveSetting("sms");
   const [sms, setSms] = useState<SmsSettings>({ user: "", token: "", source: "", admin_phone: "", enabled: true });
-  useEffect(() => { if (dbSms) setSms(dbSms); }, [dbSms]);
+  useEffect(() => { if (dbSms && !initializedKeys.current.has("sms")) { initializedKeys.current.add("sms"); setSms(dbSms); } }, [dbSms]);
 
   /* Admin Orders */
   const { data: dbAdminOrders } = useAdminOrderSettings();
   const saveAdminOrders = useSaveSetting("admin_orders");
   const [adminOrders, setAdminOrders] = useState<AdminOrderSettings>({ enabled: false });
-  useEffect(() => { if (dbAdminOrders) setAdminOrders(dbAdminOrders); }, [dbAdminOrders]);
+  useEffect(() => { if (dbAdminOrders && !initializedKeys.current.has("adminOrders")) { initializedKeys.current.add("adminOrders"); setAdminOrders(dbAdminOrders); } }, [dbAdminOrders]);
 
   /* Profile Color Picker */
   const saveProfileColor = useSaveSetting("profile_color_picker");
   const [profileColorEnabled, setProfileColorEnabled] = useState(true);
   useEffect(() => {
+    if (initializedKeys.current.has("profileColor")) return;
+    initializedKeys.current.add("profileColor");
     (supabase as any).from("app_settings").select("value").eq("key", "profile_color_picker").single()
       .then(({ data }: any) => { if (data?.value) setProfileColorEnabled(data.value.enabled !== false); });
   }, []);
@@ -85,19 +88,19 @@ const AdminSettings = () => {
   const { data: dbTranzila } = useTranzilaSettings();
   const saveTranzila = useSaveSetting("tranzila");
   const [tranzila, setTranzila] = useState<TranzilaSettings>(DEFAULT_TRANZILA);
-  useEffect(() => { if (dbTranzila) setTranzila(dbTranzila); }, [dbTranzila]);
+  useEffect(() => { if (dbTranzila && !initializedKeys.current.has("tranzila")) { initializedKeys.current.add("tranzila"); setTranzila(dbTranzila); } }, [dbTranzila]);
 
   /* VAT */
   const { data: dbVat } = useVatSettings();
   const saveVat = useSaveSetting("vat");
   const [vat, setVat] = useState<VatSettings>(DEFAULT_VAT_SETTINGS);
-  useEffect(() => { if (dbVat) setVat(dbVat); }, [dbVat]);
+  useEffect(() => { if (dbVat && !initializedKeys.current.has("vat")) { initializedKeys.current.add("vat"); setVat(dbVat); } }, [dbVat]);
 
   /* WhatsApp */
   const { data: dbWhatsapp } = useWhatsappSettings();
   const saveWhatsapp = useSaveSetting("whatsapp");
   const [whatsapp, setWhatsapp] = useState<WhatsappSettings>({ phone: "", enabled: false });
-  useEffect(() => { if (dbWhatsapp) setWhatsapp(dbWhatsapp); }, [dbWhatsapp]);
+  useEffect(() => { if (dbWhatsapp && !initializedKeys.current.has("whatsapp")) { initializedKeys.current.add("whatsapp"); setWhatsapp(dbWhatsapp); } }, [dbWhatsapp]);
 
   /* Delete all orders */
   const [showDeleteAll, setShowDeleteAll] = useState(false);
@@ -149,7 +152,7 @@ const AdminSettings = () => {
   const { data: dbMsgs } = useSmsMessages();
   const saveMsgs = useSaveSetting("sms_messages");
   const [msgs, setMsgs] = useState<SmsMessages | null>(null);
-  useEffect(() => { if (dbMsgs) setMsgs(dbMsgs); }, [dbMsgs]);
+  useEffect(() => { if (dbMsgs && !initializedKeys.current.has("msgs")) { initializedKeys.current.add("msgs"); setMsgs(dbMsgs); } }, [dbMsgs]);
 
   const setMsg = (key: string, locale: "he" | "ar" | "admin", val: string) => {
     setMsgs(prev => {

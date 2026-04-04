@@ -471,7 +471,8 @@ const AdminHomePage = () => {
   const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
   const [showAddSection, setShowAddSection] = useState(false);
   const addRef = useRef<HTMLDivElement>(null);
 
@@ -503,8 +504,17 @@ const AdminHomePage = () => {
     },
   });
 
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!allContent) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!allContent || hasInitialized.current) return;
+    hasInitialized.current = true;
 
     // Load sections order (migrate old format without `type`)
     const rawOrder = allContent["sections_config"] ?? DEFAULT_SECTIONS_ORDER;
@@ -521,7 +531,6 @@ const AdminHomePage = () => {
       newData[s.id] = allContent[s.id] ?? getDefaultSectionData(s.type, locale);
     });
     setSectionsData(newData);
-    setInitialized(true);
   }, [allContent, locale]);
 
   const updateSection = (id: string, data: any) =>
@@ -695,7 +704,7 @@ const AdminHomePage = () => {
     }
   };
 
-  if (isLoading || !initialized) {
+  if (isLoading || !hasInitialized.current) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

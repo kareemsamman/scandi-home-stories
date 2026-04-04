@@ -332,7 +332,8 @@ const AdminSiteContent = () => {
   const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
 
   const [headerData, setHeaderData] = useState<any>(getSeed("he", "header"));
   const [footerData, setFooterData] = useState<any>(getSeed("he", "footer"));
@@ -351,11 +352,19 @@ const AdminSiteContent = () => {
     },
   });
 
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!allContent) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!allContent || hasInitialized.current) return;
+    hasInitialized.current = true;
     setHeaderData(allContent["header"] ?? getSeed(locale, "header"));
     setFooterData(allContent["footer"] ?? getSeed(locale, "footer"));
-    setInitialized(true);
   }, [allContent, locale]);
 
   const saveMutation = useMutation({
@@ -416,7 +425,7 @@ const AdminSiteContent = () => {
     },
   });
 
-  if (isLoading || !initialized) {
+  if (isLoading || !hasInitialized.current) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

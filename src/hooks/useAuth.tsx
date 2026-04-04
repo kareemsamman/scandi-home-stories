@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -29,6 +29,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
 
+  // Guards to prevent duplicate loading during bootstrap
+  const lastLoadedUserId = useRef<string | null>(null);
+  const isBootstrapped = useRef(false);
+
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -52,50 +56,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Failed to load user roles", error);
       setRoles([]);
-      // Even on error, mark roles as loaded so guards don't hang
     }
 
     setRolesLoaded(true);
   }, []);
 
-  const loadUserState = useCallback(async (nextUser: User | null) => {
+  const loadUserState = useCallback(async (nextUser: User | null, force = false) => {
     if (!nextUser) {
+      lastLoadedUserId.current = null;
       setProfile(null);
       setRoles([]);
       setRolesLoaded(true);
       return;
     }
 
+    // Skip if already loaded for this user (unless forced)
+    if (!force && lastLoadedUserId.current === nextUser.id) {
+      return;
+    }
+
+    lastLoadedUserId.current = nextUser.id;
     setRolesLoaded(false);
     await Promise.all([fetchProfile(nextUser.id), fetchRoles(nextUser.id)]);
   }, [fetchProfile, fetchRoles]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      setRolesLoaded(false);
-      await Promise.all([fetchProfile(user.id), fetchRoles(user.id)]);
+      await loadUserState(user, true);
     }
-  }, [user, fetchProfile, fetchRoles]);
+  }, [user, loadUserState]);
 
   useEffect(() => {
+    // Single bootstrap path: getSession first, then listen for changes
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      await loadUserState(initialSession?.user ?? null);
+      setLoading(false);
+      isBootstrapped.current = true;
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, nextSession) => {
-        if (event === "INITIAL_SESSION") return;
+        // Skip events during bootstrap and token refreshes
+        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+          return;
+        }
 
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
 
-        if (event === "TOKEN_REFRESHED") {
-          return;
-        }
-
         if (event === "SIGNED_OUT") {
+          lastLoadedUserId.current = null;
           setProfile(null);
           setRoles([]);
           setRolesLoaded(true);
           setLoading(false);
           return;
         }
+
+        // Only load user state if bootstrap is done (avoid duplicate initial load)
+        if (!isBootstrapped.current) return;
 
         if (nextSession?.user) {
           setLoading(true);
@@ -103,6 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             void loadUserState(nextSession.user).finally(() => setLoading(false));
           }, 0);
         } else {
+          lastLoadedUserId.current = null;
           setProfile(null);
           setRoles([]);
           setRolesLoaded(true);
@@ -110,14 +132,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     );
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      await loadUserState(session?.user ?? null);
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, [loadUserState]);
@@ -160,23 +174,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("amg-orders");
   };
 
+  const isAdmin = roles.includes("admin");
+  const isWorker = roles.includes("worker");
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    session,
+    loading,
+    roles,
+    rolesLoaded,
+    profile,
+    isAdmin,
+    isWorker,
+    signUp,
+    signIn,
+    signOut,
+    refreshProfile,
+  }), [user, session, loading, roles, rolesLoaded, profile, isAdmin, isWorker, signUp, signIn, signOut, refreshProfile]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        roles,
-        rolesLoaded,
-        profile,
-        isAdmin: roles.includes("admin"),
-        isWorker: roles.includes("worker"),
-        signUp,
-        signIn,
-        signOut,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
