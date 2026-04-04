@@ -834,10 +834,16 @@ const ProductEdit = () => {
         <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
           <div className="grid grid-cols-2 gap-4">
             <Field label={locale === "he" ? "שם מוצר" : "اسم المنتج"}>
-              <Input value={currentTrans.name} onChange={(e) => setCurrentTrans(p => ({ ...p, name: e.target.value }))} />
+              <Input value={currentTrans.name} onChange={(e) => {
+                setCurrentTrans(p => ({ ...p, name: e.target.value }));
+                if (locale === "he") {
+                  const slug = e.target.value.trim().toLowerCase().replace(/[^\w\u0590-\u05FF\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+                  setBase((p: any) => ({ ...p, slug }));
+                }
+              }} />
             </Field>
             <Field label="Slug (URL)">
-              <Input value={base.slug} onChange={(e) => setBase((p: any) => ({ ...p, slug: e.target.value }))} placeholder="product-slug" dir="ltr" />
+              <Input value={base.slug} readOnly className="bg-muted cursor-default" placeholder="auto-generated" dir="ltr" />
             </Field>
           </div>
           <Field label={locale === "he" ? "תיאור קצר" : "وصف قصير"}>
