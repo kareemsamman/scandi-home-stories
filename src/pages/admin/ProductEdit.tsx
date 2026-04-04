@@ -633,6 +633,7 @@ const ProductEdit = () => {
         Object.entries((p.custom_color_prices as Record<string, number>) || {}).map(([k, v]) => [k, String(v)])
       )
     );
+    setSelectedBrandIds(Array.isArray((p as any).brands) ? (p as any).brands : []);
   }, [productData]);
 
   /* ── Derived ── */
