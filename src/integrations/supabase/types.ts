@@ -814,6 +814,7 @@ export type Database = {
       }
       products: {
         Row: {
+          brands: Json | null
           category_id: string | null
           colors: Json | null
           created_at: string | null
@@ -847,6 +848,7 @@ export type Database = {
           use_color_groups: boolean | null
         }
         Insert: {
+          brands?: Json | null
           category_id?: string | null
           colors?: Json | null
           created_at?: string | null
@@ -880,6 +882,7 @@ export type Database = {
           use_color_groups?: boolean | null
         }
         Update: {
+          brands?: Json | null
           category_id?: string | null
           colors?: Json | null
           created_at?: string | null
