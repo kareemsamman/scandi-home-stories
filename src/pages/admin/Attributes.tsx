@@ -150,20 +150,79 @@ const LengthRow = ({ item, locale, onSave, onDelete }: {
   );
 };
 
+/* ── Brand Row ── */
+const BrandRow = ({ item, locale, onSave, onDelete }: {
+  item: TaxBrand; locale: "he" | "ar";
+  onSave: (v: TaxBrand) => Promise<void>; onDelete: () => void;
+}) => {
+  const isNew = !item.name_he && !item.name_ar;
+  const [editing, setEditing] = useState(isNew);
+  const [draft, setDraft] = useState(item);
+  const [saving, setSaving] = useState(false);
+  const [arTouched, setArTouched] = useState(!!item.name_ar);
+
+  const label = locale === "he" ? item.name_he : item.name_ar;
+  const placeholder = locale === "he" ? "שם המותג" : "اسم العلامة التجارية";
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(draft);
+    setSaving(false);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
+        <span className="flex-1 text-sm font-medium text-gray-800">{label || <span className="text-gray-300 italic">—</span>}</span>
+        <button onClick={() => { setDraft(item); setEditing(true); }} className="text-gray-400 hover:text-gray-700 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={onDelete} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+      {locale === "he" ? (
+        <Input
+          value={draft.name_he}
+          onChange={(e) => { const v = e.target.value; setDraft(p => ({ ...p, name_he: v, name_ar: arTouched ? p.name_ar : v })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew}
+        />
+      ) : (
+        <Input
+          value={draft.name_ar}
+          onChange={(e) => { setArTouched(true); setDraft(p => ({ ...p, name_ar: e.target.value })); }}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew}
+        />
+      )}
+      <button onClick={handleSave} disabled={saving} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">
+        <Check className="w-4 h-4" />
+      </button>
+      <button onClick={() => { if (isNew) { onDelete(); } else { setDraft(item); setEditing(false); } }} className="text-gray-400 hover:text-gray-600 shrink-0">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
 /* ── Main page ── */
 const AdminAttributes = () => {
   const { toast } = useToast();
   const { locale } = useAdminLanguage();
   const { data: colors = [], isLoading: cLoading } = useColorTaxonomy();
   const { data: lengths = [], isLoading: lLoading } = useLengthTaxonomy();
+  const { data: brands = [], isLoading: bLoading } = useBrandTaxonomy();
   const saveColors = useSaveColorTaxonomy();
   const saveLengths = useSaveLengthTaxonomy();
+  const saveBrands = useSaveBrandTaxonomy();
   const { data: customGroups = [], isLoading: cgLoading } = useCustomColorGroups();
   const saveCustomGroups = useSaveCustomColorGroups();
 
   // Local lists for unsaved add/delete (row edits save immediately via onSave)
   const [localColors, setLocalColors] = useState<TaxColor[] | null>(null);
   const [localLengths, setLocalLengths] = useState<TaxLength[] | null>(null);
+  const [localBrands, setLocalBrands] = useState<TaxBrand[] | null>(null);
   const [localGroups, setLocalGroups] = useState<TaxCustomColorGroup[] | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");

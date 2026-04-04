@@ -31,6 +31,16 @@ export const useSaveLengthTaxonomy = () => {
   return useMutation({ mutationFn: (items: TaxLength[]) => save("length_taxonomy", items), onSuccess: () => qc.invalidateQueries({ queryKey: ["taxonomy", "lengths"] }) });
 };
 
+export interface TaxBrand { id: string; name_he: string; name_ar: string; logo?: string; }
+
+export const useBrandTaxonomy = () =>
+  useQuery<TaxBrand[]>({ queryKey: ["taxonomy", "brands"], queryFn: () => load("brand_taxonomy"), staleTime: 60_000 });
+
+export const useSaveBrandTaxonomy = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (items: TaxBrand[]) => save("brand_taxonomy", items), onSuccess: () => qc.invalidateQueries({ queryKey: ["taxonomy", "brands"] }) });
+};
+
 const taxUid = () => Math.random().toString(36).slice(2, 9);
 
 export interface TaxCustomColor {
