@@ -95,8 +95,9 @@ const AdminProducts = () => {
       for (const k of validKeys) {
         if (k in product) cleanFields[k] = product[k];
       }
+      const dupSlug = (cleanFields.slug || "product") + "-copy-" + Date.now();
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: `${cleanFields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
