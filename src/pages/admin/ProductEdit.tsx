@@ -668,8 +668,9 @@ const ProductEdit = () => {
         db.from("inventory").select("*").eq("product_id", base.id),
       ]);
       const { id, created_at, updated_at, ...fields } = base;
+      const dupSlug = (fields.slug || "product") + "-copy-" + Date.now();
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, name: fields.name || "Untitled", .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy-${Date.now()}`, status: "draft", is_featured: false }), status: "draft", is_featured: false })
+        .insert({ ...fields, name: fields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
