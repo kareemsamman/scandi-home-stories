@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Truck, Loader2, Save, Globe, Shield, Building2, MessageSquare, Smartphone, Send, CheckCircle2, XCircle, ShoppingCart, MessageCircle, Trash2, AlertTriangle, Percent, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { adjustInventory } from "@/hooks/useOrders";
