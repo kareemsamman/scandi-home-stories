@@ -939,7 +939,27 @@ const ProductEdit = () => {
         </div>
       </Section>
 
-      {/* Product Details Repeater */}
+      {/* Brands */}
+      <Section
+        title="Brands (מותגים)"
+        action={<Link to="/admin/attributes" className="text-xs text-blue-600 hover:underline">Manage brands →</Link>}
+      >
+        <div className="flex flex-wrap gap-2">
+          {allBrands.length === 0 && <p className="text-sm text-gray-400">No brands defined. <Link to="/admin/attributes" className="text-blue-600 hover:underline">Add brands in Attributes →</Link></p>}
+          {allBrands.map(b => {
+            const selected = selectedBrandIds.includes(b.id);
+            return (
+              <button key={b.id} onClick={() => setSelectedBrandIds(prev => selected ? prev.filter(x => x !== b.id) : [...prev, b.id])}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                  selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                }`}>
+                {locale === "he" ? b.name_he : b.name_ar}
+                {selected && <Check className="w-3 h-3" />}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
       <Section title="Product Details (פרטי המוצר)">
         <div className="space-y-3">
           {/* Column headers */}
