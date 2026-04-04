@@ -229,56 +229,49 @@ const AdminAttributes = () => {
 
   const activeColors = localColors ?? colors;
   const activeLengths = localLengths ?? lengths;
+  const activeBrands = localBrands ?? brands;
 
-  // Called when a row's ✓ is clicked — saves the whole list immediately
   const handleSaveColor = async (idx: number, v: TaxColor) => {
     const updated = activeColors.map((x, i) => i === idx ? v : x);
-    try {
-      await saveColors.mutateAsync(updated);
-      setLocalColors(null); // let query take over
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e?.message, variant: "destructive" });
-    }
+    try { await saveColors.mutateAsync(updated); setLocalColors(null); }
+    catch (e: any) { toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
   };
 
   const handleSaveLength = async (idx: number, v: TaxLength) => {
     const updated = activeLengths.map((x, i) => i === idx ? v : x);
-    try {
-      await saveLengths.mutateAsync(updated);
-      setLocalLengths(null);
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e?.message, variant: "destructive" });
-    }
+    try { await saveLengths.mutateAsync(updated); setLocalLengths(null); }
+    catch (e: any) { toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
+  };
+
+  const handleSaveBrand = async (idx: number, v: TaxBrand) => {
+    const updated = activeBrands.map((x, i) => i === idx ? v : x);
+    try { await saveBrands.mutateAsync(updated); setLocalBrands(null); }
+    catch (e: any) { toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
   };
 
   const handleDeleteColor = async (idx: number) => {
     const updated = activeColors.filter((_, i) => i !== idx);
-    try {
-      await saveColors.mutateAsync(updated);
-      setLocalColors(null);
-    } catch (e: any) {
-      // Optimistic: update local anyway
-      setLocalColors(updated);
-      toast({ title: "Save failed", description: e?.message, variant: "destructive" });
-    }
+    try { await saveColors.mutateAsync(updated); setLocalColors(null); }
+    catch (e: any) { setLocalColors(updated); toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
   };
 
   const handleDeleteLength = async (idx: number) => {
     const updated = activeLengths.filter((_, i) => i !== idx);
-    try {
-      await saveLengths.mutateAsync(updated);
-      setLocalLengths(null);
-    } catch (e: any) {
-      setLocalLengths(updated);
-      toast({ title: "Save failed", description: e?.message, variant: "destructive" });
-    }
+    try { await saveLengths.mutateAsync(updated); setLocalLengths(null); }
+    catch (e: any) { setLocalLengths(updated); toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
+  };
+
+  const handleDeleteBrand = async (idx: number) => {
+    const updated = activeBrands.filter((_, i) => i !== idx);
+    try { await saveBrands.mutateAsync(updated); setLocalBrands(null); }
+    catch (e: any) { setLocalBrands(updated); toast({ title: "Save failed", description: e?.message, variant: "destructive" }); }
   };
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Attributes</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage global colors and lengths used across products</p>
+        <p className="text-gray-500 text-sm mt-1">Manage global colors, lengths, and brands used across products</p>
       </div>
 
       {/* Colors */}
