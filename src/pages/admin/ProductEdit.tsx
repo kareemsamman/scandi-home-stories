@@ -669,7 +669,7 @@ const ProductEdit = () => {
       ]);
       const { id, created_at, updated_at, ...fields } = base;
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...fields, name: fields.name || "Untitled", .insert({ ...fields, name: fields.name || "Untitled", slug: `${fields.slug}-copy-${Date.now()}`, status: "draft", is_featured: false }), status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {

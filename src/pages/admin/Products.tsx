@@ -96,7 +96,7 @@ const AdminProducts = () => {
         if (k in product) cleanFields[k] = product[k];
       }
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: `${cleanFields.slug}-copy`, status: "draft", is_featured: false })
+        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: `${cleanFields.slug}-copy-${Date.now()}`, status: "draft", is_featured: false }), status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       for (const t of (trans || [])) {
