@@ -556,6 +556,9 @@ const ProductEdit = () => {
     }
   }, [productId]);
 
+  // Brands
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
+
   /* ── Populate on load ── */
   useEffect(() => {
     if (!productData || hasInitialized.current) return;
@@ -633,7 +636,7 @@ const ProductEdit = () => {
         Object.entries((p.custom_color_prices as Record<string, number>) || {}).map(([k, v]) => [k, String(v)])
       )
     );
-    setSelectedBrandIds(Array.isArray((p as any).brands) ? (p as any).brands : []);
+    setSelectedBrandIds(Array.isArray(p.brands) ? p.brands : []);
   }, [productData]);
 
   /* ── Derived ── */
@@ -927,6 +930,27 @@ const ProductEdit = () => {
             </Select>
           </Field>
         </div>
+        {allBrands.length > 0 && (
+          <Field label="Brands (מותגים)">
+            <div className="flex flex-wrap gap-2">
+              {allBrands.map((b) => (
+                <label key={b.id} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded"
+                    checked={selectedBrandIds.includes(b.id)}
+                    onChange={(e) => {
+                      setSelectedBrandIds(prev =>
+                        e.target.checked ? [...prev, b.id] : prev.filter(id => id !== b.id)
+                      );
+                    }}
+                  />
+                  {b.name_he}
+                </label>
+              ))}
+            </div>
+          </Field>
+        )}
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input type="checkbox" className="w-4 h-4 rounded" checked={base.is_featured} onChange={(e) => setBase((p: any) => ({ ...p, is_featured: e.target.checked }))} />

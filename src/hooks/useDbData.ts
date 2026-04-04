@@ -30,6 +30,7 @@ export interface DbProduct {
   custom_colors_enabled: boolean;
   custom_color_groups: any[];
   custom_color_prices: any;
+  brands: string[];
 }
 export interface DbColorGroup {
   id: string; name_he: string; name_ar: string;

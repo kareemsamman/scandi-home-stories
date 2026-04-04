@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
-import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, useBrandTaxonomy, useSaveBrandTaxonomy, TaxColor, TaxLength, TaxCustomColorGroup, TaxCustomColor, TaxBrand } from "@/hooks/useProductTaxonomy";
+import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, useBrandTaxonomy, useSaveBrandTaxonomy, TaxColor, TaxLength, TaxBrand, TaxCustomColorGroup, TaxCustomColor } from "@/hooks/useProductTaxonomy";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
   const [editing, setEditing] = useState(isNew);
   const [draft, setDraft] = useState(item);
   const [saving, setSaving] = useState(false);
-  // Mirror HE → AR until AR is explicitly touched
   const [arTouched, setArTouched] = useState(!!item.label_ar);
 
   const label = locale === "he" ? item.label_he : item.label_ar;
@@ -44,7 +43,6 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
 
   return (
     <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
-      {/* Color picker swatch */}
       <div className="relative shrink-0 w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-300 overflow-hidden cursor-pointer" style={{ background: draft.hex }}>
         <input
           type="color"
@@ -54,8 +52,6 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
           title="Pick color"
         />
       </div>
-
-      {/* Label field (HE or AR based on locale) */}
       {locale === "he" ? (
         <Input
           value={draft.label_he}
@@ -69,19 +65,13 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
           placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew}
         />
       )}
-
-      {/* Hex text input */}
       <Input
         value={draft.hex}
-        onChange={(e) => {
-          const val = e.target.value;
-          setDraft(p => ({ ...p, hex: val }));
-        }}
+        onChange={(e) => setDraft(p => ({ ...p, hex: e.target.value }))}
         placeholder="#cccccc"
         className="w-24 h-8 text-xs font-mono"
         maxLength={7}
       />
-
       <button onClick={handleSave} disabled={saving} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">
         <Check className="w-4 h-4" />
       </button>
@@ -193,7 +183,7 @@ const BrandRow = ({ item, locale, onSave, onDelete }: {
         <Input
           value={draft.name_ar}
           onChange={(e) => { setArTouched(true); setDraft(p => ({ ...p, name_ar: e.target.value })); }}
-          placeholder={placeholder} className="flex-1 h-8 text-sm" autoFocus={isNew}
+          placeholder={placeholder} className="flex-1 h-8 text-sm" dir="rtl" autoFocus={isNew}
         />
       )}
       <button onClick={handleSave} disabled={saving} className="text-green-600 hover:text-green-800 disabled:opacity-40 shrink-0">
@@ -286,13 +276,7 @@ const AdminAttributes = () => {
           <div className="space-y-2">
             {activeColors.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No colors defined yet</p>}
             {activeColors.map((c, idx) => (
-              <ColorRow
-                key={c.id}
-                item={c}
-                locale={locale}
-                onSave={(v) => handleSaveColor(idx, v)}
-                onDelete={() => handleDeleteColor(idx)}
-              />
+              <ColorRow key={c.id} item={c} locale={locale} onSave={(v) => handleSaveColor(idx, v)} onDelete={() => handleDeleteColor(idx)} />
             ))}
           </div>
         )}
@@ -310,13 +294,7 @@ const AdminAttributes = () => {
           <div className="space-y-2">
             {activeLengths.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No lengths defined yet</p>}
             {activeLengths.map((l, idx) => (
-              <LengthRow
-                key={l.id}
-                item={l}
-                locale={locale}
-                onSave={(v) => handleSaveLength(idx, v)}
-                onDelete={() => handleDeleteLength(idx)}
-              />
+              <LengthRow key={l.id} item={l} locale={locale} onSave={(v) => handleSaveLength(idx, v)} onDelete={() => handleDeleteLength(idx)} />
             ))}
           </div>
         )}
@@ -334,13 +312,7 @@ const AdminAttributes = () => {
           <div className="space-y-2">
             {activeBrands.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No brands defined yet</p>}
             {activeBrands.map((b, idx) => (
-              <BrandRow
-                key={b.id}
-                item={b}
-                locale={locale}
-                onSave={(v) => handleSaveBrand(idx, v)}
-                onDelete={() => handleDeleteBrand(idx)}
-              />
+              <BrandRow key={b.id} item={b} locale={locale} onSave={(v) => handleSaveBrand(idx, v)} onDelete={() => handleDeleteBrand(idx)} />
             ))}
           </div>
         )}
@@ -405,7 +377,6 @@ const AdminAttributes = () => {
 
           return (
             <div className="space-y-4">
-              {/* Tabs */}
               <div className="flex items-center gap-1 flex-wrap border-b border-gray-200">
                 {groups.map((g, gi) => (
                   <button
@@ -418,7 +389,6 @@ const AdminAttributes = () => {
                 ))}
               </div>
 
-              {/* Group name fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500 block mb-1">Tab Name (Hebrew)</label>
@@ -430,7 +400,6 @@ const AdminAttributes = () => {
                 </div>
               </div>
 
-              {/* Search within group */}
               <div className="relative">
                 <input
                   type="text"
@@ -441,7 +410,6 @@ const AdminAttributes = () => {
                 />
               </div>
 
-              {/* Colors */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredColors.map((color, ci) => {
                   const realIdx = activeGroup.colors.indexOf(color);

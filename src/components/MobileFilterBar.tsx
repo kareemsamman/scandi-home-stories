@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidersHorizontal, Grid3X3, ArrowUpDown, X, Search, Check } from "lucide-react";
 import type { Collection, SubCategory, Product, ContractorProduct, RetailProduct } from "@/data/products";
+import type { TaxBrand } from "@/hooks/useProductTaxonomy";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ interface FilterState {
   search: string;
   collection: string;
   subCategory: string;
+  brand: string;
   sort: string;
   lengths: string[];
   colors: string[];
@@ -26,17 +28,18 @@ interface MobileFilterBarProps {
   products: Product[];
   subCategories: SubCategory[];
   profilesCategorySlug: string;
+  brandTaxonomy: TaxBrand[];
 }
 
 type PanelType = "filter" | "category" | "sort" | null;
 
-export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearAll, collections, products, subCategories, profilesCategorySlug }: MobileFilterBarProps) => {
+export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearAll, collections, products, subCategories, profilesCategorySlug, brandTaxonomy }: MobileFilterBarProps) => {
   const { t, locale } = useLocale();
   const [activePanel, setActivePanel] = useState<PanelType>(null);
   const sortOptions: any[] = t("shop.sortOptions") || [];
 
-  // Dynamic lengths and colors based on current collection
-  const { availableLengths, availableColors } = useMemo(() => {
+  // Dynamic lengths, colors, and brands based on current collection
+  const { availableLengths, availableColors, availableBrands } = useMemo(() => {
     let relevantProducts = [...products];
     if (filters.collection !== "all") {
       const col = collections.find((c) => c.slug === filters.collection);
@@ -54,12 +57,14 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();
     contractorProducts.forEach((p) => { if (p.colorGroups[0]) p.colorGroups[0].colors.forEach((c) => colorMap.set(c.id, c)); });
     retailProducts.forEach((p) => { p.colors.forEach((c) => colorMap.set(c.id, c)); });
-    return { availableLengths: lengths, availableColors: Array.from(colorMap.values()) };
-  }, [filters.collection, filters.subCategory, products, collections, profilesCategorySlug]);
+    const brandIds = new Set(relevantProducts.flatMap((p) => p.brands || []));
+    const brands = brandTaxonomy.filter((b) => brandIds.has(b.id));
+    return { availableLengths: lengths, availableColors: Array.from(colorMap.values()), availableBrands: brands };
+  }, [filters.collection, filters.subCategory, products, collections, profilesCategorySlug, brandTaxonomy]);
 
   const closePanel = () => setActivePanel(null);
 
-  const hasActiveFilters = filters.search || filters.lengths.length > 0 || filters.colors.length > 0 || filters.skuSearch || filters.priceMin > 0 || filters.priceMax > 0;
+  const hasActiveFilters = filters.search || filters.brand !== "all" || filters.lengths.length > 0 || filters.colors.length > 0 || filters.skuSearch || filters.priceMin > 0 || filters.priceMax > 0;
 
   return (
     <>
@@ -118,6 +123,23 @@ export const MobileFilterBar = ({ filters, onFilterChange, resultCount, onClearA
                         <input type="number" value={filters.priceMax || ""} onChange={(e) => onFilterChange({ priceMax: Number(e.target.value) || 0 })} placeholder={t("shop.filters.priceMax")} className="w-full h-10 px-3 text-sm bg-muted border border-border rounded-xl outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                       </div>
                     </div>
+                    {availableBrands.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">{t("shop.filters.brand")}</label>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-3 cursor-pointer text-sm text-foreground">
+                            <input type="radio" name="mobile-brand" checked={filters.brand === "all"} onChange={() => onFilterChange({ brand: "all" })} className="accent-foreground w-4 h-4" />
+                            {t("shop.filterAll")}
+                          </label>
+                          {availableBrands.map((brand) => (
+                            <label key={brand.id} className="flex items-center gap-3 cursor-pointer text-sm text-foreground">
+                              <input type="radio" name="mobile-brand" checked={filters.brand === brand.id} onChange={() => onFilterChange({ brand: brand.id })} className="accent-foreground w-4 h-4" />
+                              {locale === "ar" ? brand.name_ar : brand.name_he}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {availableLengths.length > 0 && (
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">{t("shop.filters.length")}</label>

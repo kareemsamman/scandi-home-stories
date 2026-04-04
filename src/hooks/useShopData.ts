@@ -60,6 +60,7 @@ export const useShopData = () => {
       sort_order: p.sort_order ?? 9999,
       contentHtml: { he: (p as any).content_html_he || "", ar: (p as any).content_html_ar || "" },
       productDetails: Array.isArray((p as any).product_details) ? (p as any).product_details : [],
+      brands: Array.isArray((p as any).brands) ? (p as any).brands : [],
     };
 
     if (p.type === "contractor") {

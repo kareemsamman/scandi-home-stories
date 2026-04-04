@@ -5,6 +5,7 @@ const db = supabase as any;
 
 export interface TaxColor { id: string; label_he: string; label_ar: string; hex: string; }
 export interface TaxLength { id: string; label_he: string; label_ar: string; value: string; }
+export interface TaxBrand { id: string; name_he: string; name_ar: string; logo?: string; }
 
 const load = async (section: string) => {
   const { data } = await db.from("home_content").select("data").eq("locale", "global").eq("section", section).single();
@@ -30,8 +31,6 @@ export const useSaveLengthTaxonomy = () => {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (items: TaxLength[]) => save("length_taxonomy", items), onSuccess: () => qc.invalidateQueries({ queryKey: ["taxonomy", "lengths"] }) });
 };
-
-export interface TaxBrand { id: string; name_he: string; name_ar: string; logo?: string; }
 
 export const useBrandTaxonomy = () =>
   useQuery<TaxBrand[]>({ queryKey: ["taxonomy", "brands"], queryFn: () => load("brand_taxonomy"), staleTime: 60_000 });

@@ -21,6 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead, getProductSchema, getBreadcrumbSchema, getOrganizationSchema } from "@/components/SEOHead";
 import { useProfileColor } from "@/components/ProfileColorPicker";
+import { useBrandTaxonomy } from "@/hooks/useProductTaxonomy";
 
 /* ─── Fullscreen Gallery Lightbox ─── */
 const ImageLightbox = ({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) => {
@@ -163,6 +164,8 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
   const collection = collections.find((c) => c.id === product.collection);
+  const { data: brandTaxonomy = [] } = useBrandTaxonomy();
+  const productBrands = (product.brands || []).map(id => brandTaxonomy.find(b => b.id === id)).filter(Boolean);
 
   // Inventory loading
   const { data: inventory = [] } = useQuery({
@@ -255,7 +258,13 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
               )}
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
-              {collection && <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong mb-2 block">{collection.name[locale]}</Link>}
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {collection && <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong">{collection.name[locale]}</Link>}
+                {collection && productBrands.length > 0 && <span className="text-xs text-muted-foreground">·</span>}
+                {productBrands.map((b) => (
+                  <Link key={b!.id} to={localePath(`/shop?brand=${b!.id}`)} className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">{locale === "ar" ? b!.name_ar : b!.name_he}</Link>
+                ))}
+              </div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name[locale]}</h1>
               <p className="text-2xl font-bold mb-4">{t("common.currency")}{product.price.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">{getLocaleText(product.description, locale)}</p>
@@ -453,6 +462,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
   const collection = collections.find((c) => c.id === product.collection);
+  const { data: brandTaxonomy = [] } = useBrandTaxonomy();
+  const productBrands = (product.brands || []).map(id => brandTaxonomy.find(b => b.id === id)).filter(Boolean);
 
   const standardColors = product.colorGroups[0]?.colors || [];
   const customColorGroups = product.colorGroups.slice(1);
@@ -604,6 +615,15 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
               {isMobile ? (<MobileGallery images={product.images} onZoom={handleZoom} />) : (<div className="sticky top-24"><DesktopGallery images={product.images} onZoom={handleZoom} /></div>)}
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start">
+              {(collection || productBrands.length > 0) && (
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {collection && <Link to={localePath(`/shop?collection=${collection.slug}`)} className="text-xs font-semibold text-accent-strong">{collection.name[locale]}</Link>}
+                  {collection && productBrands.length > 0 && <span className="text-xs text-muted-foreground">·</span>}
+                  {productBrands.map((b) => (
+                    <Link key={b!.id} to={localePath(`/shop?brand=${b!.id}`)} className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">{locale === "ar" ? b!.name_ar : b!.name_he}</Link>
+                  ))}
+                </div>
+              )}
               <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name[locale]}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
               <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>

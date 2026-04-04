@@ -62,6 +62,7 @@ interface BaseProduct {
   sort_order?: number;
   contentHtml?: { he: string; ar: string };
   productDetails?: { label_he: string; label_ar: string; value_he: string; value_ar: string }[];
+  brands?: string[];
 }
 
 // TYPE 1: Retail products (Pergolas) — color swatches, optional sizes/lengths

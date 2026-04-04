@@ -14,11 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { SEOHead, getOrganizationSchema } from "@/components/SEOHead";
 import { ProfileColorPopup } from "@/components/ProfileColorPicker";
+import { useBrandTaxonomy } from "@/hooks/useProductTaxonomy";
 
 interface FilterState {
   search: string;
   collection: string;
   subCategory: string;
+  brand: string;
   sort: string;
   lengths: string[];
   colors: string[];
@@ -31,6 +33,7 @@ const defaultFilters: FilterState = {
   search: "",
   collection: "all",
   subCategory: "all",
+  brand: "all",
   sort: "featured",
   lengths: [],
   colors: [],
@@ -44,11 +47,13 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale, localePath } = useLocale();
   const { collections, profileSubCategories, profilesCategorySlug, products, isLoading, getCollectionBySlug } = useShopData();
+  const { data: brandTaxonomy = [] } = useBrandTaxonomy();
 
   const [filters, setFilters] = useState<FilterState>(() => ({
     ...defaultFilters,
     collection: searchParams.get("collection") || "all",
     subCategory: searchParams.get("sub") || "all",
+    brand: searchParams.get("brand") || "all",
     sort: searchParams.get("sort") || "featured",
   }));
 
@@ -62,6 +67,7 @@ const Products = () => {
       const p = new URLSearchParams();
       if (next.collection !== "all") p.set("collection", next.collection);
       if (next.subCategory !== "all") p.set("sub", next.subCategory);
+      if (next.brand !== "all") p.set("brand", next.brand);
       if (next.sort !== "featured") p.set("sort", next.sort);
       setSearchParams(p, { replace: true });
       return next;
@@ -98,6 +104,11 @@ const Products = () => {
         if (p.type === "contractor") return (p as ContractorProduct).subCategory === filters.subCategory;
         return false;
       });
+    }
+
+    // Brand filter
+    if (filters.brand !== "all") {
+      result = result.filter((p) => p.brands?.includes(filters.brand));
     }
 
     // Search
@@ -252,6 +263,7 @@ const Products = () => {
               products={products}
               subCategories={profileSubCategories}
               profilesCategorySlug={profilesCategorySlug}
+              brandTaxonomy={brandTaxonomy}
             />
 
             <div className="flex-1 min-w-0">
@@ -331,6 +343,7 @@ const Products = () => {
         products={products}
         subCategories={profileSubCategories}
         profilesCategorySlug={profilesCategorySlug}
+        brandTaxonomy={brandTaxonomy}
       />
     </Layout>
   );

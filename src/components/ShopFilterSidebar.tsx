@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 import type { Collection, SubCategory, Product, ContractorProduct, RetailProduct } from "@/data/products";
+import type { TaxBrand } from "@/hooks/useProductTaxonomy";
 import { useLocale } from "@/i18n/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,7 @@ interface FilterState {
   search: string;
   collection: string;
   subCategory: string;
+  brand: string;
   sort: string;
   lengths: string[];
   colors: string[];
@@ -25,9 +27,10 @@ interface ShopFilterSidebarProps {
   products: Product[];
   subCategories: SubCategory[];
   profilesCategorySlug: string;
+  brandTaxonomy: TaxBrand[];
 }
 
-export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSearchingChange, collections, products, subCategories, profilesCategorySlug }: ShopFilterSidebarProps) => {
+export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSearchingChange, collections, products, subCategories, profilesCategorySlug, brandTaxonomy }: ShopFilterSidebarProps) => {
   const { t, locale } = useLocale();
 
   // Debounced search
@@ -68,8 +71,8 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
 
   const isProfilesCollection = filters.collection === profilesCategorySlug;
 
-  // Compute available lengths and colors based on current collection filter
-  const { availableLengths, availableColors, hasContractorProducts } = useMemo(() => {
+  // Compute available lengths, colors, and brands based on current collection filter
+  const { availableLengths, availableColors, availableBrands, hasContractorProducts } = useMemo(() => {
     let relevantProducts = [...products];
 
     // Collection filter
@@ -103,12 +106,17 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
       p.colors.forEach((c) => colorMap.set(c.id, c));
     });
 
+    // Brands: collect unique brand IDs from relevant products, then resolve from taxonomy
+    const brandIds = new Set(relevantProducts.flatMap((p) => p.brands || []));
+    const brands = brandTaxonomy.filter((b) => brandIds.has(b.id));
+
     return {
       availableLengths: lengths,
       availableColors: Array.from(colorMap.values()),
+      availableBrands: brands,
       hasContractorProducts: contractorProducts.length > 0,
     };
-  }, [filters.collection, filters.subCategory, isProfilesCollection, products, collections]);
+  }, [filters.collection, filters.subCategory, isProfilesCollection, products, collections, brandTaxonomy]);
 
   return (
     <aside className="w-[260px] flex-shrink-0 hidden md:block">
@@ -209,6 +217,39 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
                     className="accent-foreground w-3.5 h-3.5"
                   />
                   {sub.name[locale]}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Brand */}
+        {availableBrands.length > 0 && (
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-2 block">
+              {t("shop.filters.brand")}
+            </label>
+            <div className="space-y-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
+                <input
+                  type="radio"
+                  name="brand"
+                  checked={filters.brand === "all"}
+                  onChange={() => onFilterChange({ brand: "all" })}
+                  className="accent-foreground w-3.5 h-3.5"
+                />
+                {t("shop.filterAll")}
+              </label>
+              {availableBrands.map((brand) => (
+                <label key={brand.id} className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-accent-strong transition-colors">
+                  <input
+                    type="radio"
+                    name="brand"
+                    checked={filters.brand === brand.id}
+                    onChange={() => onFilterChange({ brand: brand.id })}
+                    className="accent-foreground w-3.5 h-3.5"
+                  />
+                  {locale === "ar" ? brand.name_ar : brand.name_he}
                 </label>
               ))}
             </div>
