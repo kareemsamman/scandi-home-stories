@@ -110,9 +110,10 @@ const AdminProducts = () => {
       }
       return newProduct.id;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       qc.invalidateQueries({ queryKey: ["products"] });
       toast({ title: "Product duplicated — saved as draft" });
+      navigate(`/admin/products/edit/${newId}`);
     },
     onError: (e: any) => toast({ title: "Duplicate failed", description: e.message, variant: "destructive" }),
   });
