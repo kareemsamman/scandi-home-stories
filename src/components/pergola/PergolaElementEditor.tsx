@@ -165,9 +165,10 @@ export const PergolaElementEditor = () => {
     const displayNum = logicalIdx + 1;
     const cc = carrierConfigs[logicalIdx];
     const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
+    const isPvcType = config.pergolaType === "pvc";
 
-    if (!isFixedSlats || !cc) {
-      // Fallback: just show spacing controls if not fixed slats
+    if ((!isFixedSlats && !isPvcType) || !cc) {
+      // Fallback: just show spacing controls
       return (
         <Panel onClose={close} title={`חלוקה ${displayNum}`}>
           <Label>מרווח בין קורות חלוקה</Label>
