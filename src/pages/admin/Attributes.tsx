@@ -322,6 +322,30 @@ const AdminAttributes = () => {
         )}
       </div>
 
+      {/* Brands */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Brands (מותגים)</h2>
+          <Button variant="outline" size="sm" onClick={() => setLocalBrands([...activeBrands, { id: uid(), name_he: "", name_ar: "" }])}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Add Brand
+          </Button>
+        </div>
+        {bLoading ? <p className="text-gray-400 text-sm">Loading...</p> : (
+          <div className="space-y-2">
+            {activeBrands.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No brands defined yet</p>}
+            {activeBrands.map((b, idx) => (
+              <BrandRow
+                key={b.id}
+                item={b}
+                locale={locale}
+                onSave={(v) => handleSaveBrand(idx, v)}
+                onDelete={() => handleDeleteBrand(idx)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Custom Color Groups */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <div className="flex items-center justify-between">
