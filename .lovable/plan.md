@@ -1,88 +1,29 @@
 
 
-## Plan: Pergola Configurator — Terminology, Dimension Swap & Slat Calculation Overhaul
+## Fix: Product Edit form state loss on navigation
 
-### Summary
-Rename labels (נשאים → קורת חלוקה, רוחב/יציאה → טול/רוחב), add 20×100 slat size option, change the slat calculation formula to account for frame deduction, and restructure the per-carrier (קורת חלוקה) editing flow so each division beam independently configures slat size, gap, color, and lighting.
+### Problem
+The `hydratedProductIdRef` guard is already in place, **but** the query has no `staleTime`, so when the user navigates away and back, the component remounts, React Query considers the cached data "stale" and re-fetches. During re-fetch, `isLoading` may briefly be true (showing a spinner), and if the query returns a new object reference, the hydration guard only prevents overwriting if the ref hasn't been reset — but the `useEffect` on `[productId]` **resets** `hydratedProductIdRef` to `null`, so when data arrives again, it **does** overwrite.
 
----
+**Root cause**: The `useEffect` that resets `hydratedProductIdRef.current = null` on `[productId]` fires every time the component remounts (even with the same productId), allowing the populate effect to run again.
 
-### Changes
+### Fix (2 changes in `ProductEdit.tsx`)
 
-#### 1. Translations — rename labels (both HE and AR)
-- **רוחב** → stays as **רוחב** (width) but becomes the shorter dimension
-- **עומק / הטלה** → rename to **אורך** (length) — so the form shows אורך + רוחב instead of רוחב + עומק
-- **נשאים** → **קורות חלוקה** (everywhere: translations, specs summary, SVG labels, element editor)
-- **שלבים לכל נשא** → **שלבים לכל קורת חלוקה**
-- Arabic equivalents updated similarly (الحوامل → قوارص التقسيم, etc.)
+1. **Add `staleTime` to the query** — Set `staleTime: 5 * 60 * 1000` (5 minutes) on the `admin_product_edit` query. This prevents re-fetching when remounting if cached data is fresh, eliminating the loading flash entirely.
 
-**Files:** `src/i18n/translations.ts`
+2. **Fix the hydration guard** — Change the reset effect so it only clears `hydratedProductIdRef` when the productId actually changes (not on every mount):
+   ```tsx
+   useEffect(() => {
+     // Only reset if navigating to a DIFFERENT product
+     if (hydratedProductIdRef.current && hydratedProductIdRef.current !== productId) {
+       hydratedProductIdRef.current = null;
+     }
+   }, [productId]);
+   ```
+   This way, remounting with the same productId won't reset the guard, so cached data won't overwrite local edits.
 
-#### 2. Add 20×100 slat size option
-- Add `{ id: '20x100', label: '20 × 100 mm', widthMm: 20, heightMm: 100 }` to `SLAT_SIZES` in `src/types/pergola.ts`
-- Update `SlatSizeId` type
-- Update `getSlatProfileHeight` in `src/lib/pergolaRules.ts` to handle '20x100'
+3. **Add unsaved-changes warning** — Use `beforeunload` event and track a `dirty` flag to warn users before leaving with unsaved changes (optional enhancement).
 
-**Files:** `src/types/pergola.ts`, `src/lib/pergolaRules.ts`
-
-#### 3. New slat calculation formula
-Current formula doesn't account for frame deduction. New formula:
-
-```text
-FRAME_DEDUCTION = 90mm (9cm total frame)
-usableWidth = widthMm - FRAME_DEDUCTION
-
-slatProfileWidth = 20mm (face width, same for all sizes)
-gapMm = slatGapCm × 10
-
-unitSize = slatProfileWidth + gapMm
-slatCount = floor(usableWidth / unitSize)
-```
-
-Example: width=3000mm, gap=30mm, slat=70mm → usable=2910mm → unit=20+30=50 → 58 slats.
-
-Wait — re-reading the user's message: "70 + 30 = 100, 291/100 = 29". The user means the **height** of the slat profile (70mm) is what counts in the spacing calculation, not the face width (20mm). So the unit = slatHeight + gapMm.
-
-Updated formula:
-```text
-usableWidth = widthMm - 90  (frame deduction)
-slatHeight = getSlatProfileHeight(slatSize)  // 40, 70, or 100
-gapMm = slatGapCm × 10
-unitSize = slatHeight + gapMm
-slatCount = floor(usableWidth / unitSize)
-```
-
-**Files:** `src/lib/pergolaRules.ts` — update `calcSlatCount` and `calcSlatGapFromCount`
-
-#### 4. SVG dimension labels swap
-In the top view SVG, the horizontal dimension currently shows "רוחב" and vertical shows "יציאה/אורך". Swap so:
-- Horizontal (width axis) = **רוחב**
-- Vertical (length/depth axis) = **אורך**
-
-The dimension values already use `widthMm` and `lengthMm` correctly, just the labels in the summary/specs need updating.
-
-**Files:** `src/components/pergola/PergolaTopView.tsx` (label text), `src/components/pergola/PergolaSpecsSummary.tsx`
-
-#### 5. Element editor — rename נשא → קורת חלוקה
-All hardcoded Hebrew strings in `PergolaElementEditor.tsx` (like `נשא ${secIdx + 1}`, `תאורה בנשא`, `מרווח בין נשאים`) will be updated to use `קורת חלוקה` terminology and pulled from translations where possible.
-
-**Files:** `src/components/pergola/PergolaElementEditor.tsx`
-
-#### 6. SVG hover label update
-In `PergolaTopView.tsx`, the section label on hover currently says `נשא {secIdx + 1} — {secSlatCount} שלבים`. Update to `קורת חלוקה {secIdx + 1} — {secSlatCount} שלבים`.
-
-**Files:** `src/components/pergola/PergolaTopView.tsx`
-
----
-
-### Technical Details
-
-| File | What changes |
-|------|-------------|
-| `src/i18n/translations.ts` | Rename carriers→קורות חלוקה, length label, add new translation keys |
-| `src/types/pergola.ts` | Add 20×100 to SLAT_SIZES |
-| `src/lib/pergolaRules.ts` | New slat formula with 90mm frame deduction, use slatHeight instead of slatWidth for unit calculation |
-| `src/components/pergola/PergolaElementEditor.tsx` | Rename נשא→קורת חלוקה, add 20×100 option (already uses SLAT_SIZES dynamically) |
-| `src/components/pergola/PergolaTopView.tsx` | Update hover labels |
-| `src/components/pergola/PergolaSpecsSummary.tsx` | Update carrier terminology |
+### Files to modify
+- `src/pages/admin/ProductEdit.tsx` — staleTime on query + fix hydration guard reset logic
 
