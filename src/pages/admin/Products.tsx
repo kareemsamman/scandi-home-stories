@@ -100,14 +100,16 @@ const AdminProducts = () => {
         .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
-      for (const t of (trans || [])) {
-        const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
-        await db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
-      }
-      for (const i of (inv || [])) {
-        const { id: _iid, created_at: _ica, ...iFields } = i;
-        await db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
-      }
+      await Promise.all([
+        ...(trans || []).map((t: any) => {
+          const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
+          return db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
+        }),
+        ...(inv || []).map((i: any) => {
+          const { id: _iid, created_at: _ica, ...iFields } = i;
+          return db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
+        }),
+      ]);
       return newProduct.id;
     },
     onSuccess: (newId) => {
