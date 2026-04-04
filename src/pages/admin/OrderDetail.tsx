@@ -206,36 +206,22 @@ const AdminOrderDetail = () => {
 
   const handlePrint = () => {
     if (!order) return;
-    const isAr = order.locale === "ar";
-    const dir = "rtl";
-    const locale = isAr ? "ar" : "he";
     const shippingCost = calcShipping(order);
     const itemsTotal = (order.order_items || []).reduce(
       (s: number, i: DbOrderItem) => s + i.price * i.quantity, 0
     );
     const logoUrl = window.location.origin + logoWhite;
 
-    const labels = isAr ? {
+    // Always Arabic
+    const L = {
       order: "طلب", date: "التاريخ", customer: "العميل", shipping: "عنوان الشحن",
       phone: "هاتف", email: "بريد إلكتروني", items: "المنتجات", product: "المنتج",
-      color: "اللون", size: "الحجم", qty: "الكمية", price: "السعر", total: "الإجمالي",
+      color: "اللون", size: "الطول", qty: "الكمية", price: "السعر", total: "الإجمالي",
       subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
       discount: "خصم", vat: "ض.ق.م", grandTotal: "المجموع الكلي", notes: "ملاحظات",
       custom: "مخصص", thankYou: "شكراً لطلبك",
-    } : {
-      order: "הזמנה", date: "תאריך", customer: "العميل", shipping: "عنوان الشحن",
-      phone: "טלפון", email: "אימייל", items: "المنتجات", product: "מוצר",
-      color: "اللون", size: "الطول", qty: "כמות", price: "מחיר", total: "סה\"כ",
-      subtotal: "المجموع الفرعي", shippingCost: "الشحن", free: "مجاني",
-      discount: "خصم", vat: "ض.ق.م", grandTotal: "סה\"כ לתשלום", notes: "ملاحظات",
-      custom: "מותאם", thankYou: "תודה על הזמנתך",
     };
 
-    const font = isAr
-      ? "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;"
-      : "font-family: 'Segoe UI', Tahoma, Arial, sans-serif;";
-
-    // HTML-escape helper to prevent XSS in print template
     const esc = (s: string | null | undefined) =>
       (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
@@ -245,109 +231,113 @@ const AdminOrderDetail = () => {
       const stdColors = sp?.type === "contractor" && sp.colorGroups?.[0]?.colors || [];
       const isStdColor = stdColors.some((c: any) => c.name?.he === item.color_name || c.name?.ar === item.color_name || c.hex === item.color_hex);
       const isCustom = item.color_name && stdColors.length > 0 && !isStdColor;
+      const arName = item.product_id && productNameMap.get(item.product_id)?.ar || item.product_name;
+      const imgSrc = item.product_image || "";
       return `
         <tr>
-          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0;">
-            <div style="font-weight:600; font-size:13px;">${esc(item.product_id && productNameMap.get(item.product_id)?.[orderLocale] || item.product_name)}</div>
-            ${sku ? `<div style="font-size:11px; color:#9ca3af; font-family:monospace;">#${esc(sku)}</div>` : ""}
-            ${item.color_name ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${labels.color}: ${esc(item.color_name)}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;font-size:10px;">${labels.custom}</span>` : ""}</div>` : ""}
-            ${item.size ? `<div style="font-size:11px; color:#6b7280;">${labels.size}: ${esc(item.size)}</div>` : ""}
+          <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;flex-shrink:0;" />` : ""}
+              <div>
+                <div style="font-weight:700; font-size:12px; line-height:1.3;">${esc(arName)}</div>
+                ${sku ? `<div style="font-size:10px; color:#9ca3af; font-family:monospace;">#${esc(sku)}</div>` : ""}
+                ${item.color_name ? `<div style="font-size:10px; color:#6b7280; margin-top:1px; display:flex; align-items:center; gap:3px;">${item.color_hex ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color_hex};border:1px solid #d1d5db;"></span>` : ""}${L.color}: ${esc(item.color_name)}${isCustom ? ` <span style="background:#f3e8ff;color:#7e22ce;padding:0 4px;border-radius:3px;font-size:9px;font-weight:700;">${L.custom}</span>` : ""}</div>` : ""}
+                ${item.size ? `<div style="font-size:10px; color:#6b7280;">${L.size}: ${esc(item.size)}</div>` : ""}
+              </div>
+            </div>
           </td>
-          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:center; font-size:13px;">×${item.quantity}</td>
-          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-size:13px; color:#6b7280;">₪${item.price.toLocaleString()}</td>
-          <td style="padding:10px 12px; border-bottom:1px solid #f0f0f0; text-align:${isAr ? "left" : "right"}; font-weight:700; font-size:13px;">₪${(item.price * item.quantity).toLocaleString()}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; text-align:center; font-size:12px;">×${item.quantity}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; text-align:left; font-size:12px; color:#6b7280;">₪${item.price.toLocaleString()}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; text-align:left; font-weight:700; font-size:12px;">₪${(item.price * item.quantity).toLocaleString()}</td>
         </tr>`;
     }).join("");
 
     const html = `<!DOCTYPE html>
-<html lang="${locale}" dir="${dir}">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${labels.order} ${order.order_number}</title>
+  <title>${L.order} ${order.order_number}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { ${font} background:#fff; color:#1a1a1a; font-size:13px; direction:${dir}; }
+    body { font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:#fff; color:#1a1a1a; font-size:12px; direction:rtl; }
     @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      @page { margin:6mm; size:A4; }
     }
-    .header { background:#111827; color:#fff; padding:28px 36px; display:flex; align-items:center; justify-content:space-between; }
-    .header img { height:40px; object-fit:contain; }
-    .header-info { text-align:${isAr ? "left" : "right"}; }
-    .header-info h1 { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
-    .header-info p { font-size:12px; color:#9ca3af; margin-top:2px; }
-    .body { padding:28px 36px; }
-    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
-    .info-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; }
-    .info-card h3 { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-    .info-card p { font-size:13px; color:#374151; margin-bottom:4px; }
-    .info-card .name { font-weight:700; font-size:14px; color:#111827; }
-    .notes-box { background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:14px 16px; margin-bottom:24px; font-size:13px; color:#92400e; }
-    .section-title { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
-    table { width:100%; border-collapse:collapse; margin-bottom:24px; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
+    .header { background:#111827; color:#fff; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .header img { height:32px; }
+    .header h1 { font-size:16px; font-weight:800; }
+    .header p { font-size:10px; color:#9ca3af; margin-top:1px; }
+    .body { padding:14px 24px; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+    .info-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; }
+    .info-card h3 { font-size:9px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+    .info-card p { font-size:11px; color:#374151; margin-bottom:2px; }
+    .info-card .name { font-weight:700; font-size:12px; color:#111827; }
+    .notes-box { background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:8px 12px; margin-bottom:12px; font-size:11px; color:#92400e; }
+    .section-title { font-size:9px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:12px; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; }
     thead { background:#f3f4f6; }
-    th { padding:10px 12px; font-size:11px; font-weight:700; color:#6b7280; text-align:${isAr ? "left" : "right"}; }
-    th:first-child { text-align:${isAr ? "right" : "left"}; }
-    .totals { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; max-width:320px; margin-${isAr ? "right" : "left"}:auto; }
-    .totals-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
-    .totals-row.grand { border-top:2px solid #e5e7eb; margin-top:8px; padding-top:10px; font-weight:800; font-size:15px; }
-    .footer { margin-top:32px; padding:20px 36px; border-top:1px solid #e5e7eb; text-align:center; font-size:11px; color:#9ca3af; }
+    th { padding:6px 8px; font-size:10px; font-weight:700; color:#6b7280; text-align:left; }
+    th:first-child { text-align:right; }
+    .totals { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; max-width:260px; }
+    .totals-row { display:flex; justify-content:space-between; padding:3px 0; font-size:11px; }
+    .totals-row.grand { border-top:2px solid #d1d5db; margin-top:6px; padding-top:8px; font-weight:800; font-size:14px; }
+    .footer { padding:10px 24px; border-top:1px solid #e5e7eb; text-align:center; font-size:10px; color:#9ca3af; }
   </style>
 </head>
 <body>
   <div class="header">
-    <img src="${logoUrl}" alt="AMG PERGOLA" style="height:40px; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;\\'>AMG PERGOLA</span>'">
-    <div class="header-info">
-      <h1>${labels.order} ${esc(order.order_number)}</h1>
-      <p>${labels.date}: ${new Date(order.created_at).toLocaleDateString(isAr ? "ar-SA" : "he-IL", { year: "numeric", month: "long", day: "numeric" })}</p>
+    <img src="${logoUrl}" alt="AMG" onerror="this.outerHTML='<span style=\\'font-size:18px;font-weight:900;color:#fff;\\'>AMG PERGOLA</span>'">
+    <div>
+      <h1>${L.order} #${esc(order.order_number)}</h1>
+      <p>${L.date}: ${new Date(order.created_at).toLocaleDateString("ar-SA", { year:"numeric", month:"long", day:"numeric" })}</p>
     </div>
   </div>
 
   <div class="body">
     <div class="info-grid">
       <div class="info-card">
-        <h3>${labels.customer}</h3>
+        <h3>${L.customer}</h3>
         <p class="name">${esc(order.first_name)} ${esc(order.last_name)}</p>
-        <p>${labels.phone}: ${esc(order.phone)}</p>
-        <p>${labels.email}: ${esc(order.email)}</p>
+        <p>${L.phone}: ${esc(order.phone)}</p>
+        <p>${L.email}: ${esc(order.email)}</p>
       </div>
       <div class="info-card">
-        <h3>${labels.shipping}</h3>
+        <h3>${L.shipping}</h3>
         <p class="name">${esc(order.city)}</p>
         <p>${esc(order.address)}${(order as any).house_number ? ` ${esc((order as any).house_number)}` : ""}${order.apartment ? `, ${esc(order.apartment)}` : ""}</p>
       </div>
     </div>
 
-    ${order.notes ? `<div class="notes-box"><strong>${labels.notes}:</strong> ${esc(order.notes)}</div>` : ""}
+    ${order.notes ? `<div class="notes-box"><strong>${L.notes}:</strong> ${esc(order.notes)}</div>` : ""}
 
-    <p class="section-title">${labels.items}</p>
+    <p class="section-title">${L.items}</p>
     <table>
-      <thead>
-        <tr>
-          <th style="text-align:${isAr ? "right" : "left"}">${labels.product}</th>
-          <th style="text-align:center">${labels.qty}</th>
-          <th>${labels.price}</th>
-          <th>${labels.total}</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th style="text-align:right">${L.product}</th>
+        <th style="text-align:center">${L.qty}</th>
+        <th>${L.price}</th>
+        <th>${L.total}</th>
+      </tr></thead>
       <tbody>${itemsHtml}</tbody>
     </table>
 
     <div class="totals">
-      <div class="totals-row"><span>${labels.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
-      ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${labels.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
-      ${Number((order as any).vat_amount || 0) > 0 ? `<div class="totals-row"><span>${labels.vat} (${(order as any).vat_rate || 18}%)</span><span>₪${Number((order as any).vat_amount).toLocaleString()}</span></div>` : ""}
-      <div class="totals-row"><span>${labels.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${labels.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
-      <div class="totals-row grand"><span>${labels.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
+      <div class="totals-row"><span>${L.subtotal}</span><span>₪${itemsTotal.toLocaleString()}</span></div>
+      ${order.discount_code ? `<div class="totals-row" style="color:#15803d;"><span>${L.discount} (${esc(order.discount_code)})</span><span>-₪${Number(order.discount_amount || 0).toLocaleString()}</span></div>` : ""}
+      ${Number((order as any).vat_amount || 0) > 0 ? `<div class="totals-row"><span>${L.vat} (${(order as any).vat_rate || 18}%)</span><span>₪${Number((order as any).vat_amount).toLocaleString()}</span></div>` : ""}
+      <div class="totals-row"><span>${L.shippingCost}</span><span>${shippingCost === 0 ? `<span style="color:#15803d;">${L.free}</span>` : `₪${shippingCost.toLocaleString()}`}</span></div>
+      <div class="totals-row grand"><span>${L.grandTotal}</span><span>₪${Number(order.total).toLocaleString()}</span></div>
     </div>
   </div>
 
   <div class="footer">
-    <p style="font-size:13px; font-weight:600; color:#374151; margin-bottom:4px;">${labels.thankYou}</p>
+    <p style="font-size:11px; font-weight:600; color:#374151; margin-bottom:2px;">${L.thankYou}</p>
     <p>AMG Pergola · amgpergola.com</p>
   </div>
 
-  <script>window.onafterprint = function(){ window.close(); }; window.onload = function(){ setTimeout(function(){ window.print(); }, 400); }</script>
+  <script>window.onafterprint=function(){window.close()};window.onload=function(){setTimeout(function(){window.print()},400)}</script>
 </body>
 </html>`;
 
