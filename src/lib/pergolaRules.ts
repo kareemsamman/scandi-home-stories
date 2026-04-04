@@ -28,6 +28,14 @@ export function calcPvcCarrierCount(widthMm: number): number {
   return 4;
 }
 
+// PVC sub-carriers (internal bars within each חלוקה) — every 40-50cm based on יציאה (length)
+export function calcPvcSubCarriers(lengthMm: number): number {
+  if (lengthMm <= 0) return 1;
+  // Each sub-carrier spacing is ~450mm (45cm)
+  const spacing = 450;
+  return Math.max(1, Math.floor(lengthMm / spacing));
+}
+
 // PVC module classification
 export function classifyPvcModule(widthMm: number): { classification: ModuleClassification; moduleCount: number } {
   if (widthMm <= 3500) return { classification: "single", moduleCount: 1 };

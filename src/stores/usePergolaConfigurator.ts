@@ -97,7 +97,8 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         partial.slatSize !== undefined ||
         partial.slatGapCm !== undefined ||
         partial.slatColor !== undefined ||
-        partial.lighting !== undefined;
+        partial.lighting !== undefined ||
+        partial.fabricColor !== undefined;
 
       const carrierCountChanged =
         partial.carrierCountOverride !== undefined ||
@@ -115,6 +116,7 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
             slatGapCm: Number(next.slatGapCm) || 3,
             slatColor: next.slatColor,
             lighting: next.lighting as any,
+            fabricColor: next.fabricColor,
           });
           carrierConfigs = Array.from({ length: Math.max(1, specs.carrierCount - 1) }, () => ({ ...globalDef }));
         } else {
@@ -154,6 +156,7 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
         slatGapCm: Number(state.config.slatGapCm) || 3,
         slatColor: state.config.slatColor,
         lighting: state.config.lighting as any,
+        fabricColor: state.config.fabricColor,
       });
       return {
         carrierConfigs: state.carrierConfigs.map(() => ({ ...globalDef })),

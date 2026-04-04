@@ -178,8 +178,8 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
           <SideCard title={t("pergolaRequest.dimensions")} icon="📐">
             <div className="grid grid-cols-2 gap-2">
               <MiniInput label={t("pergolaRequest.width")} value={Number(config.widthCm) || 400}
-                onChange={(v) => setConfig({ widthCm: v })} min={100} max={1500} step={10} suffix="cm" />
-              <MiniInput label={t("pergolaRequest.length")} value={Number(config.lengthCm) || 400}
+                onChange={(v) => setConfig({ widthCm: v })} min={100} max={config.pergolaType === "pvc" ? 1000 : 1500} step={10} suffix="cm" />
+              <MiniInput label={config.pergolaType === "pvc" ? (locale === "ar" ? "يציאה (سم)" : "יציאה (ס\"מ)") : t("pergolaRequest.length")} value={Number(config.lengthCm) || 400}
                 onChange={(v) => setConfig({ lengthCm: v })} min={200} max={1000} step={10} suffix="cm" />
             </div>
             <MiniInput label={t("pergolaRequest.height")} value={Number(config.heightCm) || 250}

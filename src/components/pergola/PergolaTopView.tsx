@@ -1,6 +1,6 @@
 import type { DrawingConfig } from "@/types/pergola";
 import { mmToCm, lightingColor } from "@/types/pergola";
-import { calcPostPositions, calcCarrierPositions } from "@/lib/pergolaRules";
+import { calcPostPositions, calcCarrierPositions, calcPvcSubCarriers } from "@/lib/pergolaRules";
 import { usePergolaEditor, type SelectedElement } from "@/stores/usePergolaEditor";
 
 interface Props { config: DrawingConfig }
@@ -148,6 +148,86 @@ export const PergolaTopView = ({ config }: Props) => {
                   fontSize={fontSize * 0.42} fill="#3B82F6"
                   fontFamily="sans-serif" fontWeight="600" opacity={0.8}>
                   חלוקה {displayNum} — {secSlatCount} שלבים
+                </text>
+              )}
+            </g>
+          );
+        });
+      })()}
+
+      {/* ── PVC FABRIC — per-carrier sections with sub-carriers and fabric panels ── */}
+      {pergolaType === "pvc" && carrierPositions.length >= 2 && (() => {
+        const sections = carrierPositions.length - 1;
+        const subCarrierCount = calcPvcSubCarriers(lengthMm);
+        const subSpacing = lengthMm / (subCarrierCount + 1);
+        const defaultFabric = carrierConfigs[0]?.fabricColor || "#D4C9A8";
+
+        return Array.from({ length: sections }, (_, secIdx) => {
+          const rtlIdx = sections - 1 - secIdx;
+          const cc = carrierConfigs[rtlIdx];
+          const fabColor = cc?.fabricColor || defaultFabric;
+          const x1 = carrierPositions[secIdx];
+          const x2 = carrierPositions[secIdx + 1];
+          const secW = x2 - x1;
+          const el: SelectedElement = { type: "carrier", index: secIdx };
+          const isSel = isSelected(el);
+          const isHov = isHovered(el);
+          const displayNum = sections - secIdx;
+
+          return (
+            <g key={`pvc-sec-${secIdx}`} className="cursor-pointer"
+              onClick={handleClick(el)} onMouseEnter={handleHover(el)} onMouseLeave={handleHover(null)}>
+              <rect x={ox + x1} y={oy} width={secW} height={lengthMm} fill="transparent" />
+
+              {/* Selection highlight */}
+              {(isSel || isHov) && (
+                <rect x={ox + x1 + 2} y={oy + 2} width={secW - 4} height={lengthMm - 4}
+                  fill={isSel ? "#DBEAFE" : "#EFF6FF"} fillOpacity={isSel ? 0.5 : 0.3}
+                  stroke={isSel ? "#60A5FA" : "#93C5FD"} strokeWidth={2} rx={4} />
+              )}
+
+              {/* Fabric panels between sub-carriers */}
+              {Array.from({ length: subCarrierCount }, (_, si) => {
+                const y1 = subSpacing * si + (si === 0 ? 10 : 0);
+                const y2 = subSpacing * (si + 1);
+                const panelH = y2 - y1 - 6;
+                return (
+                  <g key={`fab-${secIdx}-${si}`}>
+                    {/* Fabric panel */}
+                    <rect x={ox + x1 + 10} y={oy + y1 + 3} width={secW - 20} height={panelH}
+                      fill={fabColor} fillOpacity={0.6} rx={3}
+                      stroke={fabColor} strokeWidth={1} strokeOpacity={0.3} />
+                  </g>
+                );
+              })}
+
+              {/* Sub-carrier bars (horizontal thin lines) */}
+              {Array.from({ length: subCarrierCount + 1 }, (_, si) => {
+                const yPos = subSpacing * si;
+                return (
+                  <line key={`subcar-${secIdx}-${si}`}
+                    x1={ox + x1 + 6} y1={oy + yPos} x2={ox + x2 - 6} y2={oy + yPos}
+                    stroke="#555" strokeWidth={slatStroke * 0.6} />
+                );
+              })}
+
+              {/* Lighting indicator */}
+              {cc?.lightingEnabled && cc.lighting !== "none" && (() => {
+                const ltColor = cc.lighting === "3000k" ? "#FFD27F" : cc.lighting === "4000k" ? "#FFF4E0" : "#F0F4FF";
+                return (
+                  <rect x={ox + x1 + secW * 0.15} y={oy + lengthMm - 45}
+                    width={secW * 0.7} height={18} rx={9}
+                    fill={ltColor} fillOpacity={0.7} stroke={ltColor} strokeWidth={2} strokeOpacity={0.4} />
+                );
+              })()}
+
+              {/* Section label */}
+              {(isSel || isHov) && (
+                <text x={ox + x1 + secW / 2} y={oy + lengthMm / 2}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={fontSize * 0.42} fill="#3B82F6"
+                  fontFamily="sans-serif" fontWeight="600" opacity={0.8}>
+                  חלוקה {displayNum}
                 </text>
               )}
             </g>
