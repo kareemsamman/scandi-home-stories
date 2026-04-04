@@ -497,6 +497,7 @@ const ProductEdit = () => {
   const { data: allColors = [] } = useColorTaxonomy();
   const { data: allLengths = [] } = useLengthTaxonomy();
   const { data: customColorGroupsData = [] } = useCustomColorGroups();
+  const { data: allBrands = [] } = useBrandTaxonomy();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
   const prevProductId = useRef(productId);
