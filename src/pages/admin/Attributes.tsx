@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
-import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, TaxColor, TaxLength, TaxCustomColorGroup, TaxCustomColor } from "@/hooks/useProductTaxonomy";
+import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, useBrandTaxonomy, useSaveBrandTaxonomy, TaxColor, TaxLength, TaxCustomColorGroup, TaxCustomColor, TaxBrand } from "@/hooks/useProductTaxonomy";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
