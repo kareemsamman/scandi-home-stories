@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/useLocale";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { usePergolaEditor } from "@/stores/usePergolaEditor";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS, RAL_COLORS, PVC_FABRIC_COLORS } from "@/types/pergola";
 import type { DrawingConfig, LightingChoice, MountType, SpacingMode, SantafChoice } from "@/types/pergola";
 import { calcSlatCount, adjustedCarrierCount } from "@/lib/pergolaRules";
 import { PergolaTopView } from "./PergolaTopView";
@@ -186,25 +186,29 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
               onChange={(v) => setConfig({ heightCm: v })} min={150} max={500} step={10} suffix="cm" />
           </SideCard>
 
-          {/* קורות חלוקה — count only, right after dimensions */}
+          {/* קורות חלוקה — editable for fixed, read-only for PVC */}
           <SideCard title={t("pergolaRequest.carriers")} icon="↔️">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setConfig({ carrierCountOverride: Math.max(1, (config.carrierCountOverride || specs.carrierCount) - 1) })}
-                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
-              >−</button>
-              <span className="text-sm font-semibold text-gray-800 min-w-[2rem] text-center">{specs.carrierCount}</span>
-              <button
-                onClick={() => setConfig({ carrierCountOverride: (config.carrierCountOverride || specs.carrierCount) + 1 })}
-                className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
-              >+</button>
-              {(config.carrierCountOverride || 0) > 0 && (
+            {config.pergolaType === "pvc" ? (
+              <p className="text-sm font-semibold text-gray-800 text-center">{specs.carrierCount}</p>
+            ) : (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setConfig({ carrierCountOverride: 0 })}
-                  className="px-2 py-1 rounded-md text-[9px] font-medium border border-gray-200 text-gray-400 hover:bg-gray-50"
-                >אוטומטי</button>
-              )}
-            </div>
+                  onClick={() => setConfig({ carrierCountOverride: Math.max(1, (config.carrierCountOverride || specs.carrierCount) - 1) })}
+                  className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+                >−</button>
+                <span className="text-sm font-semibold text-gray-800 min-w-[2rem] text-center">{specs.carrierCount}</span>
+                <button
+                  onClick={() => setConfig({ carrierCountOverride: (config.carrierCountOverride || specs.carrierCount) + 1 })}
+                  className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm font-bold"
+                >+</button>
+                {(config.carrierCountOverride || 0) > 0 && (
+                  <button
+                    onClick={() => setConfig({ carrierCountOverride: 0 })}
+                    className="px-2 py-1 rounded-md text-[9px] font-medium border border-gray-200 text-gray-400 hover:bg-gray-50"
+                  >אוטומטי</button>
+                )}
+              </div>
+            )}
           </SideCard>
 
           {/* Lighting — color temperature (global) */}
@@ -244,10 +248,22 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             )}
           </SideCard>
 
-          {/* Colors */}
+          {/* Colors — RAL for PVC, standard for fixed */}
           <SideCard title={t("pergolaRequest.colors")} icon="🎨">
-            <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} onChange={(v) => setConfig({ frameColor: v })} colors={STANDARD_COLORS} />
-            <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} onChange={(v) => setConfig({ roofColor: v })} colors={STANDARD_COLORS} />
+            {config.pergolaType === "pvc" ? (
+              <>
+                <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} onChange={(v) => setConfig({ frameColor: v })} colors={RAL_COLORS} />
+                <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} onChange={(v) => setConfig({ roofColor: v })} colors={RAL_COLORS} />
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <MiniColorRow label={locale === "ar" ? "لون القماش (لجميع الأقسام)" : "צבע בד (לכל החלוקות)"} value={config.fabricColor || "#D4C9A8"} onChange={(v) => setConfig({ fabricColor: v })} colors={PVC_FABRIC_COLORS} />
+                </div>
+              </>
+            ) : (
+              <>
+                <MiniColorRow label={t("pergolaRequest.frameColor")} value={config.frameColor || "#383E42"} onChange={(v) => setConfig({ frameColor: v })} colors={STANDARD_COLORS} />
+                <MiniColorRow label={t("pergolaRequest.roofColor")} value={config.roofColor || "#A5A5A5"} onChange={(v) => setConfig({ roofColor: v })} colors={STANDARD_COLORS} />
+              </>
+            )}
           </SideCard>
 
           {/* Roof fill mode (fixed pergola only) */}

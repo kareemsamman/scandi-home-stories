@@ -3,7 +3,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { usePergolaEditor, canAddPost, canRemovePost, canTogglePostLight } from "@/stores/usePergolaEditor";
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
-import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS } from "@/types/pergola";
+import { cmToMm, mmToCm, STANDARD_COLORS, SLAT_COLORS, SANTAF_COLORS, SLAT_SIZES, LIGHTING_TEMPS, PVC_FABRIC_COLORS } from "@/types/pergola";
 import type { LightingChoice, SantafChoice, SlatSizeId } from "@/types/pergola";
 import { calcPostCount } from "@/lib/pergolaRules";
 
@@ -186,14 +186,27 @@ export const PergolaElementEditor = () => {
     const autoSlatCount = calcSlatCount(secLengthMm, cc.slatGapCm * 10, cc.slatSize);
     const secSlatCount = autoSlatCount;
 
-    return (
-      <Panel onClose={close} title={`חלוקה ${displayNum} — ${secSlatCount} שלבים`}>
-        {/* Read-only info */}
-        <div className="text-xs text-gray-500 space-y-1 mb-3">
-          <p>{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ</p>
-        </div>
+    const isPvc = config.pergolaType === "pvc";
 
-        {/* Lighting — only editable per-section, with color dots */}
+    return (
+      <Panel onClose={close} title={`חלוקה ${displayNum}${!isPvc ? ` — ${secSlatCount} שלבים` : ""}`}>
+        {/* Fixed pergola: read-only slat info */}
+        {!isPvc && (
+          <div className="text-xs text-gray-500 space-y-1 mb-3">
+            <p>{secSlatCount} שלבים &middot; {cc.slatSize} &middot; מרווח {cc.slatGapCm} ס"מ</p>
+          </div>
+        )}
+
+        {/* PVC: fabric color picker per section */}
+        {isPvc && (
+          <div className="mb-3">
+            <Label>{locale === "ar" ? "لون القماش" : "צבע בד"}</Label>
+            <ColorPicker value={cc.fabricColor || "#D4C9A8"} colors={PVC_FABRIC_COLORS} locale={locale}
+              onChange={(hex) => setCarrierConfig(logicalIdx, { fabricColor: hex })} />
+          </div>
+        )}
+
+        {/* Lighting — editable per-section */}
         <Label>תאורה בחלוקה</Label>
         <div className="flex gap-1.5">
           <ToggleBtn active={!cc.lightingEnabled} onClick={() => setCarrierConfig(logicalIdx, { lightingEnabled: false, lighting: "none" })} label="ללא" />
@@ -204,7 +217,7 @@ export const PergolaElementEditor = () => {
           ))}
         </div>
 
-        <p className="text-[9px] text-gray-300 mt-3">שינוי גודל, מרווח וצבע — מהפאנל השמאלי (חל על כל החלוקות)</p>
+        {!isPvc && <p className="text-[9px] text-gray-300 mt-3">שינוי גודל, מרווח וצבע — מהפאנל השמאלי (חל על כל החלוקות)</p>}
       </Panel>
     );
   }
