@@ -332,7 +332,8 @@ const AdminSiteContent = () => {
   const { locale } = useAdminLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [initialized, setInitialized] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
 
   const [headerData, setHeaderData] = useState<any>(getSeed("he", "header"));
   const [footerData, setFooterData] = useState<any>(getSeed("he", "footer"));
