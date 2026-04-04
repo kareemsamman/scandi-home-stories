@@ -513,7 +513,7 @@ const AdminAboutPage = () => {
     },
   });
 
-  if (isLoading || !initialized) {
+  if (isLoading || !hasInitialized.current) {
     return <div className="flex items-center justify-center h-64 text-gray-400 gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Loading…</div>;
   }
 
