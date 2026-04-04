@@ -498,7 +498,8 @@ const ProductEdit = () => {
   const { data: allLengths = [] } = useLengthTaxonomy();
   const { data: customColorGroupsData = [] } = useCustomColorGroups();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const hydratedProductIdRef = useRef<string | null>(null);
+  const hasInitialized = useRef(false);
+  const prevProductId = useRef(productId);
   const [uploading, setUploading] = useState(false);
 
   /* ── Load product ── */
