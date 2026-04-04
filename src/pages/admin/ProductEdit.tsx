@@ -763,6 +763,7 @@ const ProductEdit = () => {
           Object.entries(customColorPrices).filter(([, v]) => v).map(([k, v]) => [k, Number(v)])
         ),
         custom_color_groups: [],
+        brands: selectedBrandIds,
       };
 
       let pid = id;
