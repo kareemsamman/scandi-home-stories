@@ -682,14 +682,16 @@ const ProductEdit = () => {
         .insert({ ...fields, name: fields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
-      for (const t of (trans || [])) {
-        const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
-        await db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
-      }
-      for (const i of (inv || [])) {
-        const { id: _iid, created_at: _ica, ...iFields } = i;
-        await db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
-      }
+      await Promise.all([
+        ...(trans || []).map((t: any) => {
+          const { id: _tid, created_at: _tca, product_id: _pid, ...tFields } = t;
+          return db.from("product_translations").insert({ ...tFields, name: tFields.name ? `${tFields.name} - Copy` : tFields.name, product_id: newProduct.id });
+        }),
+        ...(inv || []).map((i: any) => {
+          const { id: _iid, created_at: _ica, ...iFields } = i;
+          return db.from("inventory").insert({ ...iFields, product_id: newProduct.id });
+        }),
+      ]);
       return newProduct.id;
     },
     onSuccess: (newId) => {
@@ -758,33 +760,35 @@ const ProductEdit = () => {
         pid = data.id;
       }
 
-      for (const [loc, trans] of [["he", transHe], ["ar", transAr]] as const) {
-        await db.from("product_translations").upsert(
-          { product_id: pid, locale: loc, ...trans },
-          { onConflict: "product_id,locale" }
-        );
-      }
+      // Save translations in parallel
+      await Promise.all([
+        db.from("product_translations").upsert({ product_id: pid, locale: "he", ...transHe }, { onConflict: "product_id,locale" }),
+        db.from("product_translations").upsert({ product_id: pid, locale: "ar", ...transAr }, { onConflict: "product_id,locale" }),
+      ]);
 
+      // Save inventory in parallel
+      const invOps: Promise<any>[] = [];
       if (variantType === "simple") {
         for (const c of selectedColors) {
           const sv = simpleVariants[c.id];
-          await db.from("inventory").upsert(
+          invOps.push(db.from("inventory").upsert(
             { product_id: pid, variation_key: `color:${c.id}`, stock_quantity: Number(sv?.stock ?? 0) },
             { onConflict: "product_id,variation_key" }
-          );
+          ));
         }
       } else {
         for (const c of selectedColors) {
           const lengths = (colorLengths[c.id] || []).map(lid => allLengths.find(l => l.id === lid)).filter(Boolean) as TaxLength[];
           for (const l of lengths) {
             const stock = Number(comboStock[`${c.id}|${l.id}`] ?? 0);
-            await db.from("inventory").upsert(
+            invOps.push(db.from("inventory").upsert(
               { product_id: pid, variation_key: `combo:${c.id}|${l.id}`, stock_quantity: stock },
               { onConflict: "product_id,variation_key" }
-            );
+            ));
           }
         }
       }
+      if (invOps.length) await Promise.all(invOps);
       return pid;
     },
     onSuccess: (pid) => {
