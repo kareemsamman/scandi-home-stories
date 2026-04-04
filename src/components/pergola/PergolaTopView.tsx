@@ -67,7 +67,7 @@ export const PergolaTopView = ({ config }: Props) => {
 
       {/* Background fill — light color visible in gaps between slats */}
       <rect x={ox} y={oy} width={widthMm} height={lengthMm}
-        fill={GAP_BG} rx={4}
+        fill={pergolaType === "pvc" ? "#F8F8F8" : GAP_BG} rx={4}
         className="cursor-pointer"
         onClick={handleClick({ type: "roof", index: -1 })}
         onMouseEnter={handleHover({ type: "roof", index: -1 })}
@@ -186,17 +186,32 @@ export const PergolaTopView = ({ config }: Props) => {
                   stroke={isSel ? "#60A5FA" : "#93C5FD"} strokeWidth={2} rx={4} />
               )}
 
-              {/* Fabric panels between sub-carriers */}
+              {/* Fabric panels between sub-carriers + lighting */}
               {Array.from({ length: subCarrierCount }, (_, si) => {
                 const y1 = subSpacing * si + (si === 0 ? 10 : 0);
                 const y2 = subSpacing * (si + 1);
                 const panelH = y2 - y1 - 6;
+                const lightType = cc?.pvcLightType || "none";
+                const showFullLight = lightType === "full" && si % 2 === 0; // alternating
+                const showSideLight = lightType === "side";
                 return (
                   <g key={`fab-${secIdx}-${si}`}>
                     {/* Fabric panel */}
                     <rect x={ox + x1 + 10} y={oy + y1 + 3} width={secW - 20} height={panelH}
                       fill={fabColor} fillOpacity={0.6} rx={3}
                       stroke={fabColor} strokeWidth={1} strokeOpacity={0.3} />
+                    {/* Side lights — small circles on left + right */}
+                    {showSideLight && (
+                      <>
+                        <circle cx={ox + x1 + 22} cy={oy + y1 + 3 + panelH / 2} r={6} fill="#FFD27F" stroke="#B8860B" strokeWidth={1.5} />
+                        <circle cx={ox + x2 - 22} cy={oy + y1 + 3 + panelH / 2} r={6} fill="#FFD27F" stroke="#B8860B" strokeWidth={1.5} />
+                      </>
+                    )}
+                    {/* Full light strip — yellow bar across (alternating panels) */}
+                    {showFullLight && (
+                      <rect x={ox + x1 + 18} y={oy + y1 + 3 + panelH / 2 - 4} width={secW - 36} height={8}
+                        fill="#FFD27F" fillOpacity={0.5} rx={4} stroke="#B8860B" strokeWidth={1} strokeOpacity={0.4} />
+                    )}
                   </g>
                 );
               })}

@@ -92,18 +92,20 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             icon={<Columns3 className="w-4 h-4" />}
             label={config.mountType === "freestanding" ? t("pergolaRequest.mountFreestanding") : t("pergolaRequest.mountWall")}
           />
-          <QuickToggle
-            active={config.lighting !== "none"}
-            onClick={() => {
-              if (config.lighting === "none") {
-                setConfig({ lighting: "3000k", lightingPosition: "all_posts", lightingFixture: "led_strip" });
-              } else {
-                setConfig({ lighting: "none", lightingPosition: "none", lightingFixture: "none", lightingRoof: false, lightingPosts: [] });
-              }
-            }}
-            icon={<Lightbulb className="w-4 h-4" />}
-            label={t("pergolaRequest.lighting")}
-          />
+          {config.pergolaType !== "pvc" && (
+            <QuickToggle
+              active={config.lighting !== "none"}
+              onClick={() => {
+                if (config.lighting === "none") {
+                  setConfig({ lighting: "3000k", lightingPosition: "all_posts", lightingFixture: "led_strip" });
+                } else {
+                  setConfig({ lighting: "none", lightingPosition: "none", lightingFixture: "none", lightingRoof: false, lightingPosts: [] });
+                }
+              }}
+              icon={<Lightbulb className="w-4 h-4" />}
+              label={t("pergolaRequest.lighting")}
+            />
+          )}
           {config.pergolaType !== "pvc" && (
             <QuickToggle
               active={config.santaf === "with"}
@@ -213,8 +215,8 @@ export const PergolaEditorStep = ({ onNext }: Props) => {
             )}
           </SideCard>
 
-          {/* Lighting — color temperature (global) */}
-          {config.lighting !== "none" && (
+          {/* Lighting — color temperature (global, not for PVC) */}
+          {config.pergolaType !== "pvc" && config.lighting !== "none" && (
             <SideCard title={t("pergolaRequest.lighting")} icon="💡">
               <div className="flex gap-1.5">
                 {LIGHTING_TEMPS.map((lt) => (

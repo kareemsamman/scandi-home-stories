@@ -1,7 +1,7 @@
 import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useLocale } from "@/i18n/useLocale";
 import { mmToCm, cmToMm } from "@/types/pergola";
-import { calcSlatCount, getSlatProfileWidth } from "@/lib/pergolaRules";
+import { calcSlatCount, getSlatProfileWidth, calcPvcSubCarriers } from "@/lib/pergolaRules";
 import { AlertTriangle } from "lucide-react";
 
 export const PergolaSpecsSummary = () => {
@@ -44,6 +44,14 @@ export const PergolaSpecsSummary = () => {
   // Roof fill mode
   if (config.pergolaType === "fixed") {
     rows.push([t("pergolaRequest.roofFillMode"), config.roofFillMode === "slats" ? t("pergolaRequest.roofSlats") : t("pergolaRequest.roofSantafOnly")]);
+  }
+
+  // PVC internal sub-carriers
+  if (config.pergolaType === "pvc") {
+    const subCount = calcPvcSubCarriers(cmToMm(Number(config.lengthCm) || 400));
+    const totalInternal = subCount * Math.max(1, specs.carrierCount - 1);
+    rows.push(["חלוקות פנימיות (לכל חלוקה)", String(subCount)]);
+    rows.push(["סה\"כ חלוקות פנימיות", String(totalInternal)]);
   }
 
   // Lighting
