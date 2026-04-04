@@ -545,6 +545,8 @@ const ProductEdit = () => {
   const [customColorsEnabled, setCustomColorsEnabled] = useState(false);
   const [customColorPrices, setCustomColorPrices] = useState<Record<string, string>>({});
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
+  // Brands
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
 
   // Reset guard only when productId actually changes
   useEffect(() => {
