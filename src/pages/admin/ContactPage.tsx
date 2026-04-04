@@ -103,11 +103,23 @@ const AdminContactPage = () => {
     },
   });
 
+  const hasInitialized = useRef(false);
+  const prevLocale = useRef(locale);
+
+  // Reset guard when locale changes
   useEffect(() => {
-    if (!data) return;
+    if (prevLocale.current !== locale) {
+      hasInitialized.current = false;
+      prevLocale.current = locale;
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!data || hasInitialized.current) return;
+    hasInitialized.current = true;
     if (data.contact_hero)    setHero(prev    => ({ ...prev,    ...data.contact_hero }));
     if (data.contact_details) setDetails(prev => ({ ...prev, ...data.contact_details }));
-  }, [data]);
+  }, [data, locale]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
