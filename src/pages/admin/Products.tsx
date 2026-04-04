@@ -95,9 +95,14 @@ const AdminProducts = () => {
       for (const k of validKeys) {
         if (k in product) cleanFields[k] = product[k];
       }
+      const duplicatePayload = {
+        ...cleanFields,
+        category_id: cleanFields.category_id || null,
+        sub_category_id: cleanFields.sub_category_id || null,
+      };
       const dupSlug = (cleanFields.slug || "product") + "-copy-" + Date.now();
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...cleanFields, name: cleanFields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
+        .insert({ ...duplicatePayload, name: cleanFields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       await Promise.all([

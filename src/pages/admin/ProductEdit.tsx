@@ -680,9 +680,14 @@ const ProductEdit = () => {
         db.from("inventory").select("*").eq("product_id", base.id),
       ]);
       const { id, created_at, updated_at, ...fields } = base;
+      const duplicatePayload = {
+        ...fields,
+        category_id: fields.category_id || null,
+        sub_category_id: fields.sub_category_id || null,
+      };
       const dupSlug = (fields.slug || "product") + "-copy-" + Date.now();
       const { data: newProduct, error } = await db.from("products")
-        .insert({ ...fields, name: fields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
+        .insert({ ...duplicatePayload, name: fields.name || "Untitled", slug: dupSlug, status: "draft", is_featured: false })
         .select("id").single();
       if (error) throw error;
       await Promise.all([
