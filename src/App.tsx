@@ -80,7 +80,13 @@ const AdminPergolaRequestDetail = lazyRetry(() => import("./pages/admin/PergolaR
 const WhatsAppButton = lazyRetry(() => import("./components/WhatsAppButton").then(m => ({ default: m.WhatsAppButton })));
 const AccessibilityWidget = lazyRetry(() => import("./components/AccessibilityWidget").then(m => ({ default: m.AccessibilityWidget })));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const LocaleRoutes = () => (
   <LocaleProvider>

@@ -498,12 +498,14 @@ const ProductEdit = () => {
   const { data: allLengths = [] } = useLengthTaxonomy();
   const { data: customColorGroupsData = [] } = useCustomColorGroups();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hydratedProductIdRef = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   /* ── Load product ── */
   const { data: productData, isLoading } = useQuery({
     queryKey: ["admin_product_edit", productId],
     enabled: !isNew,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const [{ data: p }, { data: trans }, { data: inv }] = await Promise.all([
         db.from("products").select("*").eq("id", productId).single(),
@@ -541,10 +543,17 @@ const ProductEdit = () => {
   const [customColorPrices, setCustomColorPrices] = useState<Record<string, string>>({});
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
 
+  useEffect(() => {
+    hydratedProductIdRef.current = null;
+  }, [productId]);
+
   /* ── Populate on load ── */
   useEffect(() => {
     if (!productData) return;
     const { product: p, translations, inventory } = productData;
+    if (!p?.id || hydratedProductIdRef.current === p.id) return;
+    hydratedProductIdRef.current = p.id;
+
     setBase({
       id: p.id, slug: p.slug || "", type: p.type || "retail", price: p.price || 0,
       sku: p.sku || "", materials: p.materials || "", dimensions: p.dimensions || "",
