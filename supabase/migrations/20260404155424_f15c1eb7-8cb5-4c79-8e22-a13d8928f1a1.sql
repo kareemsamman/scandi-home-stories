@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN brands jsonb DEFAULT '[]'::jsonb;
