@@ -88,7 +88,7 @@ const AdminProducts = () => {
         'name','slug','type','sku','price','category_id','sub_category_id',
         'description_he','description_ar','long_description_he','long_description_ar',
         'length_he','length_ar','materials','dimensions','images','colors','sizes',
-        'is_featured','is_new','sort_order','status','max_quantity',
+        'is_featured','is_new','out_of_stock','sold_by_meter','sort_order','status','max_quantity',
         'use_color_groups','custom_colors_enabled','custom_color_groups','custom_color_prices','product_details',
       ];
       const cleanFields: Record<string, any> = {};
@@ -257,6 +257,7 @@ const AdminProducts = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
+                      {product.out_of_stock && <span className="text-[10px] px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">Out of stock</span>}
                       {isDraft && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Draft</span>}
                       {product.is_featured && <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}
                       {product.is_new && <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-700">New</span>}

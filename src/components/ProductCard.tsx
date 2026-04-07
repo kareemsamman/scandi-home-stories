@@ -43,7 +43,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   // Products with custom color groups are never fully OOS (custom colors are made-to-order)
   const hasCustomColors = contractor?.colorGroups && contractor.colorGroups.length > 1 &&
     contractor.colorGroups.slice(1).some(g => g.colors.length > 0);
-  const isOutOfStock = !hasCustomColors && inventory.length > 0 && inventory.every(r => r.stock_quantity === 0);
+  const isOutOfStock = product.outOfStock || (!hasCustomColors && inventory.length > 0 && inventory.every(r => r.stock_quantity === 0));
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();

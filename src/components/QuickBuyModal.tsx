@@ -140,7 +140,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     return 9999;
   }, [isRetail, isContractor, isCustomColor, selectedColor, selectedSize, availableSizes, invMap]);
 
-  const isOutOfStock = currentStock === 0;
+  const isOutOfStock = product?.outOfStock || currentStock === 0;
 
   // Cart-aware effective max: subtract what's already in the cart for this exact combo
   const activeColorId = selectedColor?.id || standardColors[0]?.id || "";

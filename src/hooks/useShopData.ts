@@ -62,6 +62,7 @@ export const useShopData = () => {
       productDetails: Array.isArray((p as any).product_details) ? (p as any).product_details : [],
       brands: Array.isArray((p as any).brands) ? (p as any).brands : [],
       soldByMeter: (p as any).sold_by_meter || false,
+      outOfStock: (p as any).out_of_stock || false,
     };
 
     if (p.type === "contractor") {

@@ -181,7 +181,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const getColorStock = (colorId: string) => invMap.get(`color:${colorId}`) ?? 9999;
 
   const currentStock = selectedColor ? getColorStock(selectedColor.id) : (product.colors.length === 0 ? 9999 : 9999);
-  const isOutOfStock = currentStock === 0;
+  const isOutOfStock = product.outOfStock || currentStock === 0;
   const activeColorId = selectedColor?.id || "";
   const cartQty = cartItems
     .filter(i => i.product.id === product.id && (i.options?.color?.id || "") === activeColorId)
@@ -542,7 +542,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const currentStock = selectedColor && selectedSizeObj
     ? getComboStock(selectedColor.id, selectedSizeObj.id)
     : 9999;
-  const isOutOfStock = !isCustomColor && currentStock === 0;
+  const isOutOfStock = product.outOfStock || (!isCustomColor && currentStock === 0);
   const cartQty = cartItems
     .filter(i => i.product.id === product.id && (i.options?.size || "") === activeSizeLabel && (i.options?.color?.id || "") === activeColorId)
     .reduce((sum, i) => sum + i.quantity, 0);

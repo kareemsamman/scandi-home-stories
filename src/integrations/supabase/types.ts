@@ -843,6 +843,7 @@ export type Database = {
           sizes: Json | null
           sku: string | null
           slug: string
+          out_of_stock: boolean | null
           sold_by_meter: boolean | null
           sort_order: number | null
           status: string
@@ -878,6 +879,7 @@ export type Database = {
           sizes?: Json | null
           sku?: string | null
           slug: string
+          out_of_stock?: boolean | null
           sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
@@ -913,6 +915,7 @@ export type Database = {
           sizes?: Json | null
           sku?: string | null
           slug?: string
+          out_of_stock?: boolean | null
           sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
