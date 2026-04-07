@@ -491,8 +491,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const { data: brandTaxonomy = [] } = useBrandTaxonomy();
   const productBrands = (product.brands || []).map(id => brandTaxonomy.find(b => b.id === id)).filter(Boolean);
 
-  const standardColors = product.colorGroups[0]?.colors || [];
-  const customColorGroups = product.colorGroups.slice(1);
+  const standardColors = product.colorGroups?.[0]?.colors || [];
+  const customColorGroups = (product.colorGroups || []).slice(1);
   const hasCustomColors = customColorGroups.length > 0 && customColorGroups.some(g => g.colors.length > 0);
 
   // Fetch inventory for this product (stock per combo)

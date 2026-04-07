@@ -748,8 +748,17 @@ const ProductEdit = () => {
         : [];
 
       const { id, created_at, updated_at, ...baseFields } = base;
+      // Only include known DB columns to avoid "column does not exist" errors
+      const knownCols = [
+        'slug','type','price','sku','materials','dimensions',
+        'is_featured','is_new','sort_order','images',
+        'category_id','sub_category_id','status','max_quantity',
+        'sold_by_meter','out_of_stock',
+      ];
+      const safeBase: Record<string, any> = {};
+      for (const k of knownCols) { if (k in baseFields) safeBase[k] = baseFields[k]; }
       const payload = {
-        ...baseFields,
+        ...safeBase,
         status: effectiveStatus,
         category_id: baseFields.category_id || null,
         sub_category_id: baseFields.sub_category_id || null,
