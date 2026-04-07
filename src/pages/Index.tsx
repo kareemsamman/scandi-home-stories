@@ -39,7 +39,6 @@ const NON_CONFIGURABLE = new Set(["hero_slider", "category_scroller"]);
 const db = supabase as any;
 
 const Index = () => {
-  alert("✅ Latest changes are loaded!");
   const { data: sectionsConfig } = useQuery<SectionItem[]>({
     queryKey: ["home_sections_config"],
     queryFn: async () => {
