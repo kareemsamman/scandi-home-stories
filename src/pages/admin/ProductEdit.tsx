@@ -556,9 +556,6 @@ const ProductEdit = () => {
     }
   }, [productId]);
 
-  // Brands
-  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
-
   /* ── Populate on load ── */
   useEffect(() => {
     if (!productData || hasInitialized.current) return;
