@@ -137,6 +137,8 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(product.colors[0] || null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [meterLength, setMeterLength] = useState<number>(1);
+  const isMeterProduct = product.soldByMeter === true;
   const profileColor = useProfileColor((s) => s.selectedColor);
   const retailSizes = (product as any).sizes || [];
   const hasRetailSizes = retailSizes.length > 0;
@@ -206,6 +208,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
     const options: CartItemOptions = {};
     if (selectedColor) options.color = { id: selectedColor.id, name: selectedColor.name[locale], hex: selectedColor.hex };
     if (selectedSize) options.size = selectedSize;
+    if (isMeterProduct && meterLength > 0) options.meterLength = meterLength;
     await new Promise((r) => setTimeout(r, 300));
     addToCart(product, Math.min(quantity, freshEffective), options);
     setQuantity(1);
@@ -266,7 +269,10 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                 ))}
               </div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name[locale]}</h1>
-              <p className="text-2xl font-bold mb-4">{t("common.currency")}{product.price.toLocaleString()}</p>
+              <p className="text-2xl font-bold mb-4">
+                {t("common.currency")}{product.price.toLocaleString()}
+                {isMeterProduct && <span className="text-sm font-normal text-muted-foreground ms-1">/ {locale === "ar" ? "متر" : "מטר"}</span>}
+              </p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">{getLocaleText(product.description, locale)}</p>
               <div className="h-px bg-border mb-5" />
               {product.colors.length > 0 && (
@@ -356,6 +362,19 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                 </div>
               ) : (
                 <>
+                  {isMeterProduct && (
+                    <div className="mb-5">
+                      <span className="text-sm font-medium text-foreground block mb-2">{locale === "ar" ? "الطول (متر)" : "אורך (מטר)"}</span>
+                      <input
+                        type="number"
+                        min={0.1}
+                        step={0.1}
+                        value={meterLength}
+                        onChange={(e) => setMeterLength(Math.max(0.1, Number(e.target.value)))}
+                        className="w-full h-11 rounded-lg border border-border px-4 text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                      />
+                    </div>
+                  )}
                   <div className="mb-5">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-foreground">{t("product.quantity")}</span>
@@ -366,6 +385,11 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
                     </div>
                     <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, effectiveMax))} max={effectiveMax} />
                   </div>
+                  {isMeterProduct && meterLength > 0 && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {locale === "ar" ? "المجموع" : "סה״כ"}: {meterLength} × {t("common.currency")}{currentPrice.toLocaleString()} × {quantity} = <span className="font-bold text-foreground">{t("common.currency")}{(currentPrice * meterLength * quantity).toLocaleString()}</span>
+                    </p>
+                  )}
                   <AnimatePresence mode="wait">
                     {addedConfirm ? (
                       <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full h-14 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl bg-green-600 text-white"><Check className="w-4 h-4" />{t("contractor.addedToCart")}</motion.div>
@@ -455,6 +479,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes[0]?.label[locale] || null);
   const [quantity, setQuantity] = useState(1);
+  const [meterLength, setMeterLength] = useState<number>(1);
+  const isMeterProduct = product.soldByMeter === true;
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
@@ -572,7 +598,8 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
     }
     await new Promise((r) => setTimeout(r, 300));
     const productToAdd = currentPrice !== product.price ? { ...product, price: currentPrice } : product;
-    addItem(productToAdd, Math.min(quantity, isCustomColor ? 9999 : effectiveMax), { color: colorOption, size: selectedSize || undefined });
+    const meterOpt = isMeterProduct && meterLength > 0 ? meterLength : undefined;
+    addItem(productToAdd, Math.min(quantity, isCustomColor ? 9999 : effectiveMax), { color: colorOption, size: selectedSize || undefined, meterLength: meterOpt });
     setIsAdding(false);
     setAddedConfirm(true);
     setTimeout(() => { setAddedConfirm(false); setQuantity(1); }, 1000);
@@ -626,7 +653,10 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
               )}
               <h1 className="text-xl md:text-2xl font-bold mb-1">{product.name[locale]}</h1>
               <p className="text-sm text-muted-foreground mb-1">{t("contractor.sku")}: {product.sku}</p>
-              <p className="text-2xl font-bold mb-3">{t("common.currency")}{currentPrice.toLocaleString()}</p>
+              <p className="text-2xl font-bold mb-3">
+                {t("common.currency")}{currentPrice.toLocaleString()}
+                {isMeterProduct && <span className="text-sm font-normal text-muted-foreground ms-1">/ {locale === "ar" ? "متر" : "מטר"}</span>}
+              </p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{getLocaleText(product.description, locale)}</p>
               <div className="h-px bg-border mb-4" />
 
@@ -714,6 +744,19 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                 </div>
               ) : (
                 <>
+                  {isMeterProduct && (
+                    <div className="mb-4">
+                      <span className="text-sm font-medium text-foreground block mb-2">{locale === "ar" ? "الطول (متر)" : "אורך (מטר)"}</span>
+                      <input
+                        type="number"
+                        min={0.1}
+                        step={0.1}
+                        value={meterLength}
+                        onChange={(e) => setMeterLength(Math.max(0.1, Number(e.target.value)))}
+                        className="w-full h-11 rounded-lg border border-border px-4 text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                      />
+                    </div>
+                  )}
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-medium text-foreground">{t("product.quantity")}</p>
@@ -726,6 +769,11 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
                     </div>
                     <QuantitySelector quantity={quantity} onQuantityChange={(q) => setQuantity(Math.min(q, effectiveMax))} max={effectiveMax} />
                   </div>
+                  {isMeterProduct && meterLength > 0 && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {locale === "ar" ? "المجموع" : "סה״כ"}: {meterLength} × {t("common.currency")}{currentPrice.toLocaleString()} × {quantity} = <span className="font-bold text-foreground">{t("common.currency")}{(currentPrice * meterLength * quantity).toLocaleString()}</span>
+                    </p>
+                  )}
 
                   <AnimatePresence mode="wait">
                     {addedConfirm ? (

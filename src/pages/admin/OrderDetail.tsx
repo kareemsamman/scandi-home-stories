@@ -810,6 +810,12 @@ const AdminOrderDetail = () => {
                       </div>
                     );
                   })()}
+                  {item.meter_length && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-400">אורך (מטר):</span>
+                      <span className="text-xs text-gray-700 font-medium">{item.meter_length} מטר</span>
+                    </div>
+                  )}
                   {item.size && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-400">{orderLocale === "ar" ? "الطول" : "الطول"}:</span>
@@ -821,7 +827,7 @@ const AdminOrderDetail = () => {
               <div className="text-end shrink-0 space-y-0.5">
                 <p className="text-sm text-gray-400">×{item.quantity}</p>
                 <p className="font-bold text-gray-900 text-base">₪{(item.price * item.quantity).toLocaleString()}</p>
-                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} {orderLocale === "ar" ? "للقطعة" : "للقطعة"}</p>
+                <p className="text-xs text-gray-400">₪{item.price.toLocaleString()} {item.meter_length ? `(${item.meter_length}מ׳)` : orderLocale === "ar" ? "للقطعة" : "للقطعة"}</p>
               </div>
             </div>
           ))}

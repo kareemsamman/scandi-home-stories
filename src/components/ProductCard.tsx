@@ -35,7 +35,8 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   const retail = isRetail ? (product as RetailProduct) : null;
   const contractor = isContractor ? (product as ContractorProduct) : null;
 
-  const hasOptions = (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
+  const isMeterProduct = product.soldByMeter === true;
+  const hasOptions = isMeterProduct || (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
   // OOS check: if all tracked inventory rows sum to 0
   const inventory = useProductInventory(product.id);
@@ -139,7 +140,10 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
         <div className="p-3 space-y-1.5">
           {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
           <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
-          <p className="text-sm font-bold text-foreground">{t("common.currency")}{product.price.toLocaleString()}</p>
+          <p className="text-sm font-bold text-foreground">
+            {t("common.currency")}{product.price.toLocaleString()}
+            {isMeterProduct && <span className="text-[10px] font-normal text-muted-foreground ms-1">/ {locale === "ar" ? "متر" : "מטר"}</span>}
+          </p>
           {retail && retail.colors.length > 0 && (
             <div className="pt-1">
               <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.color")}:</p>

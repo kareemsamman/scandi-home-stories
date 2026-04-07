@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       origin, shippingCost, adminDiscount,
       marketingOptIn, discountCode,
       payment_status: rawPaymentStatus,
-      items, // Array of { productId, quantity, size?, color?, colorId?, sizeId? }
+      items, // Array of { productId, quantity, size?, color?, colorId?, sizeId?, meterLength? }
     } = body;
 
     // --- Check if caller is admin (allows optional email + pay_later) ---
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
 
     const { data: products, error: prodErr } = await supabaseAdmin
       .from("products")
-      .select("id, price, name, images, status")
+      .select("id, price, name, images, status, sold_by_meter")
       .in("id", productIds);
 
     if (prodErr || !products) {
@@ -150,18 +150,21 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: `Product unavailable: ${product.name}` }, 400);
       }
 
-      const lineTotal = Number(product.price) * item.quantity;
+      const meterLen = product.sold_by_meter && item.meterLength > 0 ? Number(item.meterLength) : 1;
+      const unitPrice = Number(product.price) * meterLen;
+      const lineTotal = unitPrice * item.quantity;
       serverTotal += lineTotal;
 
       validatedItems.push({
         product_id: item.productId,
         product_name: (locale === "ar" && arNameMap.get(item.productId)) || product.name || "",
         product_image: product.images?.[0] || "",
-        price: Number(product.price),
+        price: unitPrice,
         quantity: item.quantity,
         size: item.size || null,
         color_name: item.color || null,
         color_hex: item.colorHex || null,
+        meter_length: product.sold_by_meter && item.meterLength > 0 ? Number(item.meterLength) : null,
       });
     }
 
@@ -220,7 +223,10 @@ Deno.serve(async (req) => {
                 const matchCat = hasCategoryRestriction && item.product?.collection && coupon.category_ids.includes(item.product.collection);
                 if (matchProd || matchCat) {
                   const p = priceMap.get(item.productId);
-                  if (p) applicableSubtotal += Number(p.price) * item.quantity;
+                  if (p) {
+                    const ml = p.sold_by_meter && item.meterLength > 0 ? Number(item.meterLength) : 1;
+                    applicableSubtotal += Number(p.price) * ml * item.quantity;
+                  }
                 }
               }
             }
@@ -248,19 +254,17 @@ Deno.serve(async (req) => {
     // --- VAT calculation ---
     let vatRate = 0;
     let vatAmount = 0;
-    try {
-      const { data: vatRow } = await supabaseAdmin
-        .from("app_settings")
-        .select("value")
-        .eq("key", "vat")
-        .single();
-      const vatConfig = (vatRow?.value as any) ?? { enabled: true, rate: 18 };
-      if (vatConfig.enabled && Number(vatConfig.rate) > 0) {
-        vatRate = Number(vatConfig.rate);
-        const discountedSubtotal = Math.max(0, serverTotal - totalDiscount);
-        vatAmount = Math.round(discountedSubtotal * vatRate) / 100;
-      }
-    } catch { /* VAT settings not found, skip */ }
+    const { data: vatRow } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "vat")
+      .maybeSingle();
+    const vatConfig = (vatRow?.value as any) ?? { enabled: true, rate: 18 };
+    if (vatConfig.enabled && Number(vatConfig.rate) > 0) {
+      vatRate = Number(vatConfig.rate);
+      const discountedSubtotal = Math.max(0, serverTotal - totalDiscount);
+      vatAmount = Math.round(discountedSubtotal * vatRate) / 100;
+    }
 
     const finalTotal = Math.max(0, serverTotal - totalDiscount) + vatAmount + shippingAmount;
 

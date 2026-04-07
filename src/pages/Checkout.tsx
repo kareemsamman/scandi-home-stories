@@ -445,7 +445,7 @@ const Checkout = () => {
             const sizeId = item.product.type === "contractor"
               ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
               : undefined;
-            return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId };
+            return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId, meterLength: item.options?.meterLength || undefined };
           }),
         },
       });
@@ -642,6 +642,7 @@ const Checkout = () => {
               colorHex: item.options?.color?.hex,
               colorId,
               sizeId,
+              meterLength: item.options?.meterLength || undefined,
             };
           }),
         },
@@ -721,6 +722,7 @@ const Checkout = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{item.product.name[locale]}</p>
+              {item.options?.meterLength && <p className="text-xs text-muted-foreground mt-0.5">{locale === "ar" ? "الطول" : "אורך"}: {item.options.meterLength} {locale === "ar" ? "متر" : "מטר"}</p>}
               {item.options?.size && <p className="text-xs text-muted-foreground mt-0.5">{t("contractor.length")}: {item.options.size}</p>}
               {item.options?.color && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -729,7 +731,7 @@ const Checkout = () => {
                 </p>
               )}
             </div>
-            <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * item.quantity).toLocaleString()}</span>
+            <span className="text-sm font-semibold whitespace-nowrap">{t("common.currency")}{(item.product.price * (item.options?.meterLength || 1) * item.quantity).toLocaleString()}</span>
           </div>
         ))}
       </div>
@@ -968,7 +970,7 @@ const Checkout = () => {
                       const sizeId = item.product.type === "contractor"
                         ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
                         : undefined;
-                      return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId };
+                      return { productId: item.product.id, quantity: item.quantity, size: sizeLabel, color: item.options?.color?.name, colorHex: item.options?.color?.hex, colorId, sizeId, meterLength: item.options?.meterLength || undefined };
                     }),
                   },
                 });

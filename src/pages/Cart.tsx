@@ -83,7 +83,8 @@ const Cart = () => {
 
               {items.map((item, i) => {
                 const key = getItemKey(item);
-                const lineTotal = item.product.price * item.quantity;
+                const meterLen = item.options?.meterLength || 1;
+                const lineTotal = item.product.price * meterLen * item.quantity;
                 return (
                   <motion.div
                     key={key}
@@ -102,7 +103,13 @@ const Cart = () => {
                           <Link to={localePath(`/product/${item.product.slug}`)} className="text-sm font-semibold hover:text-accent-strong transition-colors block truncate">
                             {item.product.name[locale]}
                           </Link>
-                          <p className="text-xs text-muted-foreground">{t("common.currency")}{item.product.price.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("common.currency")}{item.product.price.toLocaleString()}
+                            {item.options?.meterLength && <span> / {locale === "ar" ? "متر" : "מטר"}</span>}
+                          </p>
+                          {item.options?.meterLength && (
+                            <p className="text-xs text-muted-foreground">{locale === "ar" ? "الطول" : "אורך"}: {item.options.meterLength} {locale === "ar" ? "متر" : "מטר"}</p>
+                          )}
                           {item.options?.size && (
                             <p className="text-xs text-muted-foreground">{t("contractor.length")}: {item.options.size}</p>
                           )}
@@ -145,6 +152,9 @@ const Cart = () => {
                         <Link to={localePath(`/product/${item.product.slug}`)} className="text-sm font-semibold hover:text-accent-strong transition-colors block truncate">
                           {item.product.name[locale]}
                         </Link>
+                        {item.options?.meterLength && (
+                          <p className="text-[11px] text-muted-foreground">{locale === "ar" ? "الطول" : "אורך"}: {item.options.meterLength} {locale === "ar" ? "متر" : "מטר"}</p>
+                        )}
                         {item.options?.size && (
                           <p className="text-[11px] text-muted-foreground">{t("contractor.length")}: {item.options.size}</p>
                         )}

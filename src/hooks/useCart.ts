@@ -5,6 +5,7 @@ import { Product } from "@/data/products";
 export interface CartItemOptions {
   color?: { id: string; name: string; hex: string };
   size?: string;
+  meterLength?: number;
 }
 
 export interface CartItem {
@@ -15,7 +16,7 @@ export interface CartItem {
 
 // Unique key for a cart item (product + size + color)
 const getCartItemKey = (productId: string, options?: CartItemOptions): string => {
-  return `${productId}__${options?.size || ""}__${options?.color?.id || ""}`;
+  return `${productId}__${options?.size || ""}__${options?.color?.id || ""}__${options?.meterLength || ""}`;
 };
 
 interface CartState {
@@ -84,7 +85,10 @@ export const useCart = create<CartState>()(
       clearCart: () => set({ items: [] }),
       setItems: (items) => set({ items }),
       getSubtotal: () =>
-        get().items.reduce((t, i) => t + i.product.price * i.quantity, 0),
+        get().items.reduce((t, i) => {
+          const meterMultiplier = i.options?.meterLength || 1;
+          return t + i.product.price * meterMultiplier * i.quantity;
+        }, 0),
       getItemCount: () =>
         get().items.reduce((c, i) => c + i.quantity, 0),
       getItemKey: (item) => getCartItemKey(item.product.id, item.options),

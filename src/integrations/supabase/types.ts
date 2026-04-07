@@ -438,6 +438,7 @@ export type Database = {
           color_hex: string | null
           color_name: string | null
           id: string
+          meter_length: number | null
           order_id: string
           price: number
           product_id: string | null
@@ -450,6 +451,7 @@ export type Database = {
           color_hex?: string | null
           color_name?: string | null
           id?: string
+          meter_length?: number | null
           order_id: string
           price?: number
           product_id?: string | null
@@ -462,6 +464,7 @@ export type Database = {
           color_hex?: string | null
           color_name?: string | null
           id?: string
+          meter_length?: number | null
           order_id?: string
           price?: number
           product_id?: string | null
@@ -840,6 +843,7 @@ export type Database = {
           sizes: Json | null
           sku: string | null
           slug: string
+          sold_by_meter: boolean | null
           sort_order: number | null
           status: string
           sub_category_id: string | null
@@ -874,6 +878,7 @@ export type Database = {
           sizes?: Json | null
           sku?: string | null
           slug: string
+          sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
           sub_category_id?: string | null
@@ -908,6 +913,7 @@ export type Database = {
           sizes?: Json | null
           sku?: string | null
           slug?: string
+          sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
           sub_category_id?: string | null

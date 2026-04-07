@@ -57,7 +57,7 @@ export interface DbOrderItem {
   id: string; order_id: string; product_id: string | null;
   product_name: string; product_image: string; price: number;
   quantity: number; size: string | null; color_name: string | null;
-  color_hex: string | null;
+  color_hex: string | null; meter_length: number | null;
 }
 
 // ─── Translation helpers ───

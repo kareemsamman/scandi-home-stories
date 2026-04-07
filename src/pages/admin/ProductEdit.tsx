@@ -522,7 +522,7 @@ const ProductEdit = () => {
   /* ── Form state ── */
   const [base, setBase] = useState<any>({
     slug: "", type: "retail", price: 0, sku: "", materials: "", dimensions: "",
-    is_featured: false, is_new: false, sort_order: 0, images: [],
+    is_featured: false, is_new: false, sold_by_meter: false, sort_order: 0, images: [],
     category_id: "", sub_category_id: "", status: "published",
   });
   const [transHe, setTransHe] = useState({ name: "", description: "", long_description: "", length: "", content_html: "" });
@@ -566,7 +566,7 @@ const ProductEdit = () => {
     setBase({
       id: p.id, slug: p.slug || "", type: p.type || "retail", price: p.price || 0,
       sku: p.sku || "", materials: p.materials || "", dimensions: p.dimensions || "",
-      is_featured: p.is_featured || false, is_new: p.is_new || false,
+      is_featured: p.is_featured || false, is_new: p.is_new || false, sold_by_meter: p.sold_by_meter || false,
       sort_order: p.sort_order || 0, images: p.images || [],
       category_id: p.category_id || "", sub_category_id: p.sub_category_id || "",
       status: p.status || "published",
@@ -956,6 +956,10 @@ const ProductEdit = () => {
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input type="checkbox" className="w-4 h-4 rounded" checked={base.is_new} onChange={(e) => setBase((p: any) => ({ ...p, is_new: e.target.checked }))} />
             New
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded" checked={base.sold_by_meter} onChange={(e) => setBase((p: any) => ({ ...p, sold_by_meter: e.target.checked }))} />
+            Sold by meter (סנטפים)
           </label>
         </div>
       </Section>

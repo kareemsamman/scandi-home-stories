@@ -120,6 +120,11 @@ export const MiniCart = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-muted-foreground">AMG Pergola</p>
                   <p className="text-sm font-semibold text-foreground truncate">{item.product.name[locale]}</p>
+                  {item.options?.meterLength && (
+                    <p className="text-[11px] text-muted-foreground">
+                      {locale === "ar" ? "الطول" : "אורך"}: {item.options.meterLength} {locale === "ar" ? "متر" : "מטר"}
+                    </p>
+                  )}
                   {item.options?.size && (
                     <p className="text-[11px] text-muted-foreground">
                       {t("contractor.length")}: {item.options.size}
@@ -131,7 +136,10 @@ export const MiniCart = () => {
                       <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ backgroundColor: item.options.color.hex }} />
                     </p>
                   )}
-                  <p className="text-sm text-foreground">{t("common.currency")}{item.product.price.toLocaleString()}</p>
+                  <p className="text-sm text-foreground">
+                    {t("common.currency")}{((item.options?.meterLength || 1) * item.product.price).toLocaleString()}
+                    {item.options?.meterLength && <span className="text-[11px] text-muted-foreground ms-1">({item.options.meterLength} × {t("common.currency")}{item.product.price})</span>}
+                  </p>
                   <div className="flex items-center justify-between mt-2">
                     <QuantitySelector
                       quantity={item.quantity}

@@ -28,9 +28,12 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [meterLength, setMeterLength] = useState<number>(1);
   const [addedConfirm, setAddedConfirm] = useState(false);
   const [customColorOpen, setCustomColorOpen] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
+
+  const isMeterProduct = product?.soldByMeter === true;
 
   const isRetail = product?.type === "retail";
   const isContractor = product?.type === "contractor";
@@ -145,7 +148,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
   const cartKey = product ? `${product.id}__${activeSizeLabel}__${activeColorId}` : "";
   const cartQty = cartItems
     .filter(i => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === cartKey)
-    .reduce((sum, i) => sum + i.quantity, 0);
+    .reduce((sum, i) => sum + (isMeterProduct ? 0 : i.quantity), 0);
   const effectiveMax = isOutOfStock ? 0 : Math.max(0, currentStock - cartQty);
   const cartFull = currentStock > 0 && effectiveMax === 0;
 
@@ -176,22 +179,23 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
     const colorOption = selectedColor || (standardColors.length > 0 ? { id: standardColors[0].id, name: standardColors[0].name[locale], hex: standardColors[0].hex } : undefined);
     const qty = Math.min(quantity, freshEffective);
     const productToAdd = currentPrice !== product.price ? { ...product, price: currentPrice } : product;
+    const meterOpt = isMeterProduct && meterLength > 0 ? meterLength : undefined;
 
     if (isContractor) {
       const cart = useCart.getState();
-      const key = `${product.id}__${activeSizeLabel}__${colorOption?.id || ""}`;
+      const key = `${product.id}__${activeSizeLabel}__${colorOption?.id || ""}__${meterOpt || ""}`;
       const existing = cart.items.find(
-        (i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}` === key
+        (i) => `${i.product.id}__${i.options?.size || ""}__${i.options?.color?.id || ""}__${i.options?.meterLength || ""}` === key
       );
       if (existing) {
         cart.updateQuantity(key, Math.min(existing.quantity + qty, freshStock));
       } else {
         useCart.setState((state) => ({
-          items: [...state.items, { product: productToAdd, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined } }],
+          items: [...state.items, { product: productToAdd, quantity: qty, options: { color: colorOption, size: activeSizeLabel || undefined, meterLength: meterOpt } }],
         }));
       }
     } else {
-      addItem(productToAdd, qty, { color: colorOption, size: activeSizeLabel || undefined });
+      addItem(productToAdd, qty, { color: colorOption, size: activeSizeLabel || undefined, meterLength: meterOpt });
     }
 
     setAddedConfirm(true);
@@ -203,8 +207,10 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
         setIsCustomColor(false);
         setSelectedSize(null);
         setQuantity(1);
+        setMeterLength(1);
       }
       setQuantity(1);
+      setMeterLength(1);
     }, 1000);
   };
 
@@ -249,6 +255,7 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                   )}
                   <p className="text-base font-bold text-foreground mt-1">
                     {t("common.currency")}{currentPrice.toLocaleString()}
+                    {isMeterProduct && <span className="text-xs font-normal text-muted-foreground ms-1">/ {locale === "ar" ? "متر" : "מטר"}</span>}
                   </p>
                 </div>
                 <button
@@ -387,6 +394,23 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                   </div>
                 )}
 
+                {/* Meter length input (for sold-by-meter products) */}
+                {isMeterProduct && !isOutOfStock && !cartFull && (
+                  <div>
+                    <p className="text-sm font-medium text-foreground mb-2.5">
+                      {locale === "ar" ? "الطول (متر)" : "אורך (מטר)"}:
+                    </p>
+                    <input
+                      type="number"
+                      min={0.1}
+                      step={0.1}
+                      value={meterLength}
+                      onChange={(e) => setMeterLength(Math.max(0.1, Number(e.target.value)))}
+                      className="w-full h-11 rounded-lg border border-border px-4 text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                    />
+                  </div>
+                )}
+
                 {/* Quantity */}
                 {!isOutOfStock && !cartFull && (
                   <div>
@@ -443,7 +467,9 @@ export const QuickBuyModal = ({ product, open, onClose }: QuickBuyModalProps) =>
                       onClick={handleAdd}
                       className="w-full h-12 flex items-center justify-center text-sm font-semibold border-2 border-foreground rounded-full text-foreground hover:bg-foreground hover:text-background transition-colors"
                     >
-                      {t("product.addToBag")}
+                      {isMeterProduct
+                        ? `${t("product.addToBag")} — ${t("common.currency")}${(currentPrice * meterLength * quantity).toLocaleString()}`
+                        : t("product.addToBag")}
                     </motion.button>
                   )}
                 </AnimatePresence>
