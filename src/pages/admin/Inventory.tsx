@@ -34,27 +34,29 @@ const deriveRows = (product: any): any[] => {
     _phantom: true,
   });
 
-  if (product.type === "contractor" && colors.length > 0 && sizes.length > 0) {
+  // Products with both colors AND sizes → combo rows (works for both retail and contractor)
+  if (colors.length > 0 && sizes.length > 0) {
     const rows: any[] = [];
     const seen = new Set<string>();
     for (const color of colors) {
-      const cId = color.tax_id || color.id;
+      const cId = color.tax_id || color.id || color.hex;
       const lengths: string[] = Array.isArray(color.lengths) ? color.lengths : [];
       const relevant = lengths.length > 0
         ? sizes.filter((s: any) => lengths.includes(s.tax_id || s.id))
         : sizes;
       for (const size of relevant) {
-        const sId = size.tax_id || size.id;
+        const sId = size.tax_id || size.id || size.value;
         const key = `${cId}|${sId}`;
-        if (seen.has(key)) continue; // skip duplicates
+        if (seen.has(key)) continue;
         seen.add(key);
         rows.push(phantom(`combo:${cId}|${sId}`));
       }
     }
     return rows;
   }
-  if (product.type === "retail" && colors.length > 0) {
-    return colors.map((c: any) => phantom(`color:${c.id}`));
+  // Colors only (no sizes)
+  if (colors.length > 0) {
+    return colors.map((c: any) => phantom(`color:${c.tax_id || c.id || c.hex}`));
   }
   return [phantom("")];
 };
