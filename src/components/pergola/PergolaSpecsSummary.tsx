@@ -2,6 +2,7 @@ import { usePergolaConfigurator } from "@/stores/usePergolaConfigurator";
 import { useLocale } from "@/i18n/useLocale";
 import { mmToCm, cmToMm } from "@/types/pergola";
 import { calcSlatCount, getSlatProfileWidth, calcPvcSubCarriers } from "@/lib/pergolaRules";
+import type { CarrierConfig } from "@/types/pergola";
 import { AlertTriangle } from "lucide-react";
 
 export const PergolaSpecsSummary = () => {
@@ -78,7 +79,7 @@ export const PergolaSpecsSummary = () => {
         ))}
       </div>
 
-      {/* Per-carrier breakdown */}
+      {/* Per-carrier breakdown — Fixed */}
       {isFixedSlats && carrierConfigs.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 p-3">
           <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -108,6 +109,41 @@ export const PergolaSpecsSummary = () => {
           </div>
         </div>
       )}
+
+      {/* Per-carrier breakdown — PVC */}
+      {config.pergolaType === "pvc" && carrierConfigs.length > 0 && (() => {
+        const subCount = calcPvcSubCarriers(lengthMm);
+        return (
+          <div className="bg-white rounded-xl border border-gray-100 p-3">
+            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              פירוט חלוקות
+            </h4>
+            <div className="space-y-1">
+              {carrierConfigs.map((cc: CarrierConfig, i: number) => {
+                const displayNum = i + 1;
+                const lightLabel = cc.pvcLightType === "side" ? "צדדית" : cc.pvcLightType === "full" ? "מלאה" : "";
+                return (
+                  <div key={i} className="flex items-center justify-between text-[11px]">
+                    <span className="text-gray-400 flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm border border-gray-200 shrink-0" style={{ backgroundColor: cc.fabricColor || "#D4C9A8" }} />
+                      חלוקה {displayNum}
+                    </span>
+                    <span className="text-gray-600">
+                      {subCount} חלוקות פנימיות
+                      {lightLabel && (
+                        <>
+                          <span className="text-gray-300 mx-1">&middot;</span>
+                          💡 {lightLabel}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {isCustom && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs">
