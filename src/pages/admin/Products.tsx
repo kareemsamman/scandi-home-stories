@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Copy, GripVertical, Eye, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts, useCategories, useSubCategories } from "@/hooks/useDbData";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
@@ -233,6 +233,16 @@ const AdminProducts = () => {
                 const sizesCount = Array.isArray(product.sizes) ? product.sizes.length : 0;
                 const isDraft = (product.status || "published") === "draft";
 
+                // Completeness check
+                const issues: string[] = [];
+                if (!product.images?.length) issues.push("No images");
+                if (!product.price || product.price <= 0) issues.push("No price");
+                if (!product.category_id) issues.push("No category");
+                if (!displayName || displayName === product.slug) issues.push("No name");
+                if (colorsCount === 0 && product.type === "contractor") issues.push("No colors");
+                if (sizesCount === 0 && product.type === "contractor") issues.push("No lengths");
+                const isComplete = issues.length === 0;
+
                 const rowContent = (dragHandleProps?: any) => (
                   <div className={`flex items-center gap-3 p-4 bg-white border rounded-xl hover:border-gray-300 transition-colors ${isDraft ? "border-amber-200 bg-amber-50/30" : "border-gray-200"}`}>
                     {isDragEnabled && (
@@ -257,6 +267,14 @@ const AdminProducts = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
+                      {!isComplete && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-orange-100 text-orange-700 font-medium flex items-center gap-0.5 cursor-help" title={issues.join("\n")}>
+                          <AlertTriangle className="w-3 h-3" /> {issues.length} missing
+                        </span>
+                      )}
+                      {isComplete && (
+                        <span className="hidden sm:inline"><CheckCircle2 className="w-4 h-4 text-green-400" /></span>
+                      )}
                       {product.out_of_stock && <span className="text-[10px] px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">Out of stock</span>}
                       {isDraft && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Draft</span>}
                       {product.is_featured && <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">Featured</span>}

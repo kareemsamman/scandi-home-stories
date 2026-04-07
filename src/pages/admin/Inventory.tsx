@@ -78,8 +78,8 @@ const groupByColor = (invItems: any[], product: any) => {
   invItems.forEach(inv => {
     const { colorId, sizeId } = parseKey(inv.variation_key || "");
     if (!colorId) { simpleItem = inv; return; }
-    const colorObj = colors.find((c: any) => (c.tax_id || c.id) === colorId) ?? null;
-    const sizeObj = sizeId ? sizes.find((s: any) => (s.tax_id || s.id) === sizeId) ?? null : null;
+    const colorObj = colors.find((c: any) => (c.tax_id || c.id || c.hex) === colorId) ?? null;
+    const sizeObj = sizeId ? sizes.find((s: any) => (s.tax_id || s.id || s.value) === sizeId) ?? null : null;
     if (!colorMap.has(colorId)) colorMap.set(colorId, { colorObj, items: [] });
     colorMap.get(colorId)!.items.push({ inv, sizeObj });
   });
@@ -678,11 +678,11 @@ const AdminInventory = () => {
                             <span className="w-4 h-4 rounded-full bg-gray-300 shrink-0" />
                           )}
                           <span className="text-xs font-bold text-gray-700">
-                            {colorObj?.name_ar || colorObj?.label_ar || colorObj?.name_he || colorObj?.label_he || colorObj?.name || colorId}
+                            {colorObj?.label_he || colorObj?.label_ar || colorObj?.name_he || colorObj?.name_ar || colorObj?.name?.he || colorObj?.name?.ar || colorObj?.name || colorId}
                           </span>
-                          {(colorObj?.name_he || colorObj?.label_he) && (colorObj?.name_ar || colorObj?.label_ar) && (
+                          {colorObj?.label_ar && colorObj?.label_he && (
                             <span className="text-[10px] text-gray-400 ms-2">
-                              {colorObj?.name_he || colorObj?.label_he}
+                              {colorObj?.label_ar}
                             </span>
                           )}
                         </div>
