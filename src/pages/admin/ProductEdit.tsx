@@ -829,21 +829,37 @@ const ProductEdit = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-30 bg-gray-50 border-b border-gray-200 -mx-6 px-6 py-3 flex items-center gap-3 flex-wrap">
         <button onClick={() => navigate("/admin/products")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Products
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 flex-1">
+        <h1 className="text-lg font-bold text-gray-900 flex-1 truncate">
           {isNew ? "New Product" : (productName || base.slug || "Edit Product")}
         </h1>
-        {/* Draft badge */}
         {base.status === "draft" && (
           <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">Draft</span>
         )}
         <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
           {locale === "he" ? "Hebrew 🇮🇱" : "Arabic 🇸🇦"}
         </span>
+        <Button
+          size="sm"
+          onClick={() => save.mutate("published")}
+          disabled={save.isPending}
+          className="bg-gray-900 hover:bg-gray-800 text-white h-8 px-4 text-xs"
+        >
+          {save.isPending ? "Saving..." : "Save & Publish"}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => save.mutate("draft")}
+          disabled={save.isPending}
+          className="h-8 px-4 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+        >
+          Draft
+        </Button>
         {/* Preview */}
         {!isNew && base.slug && (
           <Button variant="outline" size="sm" onClick={() => window.open(`/he/product/${base.slug}`, "_blank")}>
@@ -872,7 +888,7 @@ const ProductEdit = () => {
               }} />
             </Field>
             <Field label="Slug (URL)">
-              <Input value={base.slug} readOnly className="bg-muted cursor-default" placeholder="auto-generated" dir="ltr" />
+              <Input value={base.slug} onChange={(e) => { const slug = e.target.value.trim().toLowerCase().replace(/[^\w\u0590-\u05FF-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-"); setBase((p: any) => ({ ...p, slug })); }} placeholder="product-slug" dir="ltr" />
             </Field>
           </div>
           <Field label={locale === "he" ? "תיאור קצר" : "وصف قصير"}>
