@@ -68,6 +68,23 @@ const AdminLayoutInner = () => {
 
   const isWorkerOnly = roles.includes("worker") && !roles.includes("admin");
 
+  // Preserve scroll position across tab switches
+  useEffect(() => {
+    const key = "admin_scroll_" + location.pathname;
+    const handleVisChange = () => {
+      if (document.hidden) {
+        sessionStorage.setItem(key, String(window.scrollY));
+      } else {
+        const saved = sessionStorage.getItem(key);
+        if (saved) {
+          requestAnimationFrame(() => window.scrollTo(0, Number(saved)));
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisChange);
+    return () => document.removeEventListener("visibilitychange", handleVisChange);
+  }, [location.pathname]);
+
   const visibleNav = navItems.filter((item) =>
     item.roles.some((r) => roles.includes(r as any))
   );
