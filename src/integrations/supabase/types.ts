@@ -851,6 +851,7 @@ export type Database = {
           type: string
           updated_at: string | null
           use_color_groups: boolean | null
+          verified: boolean | null
         }
         Insert: {
           brands?: Json | null
@@ -887,6 +888,7 @@ export type Database = {
           type?: string
           updated_at?: string | null
           use_color_groups?: boolean | null
+          verified?: boolean | null
         }
         Update: {
           brands?: Json | null
@@ -923,6 +925,7 @@ export type Database = {
           type?: string
           updated_at?: string | null
           use_color_groups?: boolean | null
+          verified?: boolean | null
         }
         Relationships: [
           {
