@@ -1,17 +1,30 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, GripVertical } from "lucide-react";
 import { useColorTaxonomy, useLengthTaxonomy, useSaveColorTaxonomy, useSaveLengthTaxonomy, useCustomColorGroups, useSaveCustomColorGroups, useBrandTaxonomy, useSaveBrandTaxonomy, TaxColor, TaxLength, TaxBrand, TaxCustomColorGroup, TaxCustomColor } from "@/hooks/useProductTaxonomy";
 import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+const SortableItem = ({ id, children }: { id: string; children: (handleProps: any) => React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={isDragging ? "opacity-50 z-50 relative" : ""}>
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+};
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 /* ── Color Row ── */
-const ColorRow = ({ item, locale, onSave, onDelete }: {
+const ColorRow = ({ item, locale, onSave, onDelete, dragHandleProps }: {
   item: TaxColor; locale: "he" | "ar";
   onSave: (v: TaxColor) => Promise<void>; onDelete: () => void;
+  dragHandleProps?: any;
 }) => {
   const isNew = !item.label_he && !item.label_ar;
   const [editing, setEditing] = useState(isNew);
@@ -32,6 +45,7 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
   if (!editing) {
     return (
       <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
+        <button {...dragHandleProps} className="touch-none cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0"><GripVertical className="w-4 h-4" /></button>
         <div className="w-6 h-6 rounded-full border border-gray-200 shrink-0" style={{ background: item.hex }} />
         <span className="flex-1 text-sm font-medium text-gray-800">{label || <span className="text-gray-300 italic">—</span>}</span>
         <span className="text-xs text-gray-300 font-mono w-20">{item.hex}</span>
@@ -83,9 +97,10 @@ const ColorRow = ({ item, locale, onSave, onDelete }: {
 };
 
 /* ── Length Row ── */
-const LengthRow = ({ item, locale, onSave, onDelete }: {
+const LengthRow = ({ item, locale, onSave, onDelete, dragHandleProps }: {
   item: TaxLength; locale: "he" | "ar";
   onSave: (v: TaxLength) => Promise<void>; onDelete: () => void;
+  dragHandleProps?: any;
 }) => {
   const isNew = !item.label_he && !item.label_ar;
   const [editing, setEditing] = useState(isNew);
@@ -106,6 +121,7 @@ const LengthRow = ({ item, locale, onSave, onDelete }: {
   if (!editing) {
     return (
       <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
+        <button {...dragHandleProps} className="touch-none cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0"><GripVertical className="w-4 h-4" /></button>
         <span className="flex-1 text-sm font-medium text-gray-800">{label || <span className="text-gray-300 italic">—</span>}</span>
         <span className="text-xs text-gray-400 font-mono w-16">{item.value}</span>
         <button onClick={() => { setDraft(item); setEditing(true); }} className="text-gray-400 hover:text-gray-700 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
@@ -141,9 +157,10 @@ const LengthRow = ({ item, locale, onSave, onDelete }: {
 };
 
 /* ── Brand Row ── */
-const BrandRow = ({ item, locale, onSave, onDelete }: {
+const BrandRow = ({ item, locale, onSave, onDelete, dragHandleProps }: {
   item: TaxBrand; locale: "he" | "ar";
   onSave: (v: TaxBrand) => Promise<void>; onDelete: () => void;
+  dragHandleProps?: any;
 }) => {
   const isNew = !item.name_he && !item.name_ar;
   const [editing, setEditing] = useState(isNew);
@@ -164,6 +181,7 @@ const BrandRow = ({ item, locale, onSave, onDelete }: {
   if (!editing) {
     return (
       <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
+        <button {...dragHandleProps} className="touch-none cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0"><GripVertical className="w-4 h-4" /></button>
         <span className="flex-1 text-sm font-medium text-gray-800">{label || <span className="text-gray-300 italic">—</span>}</span>
         <button onClick={() => { setDraft(item); setEditing(true); }} className="text-gray-400 hover:text-gray-700 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
         <button onClick={onDelete} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -217,9 +235,43 @@ const AdminAttributes = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const activeColors = localColors ?? colors;
   const activeLengths = localLengths ?? lengths;
   const activeBrands = localBrands ?? brands;
+
+  const handleDragColors = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = activeColors.findIndex(c => c.id === active.id);
+    const newIdx = activeColors.findIndex(c => c.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(activeColors, oldIdx, newIdx);
+    setLocalColors(reordered);
+    saveColors.mutate(reordered);
+  };
+
+  const handleDragLengths = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = activeLengths.findIndex(l => l.id === active.id);
+    const newIdx = activeLengths.findIndex(l => l.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(activeLengths, oldIdx, newIdx);
+    setLocalLengths(reordered);
+    saveLengths.mutate(reordered);
+  };
+
+  const handleDragBrands = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = activeBrands.findIndex(b => b.id === active.id);
+    const newIdx = activeBrands.findIndex(b => b.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(activeBrands, oldIdx, newIdx);
+    setLocalBrands(reordered);
+    saveBrands.mutate(reordered);
+  };
 
   const handleSaveColor = async (idx: number, v: TaxColor) => {
     const updated = activeColors.map((x, i) => i === idx ? v : x);
@@ -273,12 +325,18 @@ const AdminAttributes = () => {
           </Button>
         </div>
         {cLoading ? <p className="text-gray-400 text-sm">Loading...</p> : (
-          <div className="space-y-2">
-            {activeColors.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No colors defined yet</p>}
-            {activeColors.map((c, idx) => (
-              <ColorRow key={c.id} item={c} locale={locale} onSave={(v) => handleSaveColor(idx, v)} onDelete={() => handleDeleteColor(idx)} />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragColors}>
+            <SortableContext items={activeColors.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {activeColors.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No colors defined yet</p>}
+                {activeColors.map((c, idx) => (
+                  <SortableItem key={c.id} id={c.id}>
+                    {(handleProps) => <ColorRow item={c} locale={locale} onSave={(v) => handleSaveColor(idx, v)} onDelete={() => handleDeleteColor(idx)} dragHandleProps={handleProps} />}
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -291,12 +349,18 @@ const AdminAttributes = () => {
           </Button>
         </div>
         {lLoading ? <p className="text-gray-400 text-sm">Loading...</p> : (
-          <div className="space-y-2">
-            {activeLengths.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No lengths defined yet</p>}
-            {activeLengths.map((l, idx) => (
-              <LengthRow key={l.id} item={l} locale={locale} onSave={(v) => handleSaveLength(idx, v)} onDelete={() => handleDeleteLength(idx)} />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragLengths}>
+            <SortableContext items={activeLengths.map(l => l.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {activeLengths.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No lengths defined yet</p>}
+                {activeLengths.map((l, idx) => (
+                  <SortableItem key={l.id} id={l.id}>
+                    {(handleProps) => <LengthRow item={l} locale={locale} onSave={(v) => handleSaveLength(idx, v)} onDelete={() => handleDeleteLength(idx)} dragHandleProps={handleProps} />}
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -309,12 +373,18 @@ const AdminAttributes = () => {
           </Button>
         </div>
         {bLoading ? <p className="text-gray-400 text-sm">Loading...</p> : (
-          <div className="space-y-2">
-            {activeBrands.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No brands defined yet</p>}
-            {activeBrands.map((b, idx) => (
-              <BrandRow key={b.id} item={b} locale={locale} onSave={(v) => handleSaveBrand(idx, v)} onDelete={() => handleDeleteBrand(idx)} />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragBrands}>
+            <SortableContext items={activeBrands.map(b => b.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {activeBrands.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No brands defined yet</p>}
+                {activeBrands.map((b, idx) => (
+                  <SortableItem key={b.id} id={b.id}>
+                    {(handleProps) => <BrandRow item={b} locale={locale} onSave={(v) => handleSaveBrand(idx, v)} onDelete={() => handleDeleteBrand(idx)} dragHandleProps={handleProps} />}
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
