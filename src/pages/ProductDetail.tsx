@@ -189,6 +189,18 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
   const effectiveMax = isOutOfStock ? 0 : Math.max(0, currentStock - cartQty);
   const cartFull = currentStock > 0 && effectiveMax === 0;
 
+  // Compute current price for retail (combo_prices or base)
+  const currentPrice = (() => {
+    const colorObj = selectedColor as any;
+    const sizeObj = retailSizes.find((s: any) => s.label[locale] === selectedSize);
+    if (colorObj && sizeObj && colorObj.combo_prices) {
+      const p = Number(colorObj.combo_prices[sizeObj.id]);
+      if (p && p > 0) return p;
+    }
+    if (sizeObj?.price) return sizeObj.price;
+    return product.price;
+  })();
+
   const handleZoom = (idx: number) => { setLightboxStart(idx); setLightboxOpen(true); };
 
   const handleAdd = async () => {

@@ -838,12 +838,12 @@ export type Database = {
           materials: string | null
           max_quantity: number | null
           name: string
+          out_of_stock: boolean | null
           price: number
           product_details: Json | null
           sizes: Json | null
           sku: string | null
           slug: string
-          out_of_stock: boolean | null
           sold_by_meter: boolean | null
           sort_order: number | null
           status: string
@@ -874,12 +874,12 @@ export type Database = {
           materials?: string | null
           max_quantity?: number | null
           name: string
+          out_of_stock?: boolean | null
           price?: number
           product_details?: Json | null
           sizes?: Json | null
           sku?: string | null
           slug: string
-          out_of_stock?: boolean | null
           sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
@@ -910,12 +910,12 @@ export type Database = {
           materials?: string | null
           max_quantity?: number | null
           name?: string
+          out_of_stock?: boolean | null
           price?: number
           product_details?: Json | null
           sizes?: Json | null
           sku?: string | null
           slug?: string
-          out_of_stock?: boolean | null
           sold_by_meter?: boolean | null
           sort_order?: number | null
           status?: string
