@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import {
   Image, Type, HelpCircle, ArrowLeftRight, Layers, Play,
   ChevronDown, ChevronUp, Plus, Trash2, X, Save, Loader2,
@@ -413,8 +414,10 @@ const AdminAboutPage = () => {
   const queryClient = useQueryClient();
   const hasInitialized = useRef(false);
   const prevLocale = useRef(locale);
+  const restoredDraftKey = useRef<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const addRef = useRef<HTMLDivElement>(null);
+  const draftKey = `about:${locale}`;
 
   const [sectionsOrder, setSectionsOrder] = useState<SectionItem[]>(DEFAULT_ABOUT_SECTIONS_ORDER);
   const [sectionsData, setSectionsData] = useState<Record<string, any>>({});
@@ -448,8 +451,21 @@ const AdminAboutPage = () => {
     if (prevLocale.current !== locale) {
       hasInitialized.current = false;
       prevLocale.current = locale;
+      restoredDraftKey.current = null;
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<{ sectionsOrder?: SectionItem[]; sectionsData?: Record<string, any> }>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    if (Array.isArray(draft.sectionsOrder)) setSectionsOrder(draft.sectionsOrder);
+    if (draft.sectionsData) setSectionsData(draft.sectionsData);
+  }, [draftKey]);
 
   useEffect(() => {
     if (!allContent || hasInitialized.current) return;
@@ -465,6 +481,11 @@ const AdminAboutPage = () => {
     });
     setSectionsData(newData);
   }, [allContent, locale]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, { sectionsOrder, sectionsData });
+  }, [draftKey, sectionsOrder, sectionsData]);
 
   const updateSection = (id: string, data: any) => setSectionsData(prev => ({ ...prev, [id]: data }));
   const toggleVisible = (id: string) => setSectionsOrder(prev => prev.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
@@ -503,6 +524,7 @@ const AdminAboutPage = () => {
       if (orderErr) throw orderErr;
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ["about_content_all", locale] });
       queryClient.invalidateQueries({ queryKey: ["home_content"] });
       queryClient.invalidateQueries({ queryKey: ["about_sections_config"] });

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import {
   Image, LayoutGrid, Type, Play, ArrowLeftRight, HelpCircle,
   ChevronDown, ChevronUp, Plus, Trash2, X, Save, Loader2, Layers,
@@ -473,8 +474,10 @@ const AdminHomePage = () => {
   const queryClient = useQueryClient();
   const hasInitialized = useRef(false);
   const prevLocale = useRef(locale);
+  const restoredDraftKey = useRef<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const addRef = useRef<HTMLDivElement>(null);
+  const draftKey = `home:${locale}`;
 
   const [sectionsOrder, setSectionsOrder] = useState<SectionItem[]>(DEFAULT_SECTIONS_ORDER);
   const [sectionsData, setSectionsData] = useState<Record<string, any>>({});
@@ -509,8 +512,21 @@ const AdminHomePage = () => {
     if (prevLocale.current !== locale) {
       hasInitialized.current = false;
       prevLocale.current = locale;
+      restoredDraftKey.current = null;
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<{ sectionsOrder?: SectionItem[]; sectionsData?: Record<string, any> }>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    if (Array.isArray(draft.sectionsOrder)) setSectionsOrder(draft.sectionsOrder);
+    if (draft.sectionsData) setSectionsData(draft.sectionsData);
+  }, [draftKey]);
 
   useEffect(() => {
     if (!allContent || hasInitialized.current) return;
@@ -532,6 +548,11 @@ const AdminHomePage = () => {
     });
     setSectionsData(newData);
   }, [allContent, locale]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, { sectionsOrder, sectionsData });
+  }, [draftKey, sectionsOrder, sectionsData]);
 
   const updateSection = (id: string, data: any) =>
     setSectionsData(prev => ({ ...prev, [id]: data }));
@@ -576,6 +597,7 @@ const AdminHomePage = () => {
       if (orderErr) throw orderErr;
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ["home_content_all", locale] });
       queryClient.invalidateQueries({ queryKey: ["home_content"] });
       queryClient.invalidateQueries({ queryKey: ["home_sections_config"] });

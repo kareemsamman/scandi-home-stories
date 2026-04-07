@@ -12,6 +12,7 @@ import {
   type BankSettings, type SmsSettings, type SmsMessages, type AdminOrderSettings, type WhatsappSettings,
 } from "@/hooks/useAppSettings";
 import { useToast } from "@/hooks/use-toast";
+import { readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 
 const ZONES = [
   { key: "north" as const, label: "North", labelHe: "צפון", labelAr: "شمال" },
@@ -49,6 +50,8 @@ const AdminSettings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("shipping");
   const initializedKeys = useRef(new Set<string>());
+  const hasRestoredDraft = useRef(false);
+  const settingsDraftKey = "settings";
 
   /* Shipping */
   const { data: dbShipping, isLoading: shippingLoading } = useShippingSettings();
@@ -154,6 +157,25 @@ const AdminSettings = () => {
   const [msgs, setMsgs] = useState<SmsMessages | null>(null);
   useEffect(() => { if (dbMsgs && !initializedKeys.current.has("msgs")) { initializedKeys.current.add("msgs"); setMsgs(dbMsgs); } }, [dbMsgs]);
 
+  useEffect(() => {
+    if (hasRestoredDraft.current) return;
+
+    const draft = readAdminDraft<any>(settingsDraftKey);
+    hasRestoredDraft.current = true;
+    if (!draft) return;
+
+    if (draft.activeTab) setActiveTab(draft.activeTab);
+    if (draft.shipping) { initializedKeys.current.add("shipping"); setShipping(draft.shipping); }
+    if (draft.bank) { initializedKeys.current.add("bank"); setBank(draft.bank); }
+    if (draft.sms) { initializedKeys.current.add("sms"); setSms(draft.sms); }
+    if (draft.adminOrders) { initializedKeys.current.add("adminOrders"); setAdminOrders(draft.adminOrders); }
+    if (typeof draft.profileColorEnabled === "boolean") { initializedKeys.current.add("profileColor"); setProfileColorEnabled(draft.profileColorEnabled); }
+    if (draft.tranzila) { initializedKeys.current.add("tranzila"); setTranzila(draft.tranzila); }
+    if (draft.vat) { initializedKeys.current.add("vat"); setVat(draft.vat); }
+    if (draft.whatsapp) { initializedKeys.current.add("whatsapp"); setWhatsapp(draft.whatsapp); }
+    if (draft.msgs) { initializedKeys.current.add("msgs"); setMsgs(draft.msgs); }
+  }, [settingsDraftKey]);
+
   const setMsg = (key: string, locale: "he" | "ar" | "admin", val: string) => {
     setMsgs(prev => {
       if (!prev) return prev;
@@ -163,6 +185,22 @@ const AdminSettings = () => {
       return { ...prev, [key]: { ...cur, [locale]: val } };
     });
   };
+
+  useEffect(() => {
+    if (!hasRestoredDraft.current) return;
+
+    const draft: Record<string, unknown> = { activeTab };
+    if (initializedKeys.current.has("shipping")) draft.shipping = shipping;
+    if (initializedKeys.current.has("bank")) draft.bank = bank;
+    if (initializedKeys.current.has("sms")) draft.sms = sms;
+    if (initializedKeys.current.has("adminOrders")) draft.adminOrders = adminOrders;
+    if (initializedKeys.current.has("profileColor")) draft.profileColorEnabled = profileColorEnabled;
+    if (initializedKeys.current.has("tranzila")) draft.tranzila = tranzila;
+    if (initializedKeys.current.has("vat")) draft.vat = vat;
+    if (initializedKeys.current.has("whatsapp")) draft.whatsapp = whatsapp;
+    if (initializedKeys.current.has("msgs")) draft.msgs = msgs;
+    writeAdminDraft(settingsDraftKey, draft);
+  }, [activeTab, shipping, bank, sms, adminOrders, profileColorEnabled, tranzila, vat, whatsapp, msgs, settingsDraftKey]);
 
   const handleSave = async (tab: Tab) => {
     try {

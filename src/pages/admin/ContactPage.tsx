@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import { Save, Loader2, Image, X } from "lucide-react";
 
 const db = supabase as any;
@@ -105,14 +106,29 @@ const AdminContactPage = () => {
 
   const hasInitialized = useRef(false);
   const prevLocale = useRef(locale);
+  const restoredDraftKey = useRef<string | null>(null);
+  const draftKey = `contact:${locale}`;
 
   // Reset guard when locale changes
   useEffect(() => {
     if (prevLocale.current !== locale) {
       hasInitialized.current = false;
       prevLocale.current = locale;
+      restoredDraftKey.current = null;
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<{ hero?: typeof hero; details?: typeof details }>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    if (draft.hero) setHero((prev) => ({ ...prev, ...draft.hero }));
+    if (draft.details) setDetails((prev) => ({ ...prev, ...draft.details }));
+  }, [draftKey]);
 
   useEffect(() => {
     if (!data || hasInitialized.current) return;
@@ -120,6 +136,11 @@ const AdminContactPage = () => {
     if (data.contact_hero)    setHero(prev    => ({ ...prev,    ...data.contact_hero }));
     if (data.contact_details) setDetails(prev => ({ ...prev, ...data.contact_details }));
   }, [data, locale]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, { hero, details });
+  }, [draftKey, hero, details]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -133,6 +154,7 @@ const AdminContactPage = () => {
       }
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ["contact_admin_content", locale] });
       queryClient.invalidateQueries({ queryKey: ["home_content"] });
       toast({ title: "Saved", description: "Contact page updated." });

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import {
   Plus, Pencil, Trash2, ChevronUp, ChevronDown, FileText,
   Image, Type, HelpCircle, Megaphone, ShoppingBag, Mail, LayoutGrid, ArrowLeft, Save, X,
@@ -235,6 +236,8 @@ const PageEditor = ({ page, onBack }: { page: any; onBack: () => void }) => {
   const [sections, setSections] = useState<any[]>([]);
   const hasInitialized = useRef(false);
   const prevPageLocale = useRef(`${page.id}_${locale}`);
+  const restoredDraftKey = useRef<string | null>(null);
+  const draftKey = `page:${page.id}:${locale}`;
 
   // Reset guard when page or locale changes
   useEffect(() => {
@@ -242,8 +245,23 @@ const PageEditor = ({ page, onBack }: { page: any; onBack: () => void }) => {
     if (prevPageLocale.current !== key) {
       hasInitialized.current = false;
       prevPageLocale.current = key;
+      restoredDraftKey.current = null;
     }
   }, [page.id, locale]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<{ title?: string; seoTitle?: string; seoDesc?: string; sections?: any[] }>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    setTitle(draft.title || "");
+    setSeoTitle(draft.seoTitle || "");
+    setSeoDesc(draft.seoDesc || "");
+    setSections(Array.isArray(draft.sections) ? draft.sections : []);
+  }, [draftKey]);
 
   // Populate form state once per page+locale context
   useEffect(() => {
@@ -255,6 +273,11 @@ const PageEditor = ({ page, onBack }: { page: any; onBack: () => void }) => {
     setSections(trans.sections || []);
   }, [trans, page.id, locale]);
 
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, { title, seoTitle, seoDesc, sections });
+  }, [draftKey, title, seoTitle, seoDesc, sections]);
+
   const save = useMutation({
     mutationFn: async () => {
       await db.from("page_translations").upsert({
@@ -263,6 +286,7 @@ const PageEditor = ({ page, onBack }: { page: any; onBack: () => void }) => {
       }, { onConflict: "page_id,locale" });
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       qc.invalidateQueries({ queryKey: ["page_trans"] });
       toast({ title: "Page saved" });
     },

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import { Save, Loader2, Plus, Trash2, Upload } from "lucide-react";
 
 const db = supabase as any;
@@ -44,6 +45,7 @@ const DEFAULT: PopupSettings = {
 const AdminWelcomePopup = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const draftKey = "welcome_popup";
 
   const { data: dbSettings } = useQuery<PopupSettings>({
     queryKey: ["app_settings", "welcome_popup"],
@@ -55,7 +57,19 @@ const AdminWelcomePopup = () => {
 
   const [settings, setSettings] = useState<PopupSettings>(DEFAULT);
   const hasInitialized = useRef(false);
+  useEffect(() => {
+    const draft = readAdminDraft<PopupSettings>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    setSettings(draft);
+  }, [draftKey]);
+
   useEffect(() => { if (dbSettings && !hasInitialized.current) { hasInitialized.current = true; setSettings(dbSettings); } }, [dbSettings]);
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, settings);
+  }, [draftKey, settings]);
 
   const saveMutation = useMutation({
     mutationFn: async (value: PopupSettings) => {
@@ -63,6 +77,7 @@ const AdminWelcomePopup = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       qc.invalidateQueries({ queryKey: ["app_settings", "welcome_popup"] });
       toast({ title: "تم الحفظ بنجاح" });
     },

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 
 const db = supabase as any;
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -501,6 +502,7 @@ const ProductEdit = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
   const prevProductId = useRef(productId);
+  const restoredDraftKey = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   /* ── Load product ── */
@@ -547,14 +549,41 @@ const ProductEdit = () => {
   const [activeGroupIdx, setActiveGroupIdx] = useState(0);
   // Brands
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
+  const draftKey = `product:${productId ?? "new"}`;
 
   // Reset guard only when productId actually changes
   useEffect(() => {
     if (prevProductId.current !== productId) {
       hasInitialized.current = false;
       prevProductId.current = productId;
+      restoredDraftKey.current = null;
     }
   }, [productId]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<any>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    if (draft.base) setBase((prev: any) => ({ ...prev, ...draft.base }));
+    if (draft.transHe) setTransHe((prev) => ({ ...prev, ...draft.transHe }));
+    if (draft.transAr) setTransAr((prev) => ({ ...prev, ...draft.transAr }));
+    if (Array.isArray(draft.productDetails)) setProductDetails(draft.productDetails);
+    if (draft.variantType === "simple" || draft.variantType === "variable") setVariantType(draft.variantType);
+    if (Array.isArray(draft.selectedColorIds)) setSelectedColorIds(draft.selectedColorIds);
+    if (draft.simpleVariants) setSimpleVariants(draft.simpleVariants);
+    if (draft.colorLengths) setColorLengths(draft.colorLengths);
+    if (draft.comboStock) setComboStock(draft.comboStock);
+    if (draft.comboPrice) setComboPrice(draft.comboPrice);
+    if (typeof draft.customColorsEnabled === "boolean") setCustomColorsEnabled(draft.customColorsEnabled);
+    if (draft.customColorPrices) setCustomColorPrices(draft.customColorPrices);
+    if (typeof draft.activeGroupIdx === "number") setActiveGroupIdx(draft.activeGroupIdx);
+    if (Array.isArray(draft.selectedBrandIds)) setSelectedBrandIds(draft.selectedBrandIds);
+    if (typeof draft.imageUrl === "string") setImageUrl(draft.imageUrl);
+  }, [draftKey]);
 
   /* ── Populate on load ── */
   useEffect(() => {
@@ -635,6 +664,28 @@ const ProductEdit = () => {
     );
     setSelectedBrandIds(Array.isArray(p.brands) ? p.brands : []);
   }, [productData]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+
+    writeAdminDraft(draftKey, {
+      base,
+      transHe,
+      transAr,
+      productDetails,
+      variantType,
+      selectedColorIds,
+      simpleVariants,
+      colorLengths,
+      comboStock,
+      comboPrice,
+      imageUrl,
+      customColorsEnabled,
+      customColorPrices,
+      activeGroupIdx,
+      selectedBrandIds,
+    });
+  }, [draftKey, base, transHe, transAr, productDetails, variantType, selectedColorIds, simpleVariants, colorLengths, comboStock, comboPrice, imageUrl, customColorsEnabled, customColorPrices, activeGroupIdx, selectedBrandIds]);
 
   /* ── Derived ── */
   const currentTrans = locale === "he" ? transHe : transAr;
@@ -817,6 +868,7 @@ const ProductEdit = () => {
       return pid;
     },
     onSuccess: (pid) => {
+      clearAdminDraft(draftKey);
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["admin_product_edit", productId] });
       toast({ title: "Saved", description: "Product saved successfully" });

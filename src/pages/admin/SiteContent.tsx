@@ -5,6 +5,7 @@ import { useAdminLanguage } from "@/contexts/AdminLanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { clearAdminDraft, readAdminDraft, writeAdminDraft } from "@/lib/adminDraft";
 import {
   Save,
   Plus,
@@ -334,6 +335,8 @@ const AdminSiteContent = () => {
   const queryClient = useQueryClient();
   const hasInitialized = useRef(false);
   const prevLocale = useRef(locale);
+  const restoredDraftKey = useRef<string | null>(null);
+  const draftKey = `site-content:${locale}`;
 
   const [headerData, setHeaderData] = useState<any>(getSeed("he", "header"));
   const [footerData, setFooterData] = useState<any>(getSeed("he", "footer"));
@@ -357,8 +360,21 @@ const AdminSiteContent = () => {
     if (prevLocale.current !== locale) {
       hasInitialized.current = false;
       prevLocale.current = locale;
+      restoredDraftKey.current = null;
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (restoredDraftKey.current === draftKey) return;
+
+    restoredDraftKey.current = draftKey;
+    const draft = readAdminDraft<{ headerData?: any; footerData?: any }>(draftKey);
+    if (!draft) return;
+
+    hasInitialized.current = true;
+    if (draft.headerData) setHeaderData(draft.headerData);
+    if (draft.footerData) setFooterData(draft.footerData);
+  }, [draftKey]);
 
   useEffect(() => {
     if (!allContent || hasInitialized.current) return;
@@ -366,6 +382,11 @@ const AdminSiteContent = () => {
     setHeaderData(allContent["header"] ?? getSeed(locale, "header"));
     setFooterData(allContent["footer"] ?? getSeed(locale, "footer"));
   }, [allContent, locale]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    writeAdminDraft(draftKey, { headerData, footerData });
+  }, [draftKey, headerData, footerData]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -416,6 +437,7 @@ const AdminSiteContent = () => {
       if (e4) throw e4;
     },
     onSuccess: () => {
+      clearAdminDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ["site_content_all"] });
       queryClient.invalidateQueries({ queryKey: ["site_content"] });
       toast({ title: "Saved", description: "Header & Footer content updated successfully." });
