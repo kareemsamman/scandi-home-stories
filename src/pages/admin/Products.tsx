@@ -50,6 +50,15 @@ const AdminProducts = () => {
   useEffect(() => { sessionStorage.setItem("admin_prod_cat", filterCat); }, [filterCat]);
   useEffect(() => { sessionStorage.setItem("admin_prod_subcat", filterSubCat); }, [filterSubCat]);
   useEffect(() => { sessionStorage.setItem("admin_prod_status", filterStatus); }, [filterStatus]);
+
+  // Restore scroll position when coming back from product edit
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem("admin_prod_scroll");
+    if (savedScroll && !isLoading) {
+      setTimeout(() => window.scrollTo(0, Number(savedScroll)), 50);
+      sessionStorage.removeItem("admin_prod_scroll");
+    }
+  }, [isLoading]);
   const { data: subCategories = [] } = useSubCategories(filterCat !== "all" ? filterCat : undefined);
   // Local order for drag (all products, unfiltered)
   const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
@@ -283,7 +292,7 @@ const AdminProducts = () => {
                       <Button variant="ghost" size="icon" title="Duplicate" onClick={() => duplicate.mutate(product)} disabled={duplicate.isPending}>
                         <Copy className="w-4 h-4 text-gray-400" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/products/edit/${product.id}`)}>
+                      <Button variant="ghost" size="icon" onClick={() => { sessionStorage.setItem("admin_prod_scroll", String(window.scrollY)); navigate(`/admin/products/edit/${product.id}`); }}>
                         <Pencil className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete?")) del.mutate(product.id); }} className="text-red-500 hover:text-red-700">

@@ -52,7 +52,7 @@ const InvoicePage = () => {
     invoice: "فاتورة", order: "طلب", date: "التاريخ", customer: "العميل",
     shipping: "عنوان الشحن", phone: "هاتف", email: "بريد إلكتروني",
     items: "المنتجات", product: "المنتج", color: "اللون", size: "الحجم",
-    qty: "الكمية", unitPrice: "سعر الوحدة", total: "الإجمالي",
+    length: "الطول", qty: "الكمية", unitPrice: "السعر", total: "الإجمالي",
     subtotal: "المجموع الفرعي", shippingLabel: "الشحن", free: "مجاني",
     discount: "خصم", vat: "ض.ق.م", grandTotal: "سه\"כ לתשלום", notes: "ملاحظات",
     custom: "مخصص", print: "طباعة", notFound: "الفاتورة غير موجودة",
@@ -100,30 +100,30 @@ const InvoicePage = () => {
       <div className="invoice-sheet max-w-3xl mx-auto my-8 print:my-0 bg-white shadow-xl print:shadow-none rounded-2xl print:rounded-none overflow-hidden">
 
         {/* Header - compact */}
-        <div className="bg-gray-900 text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-gray-900 text-white px-6 py-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest">{t.invoice}</p>
-            <h1 className="text-xl font-black">#{order.order_number}</h1>
-            <p className="text-gray-400 text-xs mt-0.5">
+            <p className="text-xs text-gray-400 uppercase tracking-widest">{t.invoice}</p>
+            <h1 className="text-2xl font-black">{order.order_number}</h1>
+            <p className="text-gray-400 text-sm mt-0.5">
               {t.date}: {new Date(order.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
-          <img src={logoWhite} alt="AMG Pergola" className="h-10 object-contain opacity-90" />
+          <img src={logoWhite} alt="AMG Pergola" className="h-16 object-contain opacity-90" />
         </div>
 
         <div className="px-5 py-4 space-y-4">
           {/* Customer + Shipping - compact */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 rounded-lg p-3 space-y-0.5">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.customer}</p>
-              <p className="font-bold text-gray-900 text-sm">{order.first_name} {order.last_name}</p>
-              <p className="text-gray-500 text-xs">{t.phone}: {order.phone}</p>
-              <p className="text-gray-500 text-xs">{t.email}: {order.email}</p>
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.customer}</p>
+              <p className="font-bold text-gray-900 text-base">{order.first_name} {order.last_name}</p>
+              <p className="text-gray-500 text-sm">{t.phone}: {order.phone}</p>
+              <p className="text-gray-500 text-sm">{t.email}: {order.email}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3 space-y-0.5">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.shipping}</p>
-              <p className="font-bold text-gray-900 text-sm">{order.city}</p>
-              <p className="text-gray-500 text-xs">{order.address}{order.house_number ? ` ${order.house_number}` : ""}{order.apartment ? `, ${order.apartment}` : ""}</p>
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.shipping}</p>
+              <p className="font-bold text-gray-900 text-base">{order.city}</p>
+              <p className="text-gray-500 text-sm">{order.address}{order.house_number ? ` ${order.house_number}` : ""}{order.apartment ? `, ${order.apartment}` : ""}</p>
             </div>
           </div>
 
@@ -136,15 +136,16 @@ const InvoicePage = () => {
 
           {/* Items */}
           <div>
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t.items}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t.items}</p>
             <div className="rounded-lg border border-gray-100 overflow-hidden">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-100">
                   <tr>
-                    <th className="text-start px-3 py-2 text-[10px] font-semibold text-gray-500">{t.product}</th>
-                    <th className="text-center px-2 py-2 text-[10px] font-semibold text-gray-500">{t.qty}</th>
-                    <th className="text-end px-2 py-2 text-[10px] font-semibold text-gray-500">{t.unitPrice}</th>
-                    <th className="text-end px-3 py-2 text-[10px] font-semibold text-gray-500 w-20">{t.total}</th>
+                    <th className="text-start px-3 py-2 text-xs font-semibold text-gray-500">{t.product}</th>
+                    <th className="text-center px-2 py-2 text-xs font-semibold text-gray-500">{t.length}</th>
+                    <th className="text-center px-2 py-2 text-xs font-semibold text-gray-500">{t.qty}</th>
+                    <th className="text-end px-2 py-2 text-xs font-semibold text-gray-500">{t.unitPrice}</th>
+                    <th className="text-end px-3 py-2 text-xs font-semibold text-gray-500 w-24">{t.total}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,32 +154,32 @@ const InvoicePage = () => {
                     const arName = (item.product_id && productNames.get(item.product_id)?.ar) || item.product_name;
                     return (
                       <tr key={item.id ?? idx} className={idx > 0 ? "border-t border-gray-100" : ""}>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2.5">
-                            {/* Product image */}
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-3">
                             {item.product_image && (
                               <img
                                 src={item.product_image}
                                 alt={arName}
-                                className="w-14 h-14 rounded-lg object-cover border border-gray-200 flex-shrink-0 print:w-14 print:h-14"
+                                className="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0 print:w-16 print:h-16"
                               />
                             )}
                             <div className="min-w-0">
-                              <p className="font-bold text-gray-900 text-sm leading-tight">{arName}</p>
+                              <p className="font-bold text-gray-900 text-base leading-tight">{arName}</p>
+                              {item.product_id && <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{(item as any).product_id?.slice(0, 8)}</p>}
                               {item.color_name && (
-                                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
-                                  {item.color_hex && <span className="w-2.5 h-2.5 rounded-full border border-gray-200 inline-block flex-shrink-0" style={{ backgroundColor: item.color_hex }} />}
+                                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                  {item.color_hex && <span className="w-3 h-3 rounded-full border border-gray-200 inline-block flex-shrink-0" style={{ backgroundColor: item.color_hex }} />}
                                   {t.color}: {item.color_name}
-                                  {isCustom && <span className="bg-purple-100 text-purple-700 text-[8px] font-bold px-1 rounded-full">{t.custom}</span>}
+                                  {isCustom && <span className="bg-purple-100 text-purple-700 text-[9px] font-bold px-1.5 rounded-full">{t.custom}</span>}
                                 </p>
                               )}
-                              {item.size && <p className="text-[10px] text-gray-500">{t.size}: {item.size}</p>}
                             </div>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-600">×{item.quantity}</td>
-                        <td className="px-2 py-2 text-end text-gray-500">₪{Number(item.price).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-end font-bold text-gray-900">₪{(Number(item.price) * item.quantity).toLocaleString()}</td>
+                        <td className="px-2 py-2.5 text-center text-gray-600 text-sm">{item.size || "—"}</td>
+                        <td className="px-2 py-2.5 text-center text-gray-600 text-sm">×{item.quantity}</td>
+                        <td className="px-2 py-2.5 text-end text-gray-500 text-sm">₪{Number(item.price).toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-end font-bold text-gray-900 text-sm">₪{(Number(item.price) * item.quantity).toLocaleString()}</td>
                       </tr>
                     );
                   })}
@@ -189,30 +190,30 @@ const InvoicePage = () => {
 
           {/* Totals - compact */}
           <div className="flex justify-start">
-            <div className="w-64 bg-gray-50 rounded-lg p-3 space-y-1.5">
-              <div className="flex justify-between text-xs">
+            <div className="w-72 bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-500">{t.subtotal}</span>
                 <span className="font-medium">₪{itemsTotal.toLocaleString()}</span>
               </div>
               {order.discount_code && (
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-sm">
                   <span className="text-green-700">{t.discount} ({order.discount_code})</span>
                   <span className="font-semibold text-green-700">-₪{Number(order.discount_amount || 0).toLocaleString()}</span>
                 </div>
               )}
               {Number(order.vat_amount || 0) > 0 && (
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-500">{t.vat} ({order.vat_rate || 18}%)</span>
                   <span className="font-medium">₪{Number(order.vat_amount).toLocaleString()}</span>
                 </div>
               )}
-              <div className="flex justify-between text-xs">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-500">{t.shippingLabel}</span>
                 {shippingCost === 0
                   ? <span className="text-green-600 font-medium">{t.free}</span>
                   : <span className="font-medium">₪{shippingCost.toLocaleString()}</span>}
               </div>
-              <div className="flex justify-between font-bold text-sm pt-1.5 border-t border-gray-200">
+              <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200">
                 <span>{t.totalToPay}</span>
                 <span>₪{Number(order.total).toLocaleString()}</span>
               </div>
