@@ -67,6 +67,7 @@ const AdminUsers = lazyRetry(() => import("./pages/admin/Users"));
 const AdminSettings = lazyRetry(() => import("./pages/admin/Settings"));
 const AdminSiteContent = lazyRetry(() => import("./pages/admin/SiteContent"));
 const ProductEdit = lazyRetry(() => import("./pages/admin/ProductEdit"));
+const AdminCatalog = lazyRetry(() => import("./pages/admin/Catalog"));
 const AdminAttributes = lazyRetry(() => import("./pages/admin/Attributes"));
 const AdminCoupons = lazyRetry(() => import("./pages/admin/Coupons"));
 const AdminMarketing = lazyRetry(() => import("./pages/admin/Marketing"));
@@ -147,6 +148,7 @@ const App = () => (
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="products/edit/:productId" element={<ProductEdit />} />
+                <Route path="catalog" element={<AdminCatalog />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="orders/:orderId" element={<AdminOrderDetail />} />
                 <Route path="inventory" element={<AdminInventory />} />
