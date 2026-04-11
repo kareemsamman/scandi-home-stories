@@ -14,6 +14,19 @@ const ProductCatalogPage = () => {
   const { locale, localePath } = useLocale();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
+  // Fetch catalog settings (selected categories + clickable toggle)
+  const { data: catalogSettings } = useQuery({
+    queryKey: ["app_settings", "catalog"],
+    queryFn: async () => {
+      const { data } = await db.from("app_settings").select("value").eq("key", "catalog").maybeSingle();
+      return (data?.value as any) ?? { selectedCategories: [], clickable: true };
+    },
+    staleTime: 60_000,
+  });
+
+  const enabledCatIds: string[] = catalogSettings?.selectedCategories || [];
+  const clickable: boolean = catalogSettings?.clickable !== false;
+
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["catalog_categories"],
     queryFn: async () => {
@@ -24,12 +37,13 @@ const ProductCatalogPage = () => {
   });
 
   const { data: products = [], isLoading } = useQuery<any[]>({
-    queryKey: ["catalog_products"],
+    queryKey: ["catalog_products", enabledCatIds],
+    enabled: enabledCatIds.length > 0,
     queryFn: async () => {
       const { data: prods } = await db
         .from("products")
-        .select("id, slug, name, images, category_id, price, sku, show_in_catalog")
-        .eq("show_in_catalog", true)
+        .select("id, slug, name, images, category_id, price, sku")
+        .in("category_id", enabledCatIds)
         .or("status.eq.published,status.is.null")
         .order("sort_order");
       if (!prods?.length) return [];
@@ -45,7 +59,9 @@ const ProductCatalogPage = () => {
     staleTime: 60_000,
   });
 
-  const catsWithProducts = categories
+  // Only show categories that are enabled
+  const enabledCategories = categories.filter((c: any) => enabledCatIds.includes(c.id));
+  const catsWithProducts = enabledCategories
     .map((cat: any) => ({ cat, items: products.filter((p: any) => p.category_id === cat.id) }))
     .filter((g) => g.items.length > 0);
 
@@ -57,6 +73,18 @@ const ProductCatalogPage = () => {
   const seoDesc = locale === "ar"
     ? "تصفح قائمة منتجاتنا — برجولات وملحقات ألمنيوم عالية الجودة"
     : "צפו בקטלוג המוצרים שלנו — פרגולות ואביזרי אלומיניום באיכות גבוהה";
+
+  const CardWrapper = clickable
+    ? ({ product, children }: { product: any; children: React.ReactNode }) => (
+        <Link to={localePath(`/product/${product.slug}`)} className="group block rounded-2xl border border-border bg-background overflow-hidden hover:shadow-lg transition-shadow">
+          {children}
+        </Link>
+      )
+    : ({ children }: { product: any; children: React.ReactNode }) => (
+        <div className="rounded-2xl border border-border bg-background overflow-hidden">
+          {children}
+        </div>
+      );
 
   return (
     <Layout>
@@ -92,9 +120,7 @@ const ProductCatalogPage = () => {
             <button
               onClick={() => setSelectedCat(null)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                !selectedCat
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                !selectedCat ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
               {locale === "ar" ? "الكل" : "הכל"}
@@ -104,9 +130,7 @@ const ProductCatalogPage = () => {
                 key={cat.id}
                 onClick={() => setSelectedCat(selectedCat === cat.id ? null : cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  selectedCat === cat.id
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  selectedCat === cat.id ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
                 {locale === "ar" ? cat.name_ar : cat.name_he}
@@ -118,7 +142,7 @@ const ProductCatalogPage = () => {
 
       {/* Products */}
       <section className="section-container py-10 md:py-16">
-        {isLoading ? (
+        {isLoading || !catalogSettings ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
@@ -155,7 +179,7 @@ const ProductCatalogPage = () => {
                 <div className="h-px flex-1 bg-border" />
               </div>
 
-              {/* Products grid — 1 col mobile, 2 col sm, 3 col lg */}
+              {/* Products grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {items.map((product: any, pi: number) => (
                   <motion.div
@@ -165,16 +189,13 @@ const ProductCatalogPage = () => {
                     viewport={{ once: true }}
                     transition={{ delay: pi * 0.05 }}
                   >
-                    <Link
-                      to={localePath(`/product/${product.slug}`)}
-                      className="group block rounded-2xl border border-border bg-background overflow-hidden hover:shadow-lg transition-shadow"
-                    >
+                    <CardWrapper product={product}>
                       <div className="aspect-square bg-muted overflow-hidden">
                         {product.images?.[0] ? (
                           <img
                             src={product.images[0]}
                             alt={locale === "ar" ? product.name_ar : product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className={`w-full h-full object-cover transition-transform duration-500 ${clickable ? "group-hover:scale-105" : ""}`}
                             loading="lazy"
                           />
                         ) : (
@@ -184,7 +205,7 @@ const ProductCatalogPage = () => {
                         )}
                       </div>
                       <div className="p-4">
-                        <h3 className="text-base font-bold text-foreground leading-tight group-hover:text-accent-strong transition-colors">
+                        <h3 className={`text-base font-bold text-foreground leading-tight ${clickable ? "group-hover:text-accent-strong transition-colors" : ""}`}>
                           {product.name}
                         </h3>
                         {product.name_ar && product.name_ar !== product.name && (
@@ -198,7 +219,7 @@ const ProductCatalogPage = () => {
                           </p>
                         )}
                       </div>
-                    </Link>
+                    </CardWrapper>
                   </motion.div>
                 ))}
               </div>

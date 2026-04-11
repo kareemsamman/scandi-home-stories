@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { Printer, Package, Check, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Printer, Package, Check, Eye, MousePointer, Ban } from "lucide-react";
 import { useProducts, useCategories } from "@/hooks/useDbData";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import logoWhite from "@/assets/logo-white.png";
 
@@ -13,43 +12,70 @@ const AdminCatalog = () => {
   const qc = useQueryClient();
   const { data: products = [], isLoading: pLoading } = useProducts();
   const { data: categories = [], isLoading: cLoading } = useCategories();
-  const [selectedCat, setSelectedCat] = useState("all");
+
+  // Catalog settings from app_settings
+  const { data: catalogSettings } = useQuery({
+    queryKey: ["app_settings", "catalog"],
+    queryFn: async () => {
+      const { data } = await db.from("app_settings").select("value").eq("key", "catalog").maybeSingle();
+      return (data?.value as any) ?? { selectedCategories: [], clickable: true };
+    },
+    staleTime: 60_000,
+  });
+
+  const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [clickable, setClickable] = useState(true);
+
+  // Sync from DB on load
+  useEffect(() => {
+    if (catalogSettings) {
+      setSelectedCats(catalogSettings.selectedCategories || []);
+      setClickable(catalogSettings.clickable !== false);
+    }
+  }, [catalogSettings]);
+
+  const saveCatalogSettings = useMutation({
+    mutationFn: async (settings: { selectedCategories: string[]; clickable: boolean }) => {
+      await db.from("app_settings").upsert(
+        { key: "catalog", value: settings },
+        { onConflict: "key" }
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["app_settings", "catalog"] }),
+  });
+
+  const toggleCategory = (catId: string) => {
+    const next = selectedCats.includes(catId)
+      ? selectedCats.filter(id => id !== catId)
+      : [...selectedCats, catId];
+    setSelectedCats(next);
+    saveCatalogSettings.mutate({ selectedCategories: next, clickable });
+  };
+
+  const toggleClickable = () => {
+    const next = !clickable;
+    setClickable(next);
+    saveCatalogSettings.mutate({ selectedCategories: selectedCats, clickable: next });
+  };
 
   const isLoading = pLoading || cLoading;
-
-  const toggleCatalog = useMutation({
-    mutationFn: async ({ id, show }: { id: string; show: boolean }) => {
-      await db.from("products").update({ show_in_catalog: show }).eq("id", id);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["products"] }),
-  });
 
   const allProducts = (products as any[]).filter(
     (p: any) => (p.status || "published") === "published"
   );
 
-  const grouped = selectedCat === "all"
-    ? categories
-        .map((cat: any) => ({
-          cat,
-          items: allProducts.filter((p: any) => p.category_id === cat.id),
-        }))
-        .filter((g) => g.items.length > 0)
-    : categories
-        .filter((cat: any) => cat.id === selectedCat)
-        .map((cat: any) => ({
-          cat,
-          items: allProducts.filter((p: any) => p.category_id === cat.id),
-        }))
-        .filter((g) => g.items.length > 0);
-
-  const catalogCount = allProducts.filter((p: any) => p.show_in_catalog).length;
+  // Show selected categories with their products
+  const grouped = categories
+    .map((cat: any) => ({
+      cat,
+      items: allProducts.filter((p: any) => p.category_id === cat.id),
+      selected: selectedCats.includes(cat.id),
+    }))
+    .filter((g) => g.items.length > 0);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
-        Loading...
-      </div>
+      <div className="flex items-center justify-center py-20 text-gray-400">Loading...</div>
     );
   }
 
@@ -59,21 +85,24 @@ const AdminCatalog = () => {
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-gray-900 flex-1">
           קטלוג מוצרים
-          <span className="text-sm font-normal text-gray-400 ms-2">{catalogCount} נבחרו לקטלוג</span>
+          <span className="text-sm font-normal text-gray-400 ms-2">
+            {selectedCats.length} קטגוריות נבחרו
+          </span>
         </h1>
-        <Select value={selectedCat} onValueChange={setSelectedCat}>
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="כל הקטגוריות" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הקטגוריות</SelectItem>
-            {categories.map((cat: any) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name_he || cat.name_ar}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* Clickable toggle */}
+        <button
+          onClick={toggleClickable}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            clickable
+              ? "bg-blue-50 border-blue-200 text-blue-700"
+              : "bg-gray-50 border-gray-200 text-gray-500"
+          }`}
+        >
+          {clickable ? <MousePointer className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+          {clickable ? "לחיצה למוצר: פעיל" : "לחיצה למוצר: כבוי"}
+        </button>
+
         <Button variant="outline" size="sm" onClick={() => window.open("/he/product-catalog", "_blank")} className="gap-1.5">
           <Eye className="w-4 h-4" /> תצוגה מקדימה
         </Button>
@@ -100,75 +129,69 @@ const AdminCatalog = () => {
         {grouped.length === 0 && (
           <div className="text-center py-20 text-gray-400">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">אין מוצרים להצגה</p>
+            <p className="font-medium">אין קטגוריות עם מוצרים</p>
           </div>
         )}
 
-        {grouped.map(({ cat, items }) => (
-          <div key={cat.id} className="mb-10 print:mb-6 catalog-section">
-            <div className="mb-5 print:mb-3 pb-3 border-b-2 border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">{cat.name_he}</h2>
-              {cat.name_ar && cat.name_ar !== cat.name_he && (
-                <p className="text-base text-gray-500 mt-0.5">{cat.name_ar}</p>
-              )}
+        {grouped.map(({ cat, items, selected }) => (
+          <div
+            key={cat.id}
+            className={`mb-8 print:mb-6 catalog-section rounded-xl border-2 p-5 transition-colors ${
+              selected
+                ? "border-green-200 bg-green-50/30 print:border-gray-200 print:bg-white"
+                : "border-gray-100 bg-gray-50/20 opacity-50 print:hidden"
+            }`}
+          >
+            {/* Category header with toggle */}
+            <div className="flex items-center gap-4 mb-4 print:mb-3 pb-3 border-b border-gray-200">
+              <button
+                onClick={() => toggleCategory(cat.id)}
+                className={`print:hidden w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                  selected
+                    ? "bg-green-500 border-green-500"
+                    : "border-gray-300 hover:border-gray-400"
+                }`}
+              >
+                {selected && <Check className="w-4 h-4 text-white" />}
+              </button>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900">{cat.name_he}</h2>
+                {cat.name_ar && cat.name_ar !== cat.name_he && (
+                  <p className="text-base text-gray-500 mt-0.5">{cat.name_ar}</p>
+                )}
+              </div>
+              <span className="text-xs text-gray-400 print:hidden">{items.length} מוצרים</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:grid-cols-2 print:gap-3">
-              {items.map((product: any) => {
-                const inCatalog = product.show_in_catalog === true;
-                return (
-                  <div
-                    key={product.id}
-                    className={`flex gap-4 p-4 rounded-xl border transition-colors print:rounded-lg print:p-3 ${
-                      inCatalog
-                        ? "border-green-200 bg-green-50/50 print:border-gray-200 print:bg-white"
-                        : "border-gray-100 bg-gray-50/30 opacity-60 print:hidden"
-                    }`}
-                  >
-                    {/* Catalog toggle — hidden on print */}
-                    <button
-                      onClick={() => toggleCatalog.mutate({ id: product.id, show: !inCatalog })}
-                      className={`print:hidden w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 self-center transition-all ${
-                        inCatalog
-                          ? "bg-green-500 border-green-500"
-                          : "border-gray-300 hover:border-gray-400"
-                      }`}
-                    >
-                      {inCatalog && <Check className="w-4 h-4 text-white" />}
-                    </button>
-
-                    {/* Product image */}
-                    {product.images?.[0] ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover border border-gray-200 shrink-0 print:w-20 print:h-20"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 print:w-20 print:h-20">
-                        <Package className="w-8 h-8 text-gray-300" />
-                      </div>
-                    )}
-
-                    {/* Product info */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <h3 className="text-base font-bold text-gray-900 leading-tight">
-                        {product.name}
-                      </h3>
-                      {product.name_ar && product.name_ar !== product.name && (
-                        <p className="text-sm text-gray-500 mt-1 leading-tight">
-                          {product.name_ar}
-                        </p>
-                      )}
-                      {product.sku && (
-                        <p className="text-[10px] text-gray-400 font-mono mt-1.5">
-                          {product.sku}
-                        </p>
-                      )}
+            {/* Products grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 print:grid-cols-2 print:gap-3">
+              {items.map((product: any) => (
+                <div
+                  key={product.id}
+                  className="flex gap-3 p-3 rounded-lg border border-gray-100 bg-white print:p-2 print:border-gray-200"
+                >
+                  {product.images?.[0] ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-gray-200 shrink-0 print:w-16 print:h-16"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 print:w-16 print:h-16">
+                      <Package className="w-6 h-6 text-gray-300" />
                     </div>
+                  )}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h3 className="text-sm font-bold text-gray-900 leading-tight">{product.name}</h3>
+                    {product.name_ar && product.name_ar !== product.name && (
+                      <p className="text-xs text-gray-500 mt-0.5 leading-tight">{product.name_ar}</p>
+                    )}
+                    {product.sku && (
+                      <p className="text-[10px] text-gray-400 font-mono mt-1">{product.sku}</p>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
         ))}
