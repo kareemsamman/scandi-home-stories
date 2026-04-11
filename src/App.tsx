@@ -29,6 +29,7 @@ const lazyRetry = (factory: () => Promise<any>) =>
   );
 
 const Catalog = lazyRetry(() => import("./pages/Catalog"));
+const ProductCatalog = lazyRetry(() => import("./pages/ProductCatalog"));
 const Products = lazyRetry(() => import("./pages/Products"));
 const ProductDetail = lazyRetry(() => import("./pages/ProductDetail"));
 const About = lazyRetry(() => import("./pages/About"));
@@ -101,6 +102,7 @@ const LocaleRoutes = () => (
         <Route path="/" element={<Index />} />
         <Route path="/shop" element={<Products />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/product-catalog" element={<ProductCatalog />} />
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="/cart" element={<Cart />} />
