@@ -64,17 +64,19 @@ Deno.serve(async (req) => {
       return json({ error: "tranzila_not_configured" }, 400);
     }
 
+    // Tranzila docs require GET for the handshake endpoint.
     const params = new URLSearchParams();
     params.set("supplier", settings.terminal_name);
     params.set("TranzilaPW", settings.terminal_password);
     params.set("sum", String(Math.round(sumNum * 100) / 100));
-    params.set("currency", String(currency ?? 1));
+    if (currency !== undefined && currency !== null) {
+      params.set("currency", String(currency));
+    }
 
-    const tzRes = await fetch("https://api.tranzila.com/v1/handshake/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
+    const tzRes = await fetch(
+      `https://api.tranzila.com/v1/handshake/create?${params.toString()}`,
+      { method: "GET" },
+    );
 
     const text = await tzRes.text();
     console.log("tranzila-handshake response:", tzRes.status, text);
