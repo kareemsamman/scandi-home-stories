@@ -52,6 +52,8 @@ export interface DbOrder {
   payment_status?: string;
   payment_token?: string | null;
   marketing_opt_in?: boolean | null;
+  transaction_id?: string | null;
+  tranzila_token?: string | null;
 }
 export interface DbOrderItem {
   id: string; order_id: string; product_id: string | null;
