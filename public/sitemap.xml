@@ -244,6 +244,96 @@
 
   <!-- ── Products ── -->
   <url>
+    <loc>https://pergolaamg.com/he/product/angle-20x90-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x90-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x90-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/angle-20x90-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x90-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x90-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/angle-20x70-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x70-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x70-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/angle-20x70-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x70-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x70-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/angle-20x50-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x50-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x50-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/angle-20x50-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x50-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x50-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/angle-20x21-8-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x21-8-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x21-8-0-9"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/angle-20x21-8-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x21-8-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x21-8-0-9"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-40x20</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-40x20"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-40x20"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-40x20</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-40x20"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-40x20"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-70x20</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-70x20"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-70x20"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-70x20</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-70x20"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-70x20"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
     <loc>https://pergolaamg.com/he/product/rectangle-40x40</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-40x40"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-40x40"/>
@@ -289,226 +379,196 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-120-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-120-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-120-15"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x120-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x120-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x120-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-120-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-120-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-120-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-100-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-100-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-100-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-100-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-100-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-100-15"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x120-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x120-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x120-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-80-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-80-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-80-15"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x100-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x100-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x100-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-80-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-80-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-80-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-60-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-60-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-60-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-60-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-60-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-60-15"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x100-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x100-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x100-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-40-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-40-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-40-15"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x80-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x80-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x80-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-40-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-40-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-40-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-30-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-30-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-30-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-30-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-30-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-30-15"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x80-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x80-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x80-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/זווית-30-30-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-30-30-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-30-30-09"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x60-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x60-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x60-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-30-30-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-30-30-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-30-30-09"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/זווית-20-30-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-30-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-30-09"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-20-30-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-20-30-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-20-30-09"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x60-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x60-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x60-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-20-20-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-20-20-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-20-20-08"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x40-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x40-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x40-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-20-20-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-20-20-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-20-20-08"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-200-50-3</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-200-50-3"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-200-50-3"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-200-50-3</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-200-50-3"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-200-50-3"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x40-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x40-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x40-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-200-20-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-200-20-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-200-20-15"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x30-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x30-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x30-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-200-20-15</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-200-20-15"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-200-20-15"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-130-20-11</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-130-20-11"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-130-20-11"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-130-20-11</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-130-20-11"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-130-20-11"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x30-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x30-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x30-1-5"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-100-20-11</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-100-20-11"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-100-20-11"/>
+    <loc>https://pergolaamg.com/he/product/angle-30x30-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-30x30-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-30x30-0-9"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-100-20-11</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-100-20-11"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-100-20-11"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-70-20-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-70-20-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-70-20-08"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-70-20-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-70-20-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-70-20-08"/>
+    <loc>https://pergolaamg.com/ar/product/angle-30x30-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-30x30-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-30x30-0-9"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-20-40-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-20-40-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-20-40-08"/>
+    <loc>https://pergolaamg.com/he/product/angle-20x30-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x30-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x30-0-9"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-20-40-08</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-20-40-08"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-20-40-08"/>
+    <loc>https://pergolaamg.com/ar/product/angle-20x30-0-9</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/angle-20x30-0-9"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/angle-20x30-0-9"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-200x50-3</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-200x50-3"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-200x50-3"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-200x50-3</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-200x50-3"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-200x50-3"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-200x20-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-200x20-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-200x20-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-200x20-1-5</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-200x20-1-5"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-200x20-1-5"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-130x20-1-1</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-130x20-1-1"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-130x20-1-1"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-130x20-1-1</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-130x20-1-1"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-130x20-1-1"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-100x20-1-1</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-100x20-1-1"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-100x20-1-1"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-100x20-1-1</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-100x20-1-1"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-100x20-1-1"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://pergolaamg.com/he/product/rectangle-70x20-0-8</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-70x20-0-8"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-70x20-0-8"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://pergolaamg.com/ar/product/rectangle-70x20-0-8</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-70x20-0-8"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-70x20-0-8"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -544,21 +604,6 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-50-200-3</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-50-200-3"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-50-200-3"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-50-200-3</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-50-200-3"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-50-200-3"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
     <loc>https://pergolaamg.com/he/product/rectangle-100x40</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-100x40"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-100x40"/>
@@ -574,46 +619,31 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-150-50-25</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50-25"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50-25"/>
+    <loc>https://pergolaamg.com/he/product/rectangle-150x50-2</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-150x50-2"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-150x50-2"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-150-50-25</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50-25"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50-25"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-150-50-2</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50-2"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50-2"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-150-50-2</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50-2"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50-2"/>
+    <loc>https://pergolaamg.com/ar/product/rectangle-150x50-2</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-150x50-2"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-150x50-2"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-150-50</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50"/>
+    <loc>https://pergolaamg.com/he/product/rectangle-150x50</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-150x50"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-150x50"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-150-50</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-150-50"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-150-50"/>
+    <loc>https://pergolaamg.com/ar/product/rectangle-150x50</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/rectangle-150x50"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/rectangle-150x50"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -769,21 +799,6 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/תושבת-קליק</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/תושבת-קליק"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/תושבת-קליק"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/תושבת-קליק</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/תושבת-קליק"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/תושבת-קליק"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
     <loc>https://pergolaamg.com/he/product/קליק-60-מ״ל</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/קליק-60-מ״ל"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/קליק-60-מ״ל"/>
@@ -809,21 +824,6 @@
     <loc>https://pergolaamg.com/ar/product/קליק-40-מ״ל</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/קליק-40-מ״ל"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/קליק-40-מ״ל"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/פרופיל-מסדרת-ה״קליק״</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/פרופיל-מסדרת-ה״קליק״"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/פרופיל-מסדרת-ה״קליק״"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/פרופיל-מסדרת-ה״קליק״</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/פרופיל-מסדרת-ה״קליק״"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/פרופיל-מסדרת-ה״קליק״"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -859,46 +859,31 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/זווית-30-20-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-30-20-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-30-20-09"/>
+    <loc>https://pergolaamg.com/he/product/hi-tech-column-40x40-grooved-20mm-spacing-6m</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/hi-tech-column-40x40-grooved-20mm-spacing-6m"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/hi-tech-column-40x40-grooved-20mm-spacing-6m"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/זווית-30-20-09</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/זווית-30-20-09"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/זווית-30-20-09"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/עמוד-הייטק-4040-מחורץ-מרווח-20-ממ-א-6-מ"/>
+    <loc>https://pergolaamg.com/ar/product/hi-tech-column-40x40-grooved-20mm-spacing-6m</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/hi-tech-column-40x40-grooved-20mm-spacing-6m"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/hi-tech-column-40x40-grooved-20mm-spacing-6m"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/מלבן-120-40-cop120 עם קנטy</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-120-40-cop120 עם קנטy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-120-40-cop120 עם קנטy"/>
+    <loc>https://pergolaamg.com/he/product/120-with-edge</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/120-with-edge"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/120-with-edge"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/מלבן-120-40-cop120 עם קנטy</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/מלבן-120-40-cop120 עם קנטy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/מלבן-120-40-cop120 עם קנטy"/>
+    <loc>https://pergolaamg.com/ar/product/120-with-edge</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/120-with-edge"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/120-with-edge"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -1144,16 +1129,16 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/post-66x66-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/post-66x66-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/post-66x66-2000"/>
+    <loc>https://pergolaamg.com/he/product/עמוד-66x66-ל-2000</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/עמוד-66x66-ל-2000"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/עמוד-66x66-ל-2000"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/post-66x66-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/post-66x66-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/post-66x66-2000"/>
+    <loc>https://pergolaamg.com/ar/product/עמוד-66x66-ל-2000</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/עמוד-66x66-ל-2000"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/עמוד-66x66-ל-2000"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -1174,21 +1159,6 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/post-125x66-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/post-125x66-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/post-125x66-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/post-125x66-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/post-125x66-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/post-125x66-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
     <loc>https://pergolaamg.com/he/product/glazing-bar-straight-15mm-2000</loc>
     <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/glazing-bar-straight-15mm-2000"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/glazing-bar-straight-15mm-2000"/>
@@ -1204,61 +1174,16 @@
   </url>
 
   <url>
-    <loc>https://pergolaamg.com/he/product/glazing-bar-straight-26mm-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/glazing-bar-straight-26mm-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/glazing-bar-straight-26mm-2000"/>
+    <loc>https://pergolaamg.com/he/product/glazing-bar-2000-26mm</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/glazing-bar-2000-26mm"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/glazing-bar-2000-26mm"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://pergolaamg.com/ar/product/glazing-bar-straight-26mm-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/glazing-bar-straight-26mm-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/glazing-bar-straight-26mm-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/double-cover-straight-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/double-cover-straight-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/double-cover-straight-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/double-cover-straight-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/double-cover-straight-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/double-cover-straight-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/cladding-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/cladding-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/cladding-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/cladding-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/cladding-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/cladding-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <url>
-    <loc>https://pergolaamg.com/he/product/66x26-post-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/66x26-post-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/66x26-post-2000"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://pergolaamg.com/ar/product/66x26-post-2000</loc>
-    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/66x26-post-2000"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/66x26-post-2000"/>
+    <loc>https://pergolaamg.com/ar/product/glazing-bar-2000-26mm</loc>
+    <xhtml:link rel="alternate" hreflang="he" href="https://pergolaamg.com/he/product/glazing-bar-2000-26mm"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://pergolaamg.com/ar/product/glazing-bar-2000-26mm"/>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
