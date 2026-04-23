@@ -179,7 +179,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
             style={{ height: 420 }}
             onLoad={() => setLoading(false)}
             title="Tranzila Payment"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            allow="payment *; publickey-credentials-get *"
           />
         )}
       </div>
