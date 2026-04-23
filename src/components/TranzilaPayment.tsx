@@ -121,6 +121,21 @@ export const TranzilaPayment = ({
       console.log("Tranzila parent message:", data);
 
       const code = String((data.Response ?? data.response ?? "") as string);
+      const hasAnyTranzilaField =
+        "Response" in data || "response" in data ||
+        "ConfirmationCode" in data || "ConfirmationCode " in data ||
+        "index" in data || "TranzilaTK" in data ||
+        "error_msg" in data || "ErrorMessage" in data;
+
+      // Bridge with no Tranzila fields = POST return method (body unreadable
+      // by static HTML). Ignore instead of falsely showing failure.
+      if (data.__tranzilaBridge === true && !hasAnyTranzilaField) {
+        console.warn(
+          "Tranzila bridge received empty payload — terminal Return Method is likely set to POST. Switch it to GET in the Tranzila admin panel."
+        );
+        return;
+      }
+
       const isSuccess = code === "000" || data.Response === "succeeded";
 
       if (isSuccess) {
