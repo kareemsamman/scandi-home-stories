@@ -36,6 +36,17 @@ const TranzilaReturn = () => {
   }, []);
 
   useEffect(() => {
+    // If this page is rendered inside the Tranzila iframe, break out to the top window
+    // so the whole checkout page is replaced, not just the iframe area.
+    try {
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = window.location.href;
+        return;
+      }
+    } catch {
+      // Cross-origin access blocked — fall through and finalize here as best we can.
+    }
+
     if (attemptedRef.current) return;
     attemptedRef.current = true;
 
