@@ -39,6 +39,33 @@
           });
         } catch (e) { /* ignore */ }
 
+        // 1b) Some Tranzila configurations append the response as an
+        // ENCODED query string (e.g. ".../tranzila-bridge.html%3FResponse%3D000%26..."),
+        // which the browser treats as part of the path, leaving search empty.
+        // Detect that case and decode the params out of the URL.
+        try {
+          var fullUrl = window.location.href;
+          var encodedIdx = fullUrl.indexOf("%3F");
+          if (encodedIdx === -1) encodedIdx = fullUrl.indexOf("%3f");
+          if (encodedIdx !== -1) {
+            var encodedTail = fullUrl.substring(encodedIdx + 3); // skip %3F
+            var decodedTail = decodeURIComponent(encodedTail);
+            // decodedTail may itself be encoded once more — try a second pass
+            try { decodedTail = decodeURIComponent(decodedTail); } catch (e) {}
+            new URLSearchParams(decodedTail).forEach(function (v, k) {
+              if (params[k] == null) params[k] = v;
+            });
+          }
+          // Also handle the case where the path itself contains "?" after decoding once
+          var decodedPath = decodeURIComponent(window.location.pathname);
+          var qIdx = decodedPath.indexOf("?");
+          if (qIdx !== -1) {
+            new URLSearchParams(decodedPath.substring(qIdx + 1)).forEach(function (v, k) {
+              if (params[k] == null) params[k] = v;
+            });
+          }
+        } catch (e) { /* ignore */ }
+
         // 2) Hash fragment (some configurations use #key=value&...).
         try {
           if (window.location.hash && window.location.hash.length > 1) {
