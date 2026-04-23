@@ -100,15 +100,21 @@ const InvoicePage = () => {
       <div className="invoice-sheet max-w-3xl mx-auto my-8 print:my-0 bg-white shadow-xl print:shadow-none rounded-2xl print:rounded-none overflow-hidden">
 
         {/* Header - compact */}
-        <div className="bg-gray-900 text-white px-6 py-5 flex items-center justify-between">
+        <div className="bg-gray-900 text-white px-6 py-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-widest">{t.invoice}</p>
             <h1 className="text-2xl font-black">{order.order_number}</h1>
             <p className="text-gray-400 text-sm mt-0.5">
-              {t.date}: {new Date(order.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
+              {t.date}: {new Date(order.created_at).toLocaleDateString("ar-EG", { calendar: "gregory", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
-          <img src={logoWhite} alt="AMG Pergola" className="h-16 object-contain opacity-90" />
+          <div className="flex flex-col items-end gap-1 text-end">
+            <img src={logoWhite} alt="AMG Pergola" className="h-14 object-contain opacity-90 mb-1" />
+            <p className="text-sm font-bold text-white leading-tight">א.מ.ג פרגולה בע״מ</p>
+            <p className="text-[11px] text-gray-300 leading-tight">ח.פ 516723061</p>
+            <p className="text-[11px] text-gray-300 leading-tight" dir="ltr">052-812-2846</p>
+            <p className="text-[11px] text-gray-300 leading-tight" dir="ltr">mail@amgpergola.co.il</p>
+          </div>
         </div>
 
         <div className="px-5 py-4 space-y-4">
@@ -224,7 +230,7 @@ const InvoicePage = () => {
         {/* Footer */}
         <div className="border-t border-gray-100 px-5 py-3 text-center text-[10px] text-gray-400">
           <p className="font-semibold text-gray-600 mb-0.5">شكراً لطلبك</p>
-          <p>AMG Pergola · amgpergola.com</p>
+          <p>א.מ.ג פרגולה בע״מ · ח.פ 516723061 · <span dir="ltr">052-812-2846</span> · <span dir="ltr">mail@amgpergola.co.il</span></p>
         </div>
       </div>
 
