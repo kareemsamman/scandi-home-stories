@@ -841,6 +841,7 @@ export type Database = {
           out_of_stock: boolean | null
           price: number
           product_details: Json | null
+          show_in_catalog: boolean | null
           sizes: Json | null
           sku: string | null
           slug: string
@@ -878,6 +879,7 @@ export type Database = {
           out_of_stock?: boolean | null
           price?: number
           product_details?: Json | null
+          show_in_catalog?: boolean | null
           sizes?: Json | null
           sku?: string | null
           slug: string
@@ -915,6 +917,7 @@ export type Database = {
           out_of_stock?: boolean | null
           price?: number
           product_details?: Json | null
+          show_in_catalog?: boolean | null
           sizes?: Json | null
           sku?: string | null
           slug?: string
