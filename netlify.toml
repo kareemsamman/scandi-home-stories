@@ -2,7 +2,19 @@
   command = "npm run build"
   publish = "dist"
 
+# Apple Pay domain verification must be served as-is, not rewritten to index.html.
+[[redirects]]
+  from = "/.well-known/*"
+  to = "/.well-known/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/.well-known/apple-developer-merchantid-domain-association"
+  [headers.values]
+    Content-Type = "application/json"

@@ -22,6 +22,37 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
   const [failureMessage, setFailureMessage] = useState<string>("");
   const [iframeKey, setIframeKey] = useState(0);
 
+  // Load Tranzila's Apple Pay helper script on the parent page.
+  // Apple Pay runs on the parent window (not inside the iframe) because
+  // ApplePaySession requires same-origin execution.
+  useEffect(() => {
+    if (!settings?.enabled) return;
+    if (document.querySelector('script[data-tranzila-apple="1"]')) return;
+
+    const jq = document.createElement("script");
+    jq.src = "https://direct.tranzila.com/Tranzila_files/jquery.js";
+    jq.async = false;
+    jq.dataset.tranzilaApple = "1";
+
+    jq.onload = () => {
+      const ap = document.createElement("script");
+      ap.src = `https://direct.tranzila.com/js/tranzilanapple_v3.js?v=${Date.now()}`;
+      ap.async = false;
+      ap.dataset.tranzilaApple = "1";
+      ap.onload = () => {
+        try {
+          const w = window as unknown as { jQuery?: { noConflict: (removeAll?: boolean) => unknown }; $n?: unknown };
+          if (w.jQuery && typeof w.jQuery.noConflict === "function") {
+            w.$n = w.jQuery.noConflict(true);
+          }
+        } catch { /* ignore */ }
+      };
+      document.head.appendChild(ap);
+    };
+
+    document.head.appendChild(jq);
+  }, [settings?.enabled]);
+
   // Listen for postMessage from Tranzila iframe (direct or via bridge page)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
