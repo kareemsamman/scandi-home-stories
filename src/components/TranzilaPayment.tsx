@@ -109,6 +109,8 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     `trButtonColor=111111&` +
     `buttonLabel=${encodeURIComponent(locale === "ar" ? "ادفع الآن" : "שלם עכשיו")}` +
     `&bit=1&applepay=1&googlepay=1` +
+    // u71=1 suppresses Tranzila's internal success/fail screens so it redirects to our bridge URLs.
+    `&u71=1` +
     `&success_url_address=${encodeURIComponent(bridgeUrl)}` +
     `&fail_url_address=${encodeURIComponent(bridgeUrl)}` +
     `&notify_url_address=${encodeURIComponent(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`)}`;
