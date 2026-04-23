@@ -706,10 +706,41 @@ const AdminOrderDetail = () => {
         </div>
       )}
 
-      {/* ── Receipts ── */}
-      {!isWorker && (
-        <Section title={`الإيصالات${receipts.length > 0 ? ` (${receipts.length})` : ""}`} icon={Receipt}>
-          {receipts.length === 0 ? (
+      {/* ── Receipts / Tranzila confirmation ── */}
+      {!isWorker && (() => {
+        const isTranzilaOrder = !!order.transaction_id && receipts.length === 0;
+        const paymentConfirmed = !!(order as any).payment_confirmed;
+        const sectionTitle = isTranzilaOrder
+          ? "تأكيد الدفع"
+          : `الإيصالات${receipts.length > 0 ? ` (${receipts.length})` : ""}`;
+        return (
+          <Section title={sectionTitle} icon={Receipt}>
+          {isTranzilaOrder ? (
+            paymentConfirmed ? (
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <Check className="w-5 h-5 text-green-600 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-green-800 text-sm">تم تأكيد الدفع عبر Tranzila</p>
+                  <p className="text-xs text-green-700 mt-0.5">
+                    رقم التأكيد: <span className="font-mono">{order.transaction_id}</span>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-amber-800 text-sm">بانتظار تأكيد Tranzila</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    الدفع أُبلغ عنه من المتصفح فقط — لم يصل تأكيد الخادم بعد.
+                    {order.transaction_id && (
+                      <> رقم العملية: <span className="font-mono">{order.transaction_id}</span></>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )
+          ) : receipts.length === 0 ? (
             <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
               <div>
@@ -748,8 +779,9 @@ const AdminOrderDetail = () => {
               ))}
             </div>
           )}
-        </Section>
-      )}
+          </Section>
+        );
+      })()}
 
       {/* ── Items ── */}
       <Section title="المنتجات" icon={Package}>

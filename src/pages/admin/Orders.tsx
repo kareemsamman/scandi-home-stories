@@ -187,7 +187,18 @@ const AdminOrders = () => {
                         {receiptCount > 1 ? `${receiptCount} إيصالات` : "إيصال"}
                       </span>
                     )}
-                    {isAdmin && (order.payment_status || "paid") === "paid" && receiptCount === 0 && (
+                    {isAdmin && (order.payment_status || "paid") === "paid" && receiptCount === 0 && order.transaction_id && (
+                      (order as any).payment_confirmed ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
+                          ✓ Tranzila
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                          ⏳ بانتظار تأكيد Tranzila
+                        </span>
+                      )
+                    )}
+                    {isAdmin && (order.payment_status || "paid") === "paid" && receiptCount === 0 && !order.transaction_id && (
                       <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 font-semibold">
                         بدون إيصال
                       </span>
