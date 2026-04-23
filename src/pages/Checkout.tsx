@@ -1229,15 +1229,6 @@ const Checkout = () => {
                       desc="Visa · Mastercard · Isracard · Amex · Bit · Apple Pay · Google Pay"
                       color="bg-blue-600"
                     />
-                    {/* Bank Transfer — separate flow (receipt upload) */}
-                    <PayMethodBtn
-                      active={payMethod === "bank_transfer"}
-                      onClick={() => setPayMethod("bank_transfer")}
-                      icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" /></svg>}
-                      title={locale === "ar" ? "تحويل بنكي" : "העברה בנקאית"}
-                      desc={locale === "ar" ? "تحويل عبر حساب البنك" : "העברה דרך חשבון בנק"}
-                      color="bg-gray-700"
-                    />
                   </div>
                 </div>
 
