@@ -36,6 +36,7 @@ const About = lazyRetry(() => import("./pages/About"));
 const Cart = lazyRetry(() => import("./pages/Cart"));
 const Checkout = lazyRetry(() => import("./pages/Checkout"));
 const CheckoutThankYou = lazyRetry(() => import("./pages/CheckoutThankYou"));
+const TranzilaReturn = lazyRetry(() => import("./pages/TranzilaReturn"));
 const Contact = lazyRetry(() => import("./pages/Contact"));
 const Login = lazyRetry(() => import("./pages/Login"));
 const ForgotPassword = lazyRetry(() => import("./pages/ForgotPassword"));
@@ -107,6 +108,7 @@ const LocaleRoutes = () => (
         <Route path="/about" element={<About />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/checkout/tranzila-return" element={<TranzilaReturn />} />
         <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pergola-request" element={<PergolaRequest />} />
