@@ -9,6 +9,13 @@
   status = 200
   force = true
 
+# Tranzila return bridge must be served as the static HTML file, not the SPA shell.
+[[redirects]]
+  from = "/tranzila-bridge.html"
+  to = "/tranzila-bridge.html"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

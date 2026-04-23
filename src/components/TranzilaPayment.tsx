@@ -204,7 +204,6 @@ export const TranzilaPayment = ({
     orderid: orderNumber,
     contact: customerEmail || "",
     phone: customerPhone || "",
-    nologo: "1",
     // Wallet payment options (correct documented names):
     bit_pay: "1",
     google_pay: "1",
@@ -214,10 +213,7 @@ export const TranzilaPayment = ({
     // Handshake (required because the terminal has Hand Shake mechanism enabled)
     new_process: "1",
     thtk: thtk || "",
-    // Display / branding (hex without '#'):
-    trBgColor: "FFFFFF",
-    trTextColor: "111111",
-    trButtonColor: "111111",
+    // Use Tranzila's default styling (logo + colors) — no overrides.
     buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
     // Return URLs:
     success_url_address: bridgeUrl,
