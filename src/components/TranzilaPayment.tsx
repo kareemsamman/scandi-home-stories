@@ -111,7 +111,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     `&bit=1&applepay=1&googlepay=1` +
     `&success_url_address=${encodeURIComponent(bridgeUrl)}` +
     `&fail_url_address=${encodeURIComponent(bridgeUrl)}` +
-    `&notify_url_address=${encodeURIComponent(window.location.origin + "/api/tranzila-webhook")}`;
+    `&notify_url_address=${encodeURIComponent(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`)}`;
 
   const retry = () => {
     setStatus("idle");

@@ -3,3 +3,6 @@ project_id = "qehygczsuthucpvtqndy"
 [auth]
 # Session lasts 1 week (604800 seconds)
 jwt_expiry = 604800
+
+[functions.tranzila-webhook]
+verify_jwt = false
