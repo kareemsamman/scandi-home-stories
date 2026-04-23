@@ -184,10 +184,21 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
         )}
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-3">
         <p className="text-lg font-bold text-gray-900">
           {locale === "ar" ? "المبلغ المطلوب" : "סכום לתשלום"}: ₪{amount.toLocaleString()}
         </p>
+        {status === "idle" && (
+          <button
+            type="button"
+            onClick={retry}
+            className="text-xs text-gray-500 hover:text-gray-900 underline underline-offset-4 transition-colors"
+          >
+            {locale === "ar"
+              ? "هل فشل الدفع؟ أعد تحميل النموذج"
+              : "התשלום נכשל? טען מחדש את הטופס"}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-center gap-3 opacity-60">
