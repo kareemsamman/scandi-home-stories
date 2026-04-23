@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranzilaSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
+import { supabase } from "@/integrations/supabase/client";
 import { CreditCard, Loader2, AlertCircle, Lock, XCircle } from "lucide-react";
 
 interface Props {
@@ -13,70 +14,136 @@ interface Props {
   disabled?: boolean;
 }
 
-export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPhone, onSuccess, onError, disabled }: Props) => {
+// Tranzila response code → human reason (not exhaustive; we always show code too).
+const TRANZILA_REASONS: Record<string, string> = {
+  "001": "Card blocked / refer to issuer",
+  "002": "Stolen card",
+  "003": "Contact credit company",
+  "004": "Refused",
+  "005": "Forged card",
+  "033": "Card expired",
+  "036": "Card restricted",
+  "057": "Transaction not allowed for card",
+  "200": "Authorization required",
+  "461": "Wrong CVV",
+  "562": "Invalid card data",
+};
+
+export const TranzilaPayment = ({
+  amount,
+  orderNumber,
+  customerEmail,
+  customerPhone,
+  onSuccess,
+  onError,
+  disabled,
+}: Props) => {
   const { data: settings } = useTranzilaSettings();
   const { locale } = useLocale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<"idle" | "processing" | "success" | "failed">("idle");
+  const [status, setStatus] = useState<"idle" | "preparing" | "processing" | "success" | "failed">("preparing");
   const [failureMessage, setFailureMessage] = useState<string>("");
   const [iframeKey, setIframeKey] = useState(0);
+  const [thtk, setThtk] = useState<string | null>(null);
+  const [handshakeError, setHandshakeError] = useState<string>("");
 
-  // Load Tranzila's Apple Pay helper script on the parent page.
-  // Apple Pay runs on the parent window (not inside the iframe) because
-  // ApplePaySession requires same-origin execution.
+  // Fetch a fresh Handshake token (thtk) every time the iframe is mounted.
+  // Tranzila requires this when the "Hand Shake" mechanism is enabled
+  // on the terminal (it is, per the user's admin panel).
   useEffect(() => {
-    if (!settings?.enabled) return;
-    if (document.querySelector('script[data-tranzila-apple="1"]')) return;
+    if (!settings?.enabled || !settings?.terminal_name) return;
 
-    const jq = document.createElement("script");
-    jq.src = "https://direct.tranzila.com/Tranzila_files/jquery.js";
-    jq.async = false;
-    jq.dataset.tranzilaApple = "1";
+    let cancelled = false;
+    setStatus("preparing");
+    setLoading(true);
+    setHandshakeError("");
+    setThtk(null);
 
-    jq.onload = () => {
-      const ap = document.createElement("script");
-      ap.src = `https://direct.tranzila.com/js/tranzilanapple_v3.js?v=${Date.now()}`;
-      ap.async = false;
-      ap.dataset.tranzilaApple = "1";
-      ap.onload = () => {
-        try {
-          const w = window as unknown as { jQuery?: { noConflict: (removeAll?: boolean) => unknown }; $n?: unknown };
-          if (w.jQuery && typeof w.jQuery.noConflict === "function") {
-            w.$n = w.jQuery.noConflict(true);
-          }
-        } catch { /* ignore */ }
-      };
-      document.head.appendChild(ap);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("tranzila-handshake", {
+          body: { sum: Math.round(amount * 100) / 100, currency: 1 },
+        });
+        if (cancelled) return;
+        if (error || !data?.thtk) {
+          const msg =
+            (data && (data.message || data.error)) ||
+            error?.message ||
+            "Handshake failed";
+          console.error("Tranzila handshake error:", msg, data);
+          setHandshakeError(String(msg));
+          setStatus("failed");
+          setFailureMessage(
+            locale === "ar"
+              ? "تعذّر تحضير صفحة الدفع. حاول مرة أخرى."
+              : "אירעה שגיאה בהכנת דף התשלום. נסה שוב."
+          );
+          return;
+        }
+        setThtk(String(data.thtk));
+        setStatus("idle");
+      } catch (e) {
+        if (cancelled) return;
+        console.error("Tranzila handshake exception:", e);
+        setStatus("failed");
+        setFailureMessage(
+          locale === "ar"
+            ? "تعذّر الاتصال بخادم الدفع."
+            : "שגיאה בחיבור לשרת התשלומים."
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
     };
-
-    document.head.appendChild(jq);
-  }, [settings?.enabled]);
+  }, [iframeKey, amount, settings?.enabled, settings?.terminal_name, locale]);
 
   // Listen for postMessage from Tranzila iframe (direct or via bridge page)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const raw = event.data;
-      let data: any = null;
-      if (raw && typeof raw === "object") data = raw;
+      let data: Record<string, unknown> | null = null;
+      if (raw && typeof raw === "object") data = raw as Record<string, unknown>;
       else if (typeof raw === "string") {
         try { data = JSON.parse(raw); } catch { return; }
       }
       if (!data) return;
 
+      // Only process messages from our bridge or that look like Tranzila responses.
+      const looksLikeTranzila =
+        data.__tranzilaBridge === true ||
+        "Response" in data || "response" in data ||
+        "ConfirmationCode" in data;
+      if (!looksLikeTranzila) return;
+
       console.log("Tranzila parent message:", data);
 
-      const code = data.Response ?? data.response;
-      if (code == null && !data.__tranzilaBridge) return;
+      const code = String((data.Response ?? data.response ?? "") as string);
+      const isSuccess = code === "000" || data.Response === "succeeded";
 
-      if (code === "000" || code === "succeeded") {
+      if (isSuccess) {
         setStatus("success");
         onSuccess({
-          transactionId: data.ConfirmationCode || data.index || data.transaction_id || "",
-          confirmationCode: data.ConfirmationCode || data.auth_number || "",
+          transactionId: String(
+            data.ConfirmationCode || data.index || data.transaction_id || ""
+          ),
+          confirmationCode: String(
+            data.ConfirmationCode || data.auth_number || ""
+          ),
         });
       } else {
-        const msg = data.error_msg || data.ErrorMessage || (code ? `Payment failed (code: ${code})` : "Payment failed");
+        const reason =
+          (code && TRANZILA_REASONS[code]) ||
+          (data.error_msg as string) ||
+          (data.ErrorMessage as string) ||
+          (data.errormsg as string) ||
+          "";
+        const codeLabel = code ? ` (${locale === "ar" ? "رمز" : "קוד"}: ${code})` : "";
+        const msg = reason
+          ? `${reason}${codeLabel}`
+          : (locale === "ar" ? "فشل الدفع" : "התשלום נכשל") + codeLabel;
         setStatus("failed");
         setFailureMessage(msg);
         onError(msg);
@@ -84,16 +151,15 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onSuccess, onError]);
+  }, [onSuccess, onError, locale]);
 
-  // Auto-submit the POST form into the named iframe whenever it (re)mounts.
-  // Must be declared before any early return to keep hook order stable.
+  // Auto-submit the POST form into the named iframe once handshake token is ready.
   useEffect(() => {
-    if (status !== "idle") return;
+    if (status !== "idle" || !thtk) return;
     if (!settings?.enabled || !settings?.terminal_name) return;
     const form = document.getElementById(`tranzila-form-${iframeKey}`) as HTMLFormElement | null;
     if (form) setTimeout(() => form.submit(), 0);
-  }, [iframeKey, status, settings?.enabled, settings?.terminal_name]);
+  }, [iframeKey, status, thtk, settings?.enabled, settings?.terminal_name]);
 
   if (!settings?.enabled || !settings.terminal_name) {
     return (
@@ -112,8 +178,8 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
   const iframeName = `tranzila-frame-${iframeKey}`;
   const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
 
-  // Tranzila recommends POST form submission (not GET query string) for redirect URLs to work reliably.
-  // We submit the form into the iframe by name, after it mounts.
+  // Tranzila iframe POST fields — names per the docs:
+  // https://docs.tranzila.com/docs/payments-billing/795m2yi7q4nmq-iframe-integration
   const postFields: Record<string, string> = {
     sum: String(amountValue),
     currency: "1",
@@ -124,23 +190,33 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     contact: customerEmail || "",
     phone: customerPhone || "",
     nologo: "1",
-    trButtonColor: "111111",
-    buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
-    bit: "1",
+    // Wallet payment options (correct documented names):
+    bit_pay: "1",
+    google_pay: "1",
     applepay: "1",
-    googlepay: "1",
     u71: "1",
     hidesignup: "1",
+    // Handshake (required because the terminal has Hand Shake mechanism enabled)
+    new_process: "1",
+    thtk: thtk || "",
+    // Display / branding (hex without '#'):
+    trBgColor: "FFFFFF",
+    trTextColor: "111111",
+    trButtonColor: "111111",
+    buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
+    // Return URLs:
     success_url_address: bridgeUrl,
     fail_url_address: bridgeUrl,
     notify_url_address: notifyUrl,
   };
 
   const retry = () => {
-    setStatus("idle");
+    setStatus("preparing");
     setFailureMessage("");
+    setHandshakeError("");
     setLoading(true);
-    setIframeKey(k => k + 1);
+    setThtk(null);
+    setIframeKey((k) => k + 1);
   };
 
   return (
@@ -170,7 +246,10 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
                 {locale === "ar" ? "فشل الدفع" : "התשלום נכשל"}
               </p>
               {failureMessage && (
-                <p className="text-sm text-gray-600">{failureMessage}</p>
+                <p className="text-sm text-gray-600 whitespace-pre-line">{failureMessage}</p>
+              )}
+              {handshakeError && (
+                <p className="text-[11px] text-gray-400 break-words">{handshakeError}</p>
               )}
               <button
                 onClick={retry}
@@ -182,18 +261,20 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
           </div>
         )}
 
-        {status === "idle" && loading && (
+        {(status === "preparing" || (status === "idle" && loading)) && (
           <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
             <div className="text-center space-y-3">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
               <p className="text-sm text-gray-500">
-                {locale === "ar" ? "جارٍ تحميل نموذج الدفع..." : "טוען טופס תשלום..."}
+                {status === "preparing"
+                  ? (locale === "ar" ? "جارٍ تحضير الدفع الآمن..." : "מכין תשלום מאובטח...")
+                  : (locale === "ar" ? "جارٍ تحميل نموذج الدفع..." : "טוען טופס תשלום...")}
               </p>
             </div>
           </div>
         )}
 
-        {status === "idle" && (
+        {status === "idle" && thtk && (
           <>
             <form
               id={`tranzila-form-${iframeKey}`}
@@ -224,7 +305,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
         <p className="text-lg font-bold text-gray-900">
           {locale === "ar" ? "المبلغ المطلوب" : "סכום לתשלום"}: ₪{amount.toLocaleString()}
         </p>
-        {status === "idle" && (
+        {(status === "idle" || status === "preparing") && (
           <button
             type="button"
             onClick={retry}
