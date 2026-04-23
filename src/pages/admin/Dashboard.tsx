@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ShoppingBag, Package, Users, DollarSign, Clock, AlertTriangle } from "lucide-react";
+import { ShoppingBag, Package, Users, DollarSign, Clock, AlertTriangle, Sparkles, Tag, PencilRuler, Layout } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   waiting_approval: "מחכה אישור",
@@ -68,6 +68,33 @@ const AdminDashboard = () => {
     { label: "Revenue", value: `₪${(adminStats?.revenue || 0).toLocaleString()}`, icon: DollarSign, color: "text-amber-600 bg-amber-50" },
   ];
 
+  const adminQuickActions = [
+    {
+      label: "Welcome Popup",
+      description: "Edit the homepage welcome experience",
+      icon: Sparkles,
+      path: "/admin/welcome-popup",
+    },
+    {
+      label: "Colors & Attributes",
+      description: "Manage colors, brands, and lengths",
+      icon: Tag,
+      path: "/admin/attributes",
+    },
+    {
+      label: "Pergola Requests",
+      description: "Review and respond to custom requests",
+      icon: PencilRuler,
+      path: "/admin/pergola-requests",
+    },
+    {
+      label: "Header & Footer",
+      description: "Update shared site content",
+      icon: Layout,
+      path: "/admin/site-content",
+    },
+  ];
+
   const statCards = isAdmin ? adminStatCards : workerStatCards;
 
   const statusColors: Record<string, string> = {
@@ -102,6 +129,36 @@ const AdminDashboard = () => {
           );
         })}
       </div>
+
+      {isAdmin && (
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Quick Access</h2>
+            <p className="text-sm text-muted-foreground">Open the main admin areas from the dashboard.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {adminQuickActions.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  className="rounded-lg border border-border bg-background p-4 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
