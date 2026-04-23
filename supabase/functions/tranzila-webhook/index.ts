@@ -1,1 +1,1 @@
-// Tranzila server
+// Tranzila server-to-server payment notification webhook (notify
