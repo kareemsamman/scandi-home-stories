@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranzilaSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
-import { CreditCard, Loader2, AlertCircle, Lock } from "lucide-react";
+import { CreditCard, Loader2, AlertCircle, Lock, XCircle } from "lucide-react";
 
 interface Props {
   amount: number;
@@ -18,33 +18,35 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
   const { locale } = useLocale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [status, setStatus] = useState<"idle" | "processing" | "success" | "failed">("idle");
+  const [failureMessage, setFailureMessage] = useState<string>("");
+  const [iframeKey, setIframeKey] = useState(0);
 
-  // Listen for postMessage from Tranzila iframe — must be before any early return
+  // Listen for postMessage from Tranzila iframe (direct or via bridge page)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && typeof event.data === "object") {
-        const data = event.data;
-        if (data.Response === "000" || data.response === "000") {
-          onSuccess({
-            transactionId: data.ConfirmationCode || data.index || data.transaction_id || "",
-            confirmationCode: data.ConfirmationCode || data.auth_number || "",
-          });
-        } else if (data.Response || data.response) {
-          onError(data.error_msg || data.ErrorMessage || `Payment failed (code: ${data.Response || data.response})`);
-        }
-        setProcessing(false);
+      const raw = event.data;
+      let data: any = null;
+      if (raw && typeof raw === "object") data = raw;
+      else if (typeof raw === "string") {
+        try { data = JSON.parse(raw); } catch { return; }
       }
-      if (typeof event.data === "string") {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.Response === "000") {
-            onSuccess({ transactionId: parsed.ConfirmationCode || "", confirmationCode: parsed.ConfirmationCode || "" });
-          } else if (parsed.Response) {
-            onError(parsed.ErrorMessage || "Payment failed");
-          }
-          setProcessing(false);
-        } catch { /* not JSON, ignore */ }
+      if (!data) return;
+
+      const code = data.Response ?? data.response;
+      if (code == null && !data.__tranzilaBridge) return;
+
+      if (code === "000" || code === "succeeded") {
+        setStatus("success");
+        onSuccess({
+          transactionId: data.ConfirmationCode || data.index || data.transaction_id || "",
+          confirmationCode: data.ConfirmationCode || data.auth_number || "",
+        });
+      } else {
+        const msg = data.error_msg || data.ErrorMessage || (code ? `Payment failed (code: ${code})` : "Payment failed");
+        setStatus("failed");
+        setFailureMessage(msg);
+        onError(msg);
       }
     };
     window.addEventListener("message", handleMessage);
@@ -63,6 +65,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
   }
 
   const amountValue = Math.round(amount * 100) / 100;
+  const bridgeUrl = window.location.origin + "/tranzila-bridge.html";
 
   const iframeUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php?` +
     `sum=${amountValue}&` +
@@ -75,8 +78,16 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     `trButtonColor=111111&` +
     `buttonLabel=${encodeURIComponent(locale === "ar" ? "ادفع الآن" : "שלם עכשיו")}` +
     `&bit=1&applepay=1&googlepay=1` +
-    `&fail_url_address=${encodeURIComponent(window.location.origin + "/checkout?payment=failed")}` +
+    `&success_url_address=${encodeURIComponent(bridgeUrl)}` +
+    `&fail_url_address=${encodeURIComponent(bridgeUrl)}` +
     `&notify_url_address=${encodeURIComponent(window.location.origin + "/api/tranzila-webhook")}`;
+
+  const retry = () => {
+    setStatus("idle");
+    setFailureMessage("");
+    setLoading(true);
+    setIframeKey(k => k + 1);
+  };
 
   return (
     <div className="space-y-4">
@@ -86,7 +97,38 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
       </div>
 
       <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm" style={{ minHeight: 420 }}>
-        {loading && (
+        {status === "success" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white z-30">
+            <div className="text-center space-y-3 px-6">
+              <Loader2 className="w-10 h-10 animate-spin text-gray-700 mx-auto" />
+              <p className="text-sm font-medium text-gray-800">
+                {locale === "ar" ? "تم الدفع بنجاح، جارٍ إنشاء الطلب..." : "התשלום בוצע בהצלחה, יוצר הזמנה..."}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {status === "failed" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white z-30">
+            <div className="text-center space-y-4 px-6 max-w-sm">
+              <XCircle className="w-12 h-12 text-red-500 mx-auto" />
+              <p className="text-base font-bold text-gray-900">
+                {locale === "ar" ? "فشل الدفع" : "התשלום נכשל"}
+              </p>
+              {failureMessage && (
+                <p className="text-sm text-gray-600">{failureMessage}</p>
+              )}
+              <button
+                onClick={retry}
+                className="px-6 h-11 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+              >
+                {locale === "ar" ? "إعادة المحاولة" : "נסה שוב"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {status === "idle" && loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
             <div className="text-center space-y-3">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
@@ -97,26 +139,18 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
           </div>
         )}
 
-        {processing && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/90 z-20">
-            <div className="text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
-              <p className="text-sm text-gray-700 font-medium">
-                {locale === "ar" ? "جارٍ معالجة الدفع..." : "מעבד תשלום..."}
-              </p>
-            </div>
-          </div>
+        {status === "idle" && (
+          <iframe
+            key={iframeKey}
+            ref={iframeRef}
+            src={iframeUrl}
+            className="w-full border-0"
+            style={{ height: 420 }}
+            onLoad={() => setLoading(false)}
+            title="Tranzila Payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          />
         )}
-
-        <iframe
-          ref={iframeRef}
-          src={iframeUrl}
-          className="w-full border-0"
-          style={{ height: 420 }}
-          onLoad={() => setLoading(false)}
-          title="Tranzila Payment"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-        />
       </div>
 
       <div className="text-center">
