@@ -197,16 +197,29 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
         )}
 
         {status === "idle" && (
-          <iframe
-            key={iframeKey}
-            ref={iframeRef}
-            src={iframeUrl}
-            className="w-full border-0"
-            style={{ height: 420 }}
-            onLoad={() => setLoading(false)}
-            title="Tranzila Payment"
-            allow="payment *; publickey-credentials-get *"
-          />
+          <>
+            <form
+              id={`tranzila-form-${iframeKey}`}
+              action={actionUrl}
+              method="POST"
+              target={iframeName}
+              style={{ display: "none" }}
+            >
+              {Object.entries(postFields).map(([k, v]) => (
+                <input key={k} type="hidden" name={k} value={v} />
+              ))}
+            </form>
+            <iframe
+              key={iframeKey}
+              ref={iframeRef}
+              name={iframeName}
+              className="w-full border-0"
+              style={{ height: 420 }}
+              onLoad={() => setLoading(false)}
+              title="Tranzila Payment"
+              allow="payment *; publickey-credentials-get *"
+            />
+          </>
         )}
       </div>
 
