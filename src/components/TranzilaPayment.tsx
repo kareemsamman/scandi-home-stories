@@ -188,7 +188,7 @@ export const TranzilaPayment = ({
   }
 
   const amountValue = Math.round(amount * 100) / 100;
-  const bridgeUrl = window.location.origin + "/tranzila-bridge.html";
+  const bridgeUrl = `${window.location.origin}/${locale}/checkout/tranzila-return`;
   const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
   const iframeName = `tranzila-frame-${iframeKey}`;
   const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;

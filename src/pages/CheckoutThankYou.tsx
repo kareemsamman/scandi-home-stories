@@ -2,13 +2,16 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
+import { clearCompletedTranzilaOrder, loadCompletedTranzilaOrder } from "@/lib/tranzilaPending";
 import logoWhite from "@/assets/logo-white.png";
 import { SEOHead } from '@/components/SEOHead';
 
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const state = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string }) || {};
+  const routeState = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string }) || {};
+  const storedState = loadCompletedTranzilaOrder(routeState.orderNumber);
+  const state = routeState.orderNumber ? routeState : (storedState ?? routeState);
   const orderNumber = state.orderNumber || "#00000";
   const orderId = state.orderId;
   const total = state.total ?? 0;
@@ -18,6 +21,10 @@ const CheckoutThankYou = () => {
   const firstName = state.firstName || "";
   const lastName = state.lastName || "";
   const email = state.email || "";
+
+  if (storedState) {
+    clearCompletedTranzilaOrder();
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "rgb(242,242,242)" }}>

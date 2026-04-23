@@ -22,6 +22,11 @@ import { calculateVat } from "@/lib/vat";
 import { FreeShippingBar } from "@/components/FreeShippingBar";
 import { TranzilaPayment } from "@/components/TranzilaPayment";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  clearPendingTranzilaOrder,
+  saveCompletedTranzilaOrder,
+  savePendingTranzilaOrder,
+} from "@/lib/tranzilaPending";
 import logoWhite from "@/assets/logo-white.png";
 import { SEOHead } from '@/components/SEOHead';
 
@@ -261,6 +266,48 @@ const Checkout = () => {
   const discountedSubtotal = Math.max(0, subtotal - totalDiscount);
   const vatAmount = calculateVat(discountedSubtotal, vatConfig);
   const totalAfterDiscount = discountedSubtotal + vatAmount + shippingCost;
+
+  useEffect(() => {
+    if (step !== "payment" || payMethod === "bank_transfer") return;
+
+    savePendingTranzilaOrder({
+      orderNumber,
+      notes: form.note || undefined,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email || undefined,
+      phone: form.phone,
+      city: addressState.city,
+      address: addressState.street,
+      house_number: addressState.houseNumber,
+      apartment: addressState.apartment || undefined,
+      locale: locale === "ar" ? "ar" : "he",
+      origin: window.location.origin,
+      shippingCost,
+      discountCode: appliedCoupon?.coupon.code,
+      adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
+      expectedTotal: totalAfterDiscount,
+      isGuest: !user,
+      items: items.map((item) => {
+        const colorId = item.options?.color?.id;
+        const sizeLabel = item.options?.size;
+        const sizeId = item.product.type === "contractor"
+          ? (item.product as ContractorProduct).sizes?.find(s => s.label.he === sizeLabel || s.label.ar === sizeLabel)?.id
+          : undefined;
+
+        return {
+          productId: item.product.id,
+          quantity: item.quantity,
+          size: sizeLabel,
+          color: item.options?.color?.name,
+          colorHex: item.options?.color?.hex,
+          colorId,
+          sizeId,
+          meterLength: item.options?.meterLength || undefined,
+        };
+      }),
+    });
+  }, [step, payMethod, orderNumber, form, addressState, locale, shippingCost, appliedCoupon, adminDiscount, totalAfterDiscount, user, items]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSkeleton(false), 1000);
@@ -974,6 +1021,18 @@ const Checkout = () => {
 
                 clearCart();
                 if (appliedCoupon) removeCoupon();
+                clearPendingTranzilaOrder();
+                saveCompletedTranzilaOrder({
+                  orderNumber,
+                  total: orderResult?.total ?? totalAfterDiscount,
+                  date: orderDate,
+                  orderId: orderResult?.orderId,
+                  phone: form.phone,
+                  isGuest: !user,
+                  firstName: form.firstName,
+                  lastName: form.lastName,
+                  email: form.email,
+                });
 
                 navigate(localePath("/checkout/thank-you"), {
                   state: {
