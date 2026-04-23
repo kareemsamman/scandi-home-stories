@@ -86,6 +86,15 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     return () => window.removeEventListener("message", handleMessage);
   }, [onSuccess, onError]);
 
+  // Auto-submit the POST form into the named iframe whenever it (re)mounts.
+  // Must be declared before any early return to keep hook order stable.
+  useEffect(() => {
+    if (status !== "idle") return;
+    if (!settings?.enabled || !settings?.terminal_name) return;
+    const form = document.getElementById(`tranzila-form-${iframeKey}`) as HTMLFormElement | null;
+    if (form) setTimeout(() => form.submit(), 0);
+  }, [iframeKey, status, settings?.enabled, settings?.terminal_name]);
+
   if (!settings?.enabled || !settings.terminal_name) {
     return (
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
@@ -99,23 +108,33 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
 
   const amountValue = Math.round(amount * 100) / 100;
   const bridgeUrl = window.location.origin + "/tranzila-bridge.html";
+  const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
+  const iframeName = `tranzila-frame-${iframeKey}`;
+  const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
 
-  const iframeUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php?` +
-    `sum=${amountValue}&` +
-    `currency=1&` +
-    `lang=${locale === "ar" ? "ar" : "il"}&` +
-    `orderid=${orderNumber}&` +
-    `contact=${encodeURIComponent(customerEmail || "")}&` +
-    `phone=${encodeURIComponent(customerPhone || "")}&` +
-    `nologo=1&` +
-    `trButtonColor=111111&` +
-    `buttonLabel=${encodeURIComponent(locale === "ar" ? "ادفع الآن" : "שלם עכשיו")}` +
-    `&bit=1&applepay=1&googlepay=1` +
-    `&u71=1` +
-    `&hidesignup=1` +
-    `&success_url_address=${encodeURIComponent(bridgeUrl)}` +
-    `&fail_url_address=${encodeURIComponent(bridgeUrl)}` +
-    `&notify_url_address=${encodeURIComponent(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`)}`;
+  // Tranzila recommends POST form submission (not GET query string) for redirect URLs to work reliably.
+  // We submit the form into the iframe by name, after it mounts.
+  const postFields: Record<string, string> = {
+    sum: String(amountValue),
+    currency: "1",
+    cred_type: "1",
+    tranmode: "AK",
+    lang: locale === "ar" ? "ar" : "il",
+    orderid: orderNumber,
+    contact: customerEmail || "",
+    phone: customerPhone || "",
+    nologo: "1",
+    trButtonColor: "111111",
+    buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
+    bit: "1",
+    applepay: "1",
+    googlepay: "1",
+    u71: "1",
+    hidesignup: "1",
+    success_url_address: bridgeUrl,
+    fail_url_address: bridgeUrl,
+    notify_url_address: notifyUrl,
+  };
 
   const retry = () => {
     setStatus("idle");
@@ -175,16 +194,29 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
         )}
 
         {status === "idle" && (
-          <iframe
-            key={iframeKey}
-            ref={iframeRef}
-            src={iframeUrl}
-            className="w-full border-0"
-            style={{ height: 420 }}
-            onLoad={() => setLoading(false)}
-            title="Tranzila Payment"
-            allow="payment *; publickey-credentials-get *"
-          />
+          <>
+            <form
+              id={`tranzila-form-${iframeKey}`}
+              action={actionUrl}
+              method="POST"
+              target={iframeName}
+              style={{ display: "none" }}
+            >
+              {Object.entries(postFields).map(([k, v]) => (
+                <input key={k} type="hidden" name={k} value={v} />
+              ))}
+            </form>
+            <iframe
+              key={iframeKey}
+              ref={iframeRef}
+              name={iframeName}
+              className="w-full border-0"
+              style={{ height: 420 }}
+              onLoad={() => setLoading(false)}
+              title="Tranzila Payment"
+              allow="payment *; publickey-credentials-get *"
+            />
+          </>
         )}
       </div>
 
