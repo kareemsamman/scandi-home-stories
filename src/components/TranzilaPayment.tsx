@@ -3,20 +3,17 @@ import { useTranzilaSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { CreditCard, Loader2, AlertCircle, Lock } from "lucide-react";
 
-export type PaymentMethodType = "credit_card" | "bit" | "apple_pay" | "google_pay" | "bank_transfer";
-
 interface Props {
   amount: number;
   orderNumber: string;
   customerEmail?: string;
   customerPhone?: string;
-  paymentMethod?: PaymentMethodType;
   onSuccess: (response: { transactionId: string; confirmationCode: string }) => void;
   onError: (error: string) => void;
   disabled?: boolean;
 }
 
-export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPhone, paymentMethod = "credit_card", onSuccess, onError, disabled }: Props) => {
+export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPhone, onSuccess, onError, disabled }: Props) => {
   const { data: settings } = useTranzilaSettings();
   const { locale } = useLocale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -67,14 +64,6 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
 
   const amountValue = Math.round(amount * 100) / 100;
 
-  const methodParams: Record<PaymentMethodType, string> = {
-    credit_card: "",
-    bit: "&bit=1",
-    apple_pay: "&applepay=1",
-    google_pay: "&googlepay=1",
-    bank_transfer: "",
-  };
-
   const iframeUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php?` +
     `sum=${amountValue}&` +
     `currency=1&` +
@@ -85,7 +74,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     `nologo=1&` +
     `trButtonColor=111111&` +
     `buttonLabel=${encodeURIComponent(locale === "ar" ? "ادفع الآن" : "שלם עכשיו")}` +
-    (methodParams[paymentMethod] || "") +
+    `&bit=1&applepay=1&googlepay=1` +
     `&fail_url_address=${encodeURIComponent(window.location.origin + "/checkout?payment=failed")}` +
     `&notify_url_address=${encodeURIComponent(window.location.origin + "/api/tranzila-webhook")}`;
 
@@ -139,10 +128,7 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
       <div className="flex items-center justify-center gap-3 opacity-60">
         <CreditCard className="w-5 h-5 text-gray-400" />
         <span className="text-[10px] text-gray-400">
-          {paymentMethod === "credit_card" && "Visa • Mastercard • Isracard • Amex"}
-          {paymentMethod === "bit" && "Bit Payment"}
-          {paymentMethod === "apple_pay" && "Apple Pay"}
-          {paymentMethod === "google_pay" && "Google Pay"}
+          Visa • Mastercard • Isracard • Amex • Bit • Apple Pay • Google Pay
         </span>
       </div>
     </div>
