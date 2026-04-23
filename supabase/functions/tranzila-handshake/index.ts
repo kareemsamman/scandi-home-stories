@@ -97,11 +97,23 @@ Deno.serve(async (req) => {
       errorMessage =
         parsed?.error_msg ?? parsed?.ErrorMessage ?? parsed?.error ?? null;
     } catch {
-      // Not JSON — Tranzila sometimes returns the bare token.
+      // Not JSON — Tranzila typically returns "thtk=xxxx" (querystring style)
+      // or sometimes a bare token.
       const trimmed = text.trim();
-      if (trimmed && /^[A-Za-z0-9_\-]+$/.test(trimmed)) {
+      try {
+        const qs = new URLSearchParams(trimmed);
+        thtk = qs.get("thtk") || qs.get("THTK") || qs.get("token") || null;
+        if (!thtk) {
+          errorMessage =
+            qs.get("error_msg") || qs.get("error") || qs.get("ErrorMessage");
+        }
+      } catch {
+        // ignore
+      }
+      if (!thtk && /^[A-Za-z0-9_\-]+$/.test(trimmed)) {
         thtk = trimmed;
-      } else {
+      }
+      if (!thtk && !errorMessage) {
         errorMessage = trimmed || "unknown_handshake_error";
       }
     }
