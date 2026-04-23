@@ -86,6 +86,15 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     return () => window.removeEventListener("message", handleMessage);
   }, [onSuccess, onError]);
 
+  // Auto-submit the POST form into the named iframe whenever it (re)mounts.
+  // Must be declared before any early return to keep hook order stable.
+  useEffect(() => {
+    if (status !== "idle") return;
+    if (!settings?.enabled || !settings?.terminal_name) return;
+    const form = document.getElementById(`tranzila-form-${iframeKey}`) as HTMLFormElement | null;
+    if (form) setTimeout(() => form.submit(), 0);
+  }, [iframeKey, status, settings?.enabled, settings?.terminal_name]);
+
   if (!settings?.enabled || !settings.terminal_name) {
     return (
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
