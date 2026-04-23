@@ -109,6 +109,10 @@ const LocaleRoutes = () => (
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/checkout/tranzila-return" element={<TranzilaReturn />} />
+        {/* Tranzila sometimes redirects with the query string URL-encoded
+            (e.g. /checkout/tranzila-return%3FResponse%3D000...), which the
+            router sees as a path. Catch that variant too. */}
+        <Route path="/checkout/tranzila-return/*" element={<TranzilaReturn />} />
         <Route path="/checkout/thank-you" element={<CheckoutThankYou />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/pergola-request" element={<PergolaRequest />} />
