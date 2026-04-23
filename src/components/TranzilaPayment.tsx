@@ -136,18 +136,6 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
     notify_url_address: notifyUrl,
   };
 
-  // Auto-submit the form into the named iframe whenever it (re)mounts
-  useEffect(() => {
-    if (status !== "idle") return;
-    if (!settings?.enabled || !settings.terminal_name) return;
-    const formId = `tranzila-form-${iframeKey}`;
-    const form = document.getElementById(formId) as HTMLFormElement | null;
-    if (form) {
-      // Defer to next tick so the iframe is in the DOM and registered as a target
-      setTimeout(() => form.submit(), 0);
-    }
-  }, [iframeKey, status, settings?.enabled, settings?.terminal_name]);
-
   const retry = () => {
     setStatus("idle");
     setFailureMessage("");
