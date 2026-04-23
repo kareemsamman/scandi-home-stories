@@ -1,71 +1,87 @@
 
-Goal: stop unsaved admin edits from being wiped on remount, starting with Product Edit and then applying the same pattern across the admin editors that currently re-hydrate from query data on every mount.
+Goal: make Tranzila iframe work with Handshake enabled, fix the incorrect iframe styling/payment-option flags, and make the success/failure return flow reliable.
 
-1. Fix ProductEdit exactly as requested
-- Replace the current `hydratedProductIdRef` logic with a true `hasInitialized` guard plus `prevProductId` ref.
-- Reset the guard only when `productId` actually changes.
-- Keep the existing state-population code, but gate it with:
-  `if (!productData || hasInitialized.current) return;`
-- Keep the existing query `staleTime`, but treat it only as a performance improvement, not the bug fix.
+1. Fix the Tranzila iframe request to match the documentation
+- Update `src/components/TranzilaPayment.tsx` to use the documented parameter names:
+  - `bit_pay=1` instead of `bit=1`
+  - `google_pay=1` instead of `googlepay=1`
+  - keep `cred_type=1`, `currency=1`, `tranmode=AK`, `lang`, `success_url_address`, `fail_url_address`, `notify_url_address`
+- Add the documented display parameters so the Tranzila UI matches the site instead of using default teal/black styling:
+  - `trBgColor`
+  - `trTextColor`
+  - `trButtonColor`
+  - `buttonLabel`
+  - optionally keep `nologo=1`
+- Keep the iframe permission required by the docs for wallet payments:
+  - `allow="payment"`
+  - preserve current broader allow only if needed, but make sure the final markup still includes payment permission explicitly.
 
-2. Apply the same anti-reset pattern to other affected admin pages
-I found multiple pages with the same root problem: local state is repopulated from query data every mount, which will wipe unsaved edits after route changes.
-Priority pages:
-- `src/pages/admin/ContactPage.tsx`
-- `src/pages/admin/Settings.tsx`
-- `src/pages/admin/HomePage.tsx`
-- `src/pages/admin/AboutPage.tsx`
-- `src/pages/admin/SiteContent.tsx`
-- `src/pages/admin/WelcomePopup.tsx`
-- `src/pages/admin/Pages.tsx`
+2. Implement the missing Handshake flow
+- The current integration sends the iframe form directly, but with Handshake enabled Tranzila requires a pre-request to create a token first.
+- Add a backend function that calls Tranzila Handshake API before rendering/submitting the iframe:
+  - send `supplier`, `TranzilaPW`, and `sum`
+  - receive `thtk`
+- Then update `src/components/TranzilaPayment.tsx` to:
+  - request the handshake token first
+  - include `thtk` in the iframe POST
+  - include `new_process=1` exactly as required by the docs
+- This is the main reason for the current “Illegal Operation 275497” failure: Handshake is enabled in Tranzila, but the app is not yet sending the handshake token flow Tranzila now requires.
 
-Implementation pattern:
-- Add an initialization ref/flag per page.
-- Populate local state from fetched data only once per record/locale/page context.
-- Reset the guard only when the true source context changes, such as:
-  - `productId`
-  - admin `locale`
-  - selected page id
-  - selected settings tab dataset if needed
+3. Move sensitive Tranzila credentials fully server-side
+- Do not rely on terminal password from public app settings in the browser.
+- Use backend-side secrets/config for the handshake request.
+- Keep frontend limited to safe rendering data only.
 
-3. Clean up the particularly risky Pages editor logic
-- `src/pages/admin/Pages.tsx` currently sets state during render:
-  `if (trans && !initialized) { setTitle(...); ... }`
-- Move that into a guarded `useEffect`.
-- Reset initialization when page id or locale changes.
-- This is important because render-time state writes can contribute to unstable behavior and repeated renders.
+4. Fix the return/bridge page so success and failure can actually reach the parent app
+- Update `public/tranzila-bridge.html` to support both return methods described in the docs:
+  - query string (`GET`)
+  - form-posted body (`POST`)
+- Right now it only reads `window.location.search`, so if Tranzila posts the response body to the success/fail URL, the parent page receives nothing.
+- Make the bridge always post a normalized payload back to `window.parent`.
 
-4. Fix the repeated auth/profile/role loading
-Root cause found:
-- `src/hooks/useAuth.tsx` bootstraps auth in two paths:
-  - `supabase.auth.onAuthStateChange(...)`
-  - `supabase.auth.getSession().then(...)`
-- Both can call `loadUserState`, which duplicates `profiles` and `user_roles` requests.
-- Network evidence already shows repeated matching requests.
+5. Make the success/failure detection more robust in the React component
+- In `src/components/TranzilaPayment.tsx`, normalize Tranzila return fields from both bridge and direct iframe responses.
+- Show the actual refusal reason from returned fields such as:
+  - `Response`
+  - `ErrorMessage`
+  - `error_msg`
+  - any other returned status text
+- Keep the retry button visible and reset the iframe cleanly on retry.
 
-Planned auth fix:
-- Use a single controlled bootstrap path for initial session hydration.
-- Ignore duplicate initialization from the auth listener during first load.
-- Add a guard ref so `loadUserState` is not called repeatedly for the same user/session during bootstrap.
-- Only reload roles/profile when:
-  - auth user actually changes
-  - explicit `refreshProfile()` is called
-  - sign-in/sign-out transitions occur
+6. Stabilize order creation vs webhook timing
+- Review the current checkout flow in `src/pages/Checkout.tsx` and `supabase/functions/tranzila-webhook/index.ts`.
+- Today the order is created only after the client receives success, while the webhook tries to mark an existing order as paid by `order_number`.
+- That means the webhook can arrive before the order exists and get ignored.
+- Adjust the flow so payment notifications are reliable, for example by:
+  - creating the order before payment and marking it paid later, or
+  - storing unmatched Tranzila notifications temporarily and reconciling them.
+- This will prevent “paid but nothing happened” edge cases.
 
-5. Stabilize AuthProvider output
-- Memoize the context value returned by `AuthProvider`.
-- Keep callback identities stable.
-- This reduces avoidable re-renders across all consumers and lowers the chance of cascading effect churn in admin pages.
-
-6. Verification checklist after implementation
-- Product Edit: type changes, go to another admin page, come back, unsaved edits stay.
-- Product Edit: switch browser tab and return, no reset.
-- Contact / Settings / Home / About / Site Content / Welcome Popup / Pages: same unsaved-draft check.
-- Auth: confirm `profiles` and `user_roles` are not requested repeatedly in loops on normal navigation.
-- Confirm role-protected routes still work for admin and worker users.
+7. Keep the checkout UX aligned with your current payment setup
+- Preserve the single combined payment method option in checkout.
+- Ensure the title and explanatory text match the actual behavior of the iframe.
+- If bank transfer remains exposed through Tranzila rather than a separate local flow, reflect that consistently in the labels.
 
 Technical notes
-- No database changes are needed.
-- This is a frontend state hydration bug plus an auth initialization duplication issue.
-- The broad rule to apply is:
-  “Query data may hydrate local form state once per editing context, not on every remount.”
+- Docs-confirmed Handshake requirements:
+  - create token via `https://api.tranzila.com/v1/handshake/create`
+  - send `supplier`, `TranzilaPW`, `sum`
+  - pass returned `thtk` into iframe request
+  - pass `new_process=1`
+- Docs-confirmed option/display params:
+  - `bit_pay`
+  - `google_pay`
+  - `trBgColor`
+  - `trTextColor`
+  - `trButtonColor`
+  - `buttonLabel`
+- Docs-confirmed return behavior:
+  - success/failure data may be returned via POST or GET to the success/failure URL, so the bridge must parse both.
+
+Files likely to change
+- `src/components/TranzilaPayment.tsx`
+- `public/tranzila-bridge.html`
+- `src/pages/Checkout.tsx`
+- `supabase/functions/tranzila-webhook/index.ts`
+- one new backend function for Handshake
+- `supabase/config.toml` only if the new backend function needs non-default auth settings
