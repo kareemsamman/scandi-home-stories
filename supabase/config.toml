@@ -6,3 +6,6 @@ jwt_expiry = 604800
 
 [functions.tranzila-webhook]
 verify_jwt = false
+
+[functions.tranzila-handshake]
+verify_jwt = false

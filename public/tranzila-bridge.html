@@ -15,16 +15,63 @@
   </head>
   <body>
     <div class="wrap"><div class="box"><div class="spinner"></div><p>Processing…</p></div></div>
+    <!--
+      Tranzila return bridge.
+      Tranzila may redirect here with parameters in the query string (GET) OR
+      post a form to this URL (POST). Plain HTML can't read POST bodies, but
+      modern Tranzila configurations use GET redirects with query params, and
+      forms posted via target=_top will still hit this page — in that case the
+      query string is empty and we additionally read any auto-submitted form
+      fields the browser may have placed on the page (rare).
+
+      In all cases we forward whatever we can find back to the parent window
+      via postMessage, tagged with __tranzilaBridge so the React component
+      knows to act on it.
+    -->
     <script>
       (function () {
         var params = {};
+
+        // 1) Query string (GET redirect — the common case).
         try {
-          new URLSearchParams(window.location.search).forEach(function (v, k) { params[k] = v; });
+          new URLSearchParams(window.location.search).forEach(function (v, k) {
+            params[k] = v;
+          });
         } catch (e) { /* ignore */ }
+
+        // 2) Hash fragment (some configurations use #key=value&...).
+        try {
+          if (window.location.hash && window.location.hash.length > 1) {
+            new URLSearchParams(window.location.hash.slice(1)).forEach(function (v, k) {
+              if (params[k] == null) params[k] = v;
+            });
+          }
+        } catch (e) { /* ignore */ }
+
+        // 3) Any auto-rendered form on the page (POST fallback variant where
+        // Tranzila renders the response inside a form — uncommon but safe).
+        try {
+          var forms = document.getElementsByTagName("form");
+          for (var i = 0; i < forms.length; i++) {
+            var inputs = forms[i].elements;
+            for (var j = 0; j < inputs.length; j++) {
+              var el = inputs[j];
+              if (el && el.name && params[el.name] == null) {
+                params[el.name] = el.value;
+              }
+            }
+          }
+        } catch (e) { /* ignore */ }
+
         params.__tranzilaBridge = true;
+
         try {
           if (window.parent && window.parent !== window) {
             window.parent.postMessage(params, "*");
+          }
+          // Some configurations open success in _top instead of the iframe.
+          if (window.opener) {
+            window.opener.postMessage(params, "*");
           }
         } catch (e) { /* ignore */ }
       })();
