@@ -99,23 +99,45 @@ export const TranzilaPayment = ({ amount, orderNumber, customerEmail, customerPh
 
   const amountValue = Math.round(amount * 100) / 100;
   const bridgeUrl = window.location.origin + "/tranzila-bridge.html";
+  const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
+  const iframeName = `tranzila-frame-${iframeKey}`;
+  const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
 
-  const iframeUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php?` +
-    `sum=${amountValue}&` +
-    `currency=1&` +
-    `lang=${locale === "ar" ? "ar" : "il"}&` +
-    `orderid=${orderNumber}&` +
-    `contact=${encodeURIComponent(customerEmail || "")}&` +
-    `phone=${encodeURIComponent(customerPhone || "")}&` +
-    `nologo=1&` +
-    `trButtonColor=111111&` +
-    `buttonLabel=${encodeURIComponent(locale === "ar" ? "ادفع الآن" : "שלם עכשיו")}` +
-    `&bit=1&applepay=1&googlepay=1` +
-    `&u71=1` +
-    `&hidesignup=1` +
-    `&success_url_address=${encodeURIComponent(bridgeUrl)}` +
-    `&fail_url_address=${encodeURIComponent(bridgeUrl)}` +
-    `&notify_url_address=${encodeURIComponent(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`)}`;
+  // Tranzila recommends POST form submission (not GET query string) for redirect URLs to work reliably.
+  // We submit the form into the iframe by name, after it mounts.
+  const postFields: Record<string, string> = {
+    sum: String(amountValue),
+    currency: "1",
+    cred_type: "1",
+    tranmode: "AK",
+    lang: locale === "ar" ? "ar" : "il",
+    orderid: orderNumber,
+    contact: customerEmail || "",
+    phone: customerPhone || "",
+    nologo: "1",
+    trButtonColor: "111111",
+    buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
+    bit: "1",
+    applepay: "1",
+    googlepay: "1",
+    u71: "1",
+    hidesignup: "1",
+    success_url_address: bridgeUrl,
+    fail_url_address: bridgeUrl,
+    notify_url_address: notifyUrl,
+  };
+
+  // Auto-submit the form into the named iframe whenever it (re)mounts
+  useEffect(() => {
+    if (status !== "idle") return;
+    if (!settings?.enabled || !settings.terminal_name) return;
+    const formId = `tranzila-form-${iframeKey}`;
+    const form = document.getElementById(formId) as HTMLFormElement | null;
+    if (form) {
+      // Defer to next tick so the iframe is in the DOM and registered as a target
+      setTimeout(() => form.submit(), 0);
+    }
+  }, [iframeKey, status, settings?.enabled, settings?.terminal_name]);
 
   const retry = () => {
     setStatus("idle");
