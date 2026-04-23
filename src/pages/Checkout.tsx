@@ -1225,7 +1225,7 @@ const Checkout = () => {
                       active={payMethod === "card"}
                       onClick={() => setPayMethod("card")}
                       icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>}
-                      title={locale === "ar" ? "بطاقة ائتمان" : "כרטיס אשראי"}
+                      title={locale === "ar" ? "بطاقة ائتمان + تحويل بنكي" : "כרטיס אשראי + העברה בנקאית"}
                       desc="Visa · Mastercard · Isracard · Amex · Bit · Apple Pay · Google Pay"
                       color="bg-blue-600"
                     />
