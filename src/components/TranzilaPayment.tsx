@@ -237,7 +237,7 @@ export const TranzilaPayment = ({
         <span>{locale === "ar" ? "دفع آمن عبر Tranzila" : "תשלום מאובטח דרך Tranzila"}</span>
       </div>
 
-      <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm" style={{ minHeight: 420 }}>
+      <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm min-h-[720px] sm:min-h-[420px]">
         {status === "success" && (
           <div className="absolute inset-0 flex items-center justify-center bg-white z-30">
             <div className="text-center space-y-3 px-6">
@@ -302,8 +302,7 @@ export const TranzilaPayment = ({
               key={iframeKey}
               ref={iframeRef}
               name={iframeName}
-              className="w-full border-0"
-              style={{ height: 420 }}
+              className="w-full border-0 h-[720px] sm:h-[420px]"
               onLoad={() => setLoading(false)}
               title="Tranzila Payment"
               allow="payment *; publickey-credentials-get *"
