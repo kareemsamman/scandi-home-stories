@@ -18,7 +18,7 @@ const EMPTY_COUPON: Partial<Coupon> = {
   min_order_amount: 0, max_discount_amount: null, max_uses: null,
   max_uses_per_user: 1, valid_from: null, valid_until: null,
   product_ids: [], category_ids: [], is_active: true,
-  admin_only: false, allowed_phones: [],
+  admin_only: false, auto_apply: false, allowed_phones: [],
 };
 
 const statusBadge = (c: Coupon) => {
