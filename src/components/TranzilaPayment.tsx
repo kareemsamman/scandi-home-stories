@@ -302,8 +302,7 @@ export const TranzilaPayment = ({
               key={iframeKey}
               ref={iframeRef}
               name={iframeName}
-              className="w-full border-0"
-              style={{ height: 420 }}
+              className="w-full border-0 h-[720px] sm:h-[420px]"
               onLoad={() => setLoading(false)}
               title="Tranzila Payment"
               allow="payment *; publickey-credentials-get *"
