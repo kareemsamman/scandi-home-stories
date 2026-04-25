@@ -185,6 +185,16 @@ const CouponModal = ({
             <span className="text-xs text-gray-400">Only admin accounts can apply this coupon (e.g. free shipping for in-store orders)</span>
           </div>
 
+          {/* Auto-apply toggle */}
+          <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <button type="button" onClick={() => set("auto_apply", !form.auto_apply)}
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${form.auto_apply ? "text-amber-700" : "text-gray-500"}`}>
+              {form.auto_apply ? <ToggleRight className="w-5 h-5 text-amber-600" /> : <ToggleLeft className="w-5 h-5" />}
+              Auto-Apply (Site-wide Sale)
+            </button>
+            <span className="text-xs text-gray-500">Applied automatically to every cart during the date range — no code needed. Disable Admin-Only and phone restrictions for this to work.</span>
+          </div>
+
           {/* Phone restriction */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-2">
