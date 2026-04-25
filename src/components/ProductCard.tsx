@@ -126,11 +126,25 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
                 <div className="flex gap-1.5 flex-wrap">
-                  {contractor.sizes.map((s) => (
-                    <span key={s.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground">
-                      {s.label[locale]}
-                    </span>
-                  ))}
+                  {contractor.sizes.map((s: any) => {
+                    // Find min price across all colors for this length
+                    const lengthPrices: number[] = [];
+                    contractor.colorGroups.forEach(g => g.colors.forEach((c: any) => {
+                      const p = (c.combo_prices || c.prices)?.[s.id];
+                      const n = Number(p);
+                      if (!isNaN(n) && n > 0) lengthPrices.push(n);
+                    }));
+                    if (typeof s.price === "number") lengthPrices.push(s.price);
+                    const lengthPrice = lengthPrices.length > 0 ? Math.min(...lengthPrices) : null;
+                    return (
+                      <span key={s.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground inline-flex items-center gap-1">
+                        {s.label[locale]}
+                        {lengthPrice != null && (
+                          <span className="text-foreground font-semibold">· {t("common.currency")}{lengthPrice.toLocaleString()}</span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
