@@ -23,9 +23,17 @@ export interface Coupon {
   category_ids: string[];
   is_active: boolean;
   admin_only: boolean;
+  auto_apply: boolean;
   allowed_phones: string[];
   created_at: string;
 }
+
+/* Fetch the active auto-apply coupon (if any) */
+export const fetchAutoApplyCoupon = async (): Promise<Coupon | null> => {
+  const { data, error } = await db.rpc("get_auto_apply_coupon");
+  if (error || !data) return null;
+  return data as Coupon;
+};
 
 export interface AppliedCoupon {
   coupon: Coupon;

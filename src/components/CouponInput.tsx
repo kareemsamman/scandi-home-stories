@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
-import { validateCoupon, useCouponStore } from "@/hooks/useCoupons";
+import { validateCoupon, useCouponStore, fetchAutoApplyCoupon } from "@/hooks/useCoupons";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocale } from "@/i18n/useLocale";
@@ -15,6 +15,24 @@ export const CouponInput = () => {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Auto-apply: try to fetch and apply a site-wide auto-apply coupon if no coupon is currently applied
+  useEffect(() => {
+    if (applied || items.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const auto = await fetchAutoApplyCoupon();
+      if (cancelled || !auto || applied) return;
+      const subtotal = getSubtotal();
+      const cartItems = items.map(i => ({ product: { id: i.product.id, price: i.product.price, collection: (i.product as any).collection }, quantity: i.quantity }));
+      const result = await validateCoupon(auto.code, cartItems, subtotal, user?.id, isAdmin, profile?.phone);
+      if (!cancelled && !result.error && result.coupon) {
+        apply(result.coupon, result.discountAmount!);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length, applied]);
 
   const handleApply = async () => {
     if (!code.trim() || loading) return;

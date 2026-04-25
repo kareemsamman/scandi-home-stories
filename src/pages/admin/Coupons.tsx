@@ -18,7 +18,7 @@ const EMPTY_COUPON: Partial<Coupon> = {
   min_order_amount: 0, max_discount_amount: null, max_uses: null,
   max_uses_per_user: 1, valid_from: null, valid_until: null,
   product_ids: [], category_ids: [], is_active: true,
-  admin_only: false, allowed_phones: [],
+  admin_only: false, auto_apply: false, allowed_phones: [],
 };
 
 const statusBadge = (c: Coupon) => {
@@ -183,6 +183,16 @@ const CouponModal = ({
               Admin Only
             </button>
             <span className="text-xs text-gray-400">Only admin accounts can apply this coupon (e.g. free shipping for in-store orders)</span>
+          </div>
+
+          {/* Auto-apply toggle */}
+          <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <button type="button" onClick={() => set("auto_apply", !form.auto_apply)}
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${form.auto_apply ? "text-amber-700" : "text-gray-500"}`}>
+              {form.auto_apply ? <ToggleRight className="w-5 h-5 text-amber-600" /> : <ToggleLeft className="w-5 h-5" />}
+              Auto-Apply (Site-wide Sale)
+            </button>
+            <span className="text-xs text-gray-500">Applied automatically to every cart during the date range — no code needed. Disable Admin-Only and phone restrictions for this to work.</span>
           </div>
 
           {/* Phone restriction */}
