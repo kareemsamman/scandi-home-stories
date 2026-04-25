@@ -233,7 +233,7 @@ export const MiniCart = () => {
 
       <div className="border-t border-border px-6 pt-4 pb-4 space-y-3 bg-background">
         <FreeShippingBarWrapper subtotal={subtotal} />
-        <MiniCartVatSummary subtotal={subtotal} t={t} />
+        <MiniCartVatSummary subtotal={subtotal} t={t} items={items} />
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
