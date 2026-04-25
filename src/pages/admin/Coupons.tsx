@@ -406,7 +406,11 @@ const AdminCoupons = () => {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-mono text-base font-bold text-gray-900 tracking-wider">{coupon.code}</span>
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${badge.cls}`}>{badge.label}</span>
-                      {coupon.description && <span className="text-xs text-gray-400 truncate max-w-xs">{coupon.description}</span>}
+                      {(() => {
+                        const d = parseCouponDescription(coupon.description);
+                        const text = d.he || d.ar;
+                        return text ? <span className="text-xs text-gray-400 truncate max-w-xs">{text}</span> : null;
+                      })()}
                     </div>
 
                     {/* Stats row */}
