@@ -64,7 +64,11 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   const getPriceRange = (): { min: number; max: number } | null => {
     if (!contractor) return null;
     const prices: number[] = [];
-    contractor.sizes.forEach((s: any) => { if (typeof s.price === "number") prices.push(s.price); });
+    if (typeof product.price === "number" && product.price > 0) prices.push(product.price);
+    contractor.sizes.forEach((s: any) => {
+      const n = Number(s.price);
+      if (!isNaN(n) && n > 0) prices.push(n);
+    });
     contractor.colorGroups.forEach((g) => {
       g.colors.forEach((c: any) => {
         const cp = c.combo_prices || c.prices;
