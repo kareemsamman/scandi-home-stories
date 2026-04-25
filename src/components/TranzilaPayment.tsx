@@ -236,77 +236,48 @@ export const TranzilaPayment = ({
         <span>{locale === "ar" ? "دفع آمن عبر Tranzila" : "תשלום מאובטח דרך Tranzila"}</span>
       </div>
 
-      <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm min-h-[720px] sm:min-h-[420px]">
-        {status === "success" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-30">
-            <div className="text-center space-y-3 px-6">
-              <Loader2 className="w-10 h-10 animate-spin text-gray-700 mx-auto" />
-              <p className="text-sm font-medium text-gray-800">
-                {locale === "ar" ? "تم الدفع بنجاح، جارٍ إنشاء الطلب..." : "התשלום בוצע בהצלחה, יוצר הזמנה..."}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {status === "failed" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-30">
-            <div className="text-center space-y-4 px-6 max-w-sm">
-              <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-              <p className="text-base font-bold text-gray-900">
-                {locale === "ar" ? "فشل الدفع" : "התשלום נכשל"}
-              </p>
-              {failureMessage && (
-                <p className="text-sm text-gray-600 whitespace-pre-line">{failureMessage}</p>
-              )}
-              {handshakeError && (
-                <p className="text-[11px] text-gray-400 break-words">{handshakeError}</p>
-              )}
-              <button
-                onClick={retry}
-                className="px-6 h-11 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
-              >
-                {locale === "ar" ? "إعادة المحاولة" : "נסה שוב"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {(status === "preparing" || (status === "idle" && loading)) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-            <div className="text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
-              <p className="text-sm text-gray-500">
-                {status === "preparing"
-                  ? (locale === "ar" ? "جارٍ تحضير الدفع الآمن..." : "מכין תשלום מאובטח...")
-                  : (locale === "ar" ? "جارٍ تحميل نموذج الدفع..." : "טוען טופס תשלום...")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {status === "idle" && thtk && (
-          <>
-            <form
-              id={`tranzila-form-${iframeKey}`}
-              action={actionUrl}
-              method="POST"
-              target={iframeName}
-              style={{ display: "none" }}
+      <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm min-h-[280px] flex items-center justify-center">
+        {status === "failed" ? (
+          <div className="text-center space-y-4 px-6 max-w-sm py-10">
+            <XCircle className="w-12 h-12 text-red-500 mx-auto" />
+            <p className="text-base font-bold text-gray-900">
+              {locale === "ar" ? "فشل الدفع" : "התשלום נכשל"}
+            </p>
+            {failureMessage && (
+              <p className="text-sm text-gray-600 whitespace-pre-line">{failureMessage}</p>
+            )}
+            {handshakeError && (
+              <p className="text-[11px] text-gray-400 break-words">{handshakeError}</p>
+            )}
+            <button
+              onClick={retry}
+              className="px-6 h-11 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
             >
-              {Object.entries(postFields).map(([k, v]) => (
-                <input key={k} type="hidden" name={k} value={v} />
-              ))}
-            </form>
-            <iframe
-              key={iframeKey}
-              ref={iframeRef}
-              name={iframeName}
-              className="w-full border-0 h-[720px] sm:h-[420px]"
-              onLoad={() => setLoading(false)}
-              title="Tranzila Payment"
-              allow="payment *; publickey-credentials-get *"
-            />
-          </>
+              {locale === "ar" ? "إعادة المحاولة" : "נסה שוב"}
+            </button>
+          </div>
+        ) : (
+          <div className="text-center space-y-3 py-10 px-6">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
+            <p className="text-sm text-gray-500">
+              {locale === "ar"
+                ? "جارٍ تحويلك إلى صفحة الدفع الآمن..."
+                : "מעבירים אותך לדף התשלום המאובטח..."}
+            </p>
+            {status === "idle" && thtk && (
+              <form
+                id={`tranzila-form-${iframeKey}`}
+                action={actionUrl}
+                method="POST"
+                target="_top"
+                style={{ display: "none" }}
+              >
+                {Object.entries(postFields).map(([k, v]) => (
+                  <input key={k} type="hidden" name={k} value={v} />
+                ))}
+              </form>
+            )}
+          </div>
         )}
       </div>
 
