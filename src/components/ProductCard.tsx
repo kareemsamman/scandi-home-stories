@@ -59,6 +59,24 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   };
 
   const lengthRange = getLengthRange();
+
+  // Collect all prices for variable contractor products (sizes + custom color/size combos)
+  const getPriceRange = (): { min: number; max: number } | null => {
+    if (!contractor) return null;
+    const prices: number[] = [];
+    contractor.sizes.forEach((s) => { if (typeof s.price === "number") prices.push(s.price); });
+    contractor.colorGroups.forEach((g) => {
+      g.colors.forEach((c: any) => {
+        if (c.prices && typeof c.prices === "object") {
+          Object.values(c.prices).forEach((p) => { if (typeof p === "number") prices.push(p as number); });
+        }
+      });
+    });
+    if (prices.length === 0) return null;
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  };
+
+  const priceRange = getPriceRange();
   const displayPrice = contractor?.sizes?.[0]?.price || product.price;
 
   if (isContractor && contractor) {
@@ -82,7 +100,11 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
           <div className="p-3 space-y-1.5">
             {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
             <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
-            <p className="text-sm font-bold text-foreground">{t("common.currency")}{displayPrice.toLocaleString()}</p>
+            <p className="text-sm font-bold text-foreground">
+              {priceRange && priceRange.min !== priceRange.max
+                ? `${t("common.currency")}${priceRange.min.toLocaleString()} – ${t("common.currency")}${priceRange.max.toLocaleString()}`
+                : `${t("common.currency")}${(priceRange?.min ?? displayPrice).toLocaleString()}`}
+            </p>
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.color")}:</p>
