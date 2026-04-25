@@ -45,6 +45,7 @@ export const TranzilaPayment = ({
   customerPhone,
   onSuccess,
   onError,
+  disabled,
 }: Props) => {
   const { data: settings } = useTranzilaSettings();
   const { locale } = useLocale();
