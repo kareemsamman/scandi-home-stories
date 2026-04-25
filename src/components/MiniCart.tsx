@@ -15,6 +15,8 @@ import { useShippingSettings } from "@/hooks/useShippingSettings";
 import { useShopData } from "@/hooks/useShopData";
 import { cn } from "@/lib/utils";
 import { useCartInventory } from "@/hooks/useCartInventory";
+import { useCouponStore, fetchAutoApplyCoupon, validateCoupon } from "@/hooks/useCoupons";
+import { useAuth } from "@/hooks/useAuth";
 
 const CartIcon = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5">
