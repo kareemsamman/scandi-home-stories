@@ -10,6 +10,7 @@ import { useCoupons, useSaveCoupon, useDeleteCoupon, useToggleCoupon, useCouponU
 import { useCategories } from "@/hooks/useDbData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { parseCouponDescription, stringifyCouponDescription, getLocalizedCouponDescription } from "@/lib/couponDescription";
 
 const db = supabase as any;
 
