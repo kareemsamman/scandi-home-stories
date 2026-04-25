@@ -297,7 +297,7 @@ export const MiniCart = () => {
   );
 };
 
-function MiniCartVatSummary({ subtotal, t, items }: { subtotal: number; t: (k: string) => any; items: any[] }) {
+function MiniCartVatSummary({ subtotal, t, items, locale }: { subtotal: number; t: (k: string) => any; items: any[]; locale: string }) {
   const { data: vatSettings } = useVatSettings();
   const { user, isAdmin, profile } = useAuth();
   const { applied, apply } = useCouponStore();
