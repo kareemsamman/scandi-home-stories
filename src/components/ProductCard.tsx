@@ -59,6 +59,24 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   };
 
   const lengthRange = getLengthRange();
+
+  // Collect all prices for variable contractor products (sizes + custom color/size combos)
+  const getPriceRange = (): { min: number; max: number } | null => {
+    if (!contractor) return null;
+    const prices: number[] = [];
+    contractor.sizes.forEach((s) => { if (typeof s.price === "number") prices.push(s.price); });
+    contractor.colorGroups.forEach((g) => {
+      g.colors.forEach((c: any) => {
+        if (c.prices && typeof c.prices === "object") {
+          Object.values(c.prices).forEach((p) => { if (typeof p === "number") prices.push(p as number); });
+        }
+      });
+    });
+    if (prices.length === 0) return null;
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  };
+
+  const priceRange = getPriceRange();
   const displayPrice = contractor?.sizes?.[0]?.price || product.price;
 
   if (isContractor && contractor) {
