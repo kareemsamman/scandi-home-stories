@@ -1233,11 +1233,15 @@ const Checkout = () => {
                 {/* Shipping Method */}
                 <div>
                   <h2 className="text-lg font-bold mb-4">{t("checkout.shippingMethod")}</h2>
-                  {isFreeShipping ? (
+                  {isFreeShipping || hasFreeShippingCoupon ? (
                     <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-green-700">{t("checkout.freeDelivery")}</p>
-                        <p className="text-xs text-green-600">{(t("checkout.shippingFreeAbove") as string).replace("{amount}", shipping.threshold.toLocaleString())}</p>
+                        <p className="text-xs text-green-600">
+                          {hasFreeShippingCoupon
+                            ? (locale === "ar" ? "تم تطبيق قسيمة شحن مجاني" : "קופון משלוח חינם הופעל")
+                            : (t("checkout.shippingFreeAbove") as string).replace("{amount}", shipping.threshold.toLocaleString())}
+                        </p>
                       </div>
                       <span className="text-sm font-semibold text-green-700">{t("cart.complimentary")}</span>
                     </div>

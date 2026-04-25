@@ -149,7 +149,7 @@ const TranzilaReturn = () => {
             <p className="text-sm text-muted-foreground">{message}</p>
             <Link
               to={localePath("/checkout")}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-5 text-sm font-semibold text-background"
+              className="text-xs text-gray-500 hover:text-gray-900 underline underline-offset-4 transition-colors"
             >
               {locale === "ar" ? "العودة للدفع" : "חזרה לתשלום"}
             </Link>

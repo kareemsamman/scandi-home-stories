@@ -480,6 +480,7 @@ Deno.serve(async (req) => {
         const siteOrigin = (typeof origin === "string" && origin.startsWith("http")) ? origin : "https://pergolaamg.com";
         const customerLocalePrefix = locale === "ar" ? "ar" : "he";
         const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
+        const adminOrderLink = `${siteOrigin}/admin/orders/${newOrder.id}`;
         const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}`;
         const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : (locale === "ar" ? "مجاني" : "חינם");
 
@@ -493,6 +494,7 @@ Deno.serve(async (req) => {
           items: itemsList,
           shipping: shippingLabel,
           order_link: orderLink,
+          admin_order_link: adminOrderLink,
           invoice_link: invoiceLink,
         };
 
@@ -503,9 +505,14 @@ Deno.serve(async (req) => {
         }
 
         if (smsMessages.admin_new_order && smsSettings.admin_phone) {
+          // Ensure admin link is always sent even if template doesn't include {admin_order_link}
+          let adminTemplate = smsMessages.admin_new_order;
+          if (!adminTemplate.includes("{admin_order_link}") && !adminTemplate.includes("{order_link}")) {
+            adminTemplate = `${adminTemplate}\n\n🔗 {admin_order_link}`;
+          }
           await sendSmsApi(
             smsSettings.admin_phone,
-            formatSms(smsMessages.admin_new_order, { ...vars, name: `${firstName} ${lastName}` })
+            formatSms(adminTemplate, { ...vars, name: `${firstName} ${lastName}`, order_link: adminOrderLink })
           );
         }
       }
