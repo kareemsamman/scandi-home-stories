@@ -54,7 +54,10 @@ export const CouponInput = () => {
         <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-green-800 font-mono">{applied.coupon.code}</p>
-          {applied.coupon.description && <p className="text-xs text-green-600">{applied.coupon.description}</p>}
+          {(() => {
+            const desc = getLocalizedCouponDescription(applied.coupon.description, locale);
+            return desc ? <p className="text-xs text-green-600">{desc}</p> : null;
+          })()}
         </div>
         <span className="text-sm font-bold text-green-700">-₪{applied.discountAmount.toLocaleString()}</span>
         <button onClick={remove} className="text-green-500 hover:text-green-700 transition-colors">
