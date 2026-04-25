@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuantitySelector } from "./QuantitySelector";
 import { QuickBuyModal } from "./QuickBuyModal";
