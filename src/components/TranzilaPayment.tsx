@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranzilaSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,6 @@ interface Props {
   disabled?: boolean;
 }
 
-// Tranzila response code → human reason (not exhaustive; we always show code too).
 const TRANZILA_REASONS: Record<string, string> = {
   "001": "Card blocked / refer to issuer",
   "002": "Stolen card",
@@ -29,6 +28,16 @@ const TRANZILA_REASONS: Record<string, string> = {
   "562": "Invalid card data",
 };
 
+const requiresDirectUserTap = () => {
+  if (typeof navigator === "undefined") return false;
+
+  const ua = navigator.userAgent;
+  const isAppleDevice = /iPad|iPhone|iPod|Macintosh/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome|Chromium|Android/i.test(ua);
+
+  return isAppleDevice && isSafari;
+};
+
 export const TranzilaPayment = ({
   amount,
   orderNumber,
@@ -36,27 +45,20 @@ export const TranzilaPayment = ({
   customerPhone,
   onSuccess,
   onError,
-  disabled,
 }: Props) => {
   const { data: settings } = useTranzilaSettings();
   const { locale } = useLocale();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"idle" | "preparing" | "processing" | "success" | "failed">("preparing");
   const [failureMessage, setFailureMessage] = useState<string>("");
-  const [iframeKey, setIframeKey] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
   const [thtk, setThtk] = useState<string | null>(null);
   const [handshakeError, setHandshakeError] = useState<string>("");
 
-  // Fetch a fresh Handshake token (thtk) every time the iframe is mounted.
-  // Tranzila requires this when the "Hand Shake" mechanism is enabled
-  // on the terminal (it is, per the user's admin panel).
   useEffect(() => {
     if (!settings?.enabled || !settings?.terminal_name) return;
 
     let cancelled = false;
     setStatus("preparing");
-    setLoading(true);
     setHandshakeError("");
     setThtk(null);
 
@@ -65,12 +67,15 @@ export const TranzilaPayment = ({
         const { data, error } = await supabase.functions.invoke("tranzila-handshake", {
           body: { sum: Math.round(amount * 100) / 100, currency: 1 },
         });
+
         if (cancelled) return;
+
         if (error || !data?.thtk) {
           const msg =
             (data && (data.message || data.error)) ||
             error?.message ||
             "Handshake failed";
+
           console.error("Tranzila handshake error:", msg, data);
           setHandshakeError(String(msg));
           setStatus("failed");
@@ -81,6 +86,7 @@ export const TranzilaPayment = ({
           );
           return;
         }
+
         setThtk(String(data.thtk));
         setStatus("idle");
       } catch (e) {
@@ -98,37 +104,45 @@ export const TranzilaPayment = ({
     return () => {
       cancelled = true;
     };
-  }, [iframeKey, amount, settings?.enabled, settings?.terminal_name, locale]);
+  }, [reloadKey, amount, settings?.enabled, settings?.terminal_name, locale]);
 
-  // Listen for postMessage from Tranzila iframe (direct or via bridge page)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const raw = event.data;
       let data: Record<string, unknown> | null = null;
+
       if (raw && typeof raw === "object") data = raw as Record<string, unknown>;
       else if (typeof raw === "string") {
-        try { data = JSON.parse(raw); } catch { return; }
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          return;
+        }
       }
+
       if (!data) return;
 
-      // Only process messages from our bridge or that look like Tranzila responses.
       const looksLikeTranzila =
         data.__tranzilaBridge === true ||
-        "Response" in data || "response" in data ||
+        "Response" in data ||
+        "response" in data ||
         "ConfirmationCode" in data;
+
       if (!looksLikeTranzila) return;
 
       console.log("Tranzila parent message:", data);
 
       const code = String((data.Response ?? data.response ?? "") as string);
       const hasAnyTranzilaField =
-        "Response" in data || "response" in data ||
-        "ConfirmationCode" in data || "ConfirmationCode " in data ||
-        "index" in data || "TranzilaTK" in data ||
-        "error_msg" in data || "ErrorMessage" in data;
+        "Response" in data ||
+        "response" in data ||
+        "ConfirmationCode" in data ||
+        "ConfirmationCode " in data ||
+        "index" in data ||
+        "TranzilaTK" in data ||
+        "error_msg" in data ||
+        "ErrorMessage" in data;
 
-      // Bridge with no Tranzila fields = POST return method (body unreadable
-      // by static HTML). Ignore instead of falsely showing failure.
       if (data.__tranzilaBridge === true && !hasAnyTranzilaField) {
         console.warn(
           "Tranzila bridge received empty payload — terminal Return Method is likely set to POST. Switch it to GET in the Tranzila admin panel."
@@ -164,17 +178,10 @@ export const TranzilaPayment = ({
         onError(msg);
       }
     };
+
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [onSuccess, onError, locale]);
-
-  // Auto-submit the POST form into the named iframe once handshake token is ready.
-  useEffect(() => {
-    if (status !== "idle" || !thtk) return;
-    if (!settings?.enabled || !settings?.terminal_name) return;
-    const form = document.getElementById(`tranzila-form-${iframeKey}`) as HTMLFormElement | null;
-    if (form) setTimeout(() => form.submit(), 0);
-  }, [iframeKey, status, thtk, settings?.enabled, settings?.terminal_name]);
 
   if (!settings?.enabled || !settings.terminal_name) {
     return (
@@ -188,14 +195,12 @@ export const TranzilaPayment = ({
   }
 
   const amountValue = Math.round(amount * 100) / 100;
-  // Tranzila will redirect the top-level browser back here on success/failure.
   const returnUrl = `${window.location.origin}/${locale}/checkout/tranzila-return`;
   const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
   const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
+  const needsTapToOpen = requiresDirectUserTap();
 
-  // Tranzila POST fields — names per the docs:
-  // https://docs.tranzila.com/docs/payments-billing/795m2yi7q4nmq-iframe-integration
-  const postFields: Record<string, string> = {
+  const paymentParams = new URLSearchParams({
     sum: String(amountValue),
     currency: "1",
     cred_type: "1",
@@ -204,29 +209,41 @@ export const TranzilaPayment = ({
     orderid: orderNumber,
     contact: customerEmail || "",
     phone: customerPhone || "",
-    // Wallet payment options (correct documented names):
     bit_pay: "1",
     google_pay: "1",
     applepay: "1",
     u71: "1",
     hidesignup: "1",
-    // Handshake (required because the terminal has Hand Shake mechanism enabled)
     new_process: "1",
     thtk: thtk || "",
     buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
-    // Return URLs (top-level navigation back to our app):
     success_url_address: returnUrl,
     fail_url_address: returnUrl,
     notify_url_address: notifyUrl,
-  };
+  });
+
+  const paymentUrl = `${actionUrl}?${paymentParams.toString()}`;
+
+  useEffect(() => {
+    if (status !== "idle" || !thtk) return;
+    if (needsTapToOpen) return;
+
+    setStatus("processing");
+    window.location.assign(paymentUrl);
+  }, [status, thtk, needsTapToOpen, paymentUrl]);
 
   const retry = () => {
     setStatus("preparing");
     setFailureMessage("");
     setHandshakeError("");
-    setLoading(true);
     setThtk(null);
-    setIframeKey((k) => k + 1);
+    setReloadKey((k) => k + 1);
+  };
+
+  const openPaymentPage = () => {
+    if (disabled || status !== "idle" || !thtk) return;
+    setStatus("processing");
+    window.location.assign(paymentUrl);
   };
 
   return (
@@ -256,27 +273,34 @@ export const TranzilaPayment = ({
               {locale === "ar" ? "إعادة المحاولة" : "נסה שוב"}
             </button>
           </div>
+        ) : status === "idle" && thtk && needsTapToOpen ? (
+          <div className="text-center space-y-4 px-6 max-w-sm py-10">
+            <p className="text-sm text-gray-500">
+              {locale === "ar"
+                ? "تابع إلى صفحة الدفع المباشرة"
+                : "המשך לדף התשלום הישיר"}
+            </p>
+            <button
+              type="button"
+              onClick={openPaymentPage}
+              disabled={disabled}
+              className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-semibold text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {locale === "ar" ? "الانتقال לתשלום" : "המשך לתשלום"}
+            </button>
+          </div>
         ) : (
           <div className="text-center space-y-3 py-10 px-6">
             <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
             <p className="text-sm text-gray-500">
-              {locale === "ar"
-                ? "جارٍ تحويلك إلى صفحة الدفع الآمن..."
-                : "מעבירים אותך לדף התשלום המאובטח..."}
+              {status === "preparing"
+                ? locale === "ar"
+                  ? "جارٍ تحضير صفحة الدفع الآمن..."
+                  : "מכינים את דף התשלום המאובטח..."
+                : locale === "ar"
+                  ? "جارٍ تحويلك إلى صفحة الدفع الآمن..."
+                  : "מעבירים אותך לדף התשלום המאובטח..."}
             </p>
-            {status === "idle" && thtk && (
-              <form
-                id={`tranzila-form-${iframeKey}`}
-                action={actionUrl}
-                method="POST"
-                target="_top"
-                style={{ display: "none" }}
-              >
-                {Object.entries(postFields).map(([k, v]) => (
-                  <input key={k} type="hidden" name={k} value={v} />
-                ))}
-              </form>
-            )}
           </div>
         )}
       </div>
