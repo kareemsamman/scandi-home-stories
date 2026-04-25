@@ -15,6 +15,8 @@ import { useShippingSettings } from "@/hooks/useShippingSettings";
 import { useShopData } from "@/hooks/useShopData";
 import { cn } from "@/lib/utils";
 import { useCartInventory } from "@/hooks/useCartInventory";
+import { useCouponStore, fetchAutoApplyCoupon, validateCoupon } from "@/hooks/useCoupons";
+import { useAuth } from "@/hooks/useAuth";
 
 const CartIcon = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5">
@@ -231,7 +233,7 @@ export const MiniCart = () => {
 
       <div className="border-t border-border px-6 pt-4 pb-4 space-y-3 bg-background">
         <FreeShippingBarWrapper subtotal={subtotal} />
-        <MiniCartVatSummary subtotal={subtotal} t={t} />
+        <MiniCartVatSummary subtotal={subtotal} t={t} items={items} />
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
@@ -295,11 +297,42 @@ export const MiniCart = () => {
   );
 };
 
-function MiniCartVatSummary({ subtotal, t }: { subtotal: number; t: (k: string) => any }) {
+function MiniCartVatSummary({ subtotal, t, items }: { subtotal: number; t: (k: string) => any; items: any[] }) {
   const { data: vatSettings } = useVatSettings();
+  const { user, isAdmin, profile } = useAuth();
+  const { applied, apply } = useCouponStore();
   const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
-  const vatAmount = calculateVat(subtotal, vatConfig);
-  const total = subtotal + vatAmount;
+
+  // Auto-apply site-wide coupon and re-validate when subtotal changes
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      // If a coupon is already applied, re-validate to refresh discount amount with current subtotal
+      if (applied) {
+        const cartItems = items.map((i: any) => ({ product: { id: i.product.id, price: i.product.price, collection: i.product.collection }, quantity: i.quantity }));
+        const result = await validateCoupon(applied.coupon.code, cartItems, subtotal, user?.id, isAdmin, profile?.phone);
+        if (!cancelled && !result.error && result.coupon) {
+          apply(result.coupon, result.discountAmount!);
+        }
+        return;
+      }
+      const auto = await fetchAutoApplyCoupon();
+      if (cancelled || !auto) return;
+      const cartItems = items.map((i: any) => ({ product: { id: i.product.id, price: i.product.price, collection: i.product.collection }, quantity: i.quantity }));
+      const result = await validateCoupon(auto.code, cartItems, subtotal, user?.id, isAdmin, profile?.phone);
+      if (!cancelled && !result.error && result.coupon) {
+        apply(result.coupon, result.discountAmount!);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, items.length]);
+
+  const discount = applied?.discountAmount || 0;
+  const subtotalAfterDiscount = Math.max(0, subtotal - discount);
+  const vatAmount = calculateVat(subtotalAfterDiscount, vatConfig);
+  const total = subtotalAfterDiscount + vatAmount;
 
   return (
     <>
@@ -307,6 +340,14 @@ function MiniCartVatSummary({ subtotal, t }: { subtotal: number; t: (k: string) 
         <span className="text-xs text-muted-foreground">{t("cart.subtotal")}</span>
         <span className="text-xs text-muted-foreground">{t("common.currency")}{subtotal.toLocaleString()}</span>
       </div>
+      {applied && discount > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-green-700">
+            {t("cart.discount") || "הנחה"} <span className="font-mono">({applied.coupon.code})</span>
+          </span>
+          <span className="text-xs font-semibold text-green-700">-{t("common.currency")}{discount.toLocaleString()}</span>
+        </div>
+      )}
       {vatConfig.enabled && vatAmount > 0 && (
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{t("cart.vatLabel")} ({vatConfig.rate}%)</span>
