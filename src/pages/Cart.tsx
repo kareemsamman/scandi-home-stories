@@ -6,6 +6,7 @@ import { Layout } from "@/components/Layout";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 import { getLocaleText } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
