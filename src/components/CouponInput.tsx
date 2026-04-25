@@ -7,7 +7,7 @@ import { useLocale } from "@/i18n/useLocale";
 import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 
 export const CouponInput = () => {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { items } = useCart();
   const getSubtotal = useCart((s) => s.getSubtotal);
   const { user, isAdmin, profile } = useAuth();
