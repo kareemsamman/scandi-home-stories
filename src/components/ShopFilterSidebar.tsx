@@ -93,7 +93,10 @@ export const ShopFilterSidebar = ({ filters, onFilterChange, resultCount, onSear
     const retailProducts = relevantProducts.filter((p): p is RetailProduct => p.type === "retail");
 
     const lengths = Array.from(
-      new Set(contractorProducts.flatMap((p) => p.sizes.map((s) => s.label[locale])))
+      new Set([
+        ...contractorProducts.flatMap((p) => p.sizes.map((s) => s.label[locale])),
+        ...retailProducts.flatMap((p) => (p.sizes || []).map((s) => s.label[locale])),
+      ])
     ).sort((a, b) => parseFloat(a) - parseFloat(b));
 
     const colorMap = new Map<string, { id: string; name: { he: string; ar: string }; hex: string }>();

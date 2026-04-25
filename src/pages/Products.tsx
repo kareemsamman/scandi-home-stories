@@ -147,6 +147,11 @@ const Products = () => {
         if (p.type === "contractor") {
           return (p as ContractorProduct).sizes.some((s) => filters.lengths.includes(s.label.he) || filters.lengths.includes(s.label.ar));
         }
+        if (p.type === "retail") {
+          const sizes = (p as RetailProduct).sizes || [];
+          if (sizes.length === 0) return true;
+          return sizes.some((s) => filters.lengths.includes(s.label.he) || filters.lengths.includes(s.label.ar));
+        }
         return true;
       });
     }
