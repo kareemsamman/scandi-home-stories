@@ -4,6 +4,7 @@ import { validateCoupon, useCouponStore, fetchAutoApplyCoupon } from "@/hooks/us
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocale } from "@/i18n/useLocale";
+import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 
 export const CouponInput = () => {
   const { t } = useLocale();
