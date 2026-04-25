@@ -84,6 +84,14 @@ const Products = () => {
 
   const isProfilesCollection = filters.collection === profilesCategorySlug;
   const currentCollection = filters.collection !== "all" ? getCollectionBySlug(filters.collection) : null;
+  // Santaf category should be excluded from the profile-color picker
+  const santafCategory = collections.find((c) => c.slug === "santaf");
+  const santafCategoryId = santafCategory?.id || "";
+  const showProfileColorPopup =
+    filters.collection !== "all" &&
+    filters.collection !== "santaf" &&
+    !!currentCollection &&
+    currentCollection.id !== santafCategoryId;
   const activeSubCategory = filters.subCategory !== "all"
     ? profileSubCategories.find((s) => s.id === filters.subCategory)
     : null;
