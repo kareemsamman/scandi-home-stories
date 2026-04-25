@@ -188,12 +188,12 @@ export const TranzilaPayment = ({
   }
 
   const amountValue = Math.round(amount * 100) / 100;
-  const bridgeUrl = `${window.location.origin}/${locale}/checkout/tranzila-return`;
+  // Tranzila will redirect the top-level browser back here on success/failure.
+  const returnUrl = `${window.location.origin}/${locale}/checkout/tranzila-return`;
   const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
-  const iframeName = `tranzila-frame-${iframeKey}`;
   const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
 
-  // Tranzila iframe POST fields — names per the docs:
+  // Tranzila POST fields — names per the docs:
   // https://docs.tranzila.com/docs/payments-billing/795m2yi7q4nmq-iframe-integration
   const postFields: Record<string, string> = {
     sum: String(amountValue),
@@ -213,11 +213,10 @@ export const TranzilaPayment = ({
     // Handshake (required because the terminal has Hand Shake mechanism enabled)
     new_process: "1",
     thtk: thtk || "",
-    // Use Tranzila's default styling (logo + colors) — no overrides.
     buttonLabel: locale === "ar" ? "ادفع الآن" : "שלם עכשיו",
-    // Return URLs:
-    success_url_address: bridgeUrl,
-    fail_url_address: bridgeUrl,
+    // Return URLs (top-level navigation back to our app):
+    success_url_address: returnUrl,
+    fail_url_address: returnUrl,
     notify_url_address: notifyUrl,
   };
 
