@@ -12,14 +12,15 @@ export const CouponInput = () => {
   const getSubtotal = useCart((s) => s.getSubtotal);
   const { user, isAdmin, profile } = useAuth();
   const { applied, apply, remove } = useCouponStore();
+  const autoApplyDismissed = useCouponStore((s) => s.autoApplyDismissed);
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Auto-apply: try to fetch and apply a site-wide auto-apply coupon if no coupon is currently applied
+  // Auto-apply: only if not already applied and user hasn't manually removed it
   useEffect(() => {
-    if (applied || items.length === 0) return;
+    if (applied || autoApplyDismissed || items.length === 0) return;
     let cancelled = false;
     (async () => {
       const auto = await fetchAutoApplyCoupon();
@@ -33,7 +34,7 @@ export const CouponInput = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, applied]);
+  }, [items.length, applied, autoApplyDismissed]);
 
   const handleApply = async () => {
     if (!code.trim() || loading) return;

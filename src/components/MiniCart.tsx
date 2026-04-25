@@ -302,6 +302,7 @@ function MiniCartVatSummary({ subtotal, t, items, locale }: { subtotal: number; 
   const { data: vatSettings } = useVatSettings();
   const { user, isAdmin, profile } = useAuth();
   const { applied, apply } = useCouponStore();
+  const autoApplyDismissed = useCouponStore((s) => s.autoApplyDismissed);
   const vatConfig = vatSettings ?? { enabled: true, rate: 18 };
 
   // Auto-apply site-wide coupon and re-validate when subtotal changes
@@ -318,6 +319,8 @@ function MiniCartVatSummary({ subtotal, t, items, locale }: { subtotal: number; 
         }
         return;
       }
+      // Skip auto-apply if user has manually removed the coupon
+      if (autoApplyDismissed) return;
       const auto = await fetchAutoApplyCoupon();
       if (cancelled || !auto) return;
       const cartItems = items.map((i: any) => ({ product: { id: i.product.id, price: i.product.price, collection: i.product.collection }, quantity: i.quantity }));
@@ -328,7 +331,7 @@ function MiniCartVatSummary({ subtotal, t, items, locale }: { subtotal: number; 
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal, items.length]);
+  }, [subtotal, items.length, autoApplyDismissed]);
 
   const discount = applied?.discountAmount || 0;
   const subtotalAfterDiscount = Math.max(0, subtotal - discount);

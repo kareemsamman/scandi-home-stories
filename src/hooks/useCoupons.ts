@@ -43,16 +43,20 @@ export interface AppliedCoupon {
 /* ── Zustand store — persists applied coupon across Cart → Checkout ── */
 interface CouponStore {
   applied: AppliedCoupon | null;
+  autoApplyDismissed: boolean;
   apply: (coupon: Coupon, discountAmount: number) => void;
   remove: () => void;
+  resetDismissed: () => void;
 }
 
 export const useCouponStore = create<CouponStore>()(
   persist(
     (set) => ({
       applied: null,
-      apply: (coupon, discountAmount) => set({ applied: { coupon, discountAmount } }),
-      remove: () => set({ applied: null }),
+      autoApplyDismissed: false,
+      apply: (coupon, discountAmount) => set({ applied: { coupon, discountAmount }, autoApplyDismissed: false }),
+      remove: () => set({ applied: null, autoApplyDismissed: true }),
+      resetDismissed: () => set({ autoApplyDismissed: false }),
     }),
     { name: "amg-coupon" }
   )
