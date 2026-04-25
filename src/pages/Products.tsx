@@ -84,6 +84,14 @@ const Products = () => {
 
   const isProfilesCollection = filters.collection === profilesCategorySlug;
   const currentCollection = filters.collection !== "all" ? getCollectionBySlug(filters.collection) : null;
+  // Santaf category should be excluded from the profile-color picker
+  const santafCategory = collections.find((c) => c.slug === "santaf");
+  const santafCategoryId = santafCategory?.id || "";
+  const showProfileColorPopup =
+    filters.collection !== "all" &&
+    filters.collection !== "santaf" &&
+    !!currentCollection &&
+    currentCollection.id !== santafCategoryId;
   const activeSubCategory = filters.subCategory !== "all"
     ? profileSubCategories.find((s) => s.id === filters.subCategory)
     : null;
@@ -179,8 +187,15 @@ const Products = () => {
       case "name-asc": result.sort((a, b) => a.name[locale].localeCompare(b.name[locale])); break;
       default: result.sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999)); break;
     }
+
+    // Always push santaf-category products to the bottom (regardless of sort)
+    if (santafCategoryId) {
+      const santafItems = result.filter((p) => p.collection === santafCategoryId);
+      const others = result.filter((p) => p.collection !== santafCategoryId);
+      result = [...others, ...santafItems];
+    }
     return result;
-  }, [filters, isProfilesCollection, products, collections]);
+  }, [filters, isProfilesCollection, products, collections, santafCategoryId]);
 
   if (isLoading) {
     return (
@@ -217,7 +232,7 @@ const Products = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDesc} jsonLd={[getOrganizationSchema()]} />
-      {isProfilesCollection && <ProfileColorPopup />}
+      {showProfileColorPopup && <ProfileColorPopup />}
       {/* Hero */}
       <section className="relative h-[28vh] md:h-[40vh] overflow-hidden">
         <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
