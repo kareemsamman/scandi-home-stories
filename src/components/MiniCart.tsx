@@ -343,7 +343,7 @@ function MiniCartVatSummary({ subtotal, t, items }: { subtotal: number; t: (k: s
       {applied && discount > 0 && (
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-green-700">
-            {applied.coupon.description?.trim() || t("cart.discount") || "הנחה"}
+            {getLocalizedCouponDescription(applied.coupon.description, locale) || t("cart.discount") || "הנחה"}
           </span>
           <span className="text-xs font-semibold text-green-700">-{t("common.currency")}{discount.toLocaleString()}</span>
         </div>
