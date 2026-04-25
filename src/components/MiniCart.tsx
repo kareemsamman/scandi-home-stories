@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuantitySelector } from "./QuantitySelector";
 import { QuickBuyModal } from "./QuickBuyModal";
@@ -233,7 +234,7 @@ export const MiniCart = () => {
 
       <div className="border-t border-border px-6 pt-4 pb-4 space-y-3 bg-background">
         <FreeShippingBarWrapper subtotal={subtotal} />
-        <MiniCartVatSummary subtotal={subtotal} t={t} items={items} />
+        <MiniCartVatSummary subtotal={subtotal} t={t} items={items} locale={locale} />
         <div className="flex gap-3 pt-1">
           <Link to={localePath("/cart")} onClick={closeCart} className="flex-1 h-12 flex items-center justify-center text-sm font-semibold bg-foreground text-background rounded-[1.875rem] hover:bg-foreground/90 transition-colors">
             {t("miniCart.viewCart")}
@@ -297,7 +298,7 @@ export const MiniCart = () => {
   );
 };
 
-function MiniCartVatSummary({ subtotal, t, items }: { subtotal: number; t: (k: string) => any; items: any[] }) {
+function MiniCartVatSummary({ subtotal, t, items, locale }: { subtotal: number; t: (k: string) => any; items: any[]; locale: string }) {
   const { data: vatSettings } = useVatSettings();
   const { user, isAdmin, profile } = useAuth();
   const { applied, apply } = useCouponStore();
@@ -343,7 +344,7 @@ function MiniCartVatSummary({ subtotal, t, items }: { subtotal: number; t: (k: s
       {applied && discount > 0 && (
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-green-700">
-            {applied.coupon.description?.trim() || t("cart.discount") || "הנחה"}
+            {getLocalizedCouponDescription(applied.coupon.description, locale) || t("cart.discount") || "הנחה"}
           </span>
           <span className="text-xs font-semibold text-green-700">-{t("common.currency")}{discount.toLocaleString()}</span>
         </div>

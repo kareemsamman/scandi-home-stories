@@ -10,6 +10,7 @@ import { useCoupons, useSaveCoupon, useDeleteCoupon, useToggleCoupon, useCouponU
 import { useCategories } from "@/hooks/useDbData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { parseCouponDescription, stringifyCouponDescription, getLocalizedCouponDescription } from "@/lib/couponDescription";
 
 const db = supabase as any;
 
@@ -97,14 +98,34 @@ const CouponModal = ({
 
         <div className="p-6 space-y-5">
           {/* Code + Description */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Code *</label>
+            <Input value={form.code || ""} onChange={e => set("code", e.target.value.toUpperCase())} placeholder="SUMMER20" className="font-mono" />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Code *</label>
-              <Input value={form.code || ""} onChange={e => set("code", e.target.value.toUpperCase())} placeholder="SUMMER20" className="font-mono" />
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Description (Hebrew)</label>
+              <Input
+                dir="auto"
+                value={parseCouponDescription(form.description).he}
+                onChange={e => {
+                  const cur = parseCouponDescription(form.description);
+                  set("description", stringifyCouponDescription({ ...cur, he: e.target.value }));
+                }}
+                placeholder="הנחה 10% על כל המוצרים"
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
-              <Input value={form.description || ""} onChange={e => set("description", e.target.value)} placeholder="Internal note" />
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Description (Arabic)</label>
+              <Input
+                dir="auto"
+                value={parseCouponDescription(form.description).ar}
+                onChange={e => {
+                  const cur = parseCouponDescription(form.description);
+                  set("description", stringifyCouponDescription({ ...cur, ar: e.target.value }));
+                }}
+                placeholder="خصم 10% على كل المنتجات"
+              />
             </div>
           </div>
 
@@ -385,7 +406,11 @@ const AdminCoupons = () => {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-mono text-base font-bold text-gray-900 tracking-wider">{coupon.code}</span>
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${badge.cls}`}>{badge.label}</span>
-                      {coupon.description && <span className="text-xs text-gray-400 truncate max-w-xs">{coupon.description}</span>}
+                      {(() => {
+                        const d = parseCouponDescription(coupon.description);
+                        const text = d.he || d.ar;
+                        return text ? <span className="text-xs text-gray-400 truncate max-w-xs">{text}</span> : null;
+                      })()}
                     </div>
 
                     {/* Stats row */}

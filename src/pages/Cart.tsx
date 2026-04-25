@@ -6,6 +6,7 @@ import { Layout } from "@/components/Layout";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
+import { getLocalizedCouponDescription } from "@/lib/couponDescription";
 import { getLocaleText } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -203,7 +204,7 @@ const Cart = () => {
                   </div>
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-green-700">
-                      <span className="font-medium">{appliedCoupon?.coupon.description?.trim() || t("checkout.discountAppliedLabel")}</span>
+                      <span className="font-medium">{getLocalizedCouponDescription(appliedCoupon?.coupon.description, locale) || t("checkout.discountAppliedLabel")}</span>
                       <span className="font-semibold">-{t("common.currency")}{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
