@@ -187,8 +187,15 @@ const Products = () => {
       case "name-asc": result.sort((a, b) => a.name[locale].localeCompare(b.name[locale])); break;
       default: result.sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999)); break;
     }
+
+    // Always push santaf-category products to the bottom (regardless of sort)
+    if (santafCategoryId) {
+      const santafItems = result.filter((p) => p.collection === santafCategoryId);
+      const others = result.filter((p) => p.collection !== santafCategoryId);
+      result = [...others, ...santafItems];
+    }
     return result;
-  }, [filters, isProfilesCollection, products, collections]);
+  }, [filters, isProfilesCollection, products, collections, santafCategoryId]);
 
   if (isLoading) {
     return (
