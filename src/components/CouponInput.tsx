@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
-import { validateCoupon, useCouponStore } from "@/hooks/useCoupons";
+import { validateCoupon, useCouponStore, fetchAutoApplyCoupon } from "@/hooks/useCoupons";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocale } from "@/i18n/useLocale";
