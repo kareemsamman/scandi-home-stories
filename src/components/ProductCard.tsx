@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Ruler } from "lucide-react";
-import { Product, RetailProduct, ContractorProduct, getLocaleText } from "@/data/products";
+import { Product, RetailProduct, ContractorProduct } from "@/data/products";
 import { useShopData } from "@/hooks/useShopData";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "@/i18n/useLocale";
@@ -38,9 +37,7 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
   const isMeterProduct = product.soldByMeter === true;
   const hasOptions = isMeterProduct || (retail && retail.colors.length > 0) || (contractor && (contractor.sizes.length > 0 || contractor.colorGroups.some(g => g.colors.length > 0)));
 
-  // OOS check: if all tracked inventory rows sum to 0
   const inventory = useProductInventory(product.id);
-  // Products with custom color groups are never fully OOS (custom colors are made-to-order)
   const hasCustomColors = contractor?.colorGroups && contractor.colorGroups.length > 1 &&
     contractor.colorGroups.slice(1).some(g => g.colors.length > 0);
   const isOutOfStock = product.outOfStock || (!hasCustomColors && inventory.length > 0 && inventory.every(r => r.stock_quantity === 0));
@@ -51,41 +48,66 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
     if (hasOptions) { setQuickBuyOpen(true); } else { addToCart(product, 1); }
   };
 
-  const getLengthRange = () => {
-    if (!contractor || contractor.sizes.length === 0) return null;
-    const labels = contractor.sizes.map(s => s.label[locale]);
-    if (labels.length === 1) return labels[0];
-    return `${labels[0]}–${labels[labels.length - 1]}`;
-  };
-
-  const lengthRange = getLengthRange();
-
-  // Collect all prices for variable contractor products (sizes + combo prices on colors)
-  const getPriceRange = (): { min: number; max: number } | null => {
-    if (!contractor) return null;
+  const collectVariantPrices = (
+    sizes: Array<{ price?: number }> | undefined,
+    options: Array<{ combo_prices?: Record<string, number>; prices?: Record<string, number> }> | undefined,
+  ) => {
     const prices: number[] = [];
-    if (typeof product.price === "number" && product.price > 0) prices.push(product.price);
-    contractor.sizes.forEach((s: any) => {
-      const n = Number(s.price);
+
+    if (typeof product.price === "number" && product.price > 0) {
+      prices.push(product.price);
+    }
+
+    sizes?.forEach((size) => {
+      const n = Number(size.price);
       if (!isNaN(n) && n > 0) prices.push(n);
     });
-    contractor.colorGroups.forEach((g) => {
-      g.colors.forEach((c: any) => {
-        const cp = c.combo_prices || c.prices;
-        if (cp && typeof cp === "object") {
-          Object.values(cp).forEach((p) => {
-            const n = Number(p);
-            if (!isNaN(n) && n > 0) prices.push(n);
-          });
-        }
+
+    options?.forEach((option) => {
+      const priceMap = option.combo_prices || option.prices;
+      if (!priceMap || typeof priceMap !== "object") return;
+
+      Object.values(priceMap).forEach((value) => {
+        const n = Number(value);
+        if (!isNaN(n) && n > 0) prices.push(n);
       });
     });
+
+    return prices;
+  };
+
+  const getPriceRange = (prices: number[]): { min: number; max: number } | null => {
     if (prices.length === 0) return null;
     return { min: Math.min(...prices), max: Math.max(...prices) };
   };
 
-  const priceRange = getPriceRange();
-  const displayPrice = contractor?.sizes?.[0]?.price || product.price;
+  const getLengthMinPrice = (
+    sizeId: string,
+    fallbackPrice: number | undefined,
+    options: Array<{ combo_prices?: Record<string, number>; prices?: Record<string, number> }> | undefined,
+  ) => {
+    const prices: number[] = [];
+
+    if (typeof fallbackPrice === "number" && fallbackPrice > 0) {
+      prices.push(fallbackPrice);
+    }
+
+    options?.forEach((option) => {
+      const raw = option.combo_prices?.[sizeId] ?? option.prices?.[sizeId];
+      const n = Number(raw);
+      if (!isNaN(n) && n > 0) prices.push(n);
+    });
+
+    return prices.length > 0 ? Math.min(...prices) : null;
+  };
+
+  const contractorPriceRange = getPriceRange(
+    collectVariantPrices(contractor?.sizes, contractor?.colorGroups.flatMap((group) => group.colors))
+  );
+  const retailPriceRange = getPriceRange(
+    collectVariantPrices(retail?.sizes, retail?.colors)
+  );
+  const displayPrice = contractor?.sizes?.[0]?.price || retail?.sizes?.[0]?.price || product.price;
 
   if (isContractor && contractor) {
     return (
@@ -109,9 +131,9 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
             {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
             <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
             <p className="text-sm font-bold text-foreground">
-              {priceRange && priceRange.min !== priceRange.max
-                ? `${t("common.currency")}${priceRange.min.toLocaleString()} – ${t("common.currency")}${priceRange.max.toLocaleString()}`
-                : `${t("common.currency")}${(priceRange?.min ?? displayPrice).toLocaleString()}`}
+              {contractorPriceRange && contractorPriceRange.min !== contractorPriceRange.max
+                ? `${t("common.currency")}${contractorPriceRange.min.toLocaleString()} – ${t("common.currency")}${contractorPriceRange.max.toLocaleString()}`
+                : `${t("common.currency")}${(contractorPriceRange?.min ?? displayPrice).toLocaleString()}`}
             </p>
             {contractor.colorGroups.length > 0 && contractor.colorGroups[0].colors.length > 0 && (
               <div className="pt-1">
@@ -130,19 +152,16 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
                 <div className="flex gap-1.5 flex-wrap">
-                  {contractor.sizes.map((s: any) => {
-                    // Find min price across all colors for this length
-                    const lengthPrices: number[] = [];
-                    contractor.colorGroups.forEach(g => g.colors.forEach((c: any) => {
-                      const p = (c.combo_prices || c.prices)?.[s.id];
-                      const n = Number(p);
-                      if (!isNaN(n) && n > 0) lengthPrices.push(n);
-                    }));
-                    if (typeof s.price === "number") lengthPrices.push(s.price);
-                    const lengthPrice = lengthPrices.length > 0 ? Math.min(...lengthPrices) : null;
+                  {contractor.sizes.map((size) => {
+                    const lengthPrice = getLengthMinPrice(
+                      size.id,
+                      size.price,
+                      contractor.colorGroups.flatMap((group) => group.colors),
+                    );
+
                     return (
-                      <span key={s.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground inline-flex items-center gap-1">
-                        {s.label[locale]}
+                      <span key={size.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground inline-flex items-center gap-1">
+                        {size.label[locale]}
                         {lengthPrice != null && (
                           <span className="text-foreground font-semibold">· {t("common.currency")}{lengthPrice.toLocaleString()}</span>
                         )}
@@ -159,7 +178,6 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
     );
   }
 
-  // Retail product card
   return (
     <>
       <motion.article initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="group rounded-2xl overflow-hidden bg-background border border-[hsl(var(--border))] shadow-sm hover:shadow-md transition-shadow">
@@ -185,7 +203,9 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
           {collection && (<p className="text-[11px] font-medium text-muted-foreground">{collection.name[locale]}</p>)}
           <h3 className="text-sm font-bold text-foreground group-hover:text-accent-strong transition-colors">{product.name[locale]}</h3>
           <p className="text-sm font-bold text-foreground">
-            {t("common.currency")}{product.price.toLocaleString()}
+            {retailPriceRange && retailPriceRange.min !== retailPriceRange.max
+              ? `${t("common.currency")}${retailPriceRange.min.toLocaleString()} – ${t("common.currency")}${retailPriceRange.max.toLocaleString()}`
+              : `${t("common.currency")}${(retailPriceRange?.min ?? product.price).toLocaleString()}`}
             {isMeterProduct && <span className="text-[10px] font-normal text-muted-foreground ms-1">/ {locale === "ar" ? "متر" : "מטר"}</span>}
           </p>
           {retail && retail.colors.length > 0 && (
@@ -201,15 +221,22 @@ export const ProductCard = ({ product, index = 0, animate = true }: ProductCardP
               </div>
             </div>
           )}
-          {retail && (retail as any).sizes?.length > 0 && (
+          {retail && retail.sizes?.length > 0 && (
             <div className="pt-1">
               <p className="text-[10px] font-medium text-muted-foreground mb-1.5">{t("contractor.size")}:</p>
               <div className="flex gap-1.5 flex-wrap">
-                {(retail as any).sizes.map((s: any) => (
-                  <span key={s.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground">
-                    {s.label[locale]}
-                  </span>
-                ))}
+                {retail.sizes.map((size) => {
+                  const lengthPrice = getLengthMinPrice(size.id, size.price, retail.colors);
+
+                  return (
+                    <span key={size.id} className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-muted-foreground inline-flex items-center gap-1">
+                      {size.label[locale]}
+                      {lengthPrice != null && (
+                        <span className="text-foreground font-semibold">· {t("common.currency")}{lengthPrice.toLocaleString()}</span>
+                      )}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
