@@ -202,6 +202,7 @@ export type Database = {
         Row: {
           admin_only: boolean | null
           allowed_phones: string[] | null
+          auto_apply: boolean
           category_ids: string[] | null
           code: string
           created_at: string | null
@@ -223,6 +224,7 @@ export type Database = {
         Insert: {
           admin_only?: boolean | null
           allowed_phones?: string[] | null
+          auto_apply?: boolean
           category_ids?: string[] | null
           code: string
           created_at?: string | null
@@ -244,6 +246,7 @@ export type Database = {
         Update: {
           admin_only?: boolean | null
           allowed_phones?: string[] | null
+          auto_apply?: boolean
           category_ids?: string[] | null
           code?: string
           created_at?: string | null
@@ -1206,6 +1209,7 @@ export type Database = {
     }
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      get_auto_apply_coupon: { Args: never; Returns: Json }
       get_invoice_order: { Args: { order_id: string }; Returns: Json }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
