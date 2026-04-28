@@ -250,7 +250,7 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
         ogType="product"
         jsonLd={seoJsonLd}
       />
-      <div className="section-container pt-3 pb-2 md:mt-16 space-y-2">
+      <div className="section-container pt-2 pb-2 md:mt-4 space-y-1.5">
         {/* Prominent back-to-collection button — primary way to return for users who don't notice breadcrumbs */}
         {collection && (
           <Link
@@ -649,7 +649,7 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
         ogType="product"
         jsonLd={seoJsonLd}
       />
-      <div className="section-container pt-3 pb-2 md:mt-16 space-y-2">
+      <div className="section-container pt-2 pb-2 md:mt-4 space-y-1.5">
         {/* Prominent back-to-collection button — primary way to return for users who don't notice breadcrumbs */}
         {collection && (
           <Link
