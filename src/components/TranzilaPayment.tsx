@@ -47,7 +47,7 @@ export const TranzilaPayment = ({
   onError,
   disabled,
 }: Props) => {
-  const { data: settings } = useTranzilaSettings();
+  const { data: settings } = useTranzilaPublicSettings();
   const { locale } = useLocale();
   const [status, setStatus] = useState<"idle" | "preparing" | "processing" | "success" | "failed">("preparing");
   const [failureMessage, setFailureMessage] = useState<string>("");
