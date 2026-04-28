@@ -373,7 +373,7 @@ const AdminOrderDetail = () => {
 
     const oLocale = (order.locale || "he") as "he" | "ar";
     const shippingCost = calcShipping(order);
-    const invoiceLink = `${window.location.origin}/invoice/${order.id}`;
+    const invoiceLink = `${window.location.origin}/invoice/${order.id}${order.payment_token ? `?token=${order.payment_token}` : ""}`;
     const itemsList = (order.order_items || []).map((i: any) => {
       const pName = i.product_id && productNameMap.get(i.product_id)?.[oLocale] || i.product_name;
       return `• ${pName} ×${i.quantity} – ₪${(i.price * i.quantity).toLocaleString()}`;
