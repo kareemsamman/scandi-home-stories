@@ -47,7 +47,6 @@ export const useCart = create<CartState>()(
           const existing = state.items.find(
             (i) => getCartItemKey(i.product.id, i.options) === key
           );
-          const shouldOpenCart = product.type !== "contractor";
           if (existing) {
             const maxQty = product.type === "contractor" ? 9999 : 10;
             return {
@@ -56,10 +55,9 @@ export const useCart = create<CartState>()(
                   ? { ...i, quantity: Math.min(i.quantity + quantity, maxQty) }
                   : i
               ),
-              isOpen: shouldOpenCart ? true : state.isOpen,
             };
           }
-          return { items: [...state.items, { product, quantity, options }], isOpen: shouldOpenCart ? true : state.isOpen };
+          return { items: [...state.items, { product, quantity, options }] };
         });
       },
       updateQuantity: (key, quantity) => {
