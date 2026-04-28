@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil, AlertCircle } from "lucide-react";
+import { ShoppingBag, ZoomIn, X, Check, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Loader2, Pencil, AlertCircle, ArrowRight } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
@@ -250,12 +250,23 @@ const RetailProductPage = ({ product, collections, relatedProducts }: { product:
         ogType="product"
         jsonLd={seoJsonLd}
       />
-      <div className="section-container pt-2 pb-1 md:mt-16">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="section-container pt-3 pb-2 md:mt-16 space-y-2">
+        {/* Prominent back-to-collection button — primary way to return for users who don't notice breadcrumbs */}
+        {collection && (
+          <Link
+            to={localePath(`/shop?collection=${collection.slug}`)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground bg-gray-100 hover:bg-gray-200 transition-colors rounded-full ps-3 pe-4 py-2"
+          >
+            <ArrowRight className="w-4 h-4" />
+            <span>{locale === "ar" ? `العودة إلى ${collection.name[locale]}` : `חזרה ל${collection.name[locale]}`}</span>
+          </Link>
+        )}
+        {/* Breadcrumb — bumped from text-xs to text-sm for visibility */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
-          <span className="text-foreground">{product.name[locale]}</span>
+          <span className="text-foreground font-medium">{product.name[locale]}</span>
         </div>
       </div>
 
@@ -638,12 +649,23 @@ const ContractorProductPage = ({ product, collections, relatedProducts }: { prod
         ogType="product"
         jsonLd={seoJsonLd}
       />
-      <div className="section-container pt-2 pb-1 md:mt-16">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="section-container pt-3 pb-2 md:mt-16 space-y-2">
+        {/* Prominent back-to-collection button — primary way to return for users who don't notice breadcrumbs */}
+        {collection && (
+          <Link
+            to={localePath(`/shop?collection=${collection.slug}`)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground bg-gray-100 hover:bg-gray-200 transition-colors rounded-full ps-3 pe-4 py-2"
+          >
+            <ArrowRight className="w-4 h-4" />
+            <span>{locale === "ar" ? `العودة إلى ${collection.name[locale]}` : `חזרה ל${collection.name[locale]}`}</span>
+          </Link>
+        )}
+        {/* Breadcrumb — bumped from text-xs to text-sm for visibility */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link to={localePath("/shop")} className="hover:text-foreground transition-colors">{t("nav.shop")}</Link>
           <span>/</span>
           {collection && (<><Link to={localePath(`/shop?collection=${collection.slug}`)} className="hover:text-foreground transition-colors">{collection.name[locale]}</Link><span>/</span></>)}
-          <span className="text-foreground">{product.name[locale]}</span>
+          <span className="text-foreground font-medium">{product.name[locale]}</span>
         </div>
       </div>
 
