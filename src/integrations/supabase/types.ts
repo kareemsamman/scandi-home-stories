@@ -1210,7 +1210,9 @@ export type Database = {
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
       get_auto_apply_coupon: { Args: never; Returns: Json }
-      get_invoice_order: { Args: { order_id: string }; Returns: Json }
+      get_invoice_order:
+        | { Args: { order_id: string }; Returns: Json }
+        | { Args: { order_id: string; p_token?: string }; Returns: Json }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
         Returns: Json
@@ -1221,6 +1223,7 @@ export type Database = {
         Returns: Json
       }
       get_shared_cart_by_token: { Args: { p_token: string }; Returns: Json }
+      get_tranzila_public_settings: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
