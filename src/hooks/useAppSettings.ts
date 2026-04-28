@@ -158,10 +158,22 @@ export const DEFAULT_TRANZILA: TranzilaSettings = {
   enabled: false,
 };
 
+// Admin-only: returns full Tranzila settings (RLS restricts to admins)
 export const useTranzilaSettings = () =>
   useQuery<TranzilaSettings>({
     queryKey: ["app_settings", "tranzila"],
     queryFn: async () => (await fetchSetting("tranzila")) ?? DEFAULT_TRANZILA,
+    staleTime: 1000 * 60 * 5,
+  });
+
+// Public-safe: only exposes terminal_name + enabled for the checkout client
+export const useTranzilaPublicSettings = () =>
+  useQuery<{ enabled: boolean; terminal_name: string }>({
+    queryKey: ["app_settings", "tranzila_public"],
+    queryFn: async () => {
+      const { data } = await db.rpc("get_tranzila_public_settings");
+      return (data as any) ?? { enabled: false, terminal_name: "" };
+    },
     staleTime: 1000 * 60 * 5,
   });
 
