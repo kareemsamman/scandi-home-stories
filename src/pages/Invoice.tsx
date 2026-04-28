@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Printer, Package, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DbOrderItem } from "@/hooks/useDbData";
@@ -16,6 +16,8 @@ const calcShipping = (order: any): number => {
 
 const InvoicePage = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [productNames, setProductNames] = useState<Map<string, { he: string; ar: string }>>(new Map());
@@ -23,7 +25,7 @@ const InvoicePage = () => {
   useEffect(() => {
     if (!orderId) return;
     const fetchInvoice = async () => {
-      const { data: orderData } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId });
+      const { data: orderData } = await (supabase as any).rpc("get_invoice_order", { order_id: orderId, p_token: token });
       if (orderData) {
         setOrder(orderData);
         const productIds = (orderData.order_items || [])

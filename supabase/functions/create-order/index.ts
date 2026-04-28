@@ -481,7 +481,7 @@ Deno.serve(async (req) => {
         const customerLocalePrefix = locale === "ar" ? "ar" : "he";
         const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
         const adminOrderLink = `${siteOrigin}/admin/orders/${newOrder.id}`;
-        const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}`;
+        const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}${newOrder.payment_token ? `?token=${newOrder.payment_token}` : ""}`;
         const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : (locale === "ar" ? "مجاني" : "חינם");
 
         const vars: Record<string, string> = {

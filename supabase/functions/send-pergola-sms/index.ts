@@ -92,6 +92,24 @@ serve(async (req) => {
     const origin = site_origin || "https://amg-pergola-ltd.lovable.app";
 
     if (action === "notify_admin") {
+      // IP-based rate limit: max 5 notify_admin calls per IP per 10 minutes
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+        || req.headers.get("cf-connecting-ip")
+        || "unknown";
+      const rateKey = `pergola_notify_admin:${ip}`;
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { count: rlCount } = await supabaseAdmin
+        .from("rate_limits")
+        .select("*", { count: "exact", head: true })
+        .eq("key", rateKey)
+        .gte("created_at", tenMinAgo);
+      if ((rlCount ?? 0) >= 5) {
+        return new Response(JSON.stringify({ success: false, reason: "Rate limit exceeded" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      await supabaseAdmin.from("rate_limits").insert({ key: rateKey });
+
       // Send SMS to admin phone
       const adminPhone = smsSettings?.admin_phone;
       if (!adminPhone) {

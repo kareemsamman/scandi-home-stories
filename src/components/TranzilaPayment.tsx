@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTranzilaSettings } from "@/hooks/useAppSettings";
+import { useTranzilaPublicSettings } from "@/hooks/useAppSettings";
 import { useLocale } from "@/i18n/useLocale";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditCard, Loader2, AlertCircle, Lock, XCircle } from "lucide-react";
@@ -47,7 +47,7 @@ export const TranzilaPayment = ({
   onError,
   disabled,
 }: Props) => {
-  const { data: settings } = useTranzilaSettings();
+  const { data: settings } = useTranzilaPublicSettings();
   const { locale } = useLocale();
   const [status, setStatus] = useState<"idle" | "preparing" | "processing" | "success" | "failed">("preparing");
   const [failureMessage, setFailureMessage] = useState<string>("");
