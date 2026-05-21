@@ -190,8 +190,12 @@ export const PergolaElementEditor = () => {
 
     const isPvc = config.pergolaType === "pvc";
 
+    const panelTitle = isPvc
+      ? (locale === "ar" ? "الألوان والإضاءة" : "צבעים ותאורה")
+      : `${sectionWord} ${displayNum} — ${secSlatCount} שלבים`;
+
     return (
-      <Panel onClose={close} title={`${sectionWord} ${displayNum}${!isPvc ? ` — ${secSlatCount} שלבים` : ""}`}>
+      <Panel onClose={close} title={panelTitle}>
         {/* Fixed pergola: read-only slat info */}
         {!isPvc && (
           <div className="text-xs text-gray-500 space-y-1 mb-3">
@@ -204,8 +208,8 @@ export const PergolaElementEditor = () => {
           <>
             <p className="text-[10px] text-gray-400 mb-2">
               {locale === "ar"
-                ? "ℹ️ هذه الإعدادات تنطبق على جميع الأقسام"
-                : "ℹ️ הגדרות אלו חלות על כל החלוקות"}
+                ? "ℹ️ هذه الإعدادات تنطبق على البرغولة بأكملها"
+                : "ℹ️ הגדרות אלו חלות על כל הפרגולה"}
             </p>
             {/* Fabric color */}
             <Label>{locale === "ar" ? "لون القماش" : "צבע בד"}</Label>
