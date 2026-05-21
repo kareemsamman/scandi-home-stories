@@ -159,18 +159,19 @@ export const PergolaElementEditor = () => {
   // ── Carrier section editor (per-נשא) ──
   if (selected.type === "carrier") {
     const secIdx = selected.index;
-    const { carrierConfigs, setCarrierConfig } = usePergolaConfigurator.getState();
+    const { carrierConfigs, setCarrierConfig, setAllCarrierConfigs } = usePergolaConfigurator.getState();
     const sectionCount = carrierConfigs.length;
     const logicalIdx = Math.max(0, Math.min(sectionCount - 1, sectionCount - 1 - secIdx));
     const displayNum = logicalIdx + 1;
     const cc = carrierConfigs[logicalIdx];
     const isFixedSlats = config.pergolaType === "fixed" && config.roofFillMode === "slats";
     const isPvcType = config.pergolaType === "pvc";
+    const sectionWord = locale === "ar" ? "قسم" : "חלוקה";
 
     if ((!isFixedSlats && !isPvcType) || !cc) {
       // Fallback: just show spacing controls
       return (
-        <Panel onClose={close} title={`חלוקה ${displayNum}`}>
+        <Panel onClose={close} title={`${sectionWord} ${displayNum}`}>
           <Label>מרווח בין קורות חלוקה</Label>
           <div className="grid grid-cols-2 gap-1.5">
             {(["automatic", "dense", "standard", "wide"] as const).map((m) => (
@@ -190,7 +191,7 @@ export const PergolaElementEditor = () => {
     const isPvc = config.pergolaType === "pvc";
 
     return (
-      <Panel onClose={close} title={`חלוקה ${displayNum}${!isPvc ? ` — ${secSlatCount} שלבים` : ""}`}>
+      <Panel onClose={close} title={`${sectionWord} ${displayNum}${!isPvc ? ` — ${secSlatCount} שלבים` : ""}`}>
         {/* Fixed pergola: read-only slat info */}
         {!isPvc && (
           <div className="text-xs text-gray-500 space-y-1 mb-3">
@@ -198,30 +199,35 @@ export const PergolaElementEditor = () => {
           </div>
         )}
 
-        {/* PVC section editor */}
+        {/* PVC section editor — changes apply to ALL divisions (unified PVC styling) */}
         {isPvc && (
           <>
+            <p className="text-[10px] text-gray-400 mb-2">
+              {locale === "ar"
+                ? "ℹ️ هذه الإعدادات تنطبق على جميع الأقسام"
+                : "ℹ️ הגדרות אלו חלות על כל החלוקות"}
+            </p>
             {/* Fabric color */}
             <Label>{locale === "ar" ? "لون القماش" : "צבע בד"}</Label>
             <ColorPicker value={cc.fabricColor || "#D4C9A8"} colors={PVC_FABRIC_COLORS} locale={locale}
-              onChange={(hex) => setCarrierConfig(logicalIdx, { fabricColor: hex })} />
+              onChange={(hex) => setAllCarrierConfigs({ fabricColor: hex })} />
 
             {/* Sub-carrier bar color */}
             <div className="mt-3">
               <Label>{locale === "ar" ? "لون القوارص الداخلية" : "צבע חלוקות פנימיות"}</Label>
               <ColorPicker value={cc.subCarrierColor || "#383E42"} colors={[...PVC_FABRIC_COLORS, ...STANDARD_COLORS]} locale={locale}
-                onChange={(hex) => setCarrierConfig(logicalIdx, { subCarrierColor: hex })} />
+                onChange={(hex) => setAllCarrierConfigs({ subCarrierColor: hex })} />
             </div>
 
             {/* PVC lighting — 2 types */}
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Label>{locale === "ar" ? "إضاءة" : "תאורה"}</Label>
               <div className="space-y-1.5">
-                <ToggleBtn active={cc.pvcLightType === "none"} onClick={() => setCarrierConfig(logicalIdx, { pvcLightType: "none", lightingEnabled: false })}
+                <ToggleBtn active={cc.pvcLightType === "none"} onClick={() => setAllCarrierConfigs({ pvcLightType: "none", lightingEnabled: false })}
                   label={locale === "ar" ? "بدون إضاءة" : "ללא תאורה"} />
-                <ToggleBtn active={cc.pvcLightType === "side"} onClick={() => setCarrierConfig(logicalIdx, { pvcLightType: "side", lightingEnabled: true })}
+                <ToggleBtn active={cc.pvcLightType === "side"} onClick={() => setAllCarrierConfigs({ pvcLightType: "side", lightingEnabled: true })}
                   label={locale === "ar" ? "إضاءة جانبية (يمين + يسار)" : "תאורה צדדית (ימין + שמאל)"} dotColor="#FFF4E0" />
-                <ToggleBtn active={cc.pvcLightType === "full"} onClick={() => setCarrierConfig(logicalIdx, { pvcLightType: "full", lightingEnabled: true })}
+                <ToggleBtn active={cc.pvcLightType === "full"} onClick={() => setAllCarrierConfigs({ pvcLightType: "full", lightingEnabled: true })}
                   label={locale === "ar" ? "إضاءة كاملة (واحدة نعم واحدة لا)" : "תאורה מלאה (לסירוגין)"} dotColor="#FFD27F" />
               </div>
               {cc.pvcLightType === "full" && (

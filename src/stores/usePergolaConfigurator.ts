@@ -74,6 +74,7 @@ interface PergolaConfiguratorState {
   setActiveView: (view: "top" | "front" | "isometric") => void;
   resetConfig: () => void;
   setCarrierConfig: (index: number, partial: Partial<CarrierConfig>) => void;
+  setAllCarrierConfigs: (partial: Partial<CarrierConfig>) => void;
   applyGlobalToAllCarriers: () => void;
 }
 
@@ -147,6 +148,13 @@ export const usePergolaConfigurator = create<PergolaConfiguratorState>((set, get
       }
       return { carrierConfigs: configs };
     }),
+
+  // Update every carrier with the same partial — used for PVC where
+  // fabric/slat color and lighting are unified across all divisions.
+  setAllCarrierConfigs: (partial) =>
+    set((state) => ({
+      carrierConfigs: state.carrierConfigs.map((c) => ({ ...c, ...partial })),
+    })),
 
   // Re-apply global settings to all carriers (reset customization)
   applyGlobalToAllCarriers: () =>
