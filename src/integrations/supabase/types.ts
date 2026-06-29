@@ -505,6 +505,9 @@ export type Database = {
           first_name: string
           house_number: string | null
           id: string
+          invoice_issued_at: string | null
+          invoice_number: string | null
+          invoice_url: string | null
           last_name: string
           locale: string | null
           marketing_opt_in: boolean | null
@@ -535,6 +538,9 @@ export type Database = {
           first_name?: string
           house_number?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
+          invoice_url?: string | null
           last_name?: string
           locale?: string | null
           marketing_opt_in?: boolean | null
@@ -565,6 +571,9 @@ export type Database = {
           first_name?: string
           house_number?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
+          invoice_url?: string | null
           last_name?: string
           locale?: string | null
           marketing_opt_in?: boolean | null
