@@ -81,8 +81,11 @@ const CheckoutThankYou = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("thankYou.status")}</span>
-              <span className="font-semibold text-amber-600">{t("thankYou.pendingVerification")}</span>
+              <span className={`font-semibold ${paid ? "text-green-600" : "text-amber-600"}`}>
+                {paid ? t("thankYou.paidStatus") : t("thankYou.pendingVerification")}
+              </span>
             </div>
+
           </div>
 
           {/* Actions */}
