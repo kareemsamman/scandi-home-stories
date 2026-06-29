@@ -459,6 +459,33 @@ Deno.serve(async (req) => {
       if (itemsErr) throw itemsErr;
     }
 
+    // --- Automatic tax invoice (חשבונית מס/קבלה) for card payments ---
+    let invoice: { number: string; url: string } | null = null;
+    if (isCardPayment) {
+      try {
+        const { data: tzRow } = await supabaseAdmin
+          .from("app_settings").select("value").eq("key", "tranzila").maybeSingle();
+        const tz = (tzRow?.value ?? {}) as any;
+        if (tz.auto_invoice) {
+          invoice = await issueTranzilaInvoice(tz, newOrder, validatedItems);
+          if (invoice?.url) {
+            await supabaseAdmin
+              .from("orders")
+              .update({
+                invoice_url: invoice.url,
+                invoice_number: invoice.number || null,
+                invoice_issued_at: new Date().toISOString(),
+              })
+              .eq("id", newOrder.id);
+          }
+        }
+      } catch (invErr) {
+        console.error("create-order invoice flow error:", invErr);
+        // Never fail the order because of invoicing
+      }
+    }
+
+
     // --- Deduct inventory ---
     for (const item of items) {
       if (!item.productId) continue;
