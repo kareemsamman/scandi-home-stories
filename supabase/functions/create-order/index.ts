@@ -178,8 +178,13 @@ Deno.serve(async (req) => {
       origin, shippingCost, adminDiscount,
       marketingOptIn, discountCode,
       payment_status: rawPaymentStatus,
+      paymentMethod,
       items, // Array of { productId, quantity, size?, color?, colorId?, sizeId?, meterLength? }
     } = body;
+
+    // Card payment via Tranzila (credit card / Apple Pay / Bit) = already charged.
+    const isCardPayment = paymentMethod === "tranzila" || paymentMethod === "card"
+      || (rawPaymentStatus === "paid" && !!transaction_id && !receiptUrl);
 
     // --- Check if caller is admin (allows optional email + pay_later) ---
     let isAdminCaller = false;
@@ -192,6 +197,9 @@ Deno.serve(async (req) => {
       isAdminCaller = !!(roleData && roleData.length > 0);
     }
     const paymentStatus = isAdminCaller && rawPaymentStatus === "unpaid" ? "unpaid" : "paid";
+    // Card payments are confirmed → go straight to "in_process"; bank transfer waits for approval.
+    const orderStatus = isCardPayment ? "in_process" : "waiting_approval";
+
 
     // --- When admin creates order, resolve order's user_id to the CUSTOMER (not admin) ---
     let orderUserId: string | null = isAdminCaller ? null : userId;
