@@ -711,7 +711,12 @@ Deno.serve(async (req) => {
       discountAmount,
       vatAmount,
       vatRate,
+      paid: isCardPayment,
+      status: orderStatus,
+      invoiceUrl: invoice?.url ?? null,
+      invoiceNumber: invoice?.number ?? null,
     });
+
   } catch (err: any) {
     console.error("create-order error:", err);
     return jsonResponse({ error: "Failed to create order" }, 500);
