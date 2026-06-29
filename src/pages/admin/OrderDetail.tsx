@@ -715,7 +715,49 @@ const AdminOrderDetail = () => {
           : `الإيصالات${receipts.length > 0 ? ` (${receipts.length})` : ""}`;
         return (
           <Section title={sectionTitle} icon={Receipt}>
+          {/* Tranzila tax invoice (חשבונית מס) */}
+          {(order as any).invoice_url && (
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-3">
+              <Receipt className="w-5 h-5 text-green-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-green-800 text-sm">חשבונית מס / קבלה</p>
+                {(order as any).invoice_number && (
+                  <p className="text-xs text-green-700 mt-0.5">
+                    מספר חשבונית: <span className="font-mono">{(order as any).invoice_number}</span>
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={(order as any).invoice_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-green-700 hover:text-green-900 bg-white border border-green-300 rounded-lg transition-colors"
+                >
+                  <ImageIcon className="w-4 h-4" /> عرض الفاتورة
+                </a>
+                <button
+                  onClick={async () => {
+                    const locale = order.locale || "he";
+                    const url = (order as any).invoice_url as string;
+                    const msg = locale === "ar"
+                      ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة الضريبية لطلبك #${order.order_number}:\n${url}\n\n🏗 AMG PERGOLA`
+                      : `שלום ${order.first_name} 👋\n🧾 חשבונית מס להזמנה #${order.order_number}:\n${url}\n\n🏗 AMG PERGOLA`;
+                    setSendingSms(true);
+                    const ok = await sendSms(order.phone, msg);
+                    setSendingSms(false);
+                    toast({ title: ok ? `חשבונית נשלחה ב-SMS ל-${order.phone}` : "فشل الإرسال", variant: ok ? "default" : "destructive" });
+                  }}
+                  disabled={sendingSms}
+                  className="flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-blue-700 hover:text-blue-900 bg-white border border-blue-300 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" /> SMS
+                </button>
+              </div>
+            </div>
+          )}
           {isTranzilaOrder ? (
+
             paymentConfirmed ? (
               <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                 <Check className="w-5 h-5 text-green-600 shrink-0" />
