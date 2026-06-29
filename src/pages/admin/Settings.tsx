@@ -692,6 +692,32 @@ const AdminSettings = () => {
             <TInput value={tranzila.secret_key} onChange={v => setTranzila(p => ({ ...p, secret_key: v }))} placeholder="secret_..." />
           </Field>
 
+          {/* Automatic tax invoice (חשבונית מס) */}
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">إصدار فاتورة ضريبية تلقائياً (חשבונית מס)</p>
+              <p className="text-xs text-gray-400 mt-0.5">بعد نجاح الدفع، يتم إنشاء חשבונית מס/קבלה وإرسال رابطها للعميل بالرسائل القصيرة</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTranzila(p => ({ ...p, auto_invoice: !p.auto_invoice }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${tranzila.auto_invoice ? "bg-blue-600" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${tranzila.auto_invoice ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {tranzila.auto_invoice && (
+            <Field label="Documents API URL (عنوان خدمة المستندات)">
+              <TInput
+                value={tranzila.documents_api_url || ""}
+                onChange={v => setTranzila(p => ({ ...p, documents_api_url: v }))}
+                placeholder="https://billing5.tranzila.com/api/documents_db/create_document"
+              />
+            </Field>
+          )}
+
+
           {tranzila.terminal_name && (
             <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
               <span>iframe URL:</span>
