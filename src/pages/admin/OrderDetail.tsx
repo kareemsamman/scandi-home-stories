@@ -784,13 +784,7 @@ const AdminOrderDetail = () => {
               </div>
             )
           ) : receipts.length === 0 ? (
-            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-              <div>
-                <p className="font-semibold text-amber-800 text-sm">لم يتم رفع إيصال</p>
-                <p className="text-xs text-amber-600 mt-0.5">הالعميل לא העלה קבלה — אנא צור קשר לקבלת אישור תשלום</p>
-              </div>
-            </div>
+            null
           ) : resolvingUrls ? (
             <div className="flex flex-wrap gap-3">
               {receipts.map((_, idx) => (
