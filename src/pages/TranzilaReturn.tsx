@@ -87,6 +87,7 @@ const TranzilaReturn = () => {
             discountCode: pending.discountCode,
             adminDiscount: pending.adminDiscount,
             payment_status: "paid",
+            paymentMethod: "tranzila",
             transaction_id: transactionId,
             items: pending.items,
           },
@@ -108,7 +109,9 @@ const TranzilaReturn = () => {
           firstName: pending.firstName,
           lastName: pending.lastName,
           email: pending.email || "",
+          paid: true,
         });
+
 
         setStatus("success");
         navigate(localePath("/checkout/thank-you"), { replace: true });

@@ -265,12 +265,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       title: '✔ תודה על ההזמנה!',
       receiptReceived: 'קיבלנו את אישור התשלום שלך.',
       underReview: 'ההזמנה שלך נמצאת כעת בבדיקה. נעדכן אותך לאחר אימות ההעברה הבנקאית.',
+      paidReceived: 'התשלום התקבל בהצלחה ✓',
+      paidProcessing: 'ההזמנה שלך אושרה והיא בטיפול. חשבונית מס נשלחה אליך ב-SMS.',
       orderNumber: 'מספר הזמנה',
       orderDate: 'תאריך הזמנה',
       status: 'סטטוס',
       pendingVerification: 'ממתין לאישור תשלום',
+      paidStatus: 'שולם',
       backToHome: 'חזרה לדף הבית',
       viewOrder: 'צפייה בהזמנה',
+
     },
     auth: {
       login: 'התחברות',
@@ -852,12 +856,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       title: '✔ شكراً على طلبك!',
       receiptReceived: 'تم استلام إيصال الدفع الخاص بك.',
       underReview: 'طلبك قيد المراجعة حالياً. سنُبلغك بعد التحقق من التحويل البنكي.',
+      paidReceived: 'تم استلام الدفع بنجاح ✓',
+      paidProcessing: 'تمت الموافقة على طلبك وهو قيد المعالجة. تم إرسال الفاتورة الضريبية إليك عبر SMS.',
       orderNumber: 'رقم الطلب',
       orderDate: 'تاريخ الطلب',
       status: 'الحالة',
       pendingVerification: 'في انتظار تأكيد الدفع',
+      paidStatus: 'مدفوع',
       backToHome: 'العودة للرئيسية',
       viewOrder: 'عرض الطلب',
+
     },
     auth: {
       login: 'تسجيل الدخول',

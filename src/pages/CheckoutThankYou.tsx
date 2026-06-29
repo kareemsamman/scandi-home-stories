@@ -9,7 +9,7 @@ import { SEOHead } from '@/components/SEOHead';
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const routeState = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string }) || {};
+  const routeState = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string; paid?: boolean }) || {};
   const storedState = loadCompletedTranzilaOrder(routeState.orderNumber);
   const state = routeState.orderNumber ? routeState : (storedState ?? routeState);
   const orderNumber = state.orderNumber || "#00000";
@@ -17,10 +17,12 @@ const CheckoutThankYou = () => {
   const total = state.total ?? 0;
   const date = state.date || new Date().toLocaleDateString();
   const isGuest = state.isGuest ?? false;
+  const paid = state.paid ?? false;
   const phone = state.phone || "";
   const firstName = state.firstName || "";
   const lastName = state.lastName || "";
   const email = state.email || "";
+
 
   if (storedState) {
     clearCompletedTranzilaOrder();
@@ -55,11 +57,12 @@ const CheckoutThankYou = () => {
           <div>
             <h1 className="text-xl font-bold text-foreground mb-2">{t("thankYou.title")}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {t("thankYou.receiptReceived")}
+              {paid ? t("thankYou.paidReceived") : t("thankYou.receiptReceived")}
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-              {t("thankYou.underReview")}
+              {paid ? t("thankYou.paidProcessing") : t("thankYou.underReview")}
             </p>
+
           </div>
 
           {/* Order details */}
@@ -78,8 +81,11 @@ const CheckoutThankYou = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("thankYou.status")}</span>
-              <span className="font-semibold text-amber-600">{t("thankYou.pendingVerification")}</span>
+              <span className={`font-semibold ${paid ? "text-green-600" : "text-amber-600"}`}>
+                {paid ? t("thankYou.paidStatus") : t("thankYou.pendingVerification")}
+              </span>
             </div>
+
           </div>
 
           {/* Actions */}

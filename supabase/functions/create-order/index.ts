@@ -11,6 +11,144 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// ---- Tranzila Documents API (חשבונית מס/קבלה) helpers ----
+async function hmacSha256Hex(key: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(message));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+// Issues a חשבונית מס/קבלה (Invoice-Receipt) and returns { number, url } or null.
+async function issueTranzilaInvoice(
+  tz: any,
+  order: any,
+  items: any[],
+): Promise<{ number: string; url: string } | null> {
+  const appKey = (tz?.app_key || "").trim();
+  const secret = (tz?.secret_key || "").trim();
+  const terminal = (tz?.terminal_name || "").trim();
+  const endpoint = tz?.documents_api_url ||
+    "https://billing5.tranzila.com/api/documents_db/create_document";
+
+  if (!appKey || !secret || !terminal) {
+    console.warn("create-order: documents API not configured (missing keys)");
+    return null;
+  }
+
+  const rate = Number(order.vat_rate) || 0;
+  const factor = 1 + rate / 100;
+
+  const docItems: any[] = items.map((it) => ({
+    type: "I",
+    name: String(it.product_name || "פריט").slice(0, 250),
+    price_type: "G",
+    unit_price: round2(Number(it.price) * factor),
+    units_number: Number(it.quantity) || 1,
+    unit_type: 1,
+    currency_code: "ILS",
+  }));
+
+  const discount = Number(order.discount_amount) || 0;
+  if (discount > 0) {
+    docItems.push({
+      type: "I",
+      name: "הנחה",
+      price_type: "G",
+      unit_price: -round2(discount * factor),
+      units_number: 1,
+      unit_type: 1,
+      currency_code: "ILS",
+    });
+  }
+
+  const shipping = Number(order.shipping_cost) || 0;
+  if (shipping > 0) {
+    docItems.push({
+      type: "I",
+      name: "דמי משלוח",
+      price_type: "G",
+      unit_price: round2(shipping),
+      units_number: 1,
+      unit_type: 1,
+      currency_code: "ILS",
+    });
+  }
+
+  const docTotal = round2(
+    docItems.reduce((s, i) => s + i.unit_price * i.units_number, 0),
+  );
+
+  const payload: Record<string, unknown> = {
+    terminal_name: terminal,
+    document_type: "IR",
+    action: 1,
+    document_language: "heb",
+    document_currency_code: "ILS",
+    response_language: "eng",
+    client_name: `${order.first_name || ""} ${order.last_name || ""}`.trim() || "לקוח",
+    client_email: order.email || "",
+    client_address_line_1: [order.address, order.house_number].filter(Boolean).join(" ").slice(0, 250),
+    client_city: (order.city || "").slice(0, 100),
+    client_country_code: "IL",
+    created_by_system: "amg-pergola",
+    created_by_user: order.order_number,
+    items: docItems,
+    payments: [
+      { payment_method: 1, amount: docTotal, currency_code: "ILS" },
+    ],
+  };
+  if (rate > 0) payload.vat_percent = rate;
+
+  const time = Math.floor(Date.now() / 1000);
+  const nonceBytes = new Uint8Array(40);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = [...nonceBytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const accessToken = await hmacSha256Hex(secret + time + nonce, appKey);
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-tranzila-api-app-key": appKey,
+        "X-tranzila-api-request-time": String(time),
+        "X-tranzila-api-nonce": nonce,
+        "X-tranzila-api-access-token": accessToken,
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    console.log("create-order create_document response:", res.status, text);
+
+    let parsed: any = null;
+    try { parsed = JSON.parse(text); } catch { /* ignore */ }
+
+    if (!parsed || Number(parsed.status_code) !== 0 || !parsed.document) {
+      console.error("create-order invoice creation failed:", parsed?.status_msg || text);
+      return null;
+    }
+
+    const doc = parsed.document;
+    const url = doc.retrieval_key
+      ? `https://my.tranzila.com/api/get_financial_document/${doc.retrieval_key}`
+      : "";
+    return { number: String(doc.number || doc.id || ""), url };
+  } catch (err) {
+    console.error("create-order create_document error:", err);
+    return null;
+  }
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -40,8 +178,13 @@ Deno.serve(async (req) => {
       origin, shippingCost, adminDiscount,
       marketingOptIn, discountCode,
       payment_status: rawPaymentStatus,
+      paymentMethod,
       items, // Array of { productId, quantity, size?, color?, colorId?, sizeId?, meterLength? }
     } = body;
+
+    // Card payment via Tranzila (credit card / Apple Pay / Bit) = already charged.
+    const isCardPayment = paymentMethod === "tranzila" || paymentMethod === "card"
+      || (rawPaymentStatus === "paid" && !!transaction_id && !receiptUrl);
 
     // --- Check if caller is admin (allows optional email + pay_later) ---
     let isAdminCaller = false;
@@ -54,6 +197,9 @@ Deno.serve(async (req) => {
       isAdminCaller = !!(roleData && roleData.length > 0);
     }
     const paymentStatus = isAdminCaller && rawPaymentStatus === "unpaid" ? "unpaid" : "paid";
+    // Card payments are confirmed → go straight to "in_process"; bank transfer waits for approval.
+    const orderStatus = isCardPayment ? "in_process" : "waiting_approval";
+
 
     // --- When admin creates order, resolve order's user_id to the CUSTOMER (not admin) ---
     let orderUserId: string | null = isAdminCaller ? null : userId;
@@ -274,7 +420,7 @@ Deno.serve(async (req) => {
       .insert({
         user_id: orderUserId,
         order_number: orderNumber,
-        status: "waiting_approval",
+        status: orderStatus,
         total: finalTotal,
         notes: (notes && typeof notes === "string") ? notes.slice(0, 1000) : null,
         first_name: (firstName || "").slice(0, 100),
@@ -312,6 +458,33 @@ Deno.serve(async (req) => {
       );
       if (itemsErr) throw itemsErr;
     }
+
+    // --- Automatic tax invoice (חשבונית מס/קבלה) for card payments ---
+    let invoice: { number: string; url: string } | null = null;
+    if (isCardPayment) {
+      try {
+        const { data: tzRow } = await supabaseAdmin
+          .from("app_settings").select("value").eq("key", "tranzila").maybeSingle();
+        const tz = (tzRow?.value ?? {}) as any;
+        if (tz.auto_invoice) {
+          invoice = await issueTranzilaInvoice(tz, newOrder, validatedItems);
+          if (invoice?.url) {
+            await supabaseAdmin
+              .from("orders")
+              .update({
+                invoice_url: invoice.url,
+                invoice_number: invoice.number || null,
+                invoice_issued_at: new Date().toISOString(),
+              })
+              .eq("id", newOrder.id);
+          }
+        }
+      } catch (invErr) {
+        console.error("create-order invoice flow error:", invErr);
+        // Never fail the order because of invoicing
+      }
+    }
+
 
     // --- Deduct inventory ---
     for (const item of items) {
@@ -481,7 +654,9 @@ Deno.serve(async (req) => {
         const customerLocalePrefix = locale === "ar" ? "ar" : "he";
         const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
         const adminOrderLink = `${siteOrigin}/admin/orders/${newOrder.id}`;
-        const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}${newOrder.payment_token ? `?token=${newOrder.payment_token}` : ""}`;
+        // For paid card orders, link to the official Tranzila tax invoice when available.
+        const invoiceLink = invoice?.url
+          || `${siteOrigin}/invoice/${newOrder.id}${newOrder.payment_token ? `?token=${newOrder.payment_token}` : ""}`;
         const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : (locale === "ar" ? "مجاني" : "חינם");
 
         const vars: Record<string, string> = {
@@ -496,13 +671,20 @@ Deno.serve(async (req) => {
           order_link: orderLink,
           admin_order_link: adminOrderLink,
           invoice_link: invoiceLink,
+          invoice_number: invoice?.number || "",
         };
 
         const customerLocale = locale === "ar" ? "ar" : "he";
-        const customerMsg = smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he;
-        if (customerMsg) {
-          await sendSmsApi(phone, formatSms(customerMsg, vars));
+        // Card payments → "paid / in process" message (includes invoice link);
+        // bank transfer → "order received, pending verification" message.
+        const customerTemplate = isCardPayment
+          ? (smsMessages.in_process?.[customerLocale] || smsMessages.in_process?.he
+             || smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he)
+          : (smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he);
+        if (customerTemplate) {
+          await sendSmsApi(phone, formatSms(customerTemplate, vars));
         }
+
 
         if (smsMessages.admin_new_order && smsSettings.admin_phone) {
           // Ensure admin link is always sent even if template doesn't include {admin_order_link}
@@ -529,7 +711,12 @@ Deno.serve(async (req) => {
       discountAmount,
       vatAmount,
       vatRate,
+      paid: isCardPayment,
+      status: orderStatus,
+      invoiceUrl: invoice?.url ?? null,
+      invoiceNumber: invoice?.number ?? null,
     });
+
   } catch (err: any) {
     console.error("create-order error:", err);
     return jsonResponse({ error: "Failed to create order" }, 500);

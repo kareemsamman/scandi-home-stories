@@ -1006,6 +1006,7 @@ const Checkout = () => {
                     discountCode: appliedCoupon?.coupon.code,
                     adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
                     payment_status: "paid",
+                    paymentMethod: "tranzila",
                     transaction_id: result.transactionId,
                     items: items.map((item) => {
                       const colorId = item.options?.color?.id;
@@ -1032,6 +1033,7 @@ const Checkout = () => {
                   firstName: form.firstName,
                   lastName: form.lastName,
                   email: form.email,
+                  paid: true,
                 });
 
                 navigate(localePath("/checkout/thank-you"), {
@@ -1045,8 +1047,10 @@ const Checkout = () => {
                     firstName: form.firstName,
                     lastName: form.lastName,
                     email: form.email,
+                    paid: true,
                   },
                 });
+
               } catch (err) {
                 console.error("Order creation after payment failed:", err);
                 toast({
