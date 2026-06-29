@@ -9,7 +9,7 @@ import { SEOHead } from '@/components/SEOHead';
 const CheckoutThankYou = () => {
   const { t, localePath } = useLocale();
   const location = useLocation();
-  const routeState = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string }) || {};
+  const routeState = (location.state as { orderNumber?: string; total?: number; date?: string; orderId?: string; phone?: string; isGuest?: boolean; firstName?: string; lastName?: string; email?: string; paid?: boolean }) || {};
   const storedState = loadCompletedTranzilaOrder(routeState.orderNumber);
   const state = routeState.orderNumber ? routeState : (storedState ?? routeState);
   const orderNumber = state.orderNumber || "#00000";
