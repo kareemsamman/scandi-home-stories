@@ -654,7 +654,9 @@ Deno.serve(async (req) => {
         const customerLocalePrefix = locale === "ar" ? "ar" : "he";
         const orderLink = `${siteOrigin}/${customerLocalePrefix}/account/order/${newOrder.id}`;
         const adminOrderLink = `${siteOrigin}/admin/orders/${newOrder.id}`;
-        const invoiceLink = `${siteOrigin}/invoice/${newOrder.id}${newOrder.payment_token ? `?token=${newOrder.payment_token}` : ""}`;
+        // For paid card orders, link to the official Tranzila tax invoice when available.
+        const invoiceLink = invoice?.url
+          || `${siteOrigin}/invoice/${newOrder.id}${newOrder.payment_token ? `?token=${newOrder.payment_token}` : ""}`;
         const shippingLabel = shippingCost > 0 ? `₪${Number(shippingCost).toLocaleString()}` : (locale === "ar" ? "مجاني" : "חינם");
 
         const vars: Record<string, string> = {
@@ -669,13 +671,20 @@ Deno.serve(async (req) => {
           order_link: orderLink,
           admin_order_link: adminOrderLink,
           invoice_link: invoiceLink,
+          invoice_number: invoice?.number || "",
         };
 
         const customerLocale = locale === "ar" ? "ar" : "he";
-        const customerMsg = smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he;
-        if (customerMsg) {
-          await sendSmsApi(phone, formatSms(customerMsg, vars));
+        // Card payments → "paid / in process" message (includes invoice link);
+        // bank transfer → "order received, pending verification" message.
+        const customerTemplate = isCardPayment
+          ? (smsMessages.in_process?.[customerLocale] || smsMessages.in_process?.he
+             || smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he)
+          : (smsMessages.order_received?.[customerLocale] || smsMessages.order_received?.he);
+        if (customerTemplate) {
+          await sendSmsApi(phone, formatSms(customerTemplate, vars));
         }
+
 
         if (smsMessages.admin_new_order && smsSettings.admin_phone) {
           // Ensure admin link is always sent even if template doesn't include {admin_order_link}
