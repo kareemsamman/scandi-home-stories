@@ -1006,6 +1006,7 @@ const Checkout = () => {
                     discountCode: appliedCoupon?.coupon.code,
                     adminDiscount: adminDiscount > 0 ? adminDiscount : undefined,
                     payment_status: "paid",
+                    paymentMethod: "tranzila",
                     transaction_id: result.transactionId,
                     items: items.map((item) => {
                       const colorId = item.options?.color?.id;
