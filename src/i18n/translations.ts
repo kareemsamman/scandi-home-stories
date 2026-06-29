@@ -856,12 +856,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       title: '✔ شكراً على طلبك!',
       receiptReceived: 'تم استلام إيصال الدفع الخاص بك.',
       underReview: 'طلبك قيد المراجعة حالياً. سنُبلغك بعد التحقق من التحويل البنكي.',
+      paidReceived: 'تم استلام الدفع بنجاح ✓',
+      paidProcessing: 'تمت الموافقة على طلبك وهو قيد المعالجة. تم إرسال الفاتورة الضريبية إليك عبر SMS.',
       orderNumber: 'رقم الطلب',
       orderDate: 'تاريخ الطلب',
       status: 'الحالة',
       pendingVerification: 'في انتظار تأكيد الدفع',
+      paidStatus: 'مدفوع',
       backToHome: 'العودة للرئيسية',
       viewOrder: 'عرض الطلب',
+
     },
     auth: {
       login: 'تسجيل الدخول',
