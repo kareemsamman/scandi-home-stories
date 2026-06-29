@@ -184,21 +184,10 @@ export const TranzilaPayment = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [onSuccess, onError, locale]);
 
-  if (!settings?.enabled || !settings.terminal_name) {
-    return (
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-        <p className="text-sm text-amber-700">
-          {locale === "ar" ? "بوابة الدفع غير مفعلة حالياً" : "שער התשלום אינו פעיל כרגע"}
-        </p>
-      </div>
-    );
-  }
-
   const amountValue = Math.round(amount * 100) / 100;
   const returnUrl = `${window.location.origin}/${locale}/checkout/tranzila-return`;
   const notifyUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/tranzila-webhook`;
-  const actionUrl = `https://direct.tranzila.com/${settings.terminal_name}/iframenew.php`;
+  const actionUrl = `https://direct.tranzila.com/${settings?.terminal_name ?? ""}/iframenew.php`;
   const needsTapToOpen = requiresDirectUserTap();
 
   const paymentParams = new URLSearchParams({
@@ -225,6 +214,8 @@ export const TranzilaPayment = ({
 
   const paymentUrl = `${actionUrl}?${paymentParams.toString()}`;
 
+  // NOTE: this effect must run on every render (before any early return)
+  // to keep the hook order stable while settings load asynchronously.
   useEffect(() => {
     if (status !== "idle" || !thtk) return;
     if (needsTapToOpen) return;
@@ -232,6 +223,18 @@ export const TranzilaPayment = ({
     setStatus("processing");
     window.location.assign(paymentUrl);
   }, [status, thtk, needsTapToOpen, paymentUrl]);
+
+  if (!settings?.enabled || !settings.terminal_name) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+        <p className="text-sm text-amber-700">
+          {locale === "ar" ? "بوابة الدفع غير مفعلة حالياً" : "שער התשלום אינו פעיל כרגע"}
+        </p>
+      </div>
+    );
+  }
+
 
   const retry = () => {
     setStatus("preparing");
