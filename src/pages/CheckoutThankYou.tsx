@@ -17,10 +17,12 @@ const CheckoutThankYou = () => {
   const total = state.total ?? 0;
   const date = state.date || new Date().toLocaleDateString();
   const isGuest = state.isGuest ?? false;
+  const paid = state.paid ?? false;
   const phone = state.phone || "";
   const firstName = state.firstName || "";
   const lastName = state.lastName || "";
   const email = state.email || "";
+
 
   if (storedState) {
     clearCompletedTranzilaOrder();
