@@ -1033,6 +1033,7 @@ const Checkout = () => {
                   firstName: form.firstName,
                   lastName: form.lastName,
                   email: form.email,
+                  paid: true,
                 });
 
                 navigate(localePath("/checkout/thank-you"), {
@@ -1046,8 +1047,10 @@ const Checkout = () => {
                     firstName: form.firstName,
                     lastName: form.lastName,
                     email: form.email,
+                    paid: true,
                   },
                 });
+
               } catch (err) {
                 console.error("Order creation after payment failed:", err);
                 toast({
