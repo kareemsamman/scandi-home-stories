@@ -265,12 +265,16 @@ export const translations: Record<Locale, Record<string, any>> = {
       title: '✔ תודה על ההזמנה!',
       receiptReceived: 'קיבלנו את אישור התשלום שלך.',
       underReview: 'ההזמנה שלך נמצאת כעת בבדיקה. נעדכן אותך לאחר אימות ההעברה הבנקאית.',
+      paidReceived: 'התשלום התקבל בהצלחה ✓',
+      paidProcessing: 'ההזמנה שלך אושרה והיא בטיפול. חשבונית מס נשלחה אליך ב-SMS.',
       orderNumber: 'מספר הזמנה',
       orderDate: 'תאריך הזמנה',
       status: 'סטטוס',
       pendingVerification: 'ממתין לאישור תשלום',
+      paidStatus: 'שולם',
       backToHome: 'חזרה לדף הבית',
       viewOrder: 'צפייה בהזמנה',
+
     },
     auth: {
       login: 'התחברות',
