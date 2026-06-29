@@ -57,11 +57,12 @@ const CheckoutThankYou = () => {
           <div>
             <h1 className="text-xl font-bold text-foreground mb-2">{t("thankYou.title")}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {t("thankYou.receiptReceived")}
+              {paid ? t("thankYou.paidReceived") : t("thankYou.receiptReceived")}
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-              {t("thankYou.underReview")}
+              {paid ? t("thankYou.paidProcessing") : t("thankYou.underReview")}
             </p>
+
           </div>
 
           {/* Order details */}
