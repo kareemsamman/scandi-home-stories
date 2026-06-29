@@ -563,7 +563,8 @@ const AdminOrderDetail = () => {
             <button
               onClick={async () => {
                 const locale = order.locale || "he";
-                const invoiceLink = `${window.location.origin}/invoice/${order.id}${order.payment_token ? `?token=${order.payment_token}` : ""}`;
+                const officialInvoice = (order as any).invoice_url as string | undefined;
+                const invoiceLink = officialInvoice || `${window.location.origin}/invoice/${order.id}${order.payment_token ? `?token=${order.payment_token}` : ""}`;
                 const msg = locale === "ar"
                   ? `مرحباً ${order.first_name} 👋\n🧾 الفاتورة لطلبك #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`
                   : `שלום ${order.first_name} 👋\n🧾 החשבונית להזמנה #${order.order_number}:\n${invoiceLink}\n\n🏗 AMG PERGOLA`;
