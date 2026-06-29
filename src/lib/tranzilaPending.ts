@@ -40,7 +40,9 @@ export interface TranzilaCompletedOrderState {
   firstName: string;
   lastName: string;
   email: string;
+  paid?: boolean;
 }
+
 
 const PENDING_KEY = "amg-tranzila-pending-order";
 const COMPLETED_KEY = "amg-tranzila-completed-order";
