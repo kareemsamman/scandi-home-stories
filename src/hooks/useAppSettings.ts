@@ -148,6 +148,8 @@ export interface TranzilaSettings {
   secret_key: string;
   terminal_password: string;
   enabled: boolean;
+  auto_invoice?: boolean;
+  documents_api_url?: string;
 }
 
 export const DEFAULT_TRANZILA: TranzilaSettings = {
@@ -156,7 +158,10 @@ export const DEFAULT_TRANZILA: TranzilaSettings = {
   secret_key: "",
   terminal_password: "",
   enabled: false,
+  auto_invoice: false,
+  documents_api_url: "https://billing5.tranzila.com/api/documents_db/create_document",
 };
+
 
 // Admin-only: returns full Tranzila settings (RLS restricts to admins)
 export const useTranzilaSettings = () =>
