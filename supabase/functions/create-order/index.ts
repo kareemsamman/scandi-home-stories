@@ -420,7 +420,7 @@ Deno.serve(async (req) => {
       .insert({
         user_id: orderUserId,
         order_number: orderNumber,
-        status: "waiting_approval",
+        status: orderStatus,
         total: finalTotal,
         notes: (notes && typeof notes === "string") ? notes.slice(0, 1000) : null,
         first_name: (firstName || "").slice(0, 100),
