@@ -11,6 +11,144 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// ---- Tranzila Documents API (חשבונית מס/קבלה) helpers ----
+async function hmacSha256Hex(key: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(message));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+// Issues a חשבונית מס/קבלה (Invoice-Receipt) and returns { number, url } or null.
+async function issueTranzilaInvoice(
+  tz: any,
+  order: any,
+  items: any[],
+): Promise<{ number: string; url: string } | null> {
+  const appKey = (tz?.app_key || "").trim();
+  const secret = (tz?.secret_key || "").trim();
+  const terminal = (tz?.terminal_name || "").trim();
+  const endpoint = tz?.documents_api_url ||
+    "https://billing5.tranzila.com/api/documents_db/create_document";
+
+  if (!appKey || !secret || !terminal) {
+    console.warn("create-order: documents API not configured (missing keys)");
+    return null;
+  }
+
+  const rate = Number(order.vat_rate) || 0;
+  const factor = 1 + rate / 100;
+
+  const docItems: any[] = items.map((it) => ({
+    type: "I",
+    name: String(it.product_name || "פריט").slice(0, 250),
+    price_type: "G",
+    unit_price: round2(Number(it.price) * factor),
+    units_number: Number(it.quantity) || 1,
+    unit_type: 1,
+    currency_code: "ILS",
+  }));
+
+  const discount = Number(order.discount_amount) || 0;
+  if (discount > 0) {
+    docItems.push({
+      type: "I",
+      name: "הנחה",
+      price_type: "G",
+      unit_price: -round2(discount * factor),
+      units_number: 1,
+      unit_type: 1,
+      currency_code: "ILS",
+    });
+  }
+
+  const shipping = Number(order.shipping_cost) || 0;
+  if (shipping > 0) {
+    docItems.push({
+      type: "I",
+      name: "דמי משלוח",
+      price_type: "G",
+      unit_price: round2(shipping),
+      units_number: 1,
+      unit_type: 1,
+      currency_code: "ILS",
+    });
+  }
+
+  const docTotal = round2(
+    docItems.reduce((s, i) => s + i.unit_price * i.units_number, 0),
+  );
+
+  const payload: Record<string, unknown> = {
+    terminal_name: terminal,
+    document_type: "IR",
+    action: 1,
+    document_language: "heb",
+    document_currency_code: "ILS",
+    response_language: "eng",
+    client_name: `${order.first_name || ""} ${order.last_name || ""}`.trim() || "לקוח",
+    client_email: order.email || "",
+    client_address_line_1: [order.address, order.house_number].filter(Boolean).join(" ").slice(0, 250),
+    client_city: (order.city || "").slice(0, 100),
+    client_country_code: "IL",
+    created_by_system: "amg-pergola",
+    created_by_user: order.order_number,
+    items: docItems,
+    payments: [
+      { payment_method: 1, amount: docTotal, currency_code: "ILS" },
+    ],
+  };
+  if (rate > 0) payload.vat_percent = rate;
+
+  const time = Math.floor(Date.now() / 1000);
+  const nonceBytes = new Uint8Array(40);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = [...nonceBytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const accessToken = await hmacSha256Hex(secret + time + nonce, appKey);
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-tranzila-api-app-key": appKey,
+        "X-tranzila-api-request-time": String(time),
+        "X-tranzila-api-nonce": nonce,
+        "X-tranzila-api-access-token": accessToken,
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    console.log("create-order create_document response:", res.status, text);
+
+    let parsed: any = null;
+    try { parsed = JSON.parse(text); } catch { /* ignore */ }
+
+    if (!parsed || Number(parsed.status_code) !== 0 || !parsed.document) {
+      console.error("create-order invoice creation failed:", parsed?.status_msg || text);
+      return null;
+    }
+
+    const doc = parsed.document;
+    const url = doc.retrieval_key
+      ? `https://my.tranzila.com/api/get_financial_document/${doc.retrieval_key}`
+      : "";
+    return { number: String(doc.number || doc.id || ""), url };
+  } catch (err) {
+    console.error("create-order create_document error:", err);
+    return null;
+  }
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
