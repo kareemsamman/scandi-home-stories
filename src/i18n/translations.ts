@@ -91,11 +91,9 @@ export const translations: Record<Locale, Record<string, any>> = {
       description: 'מומחים בפרגולות ופתרונות הצללה מתקדמים.',
       columns: [
         { title: 'קולקציות מובחרות', links: [
-          { label: 'פרגולות ביוקלימטיות', href: '/shop?collection=bioclimatic' },
-          { label: 'מערכות למלות', href: '/shop?collection=motorized' },
-          { label: 'פרגולות קבועות', href: '/shop?collection=fixed' },
-          { label: 'גגות נפתחים', href: '/shop?collection=retractable' },
-          { label: 'אביזרים', href: '/shop?collection=accessories' },
+          { label: 'פרגולות אלומיניום', href: '/shop?collection=aluminum-pergolas' },
+          { label: 'פרופילי אלומיניום', href: '/shop?collection=profiles' },
+          { label: 'סנטפים', href: '/shop?collection=santaf' },
         ]},
         { title: 'תמיכה', links: [
           { label: 'שאלות נפוצות', href: '/contact' },
@@ -682,11 +680,9 @@ export const translations: Record<Locale, Record<string, any>> = {
       description: 'خبراء في البرجولات وحلول التظليل المتقدمة.',
       columns: [
         { title: 'مجموعات مميزة', links: [
-          { label: 'برجولات بيوكليماتيكية', href: '/shop?collection=bioclimatic' },
-          { label: 'أنظمة شرائح', href: '/shop?collection=motorized' },
-          { label: 'برجولات ثابتة', href: '/shop?collection=fixed' },
-          { label: 'أسقف قابلة للطي', href: '/shop?collection=retractable' },
-          { label: 'إكسسوارات', href: '/shop?collection=accessories' },
+          { label: 'برجولات ألمنيوم', href: '/shop?collection=aluminum-pergolas' },
+          { label: 'بروفيلات ألمنيوم', href: '/shop?collection=profiles' },
+          { label: 'سنتافات', href: '/shop?collection=santaf' },
         ]},
         { title: 'الدعم', links: [
           { label: 'الأسئلة الشائعة', href: '/contact' },
